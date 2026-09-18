@@ -182,29 +182,42 @@ class ContratViewSet(viewsets.ModelViewSet):
         """
         user = request.user
 
+        # RcupǸrer les contrats avec select_related pour Ǹviter les N+1 sur les relations
         if user.role in (Utilisateur.Role.ADMIN, Utilisateur.Role.AGENT):
             contrats = Contrat.objects.filter(
                 type_contrat=Contrat.TypeContrat.LOCATION,
                 statut=Contrat.StatutContrat.ACTIF
-            )
+            ).select_related("bien", "locataire__user")
         elif user.role == Utilisateur.Role.LOCATAIRE:
             contrats = Contrat.objects.filter(
                 type_contrat=Contrat.TypeContrat.LOCATION,
                 statut=Contrat.StatutContrat.ACTIF,
                 locataire__user=user
-            )
+            ).select_related("bien", "locataire__user")
         elif user.role == Utilisateur.Role.PROPRIETAIRE:
             contrats = Contrat.objects.filter(
                 type_contrat=Contrat.TypeContrat.LOCATION,
                 statut=Contrat.StatutContrat.ACTIF,
                 bien__proprietaire__user=user
-            )
+            ).select_related("bien", "locataire__user")
         else:
-            return Response({"error": "Permission refusée."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"error": "Permission refusǸe."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Batch fetch all paid payments for these contracts
+        from paiement.models import Paiement
+        paiements_payes = Paiement.objects.filter(
+            contrat__in=contrats,
+            statut=Paiement.StatutPaiement.PAYE
+        ).values_list('contrat_id', 'date_echeance')
+        
+        payes_par_contrat = {}
+        for c_id, date in paiements_payes:
+            payes_par_contrat.setdefault(c_id, set()).add(date)
 
         toutes_echeances = []
         for contrat in contrats:
-            echeances = contrat.get_echeances_a_venir()
+            payes = payes_par_contrat.get(contrat.id, set())
+            echeances = contrat.get_echeances_a_venir(paiements_payes=payes)
             toutes_echeances.extend(echeances)
 
         toutes_echeances.sort(key=lambda x: x['date_echeance'])

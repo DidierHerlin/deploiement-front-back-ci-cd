@@ -214,7 +214,7 @@ class Contrat(models.Model):
             self.date_paiement = self.date_debut + relativedelta(months=1)
 
     # Génération des échéances de paiement pour les contrats de location
-    def get_echeances_a_venir(self, date_reference=None):
+    def get_echeances_a_venir(self, date_reference=None, paiements_payes=None):
         from django.utils import timezone
         from paiement.models import Paiement
 
@@ -224,17 +224,19 @@ class Contrat(models.Model):
 
         if date_reference is None:
             date_reference = timezone.now().date()
+            
+        if paiements_payes is None:
+            paiements_payes = set(Paiement.objects.filter(
+                contrat=self,
+                statut=Paiement.StatutPaiement.PAYE
+            ).values_list('date_echeance', flat=True))
 
         # Première échéance : le mois suivant la date_debut
         echeance = self.date_debut + relativedelta(months=1)
 
         while echeance <= self.date_fin:
             # Vérifier si cette échéance est déjà payée
-            deja_paye = Paiement.objects.filter(
-                contrat=self,
-                date_echeance=echeance,
-                statut=Paiement.StatutPaiement.PAYE
-            ).exists()
+            deja_paye = echeance in paiements_payes
 
             if not deja_paye:
                 delta = (echeance - date_reference).days
