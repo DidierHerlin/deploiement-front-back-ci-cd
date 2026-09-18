@@ -19,7 +19,6 @@ class CoverageRunner(DiscoverRunner):
                     'manage.py',
                     '*/tests.py',
                     '*/test_*.py',
-                    'configuration/*',
                     '*/apps.py',
                     '*/admin.py',
                     '*/venv/*',

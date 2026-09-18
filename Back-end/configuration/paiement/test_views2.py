@@ -43,18 +43,13 @@ class PaiementViewsTests(APITestCase):
             type_contrat=Contrat.TypeContrat.LOCATION,
             date_debut=timezone.now().date(),
             date_fin=timezone.now().date() + timedelta(days=365),
-            date_paiement=5,
             loyer=1000,
             depot_garantie=2000
         )
-        self.paiement = Paiement.objects.create(
-            contrat=self.contrat,
-            num_echeance=1,
-            date_echeance=timezone.now().date(),
-            montant_attendu=1000,
-            montant=1000,
-            mode_paiement=Paiement.ModePaiement.VIREMENT
-        )
+        self.paiement = Paiement.objects.filter(contrat=self.contrat).first()
+        if self.paiement:
+            self.paiement.mode_paiement = Paiement.ModePaiement.VIREMENT
+            self.paiement.save()
 
     def test_list_paiements(self):
         self.client.force_authenticate(user=self.admin)

@@ -102,7 +102,7 @@ class ContratViewSet(viewsets.ModelViewSet):
 
         return queryset.none()
 
-    @action(detail=False, methods=["get"])
+    @action(detail=False, methods=["get"], url_path="bien-info")
     def bien_info(self, request: Request) -> Response:
         bien_id = request.query_params.get("bien_id")
         if not bien_id:

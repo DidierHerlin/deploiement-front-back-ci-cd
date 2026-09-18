@@ -30,13 +30,13 @@ class AdditionalViewsCoverageTests(APITestCase):
         resp = self.client.get('/api/notifications/')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         # Non lues
-        resp = self.client.get('/api/notifications/non_lues/')
+        resp = self.client.get('/api/notifications/non-lues/count/')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         # Tout marquer lu
-        resp = self.client.post('/api/notifications/tout_marquer_lu/')
+        resp = self.client.post('/api/notifications/marquer-lu/', {})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        # Marquer lu spécifique
-        resp = self.client.post(f'/api/notifications/{self.notif1.id}/marquer_lu/')
+        # Marquer lu spécifique (via detail view qui le marque comme lu)
+        resp = self.client.get(f'/api/notifications/{self.notif1.id}/')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         # Delete
         resp = self.client.delete(f'/api/notifications/{self.notif1.id}/')
@@ -55,7 +55,7 @@ class AdditionalViewsCoverageTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         
         # Valider
-        resp = self.client.post(f'/api/paiements/{paiement.id}/valider/', {"mode_paiement": "ESPECES"})
+        resp = self.client.post(f'/api/paiements/{paiement.id}/valider/', {"mode_paiement": "ESPECE"})
         self.assertIn(resp.status_code, [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]) # Could be already validated
         
         # Annuler

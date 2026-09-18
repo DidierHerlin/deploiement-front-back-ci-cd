@@ -48,7 +48,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = "configuration.urls"
+ROOT_URLCONF = "urls"
 AUTH_USER_MODEL = "utilisateur.Utilisateur"
 
 TEMPLATES = [
@@ -66,7 +66,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "configuration.wsgi.application"
+WSGI_APPLICATION = "wsgi.application"
 CORS_ALLOW_CREDENTIALS = True
 CORS_EXPOSE_HEADERS = ["Content-Disposition"]
 
@@ -197,4 +197,4 @@ EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER)
 
 # ─── Tests ───────────────────────────────────────────────────────────────────
-TEST_RUNNER = "configuration.test_runner.CoverageRunner"
+TEST_RUNNER = "test_runner.CoverageRunner"

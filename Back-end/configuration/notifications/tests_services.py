@@ -143,7 +143,7 @@ class NotificationServiceTests(TestCase):
         # Forcer une erreur send_mail
         from unittest.mock import patch
         
-        with patch('django.core.mail.send_mail', side_effect=Exception("Erreur SMTP")):
+        with patch('notifications.services.send_mail', side_effect=Exception("Erreur SMTP")):
             notif = NotificationService.envoyer(
                 utilisateur=self.locataire_user,
                 type_notif=Notification.Type.AUTRE,

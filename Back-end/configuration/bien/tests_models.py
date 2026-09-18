@@ -14,7 +14,7 @@ class BienModelTests(TestCase):
             prenoms='Test',
             role=Utilisateur.Role.PROPRIETAIRE
         )
-        self.proprietaire = self.user.profil_proprietaire
+        self.proprietaire = Proprietaire.objects.create(user=self.user, iban='FR761234567890')
 
     def test_bien_creation_location(self):
         bien = Bien(

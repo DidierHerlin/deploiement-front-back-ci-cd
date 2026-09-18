@@ -20,7 +20,7 @@ class NotificationModelTests(TestCase):
         u = Utilisateur.objects.create_user(email="test2@t.com", password="pwd")
         n = Notification.objects.create(
             utilisateur=u,
-            type=Notification.Type.ECHEANCE_LOYER,
+            type=Notification.Type.ECHEANCE_PROCHE,
             message="Test"
         )
         n.lu = True

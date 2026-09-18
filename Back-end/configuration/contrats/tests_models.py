@@ -48,7 +48,6 @@ class ContratModelTests(TestCase):
             type_contrat=Contrat.TypeContrat.LOCATION,
             date_debut=timezone.now().date(),
             date_fin=timezone.now().date() + timedelta(days=365),
-            date_paiement=5,
             loyer=1000,
             depot_garantie=2000
         )
@@ -68,7 +67,7 @@ class ContratModelTests(TestCase):
             bien=self.bien_vente,
             locataire=(getattr(self.locataire_user, 'profil_locataire', None) or __import__('utilisateur.models', fromlist=['Locataire']).Locataire.objects.create(user=self.locataire_user)), # Locataire model represents client here
             type_contrat=Contrat.TypeContrat.ACHAT,
-            type_paiement_achat="COMPTANT",
+            type_paiement_achat=Contrat.TypePaiementAchat.TOTALITE,
             prix=100000
         )
         contrat.full_clean()
