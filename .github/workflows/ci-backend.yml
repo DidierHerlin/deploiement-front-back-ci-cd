@@ -177,35 +177,4 @@ jobs:
         run: docker build -t immobilier-drf:pr ./Back-end/configuration
 
 
-  # Job 4 : Déploiement Kubernetes
 
-  deploy-k8s:
-    needs: docker-publish
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Checkout du code
-        uses: actions/checkout@v4
-
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v4
-        with:
-          version: 'latest'
-
-      - name: Configure kubeconfig
-        run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
-
-      - name: Appliquer les manifestes Kubernetes
-        run: |
-          kubectl apply -f k8s/namespace.yaml
-          kubectl apply -f k8s/database.yaml
-          kubectl apply -f k8s/backend.yaml
-
-      - name: Déployer la nouvelle image backend
-        run: |
-          kubectl set image deployment/backend backend=${{ secrets.DOCKERHUB_USERNAME }}/immobilier-drf:${{ github.sha }} -n immobilier
-          kubectl rollout status deployment/backend -n immobilier --timeout=120s
