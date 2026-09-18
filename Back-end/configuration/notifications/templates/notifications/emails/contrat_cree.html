@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+</head>
+<body style="font-family: Arial, sans-serif; color: #333;">
+    <h2>Bonjour {{ utilisateur.prenoms }} {{ utilisateur.nom }},</h2>
+    <p>Un nouveau contrat a été créé pour le bien <strong>{{ bien.titre }}</strong>.</p>
+    <ul>
+        <li>Type de contrat : {{ contrat.get_type_contrat_display }}</li>
+        <li>Date de début : {{ contrat.date_debut }}</li>
+        <li>Loyer mensuel : {{ contrat.loyer }} €</li>
+    </ul>
+    <p>{{ message }}</p>
+    {% if lien %}
+    <p>
+        <a href="{{ frontend_url }}{{ lien }}" style="padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">
+            Consulter le contrat
+        </a>
+    </p>
+    {% endif %}
+    <p>Cordialement,<br>L'équipe Gestion Immobilière</p>
+</body>
+</html>

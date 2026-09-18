@@ -1,0 +1,90 @@
+
+.env
+.env.*
+!.env.example
+
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+*.egg-info/
+*.egg
+dist/
+build/
+*.whl
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+media/
+
+# Tests & Couverture Python
+.coverage
+*.coverage
+coverage.xml
+coverage_lines.txt
+htmlcov/
+.pytest_cache/
+test_output.txt
+test_debug.log
+
+# Sécurité / Analyse statique
+bandit.json
+
+# ========================
+# Node.js / Next.js
+# ========================
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.turbo/
+tsconfig.tsbuildinfo
+
+# ========================
+# Terraform
+# ========================
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+*.tfvars
+!*.tfvars.example
+
+# ========================
+# Docker
+# ========================
+# Fichiers temporaires Docker (décommentez si besoin)
+# docker-compose.override.yml
+
+# ========================
+# IDE & Éditeurs
+# ========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ========================
+# OS
+# ========================
+*.tmp
+*.bak
+*.orig

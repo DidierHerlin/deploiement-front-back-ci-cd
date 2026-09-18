@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Quittance de loyer</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.5;
+      color: #333;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #1e3a8a;
+    }
+    .header h1 {
+      color: #1e3a8a;
+      font-size: 24pt;
+      margin: 0 0 10px 0;
+      text-transform: uppercase;
+    }
+    .badge {
+      display: inline-block;
+      background-color: #1e3a8a;
+      color: #fff;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-weight: bold;
+    }
+    .grid {
+      width: 100%;
+      margin-bottom: 30px;
+    }
+    .grid td {
+      width: 50%;
+      vertical-align: top;
+      padding: 15px;
+      background: #f9fafb;
+      border: 1px solid #eee;
+    }
+    .label {
+      font-weight: bold;
+      color: #1e3a8a;
+      font-size: 10pt;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+      display: block;
+    }
+    .info-box {
+      margin-bottom: 30px;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-left: 5px solid #1e3a8a;
+    }
+    .table-details {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+    }
+    .table-details th {
+      background-color: #1e3a8a;
+      color: #fff;
+      padding: 10px;
+      text-align: left;
+    }
+    .table-details td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+    .total-row td {
+      font-weight: bold;
+      font-size: 14pt;
+      background-color: #f3f4f6;
+    }
+    .footer {
+      margin-top: 50px;
+      font-size: 9pt;
+      color: #666;
+      border-top: 1px solid #ddd;
+      padding-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Quittance de loyer</h1>
+    <div class="badge">N° {{ paiement.id|stringformat:"04d" }}</div>
+  </div>
+
+  <table class="grid">
+    <tr>
+      <td>
+        <span class="label">Propriétaire / Bailleur</span>
+        <strong>{{ proprietaire.user.get_full_name|default:"Non renseigné" }}</strong><br>
+        {{ proprietaire.user.email }}
+      </td>
+      <td>
+        <span class="label">Locataire</span>
+        <strong>{{ locataire.user.get_full_name|default:"Non renseigné" }}</strong><br>
+        {{ locataire.user.email }}
+      </td>
+    </tr>
+  </table>
+
+  <div class="info-box">
+    <span class="label">Informations de location</span>
+    <strong>Bien concerné :</strong> {{ bien.titre }} ({{ bien.get_type_bien_display }})<br>
+    <strong>Adresse :</strong> {{ bien.adresse }}, {{ bien.ville }}<br>
+    <strong>Contrat N° :</strong> {{ contrat.id }}<br>
+    <strong>Période :</strong> {{ paiement.date_echeance|date:"F Y" }}
+  </div>
+
+  <table class="table-details">
+    <thead>
+      <tr>
+        <th>Désignation</th>
+        <th>Échéance</th>
+        <th style="text-align: right;">Montant</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Loyer mensuel et charges locatives</td>
+        <td>{{ paiement.date_echeance|date:"d/m/Y" }}</td>
+        <td style="text-align: right;">{{ montant_format }} Ar</td>
+      </tr>
+      <tr class="total-row">
+        <td colspan="2" style="text-align: right;">Total réglé</td>
+        <td style="text-align: right; color: #1e3a8a;">{{ montant_format }} Ar</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="info-box" style="border-left-color: #10b981; background-color: #f0fdf4;">
+    <strong>Détails du paiement :</strong><br>
+    Date d'encaissement : {{ paiement.date_paiement|date:"d/m/Y"|default:"N/A" }}<br>
+    Moyen de paiement : {{ paiement.get_mode_paiement_display }}<br>
+    Référence de transaction : {{ reference }}
+  </div>
+
+  <div class="footer">
+    <p><strong>Conditions :</strong> La présente quittance atteste du paiement du loyer pour la période indiquée et est délivrée sous réserve d'encaissement définitif et de l'absence de tout impayé antérieur. Ce document est généré électroniquement et vaut preuve de paiement conformément à la réglementation en vigueur.</p>
+    <p style="text-align: right; margin-top: 20px;">
+      Généré le {% now "d/m/Y à H:i" %}
+    </p>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,72 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: gesion_immobilier_back_end
+      POSTGRES_USER: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gesion_immobilier_back_end"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DB_NAME: gesion_immobilier_back_end
+      DB_USER: postgres
+      DB_PASSWORD:
+      DB_HOST: db
+      DB_PORT: 5432
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - media_data:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >-
+      sh -c "pip install --no-cache-dir xhtml2pdf bcrypt &&
+      python manage.py migrate &&
+      python manage.py runserver 0.0.0.0:8000"
+
+  sonarqube:
+    image: sonarqube:lts-community
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    environment:
+      - SONAR_FORCEAUTHENTICATION=false
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+
+  frontend:
+    build:
+      context: ../../../login-page-immobilier
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+    depends_on:
+      - web
+
+volumes:
+  postgres_data:
+  media_data:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:

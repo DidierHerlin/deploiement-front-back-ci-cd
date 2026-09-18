@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Contrat de Bail</title>
+    <style>
+        body { font-family: Helvetica, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
+        h1 { text-align: center; color: #1e3a8a; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; }
+        h2 { color: #1e3a8a; font-size: 14pt; margin-top: 20px; }
+        .section { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; background-color: #f9fafb; }
+        .row { margin-bottom: 8px; }
+        .label { font-weight: bold; width: 150px; display: inline-block; }
+        .signature-block { width: 45%; display: inline-block; margin-top: 50px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <h1>CONTRAT DE BAIL À USAGE D'HABITATION</h1>
+    
+    <p>Ce contrat est conclu le <strong>{{ contrat.date_creation|date:"d/m/Y" }}</strong> entre les parties soussignées :</p>
+
+    <div class="section">
+        <h2>1. LES PARTIES</h2>
+        <div style="margin-bottom: 10px;">
+            <strong>LE BAILLEUR (PROPRIÉTAIRE)</strong><br/>
+            Nom : {{ contrat.bien.proprietaire.user.get_full_name|default:"Non renseigné" }}<br/>
+            Email : {{ contrat.bien.proprietaire.user.email }}
+        </div>
+        <div>
+            <strong>LE PRENEUR (LOCATAIRE)</strong><br/>
+            Nom : {{ contrat.locataire.user.get_full_name|default:"Non renseigné" }}<br/>
+            Email : {{ contrat.locataire.user.email }}
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>2. LE BIEN LOUE</h2>
+        <div class="row"><span class="label">Titre :</span> {{ contrat.bien.titre }}</div>
+        <div class="row"><span class="label">Type de bien :</span> {{ contrat.bien.get_type_bien_display }}</div>
+        <div class="row"><span class="label">Surface :</span> {{ contrat.bien.surface }} m²</div>
+        <div class="row"><span class="label">Pièces :</span> {{ contrat.bien.nombre_pieces|default:"N/A" }}</div>
+        <div class="row"><span class="label">Adresse :</span> {{ contrat.bien.adresse }}, {{ contrat.bien.ville }}</div>
+    </div>
+
+    <div class="section">
+        <h2>3. CONDITIONS DU BAIL</h2>
+        <div class="row"><span class="label">Date d'effet :</span> {{ contrat.date_debut|date:"d/m/Y" }}</div>
+        <div class="row"><span class="label">Date de fin :</span> {{ contrat.date_fin|date:"d/m/Y" }}</div>
+        <div class="row"><span class="label">Loyer mensuel :</span> {{ loyer_format }} Ar</div>
+        <div class="row"><span class="label">Dépôt de garantie :</span> {{ depot_format }} Ar</div>
+    </div>
+
+    <div class="section">
+        <h2>4. CONDITIONS DE PAIEMENT</h2>
+        <p>Le preneur s'engage à payer le loyer mensuel de <strong>{{ loyer_format }} Ar</strong> au bailleur. Le dépôt de garantie, d'un montant de <strong>{{ depot_format }} Ar</strong> (correspondant à 2 mois de loyer selon RG-07 si applicable), a été convenu entre les parties.</p>
+        <p>Le statut actuel de ce contrat est : <strong>{{ contrat.get_statut_display }}</strong>.</p>
+    </div>
+
+    <div style="margin-top: 50px;">
+        <p>Fait en deux exemplaires originaux, pour servir et valoir ce que de droit.</p>
+        
+        <div class="signature-block">
+            <strong>Signature du Bailleur</strong><br/><br/><br/><br/>
+            <em>(Lu et approuvé)</em>
+        </div>
+        <div class="signature-block">
+            <strong>Signature du Preneur</strong><br/><br/><br/><br/>
+            <em>(Lu et approuvé)</em>
+        </div>
+    </div>
+
+</body>
+</html>

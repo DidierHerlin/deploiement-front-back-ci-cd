@@ -1,0 +1,124 @@
+# =============================================================================
+# CI/CD Frontend — Next.js (Gestion Immobilière)
+# =============================================================================
+# Structure : Front/ contient le projet Next.js 16 (pnpm, Node 20)
+# =============================================================================
+
+name: CI - Frontend Next.js
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Front/**'
+      - '.github/workflows/ci-frontend.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'Front/**'
+      - '.github/workflows/ci-frontend.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 1 : Build Next.js
+  # ─────────────────────────────────────────────────────────────────────────────
+  frontend-build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./Front
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Activer pnpm via corepack
+        run: corepack enable pnpm
+
+      - name: Installer les dépendances
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Next.js
+        run: pnpm run build
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 2 : Build & Push Docker (frontend)
+  # ─────────────────────────────────────────────────────────────────────────────
+  docker-publish:
+    needs: frontend-build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set image name
+        if: github.event_name == 'push'
+        run: echo "IMAGE_NAME=${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier" >> $GITHUB_ENV
+
+      - name: Build and push Docker image
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v6
+        with:
+          context: ./Front
+          file: ./Front/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Build image only on PR
+        if: github.event_name == 'pull_request'
+        run: docker build -t login-page-immobilier:pr ./Front
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 3 : Déploiement Kubernetes (frontend)
+  # ─────────────────────────────────────────────────────────────────────────────
+  deploy-k8s:
+    needs: docker-publish
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Appliquer les manifestes Kubernetes
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/frontend.yaml
+
+      - name: Déployer la nouvelle image frontend
+        run: |
+          kubectl set image deployment/frontend frontend=${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:${{ github.sha }} -n immobilier
+          kubectl rollout status deployment/frontend -n immobilier --timeout=120s

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+</head>
+<body style="font-family: Arial, sans-serif; color: #333;">
+    <h2>Bonjour {{ utilisateur.prenoms }} {{ utilisateur.nom }},</h2>
+    <p>{{ message }}</p>
+    {% if lien %}
+    <p>
+        <a href="{{ frontend_url }}{{ lien }}" style="padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">
+            Consulter
+        </a>
+    </p>
+    {% endif %}
+    <p>Cordialement,<br>L'équipe Gestion Immobilière</p>
+</body>
+</html>
