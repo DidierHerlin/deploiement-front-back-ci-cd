@@ -131,6 +131,7 @@ jobs:
           args: >-
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
             -Dsonar.sources=.
             -Dsonar.python.version=3.11
             -Dsonar.python.coverage.reportPaths=coverage.xml
