@@ -73,13 +73,18 @@ CORS_EXPOSE_HEADERS = ["Content-Disposition"]
 # ─── Base de données ──────────────────────────────────────────────────────────
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# Détection automatique : Si .env dit "host.docker.internal" mais qu'on n'est pas dans Docker, on force "localhost"
+db_host_env = config("DB_HOST", default="localhost")
+if db_host_env == "host.docker.internal" and not os.path.exists("/.dockerenv"):
+    db_host_env = "localhost"
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": config("DB_NAME", default="gesion_immobilier_back_end"),
         "USER": config("DB_USER", default="postgres"),
         "PASSWORD": config("DB_PASSWORD", default=""),
-        "HOST": config("DB_HOST", default="localhost"),
+        "HOST": db_host_env,
         "PORT": config("DB_PORT", default="5432"),
     }
 }

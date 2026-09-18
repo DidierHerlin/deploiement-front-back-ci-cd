@@ -64,15 +64,7 @@ override.tf.json
 *.tfvars
 !*.tfvars.example
 
-# ========================
-# Docker
-# ========================
-# Fichiers temporaires Docker (décommentez si besoin)
-# docker-compose.override.yml
 
-# ========================
-# IDE & Éditeurs
-# ========================
 .vscode/
 .idea/
 *.swp
@@ -82,9 +74,7 @@ override.tf.json
 Thumbs.db
 desktop.ini
 
-# ========================
-# OS
-# ========================
+
 *.tmp
 *.bak
 *.orig

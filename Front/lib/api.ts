@@ -94,8 +94,8 @@ async function fetchAPI<T>(
     ...((options.headers as Record<string, string>) ?? {}),
   })
 
-  const TIMEOUT_MS = 30_000  // 30 secondes
-  const MAX_RETRIES = 2      // 2 tentatives supplémentaires en cas d'erreur réseau
+  const TIMEOUT_MS = 5_000  // 5 secondes
+  const MAX_RETRIES = 0      // Plus de retry pour respecter le temps max
 
   async function doFetch(tokenValue: string | null): Promise<Response> {
     const controller = new AbortController()
@@ -788,4 +788,9 @@ export async function repondreReservation(id: number, payload: { reponse_admin: 
     body: JSON.stringify(payload),
   })
   return res.data || (res as any)
+}
+
+export async function getReportingStats(): Promise<any> {
+  const res = await fetchAPI<any>('/api/reporting/stats/');
+  return res;
 }
