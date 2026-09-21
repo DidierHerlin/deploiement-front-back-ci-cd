@@ -55,7 +55,7 @@ export default function AgentBiensPage() {
           rooms: b.nombre_pieces != null ? String(b.nombre_pieces) : '',
           rent: b.loyer_mensuel != null ? String(b.loyer_mensuel) : (b.prix != null ? String(b.prix) : ''),
           charges: (b as any).charges != null ? String((b as any).charges) : '',
-          status: b.statut === 'DISPONIBLE' ? 'Disponible' : b.statut === 'LOUE' ? 'Loué' : b.statut === 'RESERVE' ? 'Réservé' : b.statut === 'EN_TRAVAUX' ? 'En travaux' : 'Vendu',
+          status: (b.statut as string) === 'DISPONIBLE' ? 'Disponible' : (b.statut as string) === 'LOUE' ? 'Loué' : (b.statut as string) === 'RESERVE' ? 'Réservé' : (b.statut as string) === 'EN_TRAVAUX' ? 'En travaux' : 'Vendu',
           color: tones[i % tones.length],
           proprietaire: b.proprietaire?.id || undefined,
           photos: b.photos || []
@@ -121,10 +121,10 @@ export default function AgentBiensPage() {
 
     try {
       if (modal && modal !== 'new') {
-        await updateBien((modal as Property).id, payload)
+        await updateBien((modal as Property).id, payload as any)
         showToast('Bien modifié avec succès')
       } else {
-        await createBien(payload)
+        await createBien(payload as any)
         showToast('Nouveau bien ajouté au parc')
       }
       setModal(null)
