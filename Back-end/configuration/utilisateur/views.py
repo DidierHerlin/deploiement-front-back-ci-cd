@@ -1,5 +1,4 @@
 import logging
-
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import status
@@ -7,14 +6,9 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-# CORRECTION : imports JWT — remplacent authenticate / auth_login / auth_logout
-# / SessionAuthentication, qui géraient une authentification par SESSION,
-# incompatible avec l'exigence "authentification JWT" du cahier des charges.
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
-
 from .models import Locataire, Proprietaire, Utilisateur
 from .serializers import (
     AgentRegisterSerializer,
@@ -28,31 +22,10 @@ from .serializers import (
     UtilisateurTokenObtainPairSerializer,  # CORRECTION : serializer JWT désormais utilisé
     UtilisateurUpdateSerializer,
 )
-
 logger = logging.getLogger(__name__)
-
-# Rôles habilités à gérer les fiches Propriétaire/Locataire (équivalent de
-# "scolarite" dans l'ancien projet, qui gérait les fiches Etudiant).
 ROLES_GESTIONNAIRES = (Utilisateur.Role.AGENT, Utilisateur.Role.ADMIN)
-
-
-# ===================================================================
 # AUTHENTIFICATION JWT (CORRIGÉ)
-# ===================================================================
-
 class LoginView(TokenObtainPairView):
-    """
-    Connexion utilisateur — retourne un couple (access, refresh) de tokens JWT
-    ainsi que le profil de l'utilisateur connecté.
-
-    Utilise UtilisateurTokenObtainPairSerializer (déjà défini dans
-    serializers.py), qui enrichit le payload du token avec le rôle et
-    ajoute le profil utilisateur dans la réponse.
-
-    RG-04 : un compte désactivé (is_active=False) ne peut plus se connecter —
-    ce comportement est garanti nativement par TokenObtainPairSerializer,
-    qui vérifie `user.is_active` avant d'émettre un token.
-    """
     permission_classes = [AllowAny]
     authentication_classes = []
     serializer_class = UtilisateurTokenObtainPairSerializer
