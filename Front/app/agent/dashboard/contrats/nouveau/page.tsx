@@ -224,32 +224,20 @@ export default function NouveauContratPage() {
         ← Retour
       </button>
       <div className="panel">
-        {/* En-tête */}
-        <div className="mb-6">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="text-sm text-gray-500 hover:text-gray-700 mb-3 flex items-center gap-1"
-          >
-            ← Retour
-          </button>
-          <h1 className="text-2xl font-bold text-gray-800">
-            Nouveau contrat
-          </h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Remplissez les informations ci-dessous. Les champs financiers
-            sont pré-remplis automatiquement à la sélection du bien.
+        <div className="agent-panel-head" style={{ borderBottom: '1px solid var(--border)', paddingBottom: 16 }}>
+          <p className="eyebrow">CONTRATS</p>
+          <h2 style={{ fontSize: 20, fontWeight: 750, margin: '4px 0' }}>Nouveau contrat</h2>
+          <p style={{ fontSize: 12.5, color: 'var(--muted-foreground)', margin: 0 }}>
+            Remplissez les informations ci-dessous. Les champs financiers sont pré-remplis automatiquement à la sélection du bien.
           </p>
         </div>
 
-        {/* Message de succès */}
         {succes && (
           <div className="agent-info-box green">
             Contrat créé avec succès ! Redirection…
           </div>
         )}
 
-        {/* Message d'erreur */}
         {erreur && (
           <div className="agent-info-box red" role="alert">
             {erreur}
@@ -257,257 +245,115 @@ export default function NouveauContratPage() {
         )}
 
         <form onSubmit={handleSubmit}>
-          {/* ── Sélection du Bien ── */}
-          <div style={{ marginBottom: 18 }}>
-            <label className="agent-field">Bien <span style={{ color: 'var(--red)' }}>*</span>
-            </label>
-            <select
-              name="bien_id"
-              value={form.bien_id}
-              onChange={handleBienChange}
-              required
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              <option value="">— Sélectionnez un bien —</option>
-              {biens.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.titre} — {b.adresse} ({b.mode_transaction})
-                </option>
-              ))}
-            </select>
-
-            {/* Indicateur de chargement lors de la récupération du bien */}
-            {chargementBien && (
-              <p className="mt-1 text-xs text-emerald-600 animate-pulse">
-                Récupération des informations du bien…
-              </p>
-            )}
-
-            {/* Résumé du bien sélectionné */}
-            {bienSelectionne && !chargementBien && (
-              <div className="mt-2 rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-800">
-                <p className="font-semibold">{bienSelectionne.titre}</p>
-                <p>{bienSelectionne.adresse} · {bienSelectionne.surface} m²</p>
-                {bienSelectionne.loyer_mensuel && (
-                  <p>
-                    Loyer mensuel enregistré :{" "}
-                    <strong>
-                      {formaterMontant(bienSelectionne.loyer_mensuel)} Ar
-                    </strong>
-                  </p>
-                )}
-                {bienSelectionne.prix && (
-                  <p>
-                    Prix de vente :{" "}
-                    <strong>{formaterMontant(bienSelectionne.prix)} Ar</strong>
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* ── Type de contrat ── */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Type de contrat <span className="text-red-500">*</span>
-            </label>
-            <select
-              name="type_contrat"
-              value={form.type_contrat}
-              onChange={handleChange}
-              required
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              <option value="LOCATION">Location</option>
-              <option value="ACHAT">Achat</option>
-            </select>
-          </div>
-
-          {/* ── Locataire / Acheteur ── */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Locataire / Acheteur <span className="text-red-500">*</span>
-            </label>
-            <select
-              name="locataire_id"
-              value={form.locataire_id}
-              onChange={handleChange}
-              required
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              <option value="">— Sélectionnez un locataire —</option>
-              {locataires.map((l) => (
-                <option key={l.id} value={l.id}>
-                  {l.user.prenoms} {l.user.nom} ({l.user.email})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* ── Type de paiement (uniquement ACHAT) ── */}
-          {!isLocation && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Type de paiement <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="type_paiement_achat"
-                value={form.type_paiement_achat}
-                onChange={handleChange}
-                required={!isLocation}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              >
-                <option value="TOTALITE">Totalité (Comptant - 100%)</option>
-                <option value="PARTIEL">Partiel (50% puis 5x10%)</option>
+          <div className="agent-form-grid">
+            <label className="agent-field full">Bien <span style={{ color: 'var(--red)' }}>*</span>
+              <select name="bien_id" value={form.bien_id} onChange={handleBienChange} required>
+                <option value="">— Sélectionnez un bien —</option>
+                {biens.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.titre} — {b.adresse} ({b.mode_transaction})
+                  </option>
+                ))}
               </select>
+              {chargementBien && <span className="hint">Récupération des informations du bien…</span>}
+            </label>
+          </div>
+
+          {bienSelectionne && !chargementBien && (
+            <div className="agent-info-box blue" style={{ marginTop: 12 }}>
+              <strong>{bienSelectionne.titre}</strong>
+              <div>{bienSelectionne.adresse} · {bienSelectionne.surface} m²</div>
+              {bienSelectionne.loyer_mensuel && (
+                <div>Loyer mensuel enregistré : <strong>{formaterMontant(bienSelectionne.loyer_mensuel)} Ar</strong></div>
+              )}
+              {bienSelectionne.prix && (
+                <div>Prix de vente : <strong>{formaterMontant(bienSelectionne.prix)} Ar</strong></div>
+              )}
             </div>
           )}
 
-          {/* ── Dates (uniquement LOCATION) ── */}
-          {isLocation && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Date de début <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  name="date_debut"
-                  value={form.date_debut}
-                  onChange={handleChange}
-                  required={isLocation}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
+          <div className="agent-form-grid" style={{ marginTop: 14 }}>
+            <label className="agent-field">Type de contrat *
+              <select name="type_contrat" value={form.type_contrat} onChange={handleChange} required>
+                <option value="LOCATION">Location</option>
+                <option value="ACHAT">Achat</option>
+              </select>
+            </label>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Date de fin <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  name="date_fin"
-                  value={form.date_fin}
-                  onChange={handleChange}
-                  required={isLocation}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
-            </div>
-          )}
+            <label className="agent-field">Locataire / Acheteur *
+              <select name="locataire_id" value={form.locataire_id} onChange={handleChange} required>
+                <option value="">— Sélectionnez un locataire —</option>
+                {locataires.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.user.prenoms} {l.user.nom} ({l.user.email})
+                  </option>
+                ))}
+              </select>
+            </label>
 
-          {/* ── Champs financiers : LOCATION ── */}
-          {isLocation && (
-            <div className="rounded-lg border border-gray-200 p-4 space-y-4">
-              <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-                Finances (Location)
-              </h2>
+            {!isLocation && (
+              <label className="agent-field">Type de paiement *
+                <select name="type_paiement_achat" value={form.type_paiement_achat} onChange={handleChange} required={!isLocation}>
+                  <option value="TOTALITE">Totalité (Comptant - 100%)</option>
+                  <option value="PARTIEL">Partiel (50% puis 5x10%)</option>
+                </select>
+              </label>
+            )}
 
-              {/* Loyer mensuel */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Loyer mensuel (Ar) <span className="text-red-500">*</span>
-                </label>
+            {isLocation && (
+              <label className="agent-field">Date de début *
+                <input type="date" name="date_debut" value={form.date_debut} onChange={handleChange} required={isLocation} />
+              </label>
+            )}
+
+            {isLocation && (
+              <label className="agent-field">Date de fin *
+                <input type="date" name="date_fin" value={form.date_fin} onChange={handleChange} required={isLocation} />
+              </label>
+            )}
+
+            {isLocation && (
+              <label className="agent-field">Loyer mensuel (Ar) *
                 <input
-                  type="text"
-                  name="loyer"
-                  value={form.loyer}
-                  onChange={handleChange}
-                  required={isLocation}
-                  placeholder={
-                    chargementBien
-                      ? "Chargement…"
-                      : bienSelectionne
-                      ? ""
-                      : "Sélectionnez d'abord un bien"
-                  }
+                  type="text" name="loyer" value={form.loyer} onChange={handleChange} required={isLocation}
+                  placeholder={chargementBien ? "Chargement…" : bienSelectionne ? "" : "Sélectionnez d'abord un bien"}
                   readOnly={chargementBien}
-                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                    chargementBien
-                      ? "border-gray-200 bg-gray-50 text-gray-400 cursor-wait"
-                      : "border-gray-300"
-                  }`}
                 />
                 {bienSelectionne?.loyer_mensuel && form.loyer && (
-                  <p className="mt-1 text-xs text-emerald-600">
-                    ✅ Pré-rempli automatiquement depuis le loyer mensuel du bien
-                  </p>
+                  <span className="hint">Pré-rempli automatiquement depuis le bien.</span>
                 )}
-              </div>
+              </label>
+            )}
 
-              {/* Dépôt de garantie */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Dépôt de garantie (Ar) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="depot_garantie"
-                  value={form.depot_garantie}
-                  onChange={handleChange}
-                  required={isLocation}
-                  placeholder="Ex : 1 000 000"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
+            {isLocation && (
+              <label className="agent-field">Dépôt de garantie (Ar) *
+                <input type="text" name="depot_garantie" value={form.depot_garantie} onChange={handleChange} required={isLocation} placeholder="Ex : 1 000 000" />
                 {bienSelectionne?.loyer_mensuel && form.depot_garantie && (
-                  <p className="mt-1 text-xs text-gray-400">
-                    Par défaut : 2× le loyer mensuel
-                  </p>
+                  <span className="hint">Par défaut : 2× le loyer mensuel.</span>
                 )}
-              </div>
-            </div>
-          )}
+              </label>
+            )}
 
-          {/* ── Champs financiers : ACHAT ── */}
-          {!isLocation && (
-            <div className="rounded-lg border border-gray-200 p-4 space-y-4">
-              <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-                Finances (Achat)
-              </h2>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Prix de vente (Ar) <span className="text-red-500">*</span>
-                </label>
+            {!isLocation && (
+              <label className="agent-field">Prix de vente (Ar) *
                 <input
-                  type="text"
-                  name="prix"
-                  value={form.prix}
-                  onChange={handleChange}
-                  required={!isLocation}
-                  placeholder={
-                    chargementBien ? "Chargement…" : "Ex : 50 000 000"
-                  }
+                  type="text" name="prix" value={form.prix} onChange={handleChange} required={!isLocation}
+                  placeholder={chargementBien ? "Chargement…" : "Ex : 50 000 000"}
                   readOnly={chargementBien}
-                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                    chargementBien
-                      ? "border-gray-200 bg-gray-50 text-gray-400 cursor-wait"
-                      : "border-gray-300"
-                  }`}
                 />
                 {bienSelectionne?.prix && form.prix && (
-                  <p className="mt-1 text-xs text-emerald-600">
-                    ✅ Pré-rempli automatiquement depuis le prix du bien
-                  </p>
+                  <span className="hint">Pré-rempli automatiquement depuis le bien.</span>
                 )}
-              </div>
-            </div>
-          )}
+              </label>
+            )}
+          </div>
 
-          {/* ── Boutons ── */}
-          <div className="flex items-center gap-3 pt-2">
-            <button
-              type="submit"
-              disabled={chargementSoumission || succes}
-              className="flex-1 h-10 rounded-lg bg-emerald-700 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-60 disabled:cursor-not-allowed transition"
-            >
-              {chargementSoumission ? "Création en cours…" : "Créer le contrat"}
-            </button>
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="h-10 px-5 rounded-lg border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
-            >
+          <div className="agent-modal-actions">
+            <button type="button" onClick={() => router.back()} className="agent-btn agent-btn-ghost">
               Annuler
+            </button>
+            <button type="submit" disabled={chargementSoumission || succes} className="agent-btn agent-btn-primary" style={{ flex: 1, justifyContent: 'center' }}>
+              {chargementSoumission ? "Création en cours…" : "Créer le contrat"}
             </button>
           </div>
         </form>
