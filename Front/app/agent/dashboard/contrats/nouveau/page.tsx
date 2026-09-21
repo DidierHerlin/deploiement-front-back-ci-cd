@@ -219,8 +219,11 @@ export default function NouveauContratPage() {
   const isLocation = form.type_contrat === "LOCATION"
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-100 flex items-start justify-center p-4 pt-8">
-      <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-2xl">
+    <div style={{ maxWidth: 760, margin: '0 auto' }}>
+      <button type="button" onClick={() => router.back()} className="agent-back">
+        ← Retour
+      </button>
+      <div className="panel">
         {/* En-tête */}
         <div className="mb-6">
           <button
@@ -241,23 +244,22 @@ export default function NouveauContratPage() {
 
         {/* Message de succès */}
         {succes && (
-          <div className="mb-4 rounded-lg bg-green-50 border border-green-200 p-4 text-green-700 text-sm">
-            ✅ Contrat créé avec succès ! Redirection…
+          <div className="agent-info-box green">
+            Contrat créé avec succès ! Redirection…
           </div>
         )}
 
         {/* Message d'erreur */}
         {erreur && (
-          <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-4 text-red-700 text-sm">
-            ⚠️ {erreur}
+          <div className="agent-info-box red" role="alert">
+            {erreur}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit}>
           {/* ── Sélection du Bien ── */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Bien <span className="text-red-500">*</span>
+          <div style={{ marginBottom: 18 }}>
+            <label className="agent-field">Bien <span style={{ color: 'var(--red)' }}>*</span>
             </label>
             <select
               name="bien_id"
