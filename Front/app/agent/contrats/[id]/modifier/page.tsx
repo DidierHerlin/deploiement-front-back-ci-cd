@@ -48,19 +48,16 @@ export default function ModifierContratPage({ params }: { params: Promise<{ id: 
     }
   }
 
-  if (isLoading) return <div className="p-12 text-center text-gray-500">Chargement...</div>
+  if (isLoading) return <div className="agent-loading">Chargement du contrat...</div>
 
   return (
-    <div style={{ padding: '24px 20px', maxWidth: '900px', margin: '0 auto' }}>
-      <button 
-        onClick={() => router.back()}
-        style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', color: 'var(--muted-foreground)', cursor: 'pointer', marginBottom: 24, fontSize: 13, fontWeight: 500 }}
-      >
+    <div style={{ maxWidth: 880, margin: '0 auto' }}>
+      <button className="agent-back" onClick={() => router.back()}>
         <ArrowLeft size={16} /> Retour aux contrats
       </button>
 
       {error && (
-        <div style={{ padding: 16, background: 'var(--destructive)', color: 'white', borderRadius: 8, marginBottom: 24, fontSize: 13 }}>
+        <div className="agent-info-box red" role="alert">
           {error}
         </div>
       )}
