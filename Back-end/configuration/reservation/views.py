@@ -37,7 +37,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
         "bien", "bien__proprietaire__user",
         "locataire", "locataire__user",
         "contrat",
-    )
+    ).defer("bien__photos")
     permission_classes = [permissions.IsAuthenticated, ReservationPermission]
     filterset_fields = ["statut", "type_reservation", "bien", "locataire"]
     ordering_fields = ["date_creation", "statut"]

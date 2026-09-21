@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { UserProfil, updateProfil } from "@/lib/api";
+import { UserProfil, updateProfil, resolveMediaUrl } from "@/lib/api";
 import { Camera, CheckCircle, AlertCircle, Save } from "lucide-react";
 import { PasswordInput } from "@/components/ui/password-input";
 
@@ -21,7 +21,7 @@ export default function ProfilForm({ initialData, onUpdate }: ProfilFormProps) {
   });
   
   const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(initialData.photo_url);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(initialData.photo_url ?? initialData.photo_profil ?? null);
 
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -148,7 +148,7 @@ export default function ProfilForm({ initialData, onUpdate }: ProfilFormProps) {
           <div className="relative group w-32 h-32 rounded-full overflow-hidden border-4 border-gray-100 dark:border-gray-700 bg-gray-200 dark:bg-gray-800 shadow-sm flex items-center justify-center">
             {photoPreview ? (
               <img 
-                src={photoPreview.startsWith("http") ? photoPreview : `${process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") || "http://localhost:8000"}${photoPreview}`} 
+                src={resolveMediaUrl(photoPreview) ?? ""} 
                 alt="Photo de profil" 
                 className="w-full h-full object-cover"
               />

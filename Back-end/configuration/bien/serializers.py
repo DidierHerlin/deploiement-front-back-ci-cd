@@ -161,7 +161,9 @@ class BienSerializer(serializers.ModelSerializer):
 
 
 class BienListSerializer(serializers.ModelSerializer):
-    
+    # Liste : inclut 'photos' pour que les cartes affichent l'image.
+    # (base64 stocké en JSON ; OK à petite échelle, à optimiser
+    # en thumbnails / ImageField si le volume grandit.)
     proprietaire = ProprietaireSimpleSerializer(read_only=True)
 
     class Meta:

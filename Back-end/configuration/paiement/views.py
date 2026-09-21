@@ -21,14 +21,14 @@ class PaiementPagination(PageNumberPagination):
     """
     page_size = 20
     page_size_query_param = "page_size"
-    max_page_size = 1000
+    max_page_size = 100
 
 
 class PaiementViewSet(viewsets.ModelViewSet):
     queryset = Paiement.objects.select_related(
         "contrat__bien__proprietaire__user",
         "contrat__locataire__user"
-    )
+    ).defer("contrat__bien__photos")
     serializer_class = PaiementSerializer
     pagination_class = PaiementPagination
     permission_classes = [permissions.IsAuthenticated, PaiementPermission]

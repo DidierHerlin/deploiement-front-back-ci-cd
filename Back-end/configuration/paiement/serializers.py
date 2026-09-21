@@ -98,7 +98,7 @@ class PaiementSerializer(serializers.ModelSerializer):
         # Filtrer les contrats actifs (location ET achat)
         self.fields["contrat"].queryset = Contrat.objects.filter(
             statut=Contrat.StatutContrat.ACTIF
-        ).select_related("bien", "locataire__user")
+        ).select_related("bien", "locataire__user").defer("bien__photos")
 
     def validate_montant(self, value):
         if value < 0:

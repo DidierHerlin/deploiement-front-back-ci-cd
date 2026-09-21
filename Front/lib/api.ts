@@ -40,9 +40,12 @@ export interface BienListItem {
   type: string
   mode_transaction: "LOCATION" | "VENTE"
   adresse: string
+  surface?: number | null
+  nombre_pieces?: number | null
   loyer_mensuel: string | null
   prix: string | null
   statut: string
+  photos?: string[] | null
   proprietaire: { id: number; user: { nom: string; prenoms: string } }
 }
 
@@ -698,8 +701,25 @@ export interface UserProfil {
   role: string
   is_active: boolean
   date_creation: string
-  photo_profil: string | null
+  photo_url: string | null
+  photo_profil?: string | null
   telephone?: string | null
+}
+
+// Construit une URL image affichable : accepte URL absolue (backend),
+// blob:, data:, ou chemin relatif /media/... (préfixé par le host backend).
+export function resolveMediaUrl(url: string | null | undefined): string | null {
+  if (!url) return null
+  if (url.startsWith("http") || url.startsWith("blob:") || url.startsWith("data:")) return url
+  const base = process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") || "http://localhost:8000"
+  return `${base}${url.startsWith("/") ? url : `/${url}`}`
+}
+
+// Raccourci : extrait la photo affichable depuis un user/profil
+// (le backend renvoie `photo_url`, `photo_profil` étant write-only).
+export function getUserPhotoSrc(user: { photo_url?: string | null; photo_profil?: string | null } | null | undefined): string | null {
+  if (!user) return null
+  return resolveMediaUrl(user.photo_url ?? user.photo_profil)
 }
 
 export async function getProfil(): Promise<UserProfil> {

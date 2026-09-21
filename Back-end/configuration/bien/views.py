@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 class BienViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, PeutGererBien]
     serializer_class = BienSerializer
+    # 'photos' est inclus dans la liste pour l'affichage des cartes.
     queryset = Bien.objects.select_related("proprietaire__user")
 
     def get_serializer_class(self) -> type[BienSerializer | BienListSerializer]:

@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Home, LayoutDashboard, FileText, WalletCards, ReceiptText, ChevronDown, X, ShieldCheck, Mail, LogOut, MoreHorizontal, Building2, CalendarCheck } from 'lucide-react';
 import { deconnecter } from '@/lib/auth';
+import { getUserPhotoSrc } from '@/lib/api';
 
 const navItems = [
   { label: 'Mon tableau de bord', icon: LayoutDashboard, href: '/locataire/dashboard' },
@@ -26,6 +27,7 @@ import { getUserFullName, getUserInitials } from './userUtils';
 export function LocataireSidebar({ mobileNav, setMobileNav, activeHref, user }: LocataireSidebarProps) {
   const fullName = getUserFullName(user);
   const initials = getUserInitials(user);
+  const photoSrc = getUserPhotoSrc(user);
 
   return (
     <aside className={`sidebar ${mobileNav ? 'open' : ''}`}>
@@ -37,8 +39,8 @@ export function LocataireSidebar({ mobileNav, setMobileNav, activeHref, user }: 
       </div>
 
       <div className="workspace">
-        {user?.photo_profil ? (
-          <img src={user.photo_profil} alt={fullName} className="workspace-avatar user-initial" style={{ padding: 0, objectFit: 'cover' }} />
+        {photoSrc ? (
+          <img src={photoSrc} alt={fullName} className="workspace-avatar user-initial" style={{ padding: 0, objectFit: 'cover' }} />
         ) : (
           <div className="workspace-avatar user-initial blue">{initials}</div>
         )}
@@ -64,8 +66,8 @@ export function LocataireSidebar({ mobileNav, setMobileNav, activeHref, user }: 
           <p>Vous consultez uniquement vos informations personnelles et contractuelles.</p>
         </div>
         <div className="account">
-          {user?.photo_profil ? (
-            <img src={user.photo_profil} alt={fullName} className="user-initial" style={{ padding: 0, objectFit: 'cover' }} />
+          {photoSrc ? (
+            <img src={photoSrc} alt={fullName} className="user-initial" style={{ padding: 0, objectFit: 'cover' }} />
           ) : (
             <div className="user-initial blue">{initials}</div>
           )}

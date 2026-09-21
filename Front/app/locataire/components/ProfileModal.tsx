@@ -3,7 +3,7 @@
 
 import React, { useState, useRef } from 'react';
 import { X, UserRound, LockKeyhole, Edit2, Loader2, Save, Upload } from 'lucide-react';
-import { updateProfil } from '@/lib/api';
+import { updateProfil, getUserPhotoSrc, resolveMediaUrl } from '@/lib/api';
 
 import { getUserFullName } from './userUtils';
 
@@ -27,7 +27,7 @@ export function ProfileModal({ user, onClose, onProfileUpdated }: ProfileModalPr
     telephone: user?.telephone || '',
   });
   const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(user?.photo_profil || null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(getUserPhotoSrc(user));
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -77,7 +77,7 @@ export function ProfileModal({ user, onClose, onProfileUpdated }: ProfileModalPr
         
         <div className="modal-icon" style={{ overflow: 'hidden', padding: photoPreview ? 0 : undefined }}>
           {photoPreview ? (
-            <img src={photoPreview} alt="Profil" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={resolveMediaUrl(photoPreview) ?? ""} alt="Profil" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
             <UserRound size={20} />
           )}
@@ -141,7 +141,7 @@ export function ProfileModal({ user, onClose, onProfileUpdated }: ProfileModalPr
             </div>
             
             <div className="modal-actions" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
-              <button type="button" className="outline-button" onClick={() => { setIsEditing(false); setPhotoPreview(user?.photo_profil || null); setPhotoFile(null); }} disabled={loading}>
+              <button type="button" className="outline-button" onClick={() => { setIsEditing(false); setPhotoPreview(getUserPhotoSrc(user)); setPhotoFile(null); }} disabled={loading}>
                 Annuler
               </button>
               <button type="submit" className="primary-button" disabled={loading} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

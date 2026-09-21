@@ -50,6 +50,7 @@ class Paiement(models.Model):
     date_echeance = models.DateField(
         "Date d'échéance",
         editable=False,
+        db_index=True,
         help_text="Date à laquelle le paiement est attendu"
     )
 
@@ -152,6 +153,10 @@ class Paiement(models.Model):
         ordering = ["-date_creation"]
         verbose_name = "Paiement"
         verbose_name_plural = "Paiements"
+        indexes = [
+            models.Index(fields=["contrat", "date_echeance"]),
+            models.Index(fields=["statut", "date_echeance"]),
+        ]
         constraints = [
             models.CheckConstraint(
                 check=models.Q(montant__gte=0),

@@ -22,7 +22,21 @@ export default function BienCard({ bien, onReserver }: BienCardProps) {
   })()
 
   return (
-    <div className="panel" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div className="panel" style={{ display: 'flex', flexDirection: 'column', gap: 12, overflow: 'hidden', padding: 0 }}>
+      {/* Photo */}
+      {bien.photos && bien.photos.length > 0 ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={bien.photos[0]}
+          alt={bien.titre}
+          style={{ width: '100%', height: 180, objectFit: 'cover', display: 'block' }}
+        />
+      ) : (
+        <div style={{ width: '100%', height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9', color: '#94a3b8' }}>
+          <MapPin size={28} strokeWidth={1.2} />
+        </div>
+      )}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '0 16px 16px' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
@@ -68,6 +82,7 @@ export default function BienCard({ bien, onReserver }: BienCardProps) {
         <CalendarPlus size={16} />
         Réserver
       </button>
+      </div>
     </div>
   )
 }

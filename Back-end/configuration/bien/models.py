@@ -34,12 +34,13 @@ class Bien(models.Model):
     )
 
     titre = models.CharField("titre", max_length=200)
-    type = models.CharField("type de bien", max_length=20, choices=TypeBien.choices)
+    type = models.CharField("type de bien", max_length=20, choices=TypeBien.choices, db_index=True)
     mode_transaction = models.CharField(
         "mode de transaction",
         max_length=20,
         choices=ModeTransaction.choices,
         default=ModeTransaction.LOCATION,
+        db_index=True,
     )
     adresse = models.CharField("adresse", max_length=255)
     surface = models.FloatField("surface (m²)", validators=[validate_surface])
@@ -71,6 +72,7 @@ class Bien(models.Model):
         max_length=20,
         choices=StatutBien.choices,
         default=StatutBien.DISPONIBLE,
+        db_index=True,
     )
     photos = models.JSONField(
         "photos",

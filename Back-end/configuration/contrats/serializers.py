@@ -150,7 +150,7 @@ class ContratListSerializer(serializers.ModelSerializer):
         if not self.instance:
             self.fields['bien'].queryset = Bien.objects.filter(
                 statut=Bien.StatutBien.DISPONIBLE
-            ).select_related('proprietaire__user')
+            ).select_related('proprietaire__user').defer('photos')
 
 
 # ------------------------------------------------------------------

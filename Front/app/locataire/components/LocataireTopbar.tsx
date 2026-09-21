@@ -11,10 +11,12 @@ interface LocataireTopbarProps {
 }
 
 import { getUserFullName, getUserInitials } from './userUtils';
+import { getUserPhotoSrc } from '@/lib/api';
 
 export function LocataireTopbar({ setMobileNav, setShowProfile, activeLabel, user }: LocataireTopbarProps) {
   const fullName = getUserFullName(user);
   const initials = getUserInitials(user);
+  const photoSrc = getUserPhotoSrc(user);
 
   return (
     <header className="topbar">
@@ -31,8 +33,8 @@ export function LocataireTopbar({ setMobileNav, setShowProfile, activeLabel, use
           </button>
         </div>
         <button className="top-user top-user-button icon-button" onClick={() => setShowProfile(true)}>
-          {user?.photo_profil ? (
-            <img src={user.photo_profil} alt={fullName} className="user-initial" style={{ padding: 0, objectFit: 'cover' }} />
+          {photoSrc ? (
+            <img src={photoSrc} alt={fullName} className="user-initial" style={{ padding: 0, objectFit: 'cover' }} />
           ) : (
             <div className="user-initial blue">{initials}</div>
           )}

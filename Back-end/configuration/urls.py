@@ -27,3 +27,7 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    # En production (gunicorn/K8s), Django doit aussi servir /media/
+    # (l'Ingress route déjà /media vers le backend).
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

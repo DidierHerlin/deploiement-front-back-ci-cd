@@ -51,7 +51,7 @@ class ContratViewSet(viewsets.ModelViewSet):
         response['Content-Disposition'] = f'inline; filename="Contrat_Bail_{nom_locataire}_{nom_bien}.pdf"'
         return response
 
-    queryset = Contrat.objects.select_related("bien", "locataire", "locataire__user")
+    queryset = Contrat.objects.select_related("bien", "locataire", "locataire__user").defer("bien__photos")
     serializer_class = ContratSerializer
     permission_classes = [permissions.IsAuthenticated, ContratPermission]
     filterset_fields = ["statut", "type_contrat", "bien", "locataire"]
@@ -109,7 +109,7 @@ class ContratViewSet(viewsets.ModelViewSet):
             return Response({"error": "bien_id est requis."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            bien = Bien.objects.get(id=bien_id, statut=Bien.StatutBien.DISPONIBLE)
+            bien = Bien.objects.defer("photos").get(id=bien_id, statut=Bien.StatutBien.DISPONIBLE)
         except (Bien.DoesNotExist, ValueError, TypeError):
             return Response(
                 {"error": "Bien non trouvé ou indisponible."}, status=status.HTTP_404_NOT_FOUND
@@ -187,19 +187,19 @@ class ContratViewSet(viewsets.ModelViewSet):
             contrats = Contrat.objects.filter(
                 type_contrat=Contrat.TypeContrat.LOCATION,
                 statut=Contrat.StatutContrat.ACTIF
-            ).select_related("bien", "locataire__user")
+            ).select_related("bien", "locataire__user").defer("bien__photos")
         elif user.role == Utilisateur.Role.LOCATAIRE:
             contrats = Contrat.objects.filter(
                 type_contrat=Contrat.TypeContrat.LOCATION,
                 statut=Contrat.StatutContrat.ACTIF,
                 locataire__user=user
-            ).select_related("bien", "locataire__user")
+            ).select_related("bien", "locataire__user").defer("bien__photos")
         elif user.role == Utilisateur.Role.PROPRIETAIRE:
             contrats = Contrat.objects.filter(
                 type_contrat=Contrat.TypeContrat.LOCATION,
                 statut=Contrat.StatutContrat.ACTIF,
                 bien__proprietaire__user=user
-            ).select_related("bien", "locataire__user")
+            ).select_related("bien", "locataire__user").defer("bien__photos")
         else:
             return Response({"error": "Permission refusǸe."}, status=status.HTTP_403_FORBIDDEN)
 
