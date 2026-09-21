@@ -22,11 +22,12 @@ const initialProperties: Property[] = [
 ]
 
 import { useEffect } from 'react'
-import { getBiens, createBien, updateBien } from '@/lib/api'
+import { getBiens, createBien, updateBien, deleteBien } from '@/lib/api'
 
 export default function AgentBiensPage() {
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('Tous les statuts')
   const [type, setType] = useState('Tous les types')
@@ -35,6 +36,7 @@ export default function AgentBiensPage() {
 
   const fetchProperties = () => {
     setLoading(true)
+    setLoadError(null)
     getBiens().then(data => {
       setProperties(data.map((b, i) => {
         const tones = ['sage', 'sand', 'blue', 'clay', 'olive', 'cream']
@@ -59,7 +61,7 @@ export default function AgentBiensPage() {
           photos: b.photos || []
         }
       }))
-    }).catch(console.error).finally(() => setLoading(false))
+    }).catch((e) => setLoadError(e.message || 'Chargement impossible')).finally(() => setLoading(false))
   }
 
   useEffect(() => {
@@ -133,10 +135,48 @@ export default function AgentBiensPage() {
     }
   }
 
-  const remove = (id: number) => {
-    // There is no delete endpoint mapped yet, we just filter it locally for now or we could add deleteBien
-    setProperties((items) => items.filter((item) => item.id !== id))
-    showToast('Bien supprimé du parc (localement)')
+  const remove = async (id: number) => {
+    try {
+      await deleteBien(id)
+      setProperties((items) => items.filter((item) => item.id !== id))
+      showToast('Bien supprimé du parc')
+    } catch {
+      setProperties((items) => items.filter((item) => item.id !== id))
+      showToast('Bien retiré localement (API indisponible)')
+    }
+  }
+
+  if (loading) {
+    return (
+      <>
+        <BiensHeader onAdd={() => setModal('new')} />
+        <div className="agent-skeleton-grid" aria-label="Chargement des biens">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div className="agent-skeleton" key={i}>
+              <div className="sk-media" />
+              <div className="sk-body">
+                <div className="sk-line" style={{ width: '70%' }} />
+                <div className="sk-line" style={{ width: '90%' }} />
+                <div className="sk-line" style={{ width: '50%' }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <>
+        <BiensHeader onAdd={() => setModal('new')} />
+        <div className="agent-empty">
+          <h2>Impossible de charger les biens</h2>
+          <p>{loadError}</p>
+          <button className="agent-btn agent-btn-primary" onClick={fetchProperties}>Réessayer</button>
+        </div>
+      </>
+    )
   }
 
   return (
@@ -157,7 +197,7 @@ export default function AgentBiensPage() {
 
       <BiensFooter />
 
-      {toast && <div className="toast"><Check size={16} /> {toast}</div>}
+      {toast && <div className="agent-toast"><Check size={16} /> {toast}</div>}
     </>
   )
 }

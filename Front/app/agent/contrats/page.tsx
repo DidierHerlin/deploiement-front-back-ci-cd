@@ -22,94 +22,91 @@ export default function AgentContratsPage() {
   const filtered = contrats.filter((c) => {
     const q = search.toLowerCase()
     return String(c.id).includes(q) || String(c.bien).includes(q) || String(c.locataire).includes(q)
+      || (c.bien_titre ?? '').toLowerCase().includes(q)
+      || `${c.locataire_prenoms ?? ''} ${c.locataire_nom ?? ''}`.toLowerCase().includes(q)
   })
 
   return (
     <>
-      <section className="welcome" style={{ padding: '28px 20px 24px 20px', marginBottom: 24 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', width: '100%' }}>
-          <div>
-            <p className="eyebrow">DOCUMENTS</p>
-            <h1>Gestion des contrats</h1>
-            <p className="subtitle">Consultez, ajoutez et modifiez les baux et contrats de vente.</p>
-          </div>
-          <button 
-            onClick={() => router.push('/agent/contrats/ajouter')}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 8, border: 'none', background: 'var(--primary)', color: 'var(--primary-foreground)', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}
-          >
+      <div className="agent-head">
+        <div>
+          <p className="eyebrow">DOCUMENTS</p>
+          <h1>Gestion des contrats</h1>
+          <p className="subtitle">Consultez, ajoutez et modifiez les baux et contrats de vente.</p>
+        </div>
+        <div className="agent-head-actions">
+          <button className="agent-btn agent-btn-primary" onClick={() => router.push('/agent/contrats/ajouter')}>
             <Plus size={16} /> Nouveau contrat
           </button>
         </div>
-      </section>
-
-      <div style={{ padding: '0 20px', paddingBottom: '40px' }}>
-        <article className="panel">
-          <div className="panel-header" style={{ borderBottom: '1px solid var(--border)', paddingBottom: 16, marginBottom: 16 }}>
-            <div className="title-with-count" style={{ width: '100%', maxWidth: 400 }}>
-              <div style={{ position: 'relative', width: '100%' }}>
-                <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--muted-foreground)' }} />
-                <input
-                  type="text"
-                  placeholder="Rechercher par ID de bien ou de locataire..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px 10px 36px',
-                    borderRadius: 8,
-                    border: '1px solid var(--border)',
-                    background: 'var(--background)',
-                    color: 'var(--foreground)',
-                    outline: 'none',
-                    fontSize: 13
-                  }}
-                />
-              </div>
-            </div>
-            <span className="count-badge blue">{filtered.length}</span>
-          </div>
-          
-          {loading ? (
-            <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted-foreground)' }}>Chargement des contrats...</div>
-          ) : error ? (
-            <div style={{ padding: 40, textAlign: 'center', color: 'var(--destructive)' }}>{error}</div>
-          ) : filtered.length === 0 ? (
-            <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted-foreground)' }}>Aucun contrat trouvé.</div>
-          ) : (
-            <div className="list">
-              {filtered.map((contrat, i) => {
-                const tone = contrat.type_contrat === 'LOCATION' ? 'blue' : 'gold';
-                return (
-                  <div className="list-row" key={contrat.id} onClick={() => router.push(`/agent/contrats/${contrat.id}`)} style={{ cursor: 'pointer' }}>
-                    <div className={`person-avatar ${tone}-avatar`}>
-                      <FileText size={14} />
-                    </div>
-                    
-                    <div className="row-main">
-                      <b>{contrat.type_contrat === 'LOCATION' ? 'Bail de location' : 'Contrat de vente'}</b>
-                      <span>ID: #{contrat.id}</span>
-                    </div>
-                    
-                    <div className="row-main" style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--foreground)' }}>
-                        <Calendar size={14} style={{ color: 'var(--muted-foreground)' }} />
-                        Du {new Date(contrat.date_debut).toLocaleDateString()}
-                      </div>
-                      <div style={{ fontSize: 12, color: 'var(--muted-foreground)', marginTop: 2 }}>
-                        Bien #{contrat.bien} • Locataire #{contrat.locataire}
-                      </div>
-                    </div>
-                    
-                    <button className="row-more" aria-label={`Détails du contrat`}>
-                      <ChevronRight size={18} />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </article>
       </div>
+
+      <article className="panel">
+        <div className="agent-toolbar">
+          <div className="agent-search">
+            <Search size={16} />
+            <input
+              type="text"
+              placeholder="Rechercher (bien, locataire, n° contrat)..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label="Rechercher un contrat"
+            />
+          </div>
+          <span className="agent-badge neutre">{filtered.length} contrat{filtered.length > 1 ? 's' : ''}</span>
+        </div>
+
+        {loading ? (
+          <div className="agent-loading">Chargement des contrats...</div>
+        ) : error ? (
+          <div className="agent-empty">
+            <h2>Chargement impossible</h2>
+            <p>{error}</p>
+            <button className="agent-btn agent-btn-primary" onClick={() => window.location.reload()}>Réessayer</button>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="agent-empty">
+            <FileText size={30} />
+            <h2>Aucun contrat trouvé</h2>
+            <p>Créez votre premier contrat ou ajustez la recherche.</p>
+            <button className="agent-btn agent-btn-primary" onClick={() => router.push('/agent/contrats/ajouter')}>
+              <Plus size={15} /> Nouveau contrat
+            </button>
+          </div>
+        ) : (
+          <div className="agent-list">
+            {filtered.map((contrat) => {
+              const isLocation = contrat.type_contrat === 'LOCATION'
+              return (
+                <div className="agent-row clickable" key={contrat.id} onClick={() => router.push(`/agent/contrats/${contrat.id}`)}>
+                  <div className={`agent-avatar ${isLocation ? 'blue' : 'gold'}`}>
+                    <FileText size={15} />
+                  </div>
+
+                  <div className="agent-row-main">
+                    <b>{isLocation ? 'Bail de location' : 'Contrat de vente'}</b>
+                    <span>Contrat #{contrat.id} • Bien #{contrat.bien} • Locataire #{contrat.locataire}</span>
+                  </div>
+
+                  <div className="agent-row-main">
+                    <div className="agent-row-meta">
+                      <Calendar size={14} style={{ color: 'var(--muted-foreground)' }} />
+                      {contrat.date_debut ? `Du ${new Date(contrat.date_debut).toLocaleDateString('fr-FR')}` : 'Date à définir'}
+                    </div>
+                    <div className="agent-row-sub">{contrat.bien_titre || contrat.locataire_nom ? `${contrat.bien_titre ?? ''}${contrat.bien_titre && (contrat.locataire_nom || contrat.locataire_prenoms) ? ' • ' : ''}${[contrat.locataire_prenoms, contrat.locataire_nom].filter(Boolean).join(' ')}` : `Créé le ${new Date(contrat.date_creation).toLocaleDateString('fr-FR')}`}</div>
+                  </div>
+
+                  <span className={`agent-badge ${isLocation ? 'location' : 'achat'}`}>{isLocation ? 'Location' : 'Achat'}</span>
+                  <span className={`agent-badge ${contrat.statut === 'ACTIF' ? 'actif' : 'neutre'}`}>{contrat.statut || 'N/A'}</span>
+                  <button className="agent-row-chev" aria-label="Détails du contrat">
+                    <ChevronRight size={18} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </article>
     </>
   )
 }

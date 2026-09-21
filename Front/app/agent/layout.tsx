@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react'
 import { LayoutDashboard, Users, Building2, User, FileText, CircleDollarSign, CalendarCheck } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import { getProfil, UserProfil } from '@/lib/api'
+import './agent.css'
 
 const agentNavItems = [
   { label: 'Vue d\'ensemble', icon: LayoutDashboard, href: '/agent/dashboard' },
   { label: 'Biens immobiliers', icon: Building2, href: '/agent/biens' },
-  { label: 'Locataires', icon: Users, href: '/agent/locataires', badge: '3' },
+  { label: 'Locataires', icon: Users, href: '/agent/locataires' },
   { label: 'Réservations', icon: CalendarCheck, href: '/agent/reservations' },
   { label: 'Baux & contrats', icon: FileText, href: '/agent/contrats' },
   { label: 'Finances', icon: CircleDollarSign, href: '/agent/paiements' },

@@ -34,7 +34,6 @@ export default function ContratForm({ initialData, onSubmit, onCancel, isSubmitt
       .then(([b, l]) => {
         setBiens(b)
         setLocataires(l)
-        // Auto-select first item if new form
         setForm(prev => {
           let next = { ...prev }
           if (!initialData?.bien && b.length > 0) {
@@ -43,8 +42,7 @@ export default function ContratForm({ initialData, onSubmit, onCancel, isSubmitt
           if (!initialData?.locataire && l.length > 0) {
             next.locataire = l[0].id
           }
-          
-          // Auto-calculate financial fields
+
           const selectedBien = b.find(bien => bien.id === next.bien)
           if (selectedBien) {
             if (next.type_contrat === 'ACHAT' && !initialData?.prix) {
@@ -68,25 +66,21 @@ export default function ContratForm({ initialData, onSubmit, onCancel, isSubmitt
     setForm(prev => ({ ...prev, [key]: value }))
   }
 
-  if (loadingContext) return <div className="p-8 text-center text-gray-500">Chargement du formulaire...</div>
+  if (loadingContext) return <div className="agent-loading">Chargement du formulaire...</div>
 
   return (
-    <div className="panel" style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <div className="modal-header" style={{ marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
-        <div>
-          <p className="section-kicker">CONTRATS</p>
-          <h2 id="form-title" style={{ fontSize: 20, fontWeight: 700 }}>{title}</h2>
-          <p style={{ fontSize: 13, color: 'var(--muted-foreground)' }}>Renseignez les informations du contrat.</p>
-        </div>
+    <div className="panel" style={{ maxWidth: 820, margin: '0 auto' }}>
+      <div className="agent-panel-head" style={{ borderBottom: '1px solid var(--border)', paddingBottom: 16 }}>
+        <p className="eyebrow">CONTRATS</p>
+        <h2 style={{ fontSize: 20, fontWeight: 750, margin: '4px 0' }}>{title}</h2>
+        <p style={{ fontSize: 12.5, color: 'var(--muted-foreground)', margin: 0 }}>Renseignez les informations du contrat.</p>
       </div>
-      
+
       <form onSubmit={(e) => { e.preventDefault(); onSubmit(form) }}>
-        <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
-          
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, fontWeight: 500 }}>
-            Type de contrat
-            <select 
-              value={form.type_contrat} 
+        <div className="agent-form-grid">
+          <label className="agent-field">Type de contrat
+            <select
+              value={form.type_contrat}
               onChange={(e) => {
                 const type = e.target.value as "LOCATION" | "ACHAT"
                 setForm(prev => {
@@ -111,17 +105,15 @@ export default function ContratForm({ initialData, onSubmit, onCancel, isSubmitt
                   return next
                 })
               }}
-              style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)' }}
             >
               <option value="LOCATION">Location</option>
               <option value="ACHAT">Achat/Vente</option>
             </select>
           </label>
 
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, fontWeight: 500 }}>
-            Bien
-            <select 
-              value={form.bien} 
+          <label className="agent-field">Bien
+            <select
+              value={form.bien}
               onChange={(e) => {
                 const bienId = Number(e.target.value)
                 setForm(prev => {
@@ -144,26 +136,22 @@ export default function ContratForm({ initialData, onSubmit, onCancel, isSubmitt
                 })
               }}
               required
-              style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)' }}
             >
               <option value={0} disabled>Sélectionner un bien</option>
               {biens.map(b => (
                 <option key={b.id} value={b.id}>{b.titre} - {b.adresse}</option>
               ))}
-              {/* Fallback in case of edit where the 'bien' is not in available list anymore */}
               {initialData?.bien && !biens.find(b => b.id === initialData.bien) && (
                 <option value={initialData.bien}>Bien #{initialData.bien} (Actuel)</option>
               )}
             </select>
           </label>
 
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, fontWeight: 500 }}>
-            Locataire
-            <select 
-              value={form.locataire} 
+          <label className="agent-field">Locataire
+            <select
+              value={form.locataire}
               onChange={(e) => update('locataire', Number(e.target.value))}
               required
-              style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)' }}
             >
               <option value={0} disabled>Sélectionner un locataire</option>
               {locataires.map(l => (
@@ -173,12 +161,10 @@ export default function ContratForm({ initialData, onSubmit, onCancel, isSubmitt
           </label>
 
           {form.type_contrat === "ACHAT" && (
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, fontWeight: 500 }}>
-              Type de paiement
-              <select 
-                value={form.type_paiement_achat || 'TOTALITE'} 
+            <label className="agent-field">Type de paiement
+              <select
+                value={form.type_paiement_achat || 'TOTALITE'}
                 onChange={(e) => update('type_paiement_achat', e.target.value)}
-                style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)' }}
               >
                 <option value="TOTALITE">Totalité (Comptant - 100%)</option>
                 <option value="PARTIEL">Partiel (50% puis 5x10%)</option>
@@ -187,94 +173,78 @@ export default function ContratForm({ initialData, onSubmit, onCancel, isSubmitt
           )}
 
           {form.type_contrat === "LOCATION" && (
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, fontWeight: 500 }}>
-              Date de début
-              <input 
-                type="date" 
-                required 
-                value={form.date_debut || ''} 
-                onChange={(e) => update('date_debut', e.target.value)} 
-                style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)' }}
+            <label className="agent-field">Date de début
+              <input
+                type="date"
+                required
+                value={form.date_debut || ''}
+                onChange={(e) => update('date_debut', e.target.value)}
               />
             </label>
           )}
 
           {form.type_contrat === "LOCATION" && (
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, fontWeight: 500 }}>
-              Date de fin (optionnelle)
-              <input 
-                type="date" 
-                value={form.date_fin || ''} 
-                onChange={(e) => update('date_fin', e.target.value)} 
-                style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)' }}
+            <label className="agent-field">Date de fin (optionnelle)
+              <input
+                type="date"
+                value={form.date_fin || ''}
+                onChange={(e) => update('date_fin', e.target.value)}
               />
             </label>
           )}
 
           {form.type_contrat === "LOCATION" && (
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, fontWeight: 500 }}>
-              Loyer mensuel (Ar)
-              <input 
-                type="number" 
-                min="0" 
-                value={form.loyer || ''} 
-                onChange={(e) => update('loyer', e.target.value)} 
+            <label className="agent-field">Loyer mensuel (Ar)
+              <input
+                type="number"
+                min="0"
+                value={form.loyer || ''}
+                onChange={(e) => update('loyer', e.target.value)}
                 readOnly
                 placeholder="Ex. 850000"
-                style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--muted)', cursor: 'not-allowed', color: 'var(--muted-foreground)' }}
                 title="Le loyer est automatiquement récupéré à partir du bien sélectionné."
               />
+              <span className="hint">Récupéré automatiquement depuis le bien.</span>
             </label>
           )}
 
           {form.type_contrat === "LOCATION" && (
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, fontWeight: 500 }}>
-              Dépôt de garantie (Ar)
-              <input 
-                type="number" 
-                min="0" 
-                value={form.depot_garantie || ''} 
-                onChange={(e) => update('depot_garantie', e.target.value)} 
+            <label className="agent-field">Dépôt de garantie (Ar)
+              <input
+                type="number"
+                min="0"
+                value={form.depot_garantie || ''}
+                onChange={(e) => update('depot_garantie', e.target.value)}
                 readOnly
                 placeholder="Ex. 1700000"
-                style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--muted)', cursor: 'not-allowed', color: 'var(--muted-foreground)' }}
                 title="Le dépôt de garantie est calculé automatiquement (Loyer x 2)."
               />
+              <span className="hint">Calculé automatiquement (loyer × 2).</span>
             </label>
           )}
 
           {form.type_contrat === "ACHAT" && (
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, fontWeight: 500 }}>
-              Prix de vente (Ar)
-              <input 
-                type="number" 
-                min="0" 
-                value={form.prix || ''} 
-                onChange={(e) => update('prix', e.target.value)} 
+            <label className="agent-field">Prix de vente (Ar)
+              <input
+                type="number"
+                min="0"
+                value={form.prix || ''}
+                onChange={(e) => update('prix', e.target.value)}
                 readOnly
                 placeholder="Ex. 250000000"
-                style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--muted)', cursor: 'not-allowed', color: 'var(--muted-foreground)' }}
                 title="Le prix est automatiquement récupéré à partir du bien sélectionné."
               />
+              <span className="hint">Récupéré automatiquement depuis le bien.</span>
             </label>
           )}
-
         </div>
-        
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 32 }}>
-          <button 
-            type="button" 
-            onClick={onCancel}
-            style={{ padding: '8px 16px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', cursor: 'pointer' }}
-          >
-            Annuler
+
+        <div className="agent-modal-actions">
+          <button type="button" className="agent-btn agent-btn-ghost" onClick={onCancel}>
+            <X size={15} /> Annuler
           </button>
-          <button 
-            type="submit" 
-            disabled={isSubmitting}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 6, border: 'none', background: 'var(--primary)', color: 'var(--primary-foreground)', cursor: isSubmitting ? 'not-allowed' : 'pointer', fontWeight: 500 }}
-          >
-            <Check size={16} /> 
+          <button type="submit" className="agent-btn agent-btn-primary" disabled={isSubmitting}>
+            <Check size={16} />
             {isSubmitting ? 'Enregistrement...' : 'Enregistrer'}
           </button>
         </div>

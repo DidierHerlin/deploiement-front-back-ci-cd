@@ -1,7 +1,4 @@
-
-
-name: CI - Backend DRF
-
+name: CI - Gestion Immobilier Back-end
 on:
   push:
     branches: [main]
@@ -137,8 +134,6 @@ jobs:
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.exclusions=**/migrations/**,manage.py,**/venv/**,**/.venv/**,**/tests.py,**/test_*.py,configuration/settings.py
             -Dsonar.sourceEncoding=UTF-8
-
-#  bulid en docker et push sur docker hub
 
   docker-publish:
     needs: [backend-tests, code-quality]

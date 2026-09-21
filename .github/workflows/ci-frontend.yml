@@ -1,10 +1,4 @@
-# =============================================================================
-# CI/CD Frontend — Next.js (Gestion Immobilière)
-# =============================================================================
-# Structure : Front/ contient le projet Next.js 16 (pnpm, Node 20)
-# =============================================================================
-
-name: CI - Frontend Next.js
+name: CI - Frontend Gestion immobilier
 
 on:
   push:
@@ -22,9 +16,6 @@ permissions:
   contents: read
 
 jobs:
-  # ─────────────────────────────────────────────────────────────────────────────
-  # Job 1 : Build Next.js
-  # ─────────────────────────────────────────────────────────────────────────────
   frontend-build:
     runs-on: ubuntu-latest
 
@@ -50,9 +41,6 @@ jobs:
       - name: Build Next.js
         run: pnpm run build
 
-  # ─────────────────────────────────────────────────────────────────────────────
-  # Job 2 : Build & Push Docker (frontend)
-  # ─────────────────────────────────────────────────────────────────────────────
   docker-publish:
     needs: frontend-build
     runs-on: ubuntu-latest

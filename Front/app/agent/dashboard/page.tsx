@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Check } from 'lucide-react'
+import Link from 'next/link'
+import { Check, ArrowUpRight } from 'lucide-react'
 import { useAgentDashboard } from './hooks/useAgentDashboard'
 
 import { OccupationStats } from './components/OccupationStats'
@@ -30,11 +31,19 @@ export default function AgentDashboardPage() {
 
   return (
     <>
-      <div className="welcome-row" style={{ marginBottom: '10px' }}>
+      <div className="agent-head">
         <div>
           <p className="eyebrow">DASHBOARD AGENT</p>
-          <h1>Tableau de bord de gestion</h1>
+          <h1>Tableau de bord <span>de gestion.</span></h1>
           <p className="subtitle">Suivi de la performance locative et gestion au quotidien.</p>
+        </div>
+        <div className="agent-head-actions">
+          <Link className="agent-btn agent-btn-ghost" href="/agent/biens">
+            Voir les biens <ArrowUpRight size={15} />
+          </Link>
+          <Link className="agent-btn agent-btn-primary" href="/agent/contrats/ajouter">
+            Nouveau contrat
+          </Link>
         </div>
       </div>
 
@@ -46,21 +55,21 @@ export default function AgentDashboardPage() {
       </div>
 
       <div className="admin-grid">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', minWidth: 0 }}>
           <EstatePanel data={data} />
           <RevenueChart data={data} />
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', minWidth: 0 }}>
           <ArrearsList data={data} onToast={showToast} />
           <ContractsList data={data} />
         </div>
       </div>
 
       <PendingBanner />
-      
+
       <DashboardFooter />
 
-      {toast && <div className="toast"><Check size={16} /> {toast}</div>}
+      {toast && <div className="agent-toast"><Check size={16} /> {toast}</div>}
     </>
   )
 }

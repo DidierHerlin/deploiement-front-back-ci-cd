@@ -4,7 +4,7 @@ import { useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { creerContrat, CreerContratPayload } from "@/lib/api"
 import ContratForm from "../components/ContratForm"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, ClipboardList } from "lucide-react"
 
 function AjouterContratContent() {
   const router = useRouter()
@@ -12,7 +12,6 @@ function AjouterContratContent() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Préremplissage depuis une réservation
   const bienParam = searchParams.get("bien")
   const locataireParam = searchParams.get("locataire")
   const typeContratParam = searchParams.get("type_contrat")
@@ -38,28 +37,26 @@ function AjouterContratContent() {
   }
 
   return (
-    <div style={{ padding: '24px 20px', maxWidth: '900px', margin: '0 auto' }}>
-      <button 
-        onClick={() => router.back()}
-        style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', color: 'var(--muted-foreground)', cursor: 'pointer', marginBottom: 24, fontSize: 13, fontWeight: 500 }}
-      >
+    <div style={{ maxWidth: 880, margin: '0 auto' }}>
+      <button className="agent-back" onClick={() => router.back()}>
         <ArrowLeft size={16} /> Retour aux contrats
       </button>
 
       {reservationId && (
-        <div style={{ padding: 12, background: '#dbeafe', color: '#1e40af', borderRadius: 8, marginBottom: 16, fontSize: 13 }}>
-          📋 Ce contrat est créé à partir de la réservation #{reservationId}. Les informations ont été préremplies automatiquement.
+        <div className="agent-info-box blue">
+          <strong><ClipboardList size={14} style={{ display: 'inline', verticalAlign: '-2px', marginRight: 6 }} />Contrat depuis la réservation #{reservationId}</strong>
+          <div>Les informations ont été préremplies automatiquement.</div>
         </div>
       )}
 
       {error && (
-        <div style={{ padding: 16, background: 'var(--destructive)', color: 'white', borderRadius: 8, marginBottom: 24, fontSize: 13 }}>
+        <div className="agent-info-box red" role="alert">
           {error}
         </div>
       )}
 
-      <ContratForm 
-        title={reservationId ? "Nouveau Contrat (depuis réservation)" : "Nouveau Contrat"}
+      <ContratForm
+        title={reservationId ? "Nouveau contrat (depuis réservation)" : "Nouveau contrat"}
         initialData={Object.keys(initialData).length > 0 ? initialData : undefined}
         onSubmit={handleSubmit}
         onCancel={() => router.back()}
@@ -71,7 +68,7 @@ function AjouterContratContent() {
 
 export default function AjouterContratPage() {
   return (
-    <Suspense fallback={<div style={{ padding: '3rem', textAlign: 'center' }}>Chargement...</div>}>
+    <Suspense fallback={<div className="agent-loading">Chargement...</div>}>
       <AjouterContratContent />
     </Suspense>
   )

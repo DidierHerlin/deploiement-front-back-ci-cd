@@ -2,8 +2,8 @@
 
 export default function BiensFooter() {
   return (
-    <footer className="footer">
-      <span>Dernière mise à jour : il y a 4 min</span>
+    <footer className="agent-footer">
+      <span>Parc synchronisé avec le back-office</span>
       <span className="live"><i /> Données à jour</span>
     </footer>
   )

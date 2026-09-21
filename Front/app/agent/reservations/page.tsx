@@ -1,24 +1,19 @@
 'use client'
 
-import '@/app/admin/admin.css'
 import { useState, useEffect } from 'react'
-import { Eye, Send, FileText, CalendarCheck, X, Search } from 'lucide-react'
+import { Eye, Send, FileText, CalendarCheck, X, Search, Inbox } from 'lucide-react'
 import { getReservations, repondreReservation, ReservationData } from '@/lib/api'
 import { useRouter } from 'next/navigation'
 
 function StatutBadge({ statut }: { statut: string }) {
-  const config: Record<string, { bg: string; color: string; label: string }> = {
-    EN_ATTENTE: { bg: '#fef3c7', color: '#92400e', label: 'En attente' },
-    TRAITEE: { bg: '#dcfce7', color: '#166534', label: 'Traitée' },
-    ANNULEE: { bg: '#fef2f2', color: '#dc2626', label: 'Annulée' },
-  }
-  const c = config[statut] || config.EN_ATTENTE
-  return <span style={{ padding: '2px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600, background: c.bg, color: c.color }}>{c.label}</span>
+  const cls = statut === 'TRAITEE' ? 'valide' : statut === 'ANNULEE' ? 'annulee' : 'attente'
+  const label = statut === 'TRAITEE' ? 'Traitée' : statut === 'ANNULEE' ? 'Annulée' : 'En attente'
+  return <span className={`agent-badge ${cls}`}>{label}</span>
 }
 
 function TypeBadge({ type }: { type: string }) {
   const isLocation = type === 'LOCATION'
-  return <span style={{ padding: '2px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600, background: isLocation ? '#dbeafe' : '#fef3c7', color: isLocation ? '#1e40af' : '#92400e' }}>{isLocation ? 'Location' : 'Achat'}</span>
+  return <span className={`agent-badge ${isLocation ? 'location' : 'achat'}`}>{isLocation ? 'Location' : 'Achat'}</span>
 }
 
 export default function AgentReservationsPage() {
@@ -35,6 +30,7 @@ export default function AgentReservationsPage() {
 
   const fetchData = () => {
     setLoading(true)
+    setError(null)
     getReservations()
       .then(setReservations)
       .catch((e) => setError(e.message))
@@ -42,6 +38,8 @@ export default function AgentReservationsPage() {
   }
 
   useEffect(() => { fetchData() }, [])
+
+  const pendingCount = reservations.filter(r => r.statut === 'EN_ATTENTE').length
 
   const filtered = reservations.filter((r) => {
     const matchSearch = `${r.locataire_nom || ''} ${r.locataire_prenoms || ''} ${r.bien_titre || ''}`.toLowerCase().includes(search.toLowerCase())
@@ -72,163 +70,170 @@ export default function AgentReservationsPage() {
   }
 
   return (
-    <div>
-      {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <p className="section-kicker">GESTION</p>
-        <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Réservations</h1>
-        <p style={{ fontSize: 13, color: 'var(--muted-foreground)' }}>
-          Consultez et gérez les réservations soumises par les locataires.
-        </p>
-      </div>
-
-      {/* Toolbar */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
-        <div style={{ flex: 1, minWidth: 200, position: 'relative' }}>
-          <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--muted-foreground)' }} />
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher..." style={{ width: '100%', padding: '8px 12px 8px 32px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', fontSize: 13 }} />
+    <>
+      <div className="agent-head">
+        <div>
+          <p className="eyebrow">GESTION</p>
+          <h1>Réservations</h1>
+          <p className="subtitle">Consultez et gérez les réservations soumises par les locataires.</p>
         </div>
-        <select value={filterStatut} onChange={(e) => setFilterStatut(e.target.value)} style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', fontSize: 13 }}>
-          <option value="Tous">Tous les statuts</option>
-          <option value="EN_ATTENTE">En attente</option>
-          <option value="TRAITEE">Traitée</option>
-          <option value="ANNULEE">Annulée</option>
-        </select>
+        <div className="agent-head-actions">
+          <span className={`agent-badge ${pendingCount > 0 ? 'attente' : 'valide'}`}>
+            {pendingCount > 0 ? `${pendingCount} en attente` : 'Aucune en attente'}
+          </span>
+        </div>
       </div>
 
-      {/* Table */}
-      {loading ? (
-        <div style={{ padding: '3rem', textAlign: 'center' }}><p>Chargement...</p></div>
-      ) : error ? (
-        <div style={{ padding: '3rem', textAlign: 'center', color: 'red' }}><p>{error}</p></div>
-      ) : (
-        <div className="panel" style={{ overflow: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--muted-foreground)', fontSize: 12 }}>Locataire</th>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--muted-foreground)', fontSize: 12 }}>Bien</th>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--muted-foreground)', fontSize: 12 }}>Type</th>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--muted-foreground)', fontSize: 12 }}>Statut</th>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--muted-foreground)', fontSize: 12 }}>Date</th>
-                <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600, color: 'var(--muted-foreground)', fontSize: 12 }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: 'var(--muted-foreground)' }}>Aucune réservation trouvée.</td></tr>
-              ) : filtered.map((r) => (
-                <tr key={r.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td style={{ padding: '10px 12px' }}>{r.locataire_prenoms} {r.locataire_nom}</td>
-                  <td style={{ padding: '10px 12px' }}>{r.bien_titre}</td>
-                  <td style={{ padding: '10px 12px' }}><TypeBadge type={r.type_reservation} /></td>
-                  <td style={{ padding: '10px 12px' }}><StatutBadge statut={r.statut} /></td>
-                  <td style={{ padding: '10px 12px' }}>{new Date(r.date_creation).toLocaleDateString('fr-FR')}</td>
-                  <td style={{ padding: '10px 12px', textAlign: 'center' }}>
-                    <button onClick={() => { setSelected(r); setReponse('') }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)' }} title="Voir le détail">
-                      <Eye size={16} />
-                    </button>
-                  </td>
+      <article className="panel">
+        <div className="agent-toolbar">
+          <div className="agent-search">
+            <Search size={16} />
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher (locataire, bien)..." aria-label="Rechercher une réservation" />
+          </div>
+          <select className="agent-select" value={filterStatut} onChange={(e) => setFilterStatut(e.target.value)} aria-label="Filtrer par statut">
+            <option value="Tous">Tous les statuts</option>
+            <option value="EN_ATTENTE">En attente</option>
+            <option value="TRAITEE">Traitée</option>
+            <option value="ANNULEE">Annulée</option>
+          </select>
+        </div>
+
+        {loading ? (
+          <div className="agent-loading">Chargement des réservations...</div>
+        ) : error ? (
+          <div className="agent-empty">
+            <h2>Chargement impossible</h2>
+            <p>{error}</p>
+            <button className="agent-btn agent-btn-primary" onClick={fetchData}>Réessayer</button>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="agent-empty">
+            <Inbox size={30} />
+            <h2>Aucune réservation trouvée</h2>
+            <p>Aucune demande ne correspond aux filtres actuels.</p>
+          </div>
+        ) : (
+          <div className="agent-table-wrap">
+            <table className="agent-table">
+              <thead>
+                <tr>
+                  <th>Locataire</th>
+                  <th>Bien</th>
+                  <th>Type</th>
+                  <th>Statut</th>
+                  <th>Date</th>
+                  <th className="center">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {filtered.map((r) => (
+                  <tr key={r.id}>
+                    <td><strong style={{ color: 'var(--navy)' }}>{r.locataire_prenoms} {r.locataire_nom}</strong></td>
+                    <td>{r.bien_titre}</td>
+                    <td><TypeBadge type={r.type_reservation} /></td>
+                    <td><StatutBadge statut={r.statut} /></td>
+                    <td style={{ whiteSpace: 'nowrap' }}>{new Date(r.date_creation).toLocaleDateString('fr-FR')}</td>
+                    <td className="center">
+                      <button className="agent-row-chev" style={{ margin: '0 auto' }} onClick={() => { setSelected(r); setReponse('') }} title="Voir le détail" aria-label={`Voir la réservation ${r.id}`}>
+                        <Eye size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </article>
 
-      {/* Modal détail */}
       {selected && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div className="panel" style={{ maxWidth: 640, width: '100%', maxHeight: '90vh', overflow: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700 }}>Détail de la réservation #{selected.id}</h2>
-              <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+        <div className="agent-modal-backdrop" onClick={() => setSelected(null)}>
+          <div className="agent-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+            <div className="agent-modal-head">
+              <div>
+                <p className="eyebrow">RÉSERVATION #{selected.id}</p>
+                <h2>Détail de la demande</h2>
+              </div>
+              <button className="agent-modal-close" onClick={() => setSelected(null)} aria-label="Fermer"><X size={20} /></button>
             </div>
 
-            <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
               <TypeBadge type={selected.type_reservation} />
               <StatutBadge statut={selected.statut} />
             </div>
 
-            {/* Locataire info */}
-            <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted-foreground)', marginBottom: 8 }}>👤 Locataire</h4>
-            <div style={{ background: 'var(--muted)', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 13 }}>
-              <p><strong>{selected.locataire_prenoms} {selected.locataire_nom}</strong></p>
-              <p>Email : {selected.locataire_email}</p>
-              {selected.locataire_telephone && <p>Tél : {selected.locataire_telephone}</p>}
+            <h4 className="agent-detail-label">Locataire</h4>
+            <div className="agent-info-box blue" style={{ marginBottom: 16 }}>
+              <strong>{selected.locataire_prenoms} {selected.locataire_nom}</strong>
+              <div>Email : {selected.locataire_email}</div>
+              {selected.locataire_telephone && <div>Tél : {selected.locataire_telephone}</div>}
             </div>
 
-            {/* Bien info */}
-            <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted-foreground)', marginBottom: 8 }}>🏠 Bien</h4>
-            <div style={{ background: 'var(--muted)', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 13 }}>
-              <p><strong>{selected.bien_titre}</strong></p>
-              <p>Type : {selected.bien_type} • Adresse : {selected.bien_adresse}</p>
-              {selected.bien_surface && <p>Surface : {selected.bien_surface} m²</p>}
-              {selected.bien_nombre_pieces && <p>Pièces : {selected.bien_nombre_pieces}</p>}
-              {selected.bien_loyer_mensuel && <p>Loyer : {Number(selected.bien_loyer_mensuel).toLocaleString()} Ar/mois</p>}
-              {selected.bien_prix && <p>Prix : {Number(selected.bien_prix).toLocaleString()} Ar</p>}
+            <h4 className="agent-detail-label">Bien</h4>
+            <div className="agent-info-box blue" style={{ background: '#f8fafc', borderColor: 'var(--border)', color: 'var(--navy)' }}>
+              <strong>{selected.bien_titre}</strong>
+              <div style={{ color: 'var(--muted-foreground)' }}>Type : {selected.bien_type} • Adresse : {selected.bien_adresse}</div>
+              {selected.bien_surface && <div>Surface : {selected.bien_surface} m²</div>}
+              {selected.bien_nombre_pieces && <div>Pièces : {selected.bien_nombre_pieces}</div>}
+              {selected.bien_loyer_mensuel && <div>Loyer : {Number(selected.bien_loyer_mensuel).toLocaleString('fr-FR')} Ar/mois</div>}
+              {selected.bien_prix && <div>Prix : {Number(selected.bien_prix).toLocaleString('fr-FR')} Ar</div>}
             </div>
 
-            {/* Reservation info */}
-            <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted-foreground)', marginBottom: 8 }}>📋 Réservation</h4>
-            <div style={{ background: 'var(--muted)', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 13 }}>
-              <p>Type : {selected.type_reservation === 'LOCATION' ? 'Location' : 'Achat'}</p>
-              <p>Date : {new Date(selected.date_creation).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-              {selected.commentaire && <p style={{ marginTop: 8 }}>Commentaire : « {selected.commentaire} »</p>}
+            <h4 className="agent-detail-label">Réservation</h4>
+            <div className="agent-info-box blue" style={{ background: '#f8fafc', borderColor: 'var(--border)', color: 'var(--navy)' }}>
+              <div>Type : {selected.type_reservation === 'LOCATION' ? 'Location' : 'Achat'}</div>
+              <div>Date : {new Date(selected.date_creation).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+              {selected.commentaire && <div style={{ marginTop: 8 }}>Commentaire : « {selected.commentaire} »</div>}
             </div>
 
-            {/* Actions */}
             {selected.statut === 'EN_ATTENTE' && (
               <>
-                <button
-                  onClick={() => handleGerer(selected)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 8, border: 'none', background: 'var(--primary)', color: 'var(--primary-foreground)', cursor: 'pointer', fontWeight: 600, fontSize: 13, marginBottom: 20, width: '100%', justifyContent: 'center' }}
-                >
-                  <FileText size={16} /> Gérer la réservation — Créer le contrat
+                <button className="agent-btn agent-btn-primary" onClick={() => handleGerer(selected)} style={{ width: '100%', justifyContent: 'center', marginBottom: 20 }}>
+                  <FileText size={16} /> Gérer — Créer le contrat
                 </button>
 
-                <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted-foreground)', marginBottom: 8 }}>✉️ Répondre au locataire</h4>
-                <textarea
-                  value={reponse}
-                  onChange={(e) => setReponse(e.target.value)}
-                  placeholder={
-                    selected.type_reservation === 'LOCATION'
+                <h4 className="agent-detail-label">Répondre au locataire</h4>
+                <label className="agent-field full">
+                  <textarea
+                    value={reponse}
+                    onChange={(e) => setReponse(e.target.value)}
+                    placeholder={selected.type_reservation === 'LOCATION'
                       ? "Ex : Votre réservation a été validée. Veuillez consulter votre contrat de bail."
-                      : "Ex : Votre réservation a été validée. Veuillez consulter votre contrat de vente."
-                  }
-                  rows={3}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', resize: 'vertical', fontSize: 13, marginBottom: 12 }}
-                />
-                <button
-                  onClick={handleRepondre}
-                  disabled={sending || !reponse.trim()}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 6, border: 'none', background: '#16a34a', color: 'white', cursor: (sending || !reponse.trim()) ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: 13 }}
-                >
-                  <Send size={14} />
-                  {sending ? 'Envoi...' : 'Envoyer la réponse et traiter'}
-                </button>
+                      : "Ex : Votre réservation a été validée. Veuillez consulter votre contrat de vente."}
+                    rows={3}
+                  />
+                </label>
+                <div className="agent-modal-actions" style={{ borderTop: 0, paddingTop: 12, marginTop: 12 }}>
+                  <button className="agent-btn agent-btn-ghost" onClick={() => setSelected(null)}>Fermer</button>
+                  <button className="agent-btn agent-btn-success" onClick={handleRepondre} disabled={sending || !reponse.trim()}>
+                    <Send size={14} />
+                    {sending ? 'Envoi...' : 'Envoyer et traiter'}
+                  </button>
+                </div>
               </>
             )}
 
             {selected.statut === 'TRAITEE' && selected.reponse_admin && (
-              <div style={{ padding: 12, background: '#f0fdf4', borderRadius: 6, borderLeft: '3px solid #22c55e', marginTop: 8 }}>
-                <p style={{ fontSize: 12, fontWeight: 600, color: '#166534', marginBottom: 4 }}>✅ Réponse envoyée</p>
-                <p style={{ fontSize: 13, color: '#15803d' }}>{selected.reponse_admin}</p>
+              <div className="agent-info-box green">
+                <strong>Réponse envoyée</strong>
+                <div>{selected.reponse_admin}</div>
               </div>
             )}
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
-              <button onClick={() => setSelected(null)} style={{ padding: '8px 16px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', cursor: 'pointer', fontSize: 13 }}>Fermer</button>
-            </div>
+            {selected.statut !== 'EN_ATTENTE' && (
+              <div className="agent-modal-actions">
+                <button className="agent-btn agent-btn-ghost" onClick={() => setSelected(null)}>Fermer</button>
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {toast && (
-        <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 1100, display: 'flex', alignItems: 'center', gap: 8, background: '#166534', color: 'white', padding: '10px 20px', borderRadius: 8, fontSize: 13, fontWeight: 500, boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
+        <div className="agent-toast">
           <CalendarCheck size={16} /> {toast}
         </div>
       )}
-    </div>
+    </>
   )
 }
