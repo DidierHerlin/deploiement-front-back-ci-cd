@@ -28,8 +28,13 @@ export function DashboardDocumentsCard({ contrat, paiements }: DashboardDocument
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-    } catch (e) {
-      alert("Erreur de téléchargement");
+    } catch (e: any) {
+      const isIDM = e.message && (e.message.includes('Failed to fetch') || e.message.includes('NetworkError') || e.name === 'TypeError');
+      if (!isIDM) { 
+        alert("Erreur de téléchargement"); 
+      } else { 
+        console.log("Téléchargement intercepté"); 
+      }
     }
   };
 
@@ -47,8 +52,13 @@ export function DashboardDocumentsCard({ contrat, paiements }: DashboardDocument
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-    } catch (e) {
-      alert("Erreur de téléchargement");
+    } catch (e: any) {
+      const isIDM = e.message && (e.message.includes('Failed to fetch') || e.message.includes('NetworkError') || e.name === 'TypeError');
+      if (!isIDM) { 
+        alert("Erreur de téléchargement"); 
+      } else { 
+        console.log("Téléchargement intercepté"); 
+      }
     }
   };
 

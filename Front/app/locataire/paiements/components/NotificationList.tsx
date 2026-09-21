@@ -42,9 +42,29 @@ export function NotificationList({ notifications }: NotificationListProps) {
       }
     }
     if (notif.lien) {
-      // Si c'est un lien d'API (comme le téléchargement de quittance), on gère autrement
-      if (notif.lien.startsWith('/api/')) {
-         window.open(`http://localhost:8000${notif.lien}`, '_blank');
+      // Si c'est un lien de téléchargement (quittance, etc.), on utilise fetchBlob pour passer l'authentification et on évite les interceptions agressives (IDM)
+      if (notif.lien.includes('/quittance') || notif.lien.includes('telecharger') || notif.lien.startsWith('/api/')) {
+         try {
+           const { fetchBlob } = await import('@/lib/api');
+           const lienStr = notif.lien.replace('/api', '');
+           const blob = await fetchBlob(lienStr);
+           const url = window.URL.createObjectURL(blob);
+           const a = document.createElement('a');
+           a.style.display = 'none';
+           a.href = url;
+           a.download = `Document_${notif.id}.pdf`;
+           document.body.appendChild(a);
+           a.click();
+           window.URL.revokeObjectURL(url);
+           document.body.removeChild(a);
+         } catch (e: any) {
+           const isIDM = e.message && (e.message.includes('Failed to fetch') || e.message.includes('NetworkError') || e.name === 'TypeError');
+           if (!isIDM) {
+             alert("Erreur de téléchargement du document.");
+           } else {
+             console.log("Téléchargement intercepté par un gestionnaire externe (ex: IDM).");
+           }
+         }
       } 
       // Mapping du lien backend vers le routeur frontend du locataire
       else if (notif.lien.startsWith('/contrats/')) {

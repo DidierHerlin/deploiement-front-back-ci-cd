@@ -40,7 +40,7 @@ const notifications = [
 
 import { StatCard } from '@/proprietaire/components/StatCard'
 import '../styles/dashboard.css'
-import { getBiens, BienListItem, getPaiements, Paiement } from '@/lib/api'
+import { getBiens, BienListItem, getPaiements, Paiement, getNotifications, getEcheances, Notification } from '@/lib/api'
 
 export function ProprietaireDashboard() {
   const [active, setActive] = useState('Vue d’ensemble')
@@ -52,6 +52,8 @@ export function ProprietaireDashboard() {
   
   const [biensList, setBiensList] = useState<BienListItem[]>([])
   const [paiementsList, setPaiementsList] = useState<Paiement[]>([])
+  const [notificationsList, setNotificationsList] = useState<Notification[]>([])
+  const [echeancesList, setEcheancesList] = useState<any[]>([])
 
   useEffect(() => {
     getProfil()
@@ -78,6 +80,18 @@ export function ProprietaireDashboard() {
       .catch(err => {
         console.error("Erreur chargement paiements", err)
       })
+
+    getNotifications()
+      .then(data => {
+        if (Array.isArray(data)) setNotificationsList(data)
+      })
+      .catch(err => console.error("Erreur chargement notifications", err))
+
+    getEcheances()
+      .then(data => {
+        setEcheancesList(data || [])
+      })
+      .catch(err => console.error("Erreur chargement echeances", err))
   }, [])
 
   const filtered = biensList.filter((item) => `${item.titre} ${item.adresse}`.toLowerCase().includes(query.toLowerCase()))
@@ -141,10 +155,50 @@ export function ProprietaireDashboard() {
       <div className="welcome-row"><div><p className="eyebrow">MARDI 02 JUILLET 2024</p><h1>Bonjour{userName ? ` ${userName}` : ''}, <span>voici votre patrimoine.</span></h1><p className="subtitle">Suivez vos biens, vos revenus et les événements importants en un coup d’œil.</p></div><button className="outline-button download-button"><Download size={16} />Exporter mes données</button></div>
       <div className="owner-banner"><div className="banner-icon"><Home size={19} /></div><div><strong>Bienvenue dans votre espace propriétaire</strong><p>Votre agence Horizon gère {totalBiens} bien{totalBiens > 1 ? 's' : ''} pour vous. Les informations affichées concernent uniquement votre patrimoine.</p></div><ChevronRight size={18} /></div>
       <section className="stats-grid"><StatCard icon={Building2} label="Mes biens" value={totalBiens.toString()} detail={biensDetailStr} tone="blue" /><StatCard icon={CircleDollarSign} label="Revenus mensuels" value={`${revenuCeMois.toLocaleString('fr-FR')} Ar`} detail={evolutionText} tone="green" /><StatCard icon={WalletCards} label="Taux d’occupation" value={`${tauxOccupation}%`} detail={tauxDetailStr} tone="orange" /><StatCard icon={CalendarDays} label="Prochaine échéance" value="05 juil." detail="2 loyers attendus" tone="red" /></section>
-      <div className="content-grid"><section className="panel revenue-panel"><div className="panel-header"><div><h2>Mes revenus locatifs</h2><p>Évolution des encaissements sur les 6 derniers mois</p></div><button className="select-button">6 derniers mois <ChevronDown size={14} /></button></div><div className="chart"><div className="chart-y"><span>4k</span><span>3k</span><span>2k</span><span>0</span></div><div className="chart-area"><div className="grid-lines"><i /><i /><i /><i /></div><svg viewBox="0 0 600 205" preserveAspectRatio="none" aria-label="Graphique de mes revenus"><defs><linearGradient id="ownerChartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="var(--primary)" stopOpacity=".22" /><stop offset="1" stopColor="var(--primary)" stopOpacity="0" /></linearGradient></defs><path d="M0 155 C40 150 60 120 110 130 S160 105 205 120 S260 75 300 88 S350 105 395 72 S450 65 485 42 S535 58 600 22 L600 205 L0 205Z" fill="url(#ownerChartFill)" /><path d="M0 155 C40 150 60 120 110 130 S160 105 205 120 S260 75 300 88 S350 105 395 72 S450 65 485 42 S535 58 600 22" fill="none" stroke="var(--primary)" strokeWidth="3" strokeLinecap="round" /></svg><div className="chart-labels"><span>Jan</span><span>Fév</span><span>Mar</span><span>Avr</span><span>Mai</span><span>Juin</span></div></div></div></section>
-        <section className="panel deadlines-panel"><div className="panel-header"><div><h2>Événements à venir</h2><p>Les prochaines échéances de vos biens</p></div><button className="more-button" aria-label="Plus d’options"><MoreHorizontal size={20} /></button></div><div className="deadline-list"><div className="deadline"><div className="date-block"><strong>05</strong><span>JUIL</span></div><div><strong>Loyers attendus</strong><p>2 paiements · 3 350 Ar</p></div><ChevronRight size={17} /></div><div className="deadline"><div className="date-block amber"><strong>15</strong><span>JUIL</span></div><div><strong>Fin de contrat</strong><p>Résidence Les Jardins · Lot 12</p></div><ChevronRight size={17} /></div><div className="deadline"><div className="date-block rose"><strong>22</strong><span>JUIL</span></div><div><strong>Révision de loyer</strong><p>Le Patio Central</p></div><ChevronRight size={17} /></div></div><button className="link-button">Voir mon calendrier <ArrowUpRight size={15} /></button></section></div>
+      <div className="content-grid">
+        <section className="panel revenue-panel">
+          <div className="panel-header"><div><h2>Mes revenus locatifs</h2><p>Évolution des encaissements sur les 6 derniers mois</p></div><button className="select-button">6 derniers mois <ChevronDown size={14} /></button></div>
+          <div className="chart"><div className="chart-y"><span>4k</span><span>3k</span><span>2k</span><span>0</span></div><div className="chart-area"><div className="grid-lines"><i /><i /><i /><i /></div><svg viewBox="0 0 600 205" preserveAspectRatio="none" aria-label="Graphique de mes revenus"><defs><linearGradient id="ownerChartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="var(--primary)" stopOpacity=".22" /><stop offset="1" stopColor="var(--primary)" stopOpacity="0" /></linearGradient></defs><path d="M0 155 C40 150 60 120 110 130 S160 105 205 120 S260 75 300 88 S350 105 395 72 S450 65 485 42 S535 58 600 22 L600 205 L0 205Z" fill="url(#ownerChartFill)" /><path d="M0 155 C40 150 60 120 110 130 S160 105 205 120 S260 75 300 88 S350 105 395 72 S450 65 485 42 S535 58 600 22" fill="none" stroke="var(--primary)" strokeWidth="3" strokeLinecap="round" /></svg><div className="chart-labels"><span>Jan</span><span>Fév</span><span>Mar</span><span>Avr</span><span>Mai</span><span>Juin</span></div></div></div>
+        </section>
+        <section className="panel deadlines-panel">
+          <div className="panel-header"><div><h2>Événements à venir</h2><p>Les prochaines échéances de vos biens</p></div><button className="more-button" aria-label="Plus d’options"><MoreHorizontal size={20} /></button></div>
+          <div className="deadline-list">
+            {echeancesList.length > 0 ? (
+              echeancesList.slice(0, 3).map((e: any, idx) => {
+                const dateObj = e.date_echeance ? new Date(e.date_echeance) : new Date();
+                const day = dateObj.getDate().toString().padStart(2, '0');
+                const month = dateObj.toLocaleString('fr-FR', { month: 'short' }).toUpperCase();
+                return (
+                  <div className="deadline" key={idx}>
+                    <div className="date-block"><strong>{day}</strong><span>{month}</span></div>
+                    <div><strong>Loyer attendu</strong><p>{e.bien_titre} · {parseFloat(e.montant_attendu).toLocaleString('fr-FR')} Ar</p></div>
+                    <ChevronRight size={17} />
+                  </div>
+                );
+              })
+            ) : (
+              <p style={{ fontSize: '11px', color: '#687386', padding: '10px 0' }}>Aucun événement à venir.</p>
+            )}
+          </div>
+          <button className="link-button">Voir mon calendrier <ArrowUpRight size={15} /></button>
+        </section>
+      </div>
       <div className="lower-grid"><section className="panel"><div className="panel-header"><div><h2>Historique des paiements</h2><p>Les derniers encaissements de vos biens</p></div><Link href="/proprietaire/paiements" className="outline-button">Tout voir <ArrowUpRight size={15} /></Link></div><div className="table-wrap"><table><thead><tr><th>LOCATAIRE</th><th>BIEN</th><th>MONTANT</th><th>DATE</th><th>STATUT</th></tr></thead><tbody>{visiblePayments.map((payment) => <tr key={payment.id}><td><div className="tenant"><span>{(payment.locataire_nom || 'XX').substring(0, 2).toUpperCase()}</span><strong>{payment.locataire_nom || 'Inconnu'}</strong></div></td><td>{payment.bien_titre}</td><td><strong>{(parseFloat(payment.montant_paye as string) || parseFloat(payment.montant as string) || parseFloat(payment.montant_attendu as string) || 0).toLocaleString('fr-FR')} Ar</strong></td><td>{payment.date_paiement ? new Date(payment.date_paiement).toLocaleDateString('fr-FR') : '-'}</td><td><span className={`status ${payment.statut === 'PAYE' ? 'paid' : 'late'}`}>{payment.statut === 'PAYE' ? 'Payé' : 'En retard'}</span></td></tr>)}</tbody></table></div></section><section className="panel properties-panel"><div className="panel-header"><div><h2>Mes biens immobiliers</h2><p>La situation actuelle de votre parc</p></div><Link href="/proprietaire/biens" className="outline-button">Tout voir <ArrowUpRight size={15} /></Link></div><div className="property-list">{filtered.slice(0, 3).map((property) => <div className="property" key={property.id}><div className={`property-icon ${property.statut === 'LOUE' ? 'blue' : property.statut === 'DISPONIBLE' ? 'orange' : 'green'}`}><Building2 size={18} /></div><div className="property-info"><strong>{property.titre}</strong><span>{property.adresse}</span></div><div className="property-meta"><strong>{parseFloat(property.prix || property.loyer_mensuel || '0').toLocaleString('fr-FR')} Ar</strong><span className={`mini-status ${property.statut === 'LOUE' ? 'green' : property.statut === 'RESERVE' ? 'purple' : 'orange'}`}>{property.statut === 'LOUE' ? 'Loué' : property.statut === 'VENDU' ? 'Vendu' : property.statut === 'RESERVE' ? 'Réservé' : property.statut === 'EN_TRAVAUX' ? 'En travaux' : 'Disponible'}</span></div></div>)}</div></section></div>
-      <section className="panel notifications-section"><div className="panel-header"><div><h2>Notifications récentes</h2><p>Les informations importantes concernant vos biens</p></div><button className="outline-button" onClick={() => setNotificationsOpen(true)}>Tout afficher <ArrowUpRight size={15} /></button></div><div className="notification-row">{notifications.map((item) => { const Icon = item.icon; return <article className="notification-card" key={item.title}><div className={`notification-icon ${item.tone}`}><Icon size={17} /></div><div><strong>{item.title}</strong><p>{item.text}</p><small>{item.time}</small></div></article> })}</div></section>
+      <section className="panel notifications-section">
+        <div className="panel-header"><div><h2>Notifications récentes</h2><p>Les informations importantes concernant vos biens</p></div><button className="outline-button" onClick={() => setNotificationsOpen(true)}>Tout afficher <ArrowUpRight size={15} /></button></div>
+        <div className="notification-row">
+          {notificationsList.length > 0 ? (
+            notificationsList.slice(0, 3).map((item) => (
+              <article className="notification-card" key={item.id}>
+                <div className={`notification-icon blue`}><CircleAlert size={17} /></div>
+                <div><strong>{item.titre || item.type_display}</strong><p>{item.message}</p><small>{item.date_creation ? new Date(item.date_creation).toLocaleDateString('fr-FR') : ''}</small></div>
+              </article>
+            ))
+          ) : (
+            <p style={{ fontSize: '11px', color: '#687386', padding: '10px 0' }}>Aucune notification récente.</p>
+          )}
+        </div>
+      </section>
     </>
   )
 }

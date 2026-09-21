@@ -35,9 +35,14 @@ export function PaiementList({ paiements }: PaiementListProps) {
       
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-    } catch (error) {
-      console.error("Erreur lors du téléchargement de la quittance", error);
-      alert("Impossible de télécharger la quittance.");
+    } catch (error: any) {
+      const isIDM = error.message && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError') || error.name === 'TypeError');
+      if (!isIDM) {
+        console.error("Erreur lors du téléchargement de la quittance", error);
+        alert("Impossible de télécharger la quittance.");
+      } else {
+        console.log("Téléchargement intercepté par un gestionnaire externe (ex: IDM).");
+      }
     }
   };
 

@@ -43,7 +43,7 @@ class BienReglesMetierTestCase(APITestCase):
         donnees["proprietaire"] = self.proprietaire
         return Bien.objects.create(**donnees)
 
-    # Cohérence mode_transaction / loyer_mensuel / prix
+    # Test sur le mode de transactions 
 
     def test_creation_bien_location_ok(self):
         response = self.client.post(self.URL_LISTE, self._donnees(), format="json")
@@ -85,7 +85,7 @@ class BienReglesMetierTestCase(APITestCase):
         response = self.client.post(self.URL_LISTE, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    # Règle terrain : nombre_pieces doit être null
+    # Terrain iln'y a pas 
 
     def test_creation_terrain_sans_pieces_ok(self):
         data = self._donnees(

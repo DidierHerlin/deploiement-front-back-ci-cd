@@ -1,6 +1,19 @@
-import { getAccessToken, rafraichirToken, marquerDeconnecte } from "./auth"
+import { getAccessToken, rafraichirToken, marquerDeconnecte, getRefreshToken, isTokenValid } from "./auth"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000/api"
+
+// -- CACHE SYSTEM --
+const apiCache = new Map<string, { data: any, timestamp: number }>()
+const CACHE_TTL_MS = 60 * 1000 // 1 minute
+
+function getCacheKey(path: string, options: RequestInit) {
+  return `${options.method || 'GET'}:${path}`
+}
+
+export function invalidateCache() {
+  apiCache.clear()
+}
+// -----------------
 // Types métier
 
 export interface Bien {
@@ -87,6 +100,32 @@ async function fetchAPI<T>(
   options: RequestInit = {}
 ): Promise<T> {
   let token = getAccessToken()
+  const method = (options.method || 'GET').toUpperCase()
+
+  // -- VÉRIFICATION DU CACHE --
+  if (method === 'GET') {
+    const cacheKey = getCacheKey(path, options)
+    const cached = apiCache.get(cacheKey)
+    if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
+      return cached.data as T
+    }
+  }
+
+  // -- VÉRIFICATION ET RAFRAÎCHISSEMENT DU TOKEN AVANT REQUÊTE --
+  if (!path.startsWith("/auth/") && !path.includes("login") && !path.includes("register")) {
+    if (!isTokenValid(token)) {
+      const refresh = getRefreshToken()
+      if (!isTokenValid(refresh)) {
+        gererExpirationSession()
+        throw new Error("Session expirée — veuillez vous reconnecter.")
+      }
+      token = await rafraichirToken()
+      if (!token) {
+        gererExpirationSession()
+        throw new Error("Session expirée — veuillez vous reconnecter.")
+      }
+    }
+  }
 
   const buildHeaders = (t: string | null): HeadersInit => ({
     "Content-Type": "application/json",
@@ -94,8 +133,8 @@ async function fetchAPI<T>(
     ...((options.headers as Record<string, string>) ?? {}),
   })
 
-  const TIMEOUT_MS = 5_000  // 5 secondes
-  const MAX_RETRIES = 0      // Plus de retry pour respecter le temps max
+  const TIMEOUT_MS = 30_000  // 30 secondes pour les tableaux de bord chargés
+  const MAX_RETRIES = 1      // 1 retry en cas d'erreur réseau transitoire
 
   async function doFetch(tokenValue: string | null): Promise<Response> {
     const controller = new AbortController()
@@ -144,16 +183,56 @@ async function fetchAPI<T>(
         } catch {
           // Impossible de parser le body — on garde le code HTTP
         }
-        throw new Error(detail)
+        throw new Error(`Erreur API (${res.status}) sur ${path} : ${detail}`)
       }
 
       // 204 No Content
-      if (res.status === 204) return null as unknown as T
+      if (res.status === 204) {
+        if (method !== 'GET') {
+          invalidateCache()
+          if (typeof window !== "undefined" && !path.includes('marquer-lu')) {
+            import("sonner").then(({ toast }) => {
+              if (method === 'DELETE') toast.success("Suppression effectuée avec succès")
+              else toast.success("Opération réussie")
+            })
+          }
+        }
+        return null as unknown as T
+      }
 
       const text = await res.text()
-      if (!text) return null as unknown as T
+      if (!text) {
+        if (method !== 'GET') invalidateCache()
+        return null as unknown as T
+      }
 
-      return JSON.parse(text) as T
+      const data = JSON.parse(text) as T
+      if (method === 'GET') {
+         apiCache.set(getCacheKey(path, options), { data, timestamp: Date.now() })
+      } else {
+         invalidateCache()
+         if (typeof window !== "undefined" && !path.includes('marquer-lu')) {
+           import("sonner").then(({ toast }) => {
+             let msg = "Opération réussie"
+             if (method === 'POST') {
+               if (path.includes('valider')) msg = "Paiement validé avec succès"
+               else if (path.includes('refuser')) msg = "Paiement refusé"
+               else if (path.includes('annuler')) msg = "Paiement annulé"
+               else if (path.includes('resilier')) msg = "Contrat résilié"
+               else if (path.includes('terminer')) msg = "Contrat terminé"
+               else if (path.includes('finaliser_vente')) msg = "Vente finalisée"
+               else if (path.includes('repondre')) msg = "Réponse envoyée"
+               else msg = "Ajout effectué avec succès"
+             } else if (method === 'PATCH' || method === 'PUT') {
+               msg = "Mise à jour effectuée avec succès"
+             } else if (method === 'DELETE') {
+               msg = "Suppression effectuée avec succès"
+             }
+             toast.success(msg)
+           })
+         }
+      }
+      return data
 
     } catch (error: any) {
       const isNetworkError = error.name === 'AbortError'
@@ -234,6 +313,19 @@ export async function fetchBlob(
 ): Promise<Blob> {
   let token = getAccessToken()
 
+  if (!isTokenValid(token)) {
+    const refresh = getRefreshToken()
+    if (!isTokenValid(refresh)) {
+      gererExpirationSession()
+      throw new Error("Session expirée — veuillez vous reconnecter.")
+    }
+    token = await rafraichirToken()
+    if (!token) {
+      gererExpirationSession()
+      throw new Error("Session expirée — veuillez vous reconnecter.")
+    }
+  }
+
   const buildHeaders = (t: string | null): HeadersInit => ({
     Accept: "application/pdf, application/octet-stream, */*",
     ...(t ? { Authorization: `Bearer ${t}` } : {}),
@@ -241,7 +333,7 @@ export async function fetchBlob(
   })
 
   const TIMEOUT_MS = 60_000  // 60 secondes (les PDF peuvent être longs à générer)
-  const MAX_RETRIES = 2
+  const MAX_RETRIES = 0      // 0 retry pour éviter plusieurs popups IDM (Internet Download Manager)
 
   async function doFetch(tokenValue: string | null): Promise<Response> {
     const controller = new AbortController()
@@ -337,7 +429,7 @@ export interface BienInfo {
 }
 
 export async function getBienInfo(bienId: number): Promise<BienInfo> {
-  return fetchAPI<BienInfo>(`/contrats/bien_info/?bien_id=${bienId}`)
+  return fetchAPI<BienInfo>(`/contrats/bien-info/?bien_id=${bienId}`)
 }
 
 
@@ -583,15 +675,16 @@ export interface Notification {
 }
 
 export async function getNotifications(): Promise<Notification[]> {
-  return fetchAPI<Notification[]>('/api/notifications/');
+  const res = await fetchAPI<{ count?: number; results?: Notification[] } | Notification[]>('/notifications/');
+  return Array.isArray(res) ? res : (res.results || []);
 }
 
 export async function getUnreadNotificationsCount(): Promise<{ count: number }> {
-  return fetchAPI<{ count: number }>('/api/notifications/non-lues/count/');
+  return fetchAPI<{ count: number }>('/notifications/non-lues/count/');
 }
 
 export async function markNotificationsAsRead(notificationIds?: number[]): Promise<any> {
-  return fetchAPI<any>('/api/notifications/marquer-lu/', {
+  return fetchAPI<any>('/notifications/marquer-lu/', {
     method: 'POST',
     body: JSON.stringify(notificationIds ? { notification_ids: notificationIds } : {}),
   });
@@ -617,6 +710,20 @@ export async function getProfil(): Promise<UserProfil> {
 export async function updateProfil(payload: FormData): Promise<UserProfil> {
   // fetchAPI forces Content-Type: application/json by default.
   let token = getAccessToken()
+
+  if (!isTokenValid(token)) {
+    const refresh = getRefreshToken()
+    if (!isTokenValid(refresh)) {
+      gererExpirationSession()
+      throw new Error("Session expirée — veuillez vous reconnecter.")
+    }
+    token = await rafraichirToken()
+    if (!token) {
+      gererExpirationSession()
+      throw new Error("Session expirée — veuillez vous reconnecter.")
+    }
+  }
+
   const options: RequestInit = {
     method: "PUT",
     body: payload,
@@ -655,6 +762,10 @@ export async function updateProfil(payload: FormData): Promise<UserProfil> {
   }
 
   const data = await res.json() as { success: boolean; user: UserProfil }
+  invalidateCache()
+  if (typeof window !== "undefined") {
+    import("sonner").then(({ toast }) => toast.success("Profil mis à jour avec succès"))
+  }
   return data.user
 }
 
@@ -791,6 +902,6 @@ export async function repondreReservation(id: number, payload: { reponse_admin: 
 }
 
 export async function getReportingStats(): Promise<any> {
-  const res = await fetchAPI<any>('/api/reporting/stats/');
+  const res = await fetchAPI<any>('/reporting/stats/');
   return res;
 }

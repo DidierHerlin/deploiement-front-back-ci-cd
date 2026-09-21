@@ -1,16 +1,14 @@
 apiVersion: v1
-kind: ConfigMap
+kind: PersistentVolumeClaim
 metadata:
-  name: backend-config
+  name: media-pvc
   namespace: immobilier
-data:
-  DB_NAME: gesion_immobilier_back_end
-  DB_USER: postgres
-  DB_PASSWORD: ""
-  DB_HOST: postgres
-  DB_PORT: "5432"
-  ALLOWED_HOSTS: "*"
-  CORS_ALLOWED_ORIGINS: "http://localhost:3000,http://frontend:3000"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -27,16 +25,60 @@ spec:
       labels:
         app: backend
     spec:
+      initContainers:
+        - name: wait-for-db
+          image: busybox
+          command: ['sh', '-c', 'until nc -z postgres 5432; do echo waiting for db; sleep 2; done;']
       containers:
         - name: backend
-          # A remplacer par l'image Docker Hub de l'utilisateur
-          image: localhost/immobilier-drf:latest
+          image: didierherlin/immobilier-drf:latest
           imagePullPolicy: IfNotPresent
-          envFrom:
-            - configMapRef:
-                name: backend-config
           ports:
             - containerPort: 8000
+          env:
+            - name: DB_NAME
+              value: "gesion_immobilier_back_end"
+            - name: DB_USER
+              value: "postgres"
+            - name: DB_PASSWORD
+              value: ""
+            - name: DB_HOST
+              value: "postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: SECRET_KEY
+              value: "django-insecure-k!0w=czf6t1*c=m)zxzu-r49!7(eag)byp^bj_-grl*@5_4s1f"
+            - name: DEBUG
+              value: "True"
+            - name: ALLOWED_HOSTS
+              value: "*"
+            - name: CORS_ALLOWED_ORIGINS
+              value: "http://immobilier.local"
+            - name: EMAIL_HOST_USER
+              value: "didierherlin18@gmail.com"
+            - name: EMAIL_HOST_PASSWORD
+              value: "qvxy yqjj gmtr mfuc"
+          command:
+            - sh
+            - -c
+            - "python manage.py migrate && gunicorn --bind 0.0.0.0:8000 --workers 3 wsgi:application"
+          volumeMounts:
+            - name: media-data
+              mountPath: /app/media
+          readinessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+      volumes:
+        - name: media-data
+          persistentVolumeClaim:
+            claimName: media-pvc
 ---
 apiVersion: v1
 kind: Service

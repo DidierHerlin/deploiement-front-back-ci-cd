@@ -56,7 +56,7 @@ export function DashboardProchaineEcheanceCard({ paiements, contratActif }: Dash
       </div>
       {paiementsEnAttente.length > 1 && (
         <div className="due-notice" style={{ backgroundColor: '#fef3c7', color: '#b45309' }}>
-          <span style={{ fontSize: '13px' }}>Attention : Vous avez d'autres paiements en attente.</span>
+          <span style={{ fontSize: '13px' }}>Attention : Votre prochain paiement ce sera {echeance.toLocaleDateString('fr-FR')}</span>
         </div>
       )}
     </aside>

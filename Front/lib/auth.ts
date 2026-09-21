@@ -21,6 +21,21 @@ export function getRefreshToken(): string | null {
   return localStorage.getItem("refresh_token")
 }
 
+export function isTokenValid(token: string | null): boolean {
+  if (!token) return false
+  try {
+    const payloadBase64 = token.split('.')[1]
+    if (!payloadBase64) return false
+    const payloadJson = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'))
+    const payload = JSON.parse(payloadJson)
+    const currentTime = Math.floor(Date.now() / 1000)
+    // 10 seconds buffer
+    return payload.exp > currentTime + 10
+  } catch {
+    return false
+  }
+}
+
 function supprimerTokens() {
   localStorage.removeItem("access_token")
   localStorage.removeItem("refresh_token")

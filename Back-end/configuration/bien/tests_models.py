@@ -57,7 +57,7 @@ class BienModelTests(TestCase):
             mode_transaction=Bien.ModeTransaction.VENTE,
             adresse="1 rue test",
             surface=500,
-            nombre_pieces=2,  # Invalid for terrain
+            nombre_pieces=2,  
             prix=100000
         )
         with self.assertRaises(ValidationError):
@@ -72,7 +72,7 @@ class BienModelTests(TestCase):
             adresse="1 rue test",
             surface=50,
             nombre_pieces=2,
-            loyer_mensuel=None # Invalid for location
+            loyer_mensuel=None 
         )
         with self.assertRaises(ValidationError):
             bien.full_clean()

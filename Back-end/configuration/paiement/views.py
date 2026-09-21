@@ -13,11 +13,11 @@ from .utils import generate_quittance_pdf   # <-- IMPORTANT
 
 
 class PaiementPagination(PageNumberPagination):
-    """Pagination personnalisée pour les paiements.
+    """Pagination personnalisÃ©e pour les paiements.
 
-    Permet au frontend de demander une taille de page via le paramètre
-    ``page_size`` (ex: ``?page_size=1000``).  La valeur maximale autorisée
-    est plafonnée à 1 000 pour éviter les abus.
+    Permet au frontend de demander une taille de page via le paramÃ¨tre
+    ``page_size`` (ex: ``?page_size=1000``).  La valeur maximale autorisÃ©e
+    est plafonnÃ©e Ã  1 000 pour Ã©viter les abus.
     """
     page_size = 20
     page_size_query_param = "page_size"
@@ -50,8 +50,8 @@ class PaiementViewSet(viewsets.ModelViewSet):
             NotificationService.envoyer(
                 utilisateur=u,
                 type_notif=Notification.Type.AUTRE,
-                titre=f"Nouveau paiement ajouté pour {paiement.contrat.bien.titre}",
-                message=f"Un nouveau paiement de {paiement.montant_attendu} € a été généré.",
+                titre=f"Nouveau paiement ajoutÃ© pour {paiement.contrat.bien.titre}",
+                message=f"Un nouveau paiement de {int(float(paiement.montant_attendu or 0)):,} Ar a été généré.".replace(",", " "),
                 lien=f"/paiements/{paiement.id}",
                 contexte_email={"paiement": paiement}
             )
@@ -75,7 +75,7 @@ class PaiementViewSet(viewsets.ModelViewSet):
     def valider(self, request, pk=None):
         paiement = self.get_object()
         if paiement.statut == Paiement.StatutPaiement.PAYE:
-            return Response({"error": "Ce paiement est déjà validé."},
+            return Response({"error": "Ce paiement est dÃ©jÃ  validÃ©."},
                             status=status.HTTP_400_BAD_REQUEST)
         
         mode = request.data.get("mode_paiement")
@@ -104,8 +104,8 @@ class PaiementViewSet(viewsets.ModelViewSet):
             NotificationService.envoyer(
                 utilisateur=u,
                 type_notif=Notification.Type.PAIEMENT_VALIDE,
-                titre=f"Paiement validé pour le contrat {paiement.contrat.bien.titre}",
-                message=f"Le paiement de {paiement.montant} € pour {paiement.contrat.bien.titre} a été validé.",
+                titre=f"Paiement validÃ© pour le contrat {paiement.contrat.bien.titre}",
+                message=f"Le paiement de {int(float(paiement.montant or 0)):,} Ar pour {paiement.contrat.bien.titre} a été validé.".replace(",", " "),
                 lien=f"/api/paiements/{paiement.id}/quittance/",
                 contexte_email={"paiement": paiement}
             )
@@ -116,7 +116,7 @@ class PaiementViewSet(viewsets.ModelViewSet):
     def refuser(self, request, pk=None):
         paiement = self.get_object()
         if paiement.statut == Paiement.StatutPaiement.PAYE:
-            return Response({"error": "Un paiement validé ne peut pas être refusé."},
+            return Response({"error": "Un paiement validÃ© ne peut pas Ãªtre refusÃ©."},
                             status=status.HTTP_400_BAD_REQUEST)
         
         paiement.statut = Paiement.StatutPaiement.ECHOUE
@@ -128,7 +128,7 @@ class PaiementViewSet(viewsets.ModelViewSet):
     def annuler(self, request, pk=None):
         paiement = self.get_object()
         if paiement.statut == Paiement.StatutPaiement.PAYE:
-            return Response({"error": "Un paiement validé ne peut pas être annulé."},
+            return Response({"error": "Un paiement validÃ© ne peut pas Ãªtre annulÃ©."},
                             status=status.HTTP_400_BAD_REQUEST)
         with transaction.atomic():
             paiement.annuler_paiement()
@@ -137,18 +137,18 @@ class PaiementViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["get"])
     def quittance(self, request, pk=None):
         """
-        RG-16 : Générer ou servir la quittance de loyer au format PDF.
+        RG-16 : GÃ©nÃ©rer ou servir la quittance de loyer au format PDF.
         """
         paiement = self.get_object()
 
-        # 1. Vérifier que le paiement est validé
+        # 1. VÃ©rifier que le paiement est validÃ©
         if paiement.statut != Paiement.StatutPaiement.PAYE:
             return Response(
-                {"error": "Seuls les paiements validés peuvent générer une quittance."},
+                {"error": "Seuls les paiements validÃ©s peuvent gÃ©nÃ©rer une quittance."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 2. Si le fichier n'existe pas encore ou n'est plus sur le disque, le générer
+        # 2. Si le fichier n'existe pas encore ou n'est plus sur le disque, le gÃ©nÃ©rer
         needs_generation = (
             not paiement.fichier_quittance
             or not paiement.fichier_quittance.name
@@ -159,15 +159,15 @@ class PaiementViewSet(viewsets.ModelViewSet):
         if needs_generation:
             try:
                 generate_quittance_pdf(paiement)
-                # Rafraîchir l'objet pour récupérer le chemin du fichier sauvegardé
+                # RafraÃ®chir l'objet pour rÃ©cupÃ©rer le chemin du fichier sauvegardÃ©
                 paiement.refresh_from_db()
             except Exception as e:
                 return Response(
-                    {"error": f"Erreur lors de la génération du PDF : {str(e)}"},
+                    {"error": f"Erreur lors de la gÃ©nÃ©ration du PDF : {str(e)}"},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
-        # 3. Vérifier que le fichier a bien été créé et le servir
+        # 3. VÃ©rifier que le fichier a bien Ã©tÃ© crÃ©Ã© et le servir
         if (
             paiement.fichier_quittance
             and paiement.fichier_quittance.name
@@ -184,7 +184,7 @@ class PaiementViewSet(viewsets.ModelViewSet):
             response["Content-Disposition"] = (
                 f'inline; filename="quittance_{paiement.pk}.pdf"'
             )
-            # Headers CORS explicites pour les réponses binaires
+            # Headers CORS explicites pour les rÃ©ponses binaires
             origin = request.META.get("HTTP_ORIGIN", "")
             if origin:
                 response["Access-Control-Allow-Origin"] = origin
@@ -192,7 +192,7 @@ class PaiementViewSet(viewsets.ModelViewSet):
             return response
         else:
             return Response(
-                {"error": "Impossible de lire le fichier de quittance sur le serveur après génération."},
+                {"error": "Impossible de lire le fichier de quittance sur le serveur aprÃ¨s gÃ©nÃ©ration."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -200,7 +200,7 @@ class PaiementViewSet(viewsets.ModelViewSet):
     def impayes(self, request):
         user = request.user
         if user.role not in (Utilisateur.Role.ADMIN, Utilisateur.Role.AGENT, Utilisateur.Role.PROPRIETAIRE):
-            return Response({"error": "Permission refusée."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"error": "Permission refusÃ©e."}, status=status.HTTP_403_FORBIDDEN)
 
         today = timezone.now().date()
         queryset = self.get_queryset().filter(
