@@ -1,14 +1,10 @@
 from __future__ import annotations
-
 from typing import Any
-
 from django import forms
 from django.contrib import admin
 from django.db import models
 from django.http import HttpRequest
-
 from .models import Bien
-
 @admin.register(Bien)
 class BienAdmin(admin.ModelAdmin):
 
