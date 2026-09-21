@@ -19,12 +19,16 @@ class CoverageRunner(DiscoverRunner):
                     'manage.py',
                     '*/tests.py',
                     '*/test_*.py',
+                    '*/tests_*.py',
+                    'test_reporting.py',
+                    'test_runner.py',
+                    'performance_test.py',
+                    'check_user.py',
+                    'scratch/*',
                     '*/apps.py',
                     '*/admin.py',
                     '*/venv/*',
                     '*/.venv/*',
-                    'utilisateur/serializers.py',
-                    'utilisateur/views.py',
                 ]
             )
             self.cov.start()

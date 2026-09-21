@@ -130,9 +130,13 @@ jobs:
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
             -Dsonar.sources=.
+            -Dsonar.tests=.
+            -Dsonar.test.inclusions=**/test_*.py,**/tests.py,**/tests_*.py,test_reporting.py
             -Dsonar.python.version=3.11
             -Dsonar.python.coverage.reportPaths=coverage.xml
-            -Dsonar.exclusions=**/migrations/**,manage.py,**/venv/**,**/.venv/**,**/tests.py,**/test_*.py,configuration/settings.py
+            -Dsonar.exclusions=**/migrations/**,**/__pycache__/**,**/.pytest_cache/**,manage.py,**/settings.py,settings.py,wsgi.py,asgi.py,**/test_*.py,**/tests.py,**/tests_*.py,test_reporting.py,test_runner.py,performance_test.py,check_user.py,scratch/**,**/media/**,coverage.xml,.coverage,**/*.log,**/*.txt,**/.venv/**,**/venv/**
+            -Dsonar.cpd.exclusions=**/migrations/**,**/test_*.py,**/tests.py,**/tests_*.py,test_reporting.py,**/admin.py,**/apps.py,**/urls.py
+            -Dsonar.coverage.exclusions=**/migrations/**,**/test_*.py,**/tests.py,**/tests_*.py,test_reporting.py,test_runner.py,performance_test.py,check_user.py,scratch/**,manage.py,**/settings.py,settings.py,wsgi.py,asgi.py,**/admin.py,**/apps.py,**/urls.py,**/__init__.py
             -Dsonar.sourceEncoding=UTF-8
 
   docker-publish:

@@ -24,7 +24,7 @@ export function PaiementDetails({ paiement, onClose }: PaiementDetailsProps) {
           {paiement.est_en_retard && (
             <div style={{ padding: '10px 15px', background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: '6px', color: '#b91c1c', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
               <AlertTriangle size={18} />
-              <span>Ce paiement est en retard par rapport à la date d'échéance.</span>
+              <span>{paiement.statut === 'PAYE' ? "Ce paiement a été réglé en retard par rapport à la date d'échéance." : "Ce paiement est en retard par rapport à la date d'échéance."}</span>
             </div>
           )}
         </div>

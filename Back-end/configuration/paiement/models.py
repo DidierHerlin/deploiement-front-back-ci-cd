@@ -236,9 +236,11 @@ class Paiement(models.Model):
     @property
     def est_en_retard(self) -> bool:
         if self.statut == self.StatutPaiement.PAYE:
-            if self.date_paiement:
-                return (self.date_paiement - self.date_echeance).days > 5
-            return False
+            # Historique du retard : un paiement payé en retard reste marqué.
+            # Fallback sur aujourd'hui si date_paiement absente (lignes legacy
+            # passées à PAYE sans date) au lieu de masquer le bandeau.
+            date_reference = self.date_paiement or timezone.now().date()
+            return (date_reference - self.date_echeance).days > 5
         else:
             return (timezone.now().date() - self.date_echeance).days > 5
 
