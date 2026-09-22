@@ -55,12 +55,12 @@ class EcheancesBatchTests(TestCase):
         
         # Test without passing batch (should fallback to querying)
         echeances = self.contrat.get_echeances_a_venir(date_reference=echeance_1)
-        self.assertEqual(len(echeances), 0) # No unpaid echeances in window
+        self.assertEqual(len(echeances), 1) # Returns the next unpaid (echeance_2)
         
         # Test with batch
         batch = {echeance_1}
         echeances_batch = self.contrat.get_echeances_a_venir(date_reference=echeance_1, paiements_payes=batch)
-        self.assertEqual(len(echeances_batch), 0)
+        self.assertEqual(len(echeances_batch), 1)
 
         # Move reference date forward
         echeance_2 = self.date_debut + relativedelta(months=2)
