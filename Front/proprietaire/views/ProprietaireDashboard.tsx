@@ -7,7 +7,7 @@ import { getProfil } from '@/lib/api'
 import {
   Bell, Building2, CalendarDays, ChevronDown, ChevronRight, CircleDollarSign,
   FileText, Home, LayoutDashboard, Menu, MoreHorizontal, Search, Settings,
-  UserRound, WalletCards, X, ArrowUpRight, CircleAlert, Download, Eye,
+  UserRound, WalletCards, X, ArrowUpRight, CircleAlert, Eye,
   CheckCircle2, Clock3,
 } from 'lucide-react'
 
@@ -132,9 +132,9 @@ export function ProprietaireDashboard() {
       const amt = parseFloat(p.montant_paye as string) || parseFloat(p.montant as string) || parseFloat(p.montant_attendu as string) || 0
       
       if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
-        revenuCeMois += amt
+        revenuCeMois += amt * 0.9
       } else if (d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear) {
-        revenuMoisDernier += amt
+        revenuMoisDernier += amt * 0.9
       }
     }
   })
@@ -150,11 +150,28 @@ export function ProprietaireDashboard() {
     evolutionText = "Aucun revenu ce mois-ci"
   }
 
+  let prochaineEcheanceStr = '-'
+  let loyersAttendusStr = 'Aucune échéance à venir'
+  let toneEcheance = 'green' // green by default if no deadlines
+
+  if (echeancesList.length > 0) {
+    const firstDate = echeancesList[0].date_echeance
+    const count = echeancesList.filter(e => e.date_echeance === firstDate).length
+    const dateObj = new Date(firstDate)
+    const day = dateObj.getDate().toString().padStart(2, '0')
+    const month = dateObj.toLocaleString('fr-FR', { month: 'short' })
+    prochaineEcheanceStr = `${day} ${month}.`
+    loyersAttendusStr = `${count} loyer${count > 1 ? 's' : ''} attendu${count > 1 ? 's' : ''}`
+    toneEcheance = 'red'
+  }
+
   return (
     <>
-      <div className="welcome-row"><div><p className="eyebrow">MARDI 02 JUILLET 2024</p><h1>Bonjour{userName ? ` ${userName}` : ''}, <span>voici votre patrimoine.</span></h1><p className="subtitle">Suivez vos biens, vos revenus et les événements importants en un coup d’œil.</p></div><button className="outline-button download-button"><Download size={16} />Exporter mes données</button></div>
+      <div className="welcome-row"><div><p className="eyebrow">MARDI 02 JUILLET 2024</p><h1>Bonjour{userName ? ` ${userName}` : ''}, <span>voici votre patrimoine.</span></h1><p className="subtitle">Suivez vos biens, vos revenus et les événements importants en un coup d’œil.</p>
+      </div>
+      </div>
       <div className="owner-banner"><div className="banner-icon"><Home size={19} /></div><div><strong>Bienvenue dans votre espace propriétaire</strong><p>Votre agence Horizon gère {totalBiens} bien{totalBiens > 1 ? 's' : ''} pour vous. Les informations affichées concernent uniquement votre patrimoine.</p></div><ChevronRight size={18} /></div>
-      <section className="stats-grid"><StatCard icon={Building2} label="Mes biens" value={totalBiens.toString()} detail={biensDetailStr} tone="blue" /><StatCard icon={CircleDollarSign} label="Revenus mensuels" value={`${revenuCeMois.toLocaleString('fr-FR')} Ar`} detail={evolutionText} tone="green" /><StatCard icon={WalletCards} label="Taux d’occupation" value={`${tauxOccupation}%`} detail={tauxDetailStr} tone="orange" /><StatCard icon={CalendarDays} label="Prochaine échéance" value="05 juil." detail="2 loyers attendus" tone="red" /></section>
+      <section className="stats-grid"><StatCard icon={Building2} label="Mes biens" value={totalBiens.toString()} detail={biensDetailStr} tone="blue" /><StatCard icon={CircleDollarSign} label="Revenus mensuels" value={`${revenuCeMois.toLocaleString('fr-FR')} Ar`} detail={evolutionText} tone="green" /><StatCard icon={WalletCards} label="Taux d’occupation" value={`${tauxOccupation}%`} detail={tauxDetailStr} tone="orange" /><StatCard icon={CalendarDays} label="Prochaine échéance" value={prochaineEcheanceStr} detail={loyersAttendusStr} tone={toneEcheance} /></section>
       <div className="content-grid">
         <section className="panel revenue-panel">
           <div className="panel-header"><div><h2>Mes revenus locatifs</h2><p>Évolution des encaissements sur les 6 derniers mois</p></div><button className="select-button">6 derniers mois <ChevronDown size={14} /></button></div>
@@ -171,7 +188,7 @@ export function ProprietaireDashboard() {
                 return (
                   <div className="deadline" key={idx}>
                     <div className="date-block"><strong>{day}</strong><span>{month}</span></div>
-                    <div><strong>Loyer attendu</strong><p>{e.bien_titre} · {parseFloat(e.montant_attendu).toLocaleString('fr-FR')} Ar</p></div>
+                    <div><strong>Loyer attendu</strong><p>{e.bien_titre} · {(parseFloat(e.montant_attendu) * 0.9).toLocaleString('fr-FR')} Ar</p></div>
                     <ChevronRight size={17} />
                   </div>
                 );
@@ -183,7 +200,7 @@ export function ProprietaireDashboard() {
           <button className="link-button">Voir mon calendrier <ArrowUpRight size={15} /></button>
         </section>
       </div>
-      <div className="lower-grid"><section className="panel"><div className="panel-header"><div><h2>Historique des paiements</h2><p>Les derniers encaissements de vos biens</p></div><Link href="/proprietaire/paiements" className="outline-button">Tout voir <ArrowUpRight size={15} /></Link></div><div className="table-wrap"><table><thead><tr><th>LOCATAIRE</th><th>BIEN</th><th>MONTANT</th><th>DATE</th><th>STATUT</th></tr></thead><tbody>{visiblePayments.map((payment) => <tr key={payment.id}><td><div className="tenant"><span>{(payment.locataire_nom || 'XX').substring(0, 2).toUpperCase()}</span><strong>{payment.locataire_nom || 'Inconnu'}</strong></div></td><td>{payment.bien_titre}</td><td><strong>{(parseFloat(payment.montant_paye as string) || parseFloat(payment.montant as string) || parseFloat(payment.montant_attendu as string) || 0).toLocaleString('fr-FR')} Ar</strong></td><td>{payment.date_paiement ? new Date(payment.date_paiement).toLocaleDateString('fr-FR') : '-'}</td><td><span className={`status ${payment.statut === 'PAYE' ? 'paid' : 'late'}`}>{payment.statut === 'PAYE' ? 'Payé' : 'En retard'}</span></td></tr>)}</tbody></table></div></section><section className="panel properties-panel"><div className="panel-header"><div><h2>Mes biens immobiliers</h2><p>La situation actuelle de votre parc</p></div><Link href="/proprietaire/biens" className="outline-button">Tout voir <ArrowUpRight size={15} /></Link></div><div className="property-list">{filtered.slice(0, 3).map((property) => <div className="property" key={property.id}><div className={`property-icon ${property.statut === 'LOUE' ? 'blue' : property.statut === 'DISPONIBLE' ? 'orange' : 'green'}`}><Building2 size={18} /></div><div className="property-info"><strong>{property.titre}</strong><span>{property.adresse}</span></div><div className="property-meta"><strong>{parseFloat(property.prix || property.loyer_mensuel || '0').toLocaleString('fr-FR')} Ar</strong><span className={`mini-status ${property.statut === 'LOUE' ? 'green' : property.statut === 'RESERVE' ? 'purple' : 'orange'}`}>{property.statut === 'LOUE' ? 'Loué' : property.statut === 'VENDU' ? 'Vendu' : property.statut === 'RESERVE' ? 'Réservé' : property.statut === 'EN_TRAVAUX' ? 'En travaux' : 'Disponible'}</span></div></div>)}</div></section></div>
+      <div className="lower-grid"><section className="panel"><div className="panel-header"><div><h2>Historique des paiements</h2><p>Les derniers encaissements de vos biens</p></div><Link href="/proprietaire/paiements" className="outline-button">Tout voir <ArrowUpRight size={15} /></Link></div><div className="table-wrap"><table><thead><tr><th>LOCATAIRE</th><th>BIEN</th><th>MONTANT</th><th>DATE</th><th>STATUT</th></tr></thead><tbody>{visiblePayments.map((payment) => <tr key={payment.id}><td><div className="tenant"><span>{(payment.locataire_nom || 'XX').substring(0, 2).toUpperCase()}</span><strong>{payment.locataire_nom || 'Inconnu'}</strong></div></td><td>{payment.bien_titre}</td><td><strong>{((parseFloat(payment.montant_paye as string) || parseFloat(payment.montant as string) || parseFloat(payment.montant_attendu as string) || 0) * 0.9).toLocaleString('fr-FR')} Ar</strong></td><td>{payment.date_paiement ? new Date(payment.date_paiement).toLocaleDateString('fr-FR') : '-'}</td><td><span className={`status ${payment.statut === 'PAYE' ? 'paid' : 'late'}`}>{payment.statut === 'PAYE' ? 'Payé' : 'En retard'}</span></td></tr>)}</tbody></table></div></section><section className="panel properties-panel"><div className="panel-header"><div><h2>Mes biens immobiliers</h2><p>La situation actuelle de votre parc</p></div><Link href="/proprietaire/biens" className="outline-button">Tout voir <ArrowUpRight size={15} /></Link></div><div className="property-list">{filtered.slice(0, 3).map((property) => <div className="property" key={property.id}><div className={`property-icon ${property.statut === 'LOUE' ? 'blue' : property.statut === 'DISPONIBLE' ? 'orange' : 'green'}`}><Building2 size={18} /></div><div className="property-info"><strong>{property.titre}</strong><span>{property.adresse}</span></div><div className="property-meta"><strong>{parseFloat(property.prix || property.loyer_mensuel || '0').toLocaleString('fr-FR')} Ar</strong><span className={`mini-status ${property.statut === 'LOUE' ? 'green' : property.statut === 'RESERVE' ? 'purple' : 'orange'}`}>{property.statut === 'LOUE' ? 'Loué' : property.statut === 'VENDU' ? 'Vendu' : property.statut === 'RESERVE' ? 'Réservé' : property.statut === 'EN_TRAVAUX' ? 'En travaux' : 'Disponible'}</span></div></div>)}</div></section></div>
       <section className="panel notifications-section">
         <div className="panel-header"><div><h2>Notifications récentes</h2><p>Les informations importantes concernant vos biens</p></div><button className="outline-button" onClick={() => setNotificationsOpen(true)}>Tout afficher <ArrowUpRight size={15} /></button></div>
         <div className="notification-row">

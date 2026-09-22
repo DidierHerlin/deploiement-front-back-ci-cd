@@ -4,22 +4,26 @@
   <meta charset="UTF-8">
   <title>Quittance de loyer</title>
   <style>
+    @page {
+      size: a4 portrait;
+      margin: 2cm;
+    }
     body {
-      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-family: Helvetica, Arial, sans-serif;
       font-size: 11pt;
       line-height: 1.5;
       color: #333;
     }
     .header {
       text-align: center;
-      margin-bottom: 40px;
-      padding-bottom: 20px;
+      margin-bottom: 30px;
+      padding-bottom: 10px;
       border-bottom: 2px solid #1e3a8a;
     }
     .header h1 {
       color: #1e3a8a;
-      font-size: 24pt;
-      margin: 0 0 10px 0;
+      font-size: 22pt;
+      margin: 0 0 5px 0;
       text-transform: uppercase;
     }
     .badge {
@@ -27,18 +31,17 @@
       background-color: #1e3a8a;
       color: #fff;
       padding: 5px 15px;
-      border-radius: 20px;
       font-weight: bold;
     }
     .grid {
       width: 100%;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
     }
     .grid td {
       width: 50%;
       vertical-align: top;
       padding: 15px;
-      background: #f9fafb;
+      background-color: #f9fafb;
       border: 1px solid #eee;
     }
     .label {
@@ -50,15 +53,23 @@
       display: block;
     }
     .info-box {
-      margin-bottom: 30px;
+      margin-bottom: 20px;
       border: 1px solid #ddd;
       padding: 15px;
+      background-color: #ffffff;
       border-left: 5px solid #1e3a8a;
+    }
+    .info-box-success {
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+      padding: 15px;
+      background-color: #f0fdf4;
+      border-left: 5px solid #10b981;
     }
     .table-details {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
     }
     .table-details th {
       background-color: #1e3a8a;
@@ -76,11 +87,12 @@
       background-color: #f3f4f6;
     }
     .footer {
-      margin-top: 50px;
+      margin-top: 40px;
       font-size: 9pt;
       color: #666;
       border-top: 1px solid #ddd;
-      padding-top: 20px;
+      padding-top: 15px;
+      text-align: justify;
     }
   </style>
 </head>
@@ -135,7 +147,7 @@
     </tbody>
   </table>
 
-  <div class="info-box" style="border-left-color: #10b981; background-color: #f0fdf4;">
+  <div class="info-box-success">
     <strong>Détails du paiement :</strong><br>
     Date d'encaissement : {{ paiement.date_paiement|date:"d/m/Y"|default:"N/A" }}<br>
     Moyen de paiement : {{ paiement.get_mode_paiement_display }}<br>

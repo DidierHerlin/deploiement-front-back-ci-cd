@@ -1,4 +1,4 @@
-import { Users, Home, FileText, DollarSign, AlertCircle, TrendingUp } from 'lucide-react';
+import { Users, Home, FileText, AlertCircle, TrendingUp } from 'lucide-react';
 import { ReportingData } from '../hooks/useReporting';
 
 export function ReportingStats({ data }: { data: ReportingData }) {
@@ -54,7 +54,7 @@ export function ReportingStats({ data }: { data: ReportingData }) {
       <div className="p-6 bg-white rounded-lg shadow-sm border">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-medium text-gray-500">Revenus Globaux</h3>
-          <DollarSign className="text-purple-500 w-5 h-5" />
+          <h3 className="text-purple-500 w-5 h-5">Ar</h3>
         </div>
         <p className="text-2xl font-bold">{totalRevenus.toLocaleString('fr-MG')} Ar</p>
         <div className="text-sm text-gray-500 mt-2 flex items-center">

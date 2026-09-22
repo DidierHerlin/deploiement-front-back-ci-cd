@@ -30,6 +30,7 @@ export default function AdminReservationsPage() {
   const [filterStatut, setFilterStatut] = useState('Tous')
   const [selected, setSelected] = useState<ReservationData | null>(null)
   const [reponse, setReponse] = useState('')
+  const [newStatut, setNewStatut] = useState('TRAITEE')
   const [sending, setSending] = useState(false)
   const [toast, setToast] = useState('')
 
@@ -53,10 +54,11 @@ export default function AdminReservationsPage() {
     if (!selected || !reponse.trim()) return
     setSending(true)
     try {
-      await repondreReservation(selected.id, { reponse_admin: reponse, statut: 'TRAITEE' })
+      await repondreReservation(selected.id, { reponse_admin: reponse, statut: newStatut })
       setToast('Réponse envoyée au locataire.')
       setSelected(null)
       setReponse('')
+      setNewStatut('TRAITEE')
       fetchData()
       setTimeout(() => setToast(''), 3000)
     } catch (e: any) {
@@ -151,7 +153,7 @@ export default function AdminReservationsPage() {
             </div>
 
             {/* Locataire info */}
-            <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted-foreground)', marginBottom: 8 }}>👤 Locataire</h4>
+            <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted-foreground)', marginBottom: 8 }}>Information sur le locataire</h4>
             <div style={{ background: 'var(--muted)', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 13 }}>
               <p><strong>{selected.locataire_prenoms} {selected.locataire_nom}</strong></p>
               <p>Email : {selected.locataire_email}</p>
@@ -159,7 +161,7 @@ export default function AdminReservationsPage() {
             </div>
 
             {/* Bien info */}
-            <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted-foreground)', marginBottom: 8 }}>🏠 Bien</h4>
+            <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted-foreground)', marginBottom: 8 }}>Information sur le bien</h4>
             <div style={{ background: 'var(--muted)', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 13 }}>
               <p><strong>{selected.bien_titre}</strong></p>
               <p>Type : {selected.bien_type} • Adresse : {selected.bien_adresse}</p>
@@ -170,7 +172,7 @@ export default function AdminReservationsPage() {
             </div>
 
             {/* Reservation info */}
-            <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted-foreground)', marginBottom: 8 }}>📋 Réservation</h4>
+            <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted-foreground)', marginBottom: 8 }}>Réservation</h4>
             <div style={{ background: 'var(--muted)', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 13 }}>
               <p>Type : {selected.type_reservation === 'LOCATION' ? 'Location' : 'Achat'}</p>
               <p>Date : {new Date(selected.date_creation).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
@@ -185,29 +187,46 @@ export default function AdminReservationsPage() {
                   onClick={() => handleGerer(selected)}
                   style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 8, border: 'none', background: 'var(--primary)', color: 'var(--primary-foreground)', cursor: 'pointer', fontWeight: 600, fontSize: 13, marginBottom: 20, width: '100%', justifyContent: 'center' }}
                 >
-                  <FileText size={16} /> Gérer la réservation — Créer le contrat
+                  <FileText size={16} /> Gérer la réservation
                 </button>
 
                 {/* Répondre au locataire */}
-                <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted-foreground)', marginBottom: 8 }}>✉️ Répondre au locataire</h4>
-                <textarea
-                  value={reponse}
-                  onChange={(e) => setReponse(e.target.value)}
-                  placeholder={
-                    selected.type_reservation === 'LOCATION'
-                      ? "Ex : Votre réservation a été validée. Veuillez consulter votre contrat de bail pour prendre connaissance des détails."
-                      : "Ex : Votre réservation a été validée. Veuillez consulter votre contrat de vente pour prendre connaissance des détails."
-                  }
-                  rows={3}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', resize: 'vertical', fontSize: 13, marginBottom: 12 }}
-                />
+                <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted-foreground)', marginBottom: 8 }}>Répondre au demande</h4>
+                
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Décision</label>
+                  <select
+                    value={newStatut}
+                    onChange={(e) => setNewStatut(e.target.value)}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', fontSize: 13 }}
+                  >
+                    <option value="TRAITEE">Accepter la réservation (Traitée)</option>
+                    <option value="ANNULEE">Refuser la réservation (Annulée)</option>
+                  </select>
+                </div>
+
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Message de réponse</label>
+                  <textarea
+                    value={reponse}
+                    onChange={(e) => setReponse(e.target.value)}
+                    placeholder={
+                      selected.type_reservation === 'LOCATION'
+                        ? "Ex : Votre réservation a été validée. Veuillez consulter votre contrat de bail pour prendre connaissance des détails."
+                        : "Ex : Votre réservation a été validée. Veuillez consulter votre contrat de vente pour prendre connaissance des détails."
+                    }
+                    rows={3}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', resize: 'vertical', fontSize: 13 }}
+                  />
+                </div>
+                
                 <button
                   onClick={handleRepondre}
                   disabled={sending || !reponse.trim()}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 6, border: 'none', background: '#16a34a', color: 'white', cursor: (sending || !reponse.trim()) ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: 13 }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 6, border: 'none', background: newStatut === 'TRAITEE' ? '#16a34a' : '#dc2626', color: 'white', cursor: (sending || !reponse.trim()) ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: 13 }}
                 >
                   <Send size={14} />
-                  {sending ? 'Envoi...' : 'Envoyer la réponse et traiter'}
+                  {sending ? 'Envoi...' : (newStatut === 'TRAITEE' ? 'Envoyer la réponse' : 'Refuser et envoyer la réponse')}
                 </button>
               </>
             )}

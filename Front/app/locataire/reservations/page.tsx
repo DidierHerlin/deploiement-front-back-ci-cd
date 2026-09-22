@@ -129,7 +129,7 @@ export default function MesReservationsPage() {
               <StatutBadge statut={selected.statut} />
             </div>
 
-            <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted-foreground)', marginBottom: 8 }}>🏠 Bien</h4>
+            <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted-foreground)', marginBottom: 8 }}>Information sur le bien</h4>
             <div style={{ background: 'var(--muted)', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 13 }}>
               <p><strong>{selected.bien_titre}</strong></p>
               <p>{selected.bien_type} • {selected.bien_adresse}</p>

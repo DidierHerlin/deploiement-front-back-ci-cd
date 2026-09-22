@@ -4,13 +4,41 @@
     <meta charset="utf-8">
     <title>Contrat de Bail</title>
     <style>
-        body { font-family: Helvetica, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; }
-        h1 { text-align: center; color: #1e3a8a; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; }
-        h2 { color: #1e3a8a; font-size: 14pt; margin-top: 20px; }
-        .section { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; background-color: #f9fafb; }
+        @page {
+            size: a4 portrait;
+            margin: 2cm;
+        }
+        body { 
+            font-family: Helvetica, Arial, sans-serif; 
+            font-size: 11pt; 
+            line-height: 1.5; 
+            color: #333; 
+        }
+        h1 { 
+            text-align: center; 
+            color: #1e3a8a; 
+            border-bottom: 2px solid #1e3a8a; 
+            padding-bottom: 15px; 
+            margin-bottom: 30px;
+        }
+        h2 { 
+            color: #1e3a8a; 
+            font-size: 14pt; 
+            margin-top: 25px; 
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .section { 
+            margin-bottom: 25px; 
+            padding: 15px; 
+            border: 1px solid #ddd; 
+            background-color: #f9fafb; 
+        }
         .row { margin-bottom: 8px; }
         .label { font-weight: bold; width: 150px; display: inline-block; }
-        .signature-block { width: 45%; display: inline-block; margin-top: 50px; text-align: center; }
+        .signature-block { width: 45%; display: inline-block; margin-top: 40px; text-align: center; }
+        p { text-align: justify; }
     </style>
 </head>
 <body>
@@ -59,14 +87,18 @@
     <div style="margin-top: 50px;">
         <p>Fait en deux exemplaires originaux, pour servir et valoir ce que de droit.</p>
         
-        <div class="signature-block">
-            <strong>Signature du Bailleur</strong><br/><br/><br/><br/>
-            <em>(Lu et approuvé)</em>
-        </div>
-        <div class="signature-block">
-            <strong>Signature du Preneur</strong><br/><br/><br/><br/>
-            <em>(Lu et approuvé)</em>
-        </div>
+        <table style="width: 100%; margin-top: 40px; text-align: center; border-collapse: collapse;">
+            <tr>
+                <td style="width: 50%;">
+                    <strong>Signature du Bailleur</strong><br/><br/><br/><br/>
+                    <em>(Lu et approuvé)</em>
+                </td>
+                <td style="width: 50%;">
+                    <strong>Signature du Preneur</strong><br/><br/><br/><br/>
+                    <em>(Lu et approuvé)</em>
+                </td>
+            </tr>
+        </table>
     </div>
 
 </body>
