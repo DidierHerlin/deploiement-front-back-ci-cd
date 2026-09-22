@@ -239,18 +239,15 @@ class Contrat(models.Model):
             deja_paye = echeance in paiements_payes
 
             if not deja_paye:
-                delta = (echeance - date_reference).days
-
-                # On affiche l'échéance si elle est dans la fenêtre [-5, +5] jours
-                if -5 <= delta <= 5:
-                    return [{
-                        'date_echeance': echeance,
-                        'montant_attendu': self.loyer,
-                        'est_paye': False,
-                        'contrat_id': self.id,
-                        'bien_titre': self.bien.titre,
-                        'locataire_nom': self.locataire.user.get_full_name(),
-                    }]
+                # Retourne la première échéance non payée (la prochaine attendue)
+                return [{
+                    'date_echeance': echeance,
+                    'montant_attendu': self.loyer,
+                    'est_paye': False,
+                    'contrat_id': self.id,
+                    'bien_titre': self.bien.titre,
+                    'locataire_nom': self.locataire.user.get_full_name(),
+                }]
 
             # Passer au mois suivant
             echeance += relativedelta(months=1)

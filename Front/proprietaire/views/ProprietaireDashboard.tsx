@@ -7,9 +7,10 @@ import { getProfil } from '@/lib/api'
 import {
   Bell, Building2, CalendarDays, ChevronDown, ChevronRight, CircleDollarSign,
   FileText, Home, LayoutDashboard, Menu, MoreHorizontal, Search, Settings,
-  UserRound, WalletCards, X, ArrowUpRight, CircleAlert, Eye,
+  UserRound, WalletCards, X, ArrowUpRight, CircleAlert, Download, Eye,
   CheckCircle2, Clock3,
 } from 'lucide-react'
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 
 // ... (navItems, properties, payments, notifications omitted for brevity but I need to keep them)
 
@@ -126,15 +127,31 @@ export function ProprietaireDashboard() {
   let revenuCeMois = 0
   let revenuMoisDernier = 0
 
+  const chartData: any[] = []
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(currentYear, currentMonth - i, 1)
+    chartData.push({
+      name: d.toLocaleString('fr-FR', { month: 'short' }).replace('.', ''),
+      month: d.getMonth(),
+      year: d.getFullYear(),
+      total: 0
+    })
+  }
+
   paiementsList.forEach(p => {
     if (p.statut === 'PAYE' && p.date_paiement) {
       const d = new Date(p.date_paiement)
-      const amt = parseFloat(p.montant_paye as string) || parseFloat(p.montant as string) || parseFloat(p.montant_attendu as string) || 0
+      const amt = (parseFloat(p.montant_paye as string) || parseFloat(p.montant as string) || parseFloat(p.montant_attendu as string) || 0) * 0.9
       
       if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
-        revenuCeMois += amt * 0.9
+        revenuCeMois += amt
       } else if (d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear) {
-        revenuMoisDernier += amt * 0.9
+        revenuMoisDernier += amt
+      }
+
+      const target = chartData.find(c => c.month === d.getMonth() && c.year === d.getFullYear())
+      if (target) {
+        target.total += amt
       }
     }
   })
@@ -174,8 +191,23 @@ export function ProprietaireDashboard() {
       <section className="stats-grid"><StatCard icon={Building2} label="Mes biens" value={totalBiens.toString()} detail={biensDetailStr} tone="blue" /><StatCard icon={CircleDollarSign} label="Revenus mensuels" value={`${revenuCeMois.toLocaleString('fr-FR')} Ar`} detail={evolutionText} tone="green" /><StatCard icon={WalletCards} label="Taux d’occupation" value={`${tauxOccupation}%`} detail={tauxDetailStr} tone="orange" /><StatCard icon={CalendarDays} label="Prochaine échéance" value={prochaineEcheanceStr} detail={loyersAttendusStr} tone={toneEcheance} /></section>
       <div className="content-grid">
         <section className="panel revenue-panel">
-          <div className="panel-header"><div><h2>Mes revenus locatifs</h2><p>Évolution des encaissements sur les 6 derniers mois</p></div><button className="select-button">6 derniers mois <ChevronDown size={14} /></button></div>
-          <div className="chart"><div className="chart-y"><span>4k</span><span>3k</span><span>2k</span><span>0</span></div><div className="chart-area"><div className="grid-lines"><i /><i /><i /><i /></div><svg viewBox="0 0 600 205" preserveAspectRatio="none" aria-label="Graphique de mes revenus"><defs><linearGradient id="ownerChartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="var(--primary)" stopOpacity=".22" /><stop offset="1" stopColor="var(--primary)" stopOpacity="0" /></linearGradient></defs><path d="M0 155 C40 150 60 120 110 130 S160 105 205 120 S260 75 300 88 S350 105 395 72 S450 65 485 42 S535 58 600 22 L600 205 L0 205Z" fill="url(#ownerChartFill)" /><path d="M0 155 C40 150 60 120 110 130 S160 105 205 120 S260 75 300 88 S350 105 395 72 S450 65 485 42 S535 58 600 22" fill="none" stroke="var(--primary)" strokeWidth="3" strokeLinecap="round" /></svg><div className="chart-labels"><span>Jan</span><span>Fév</span><span>Mar</span><span>Avr</span><span>Mai</span><span>Juin</span></div></div></div>
+          <div className="panel-header"><div><h2>Mes revenus locatifs</h2><p>Évolution des encaissements sur les 6 derniers mois</p></div></div>
+          <div style={{ height: '214px', width: '100%', marginTop: '16px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#1e3a8a" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#1e3a8a" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} tickFormatter={(val) => val >= 1000 ? `${(val/1000).toFixed(0)}k` : val} width={35} />
+                <Tooltip formatter={(value: any) => [`${Number(value).toLocaleString('fr-FR')} Ar`, 'Revenus nets']} labelStyle={{ color: '#374151' }} itemStyle={{ color: '#1e3a8a', fontWeight: 600 }} />
+                <Area type="monotone" dataKey="total" stroke="#1e3a8a" strokeWidth={3} fillOpacity={1} fill="url(#colorTotal)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </section>
         <section className="panel deadlines-panel">
           <div className="panel-header"><div><h2>Événements à venir</h2><p>Les prochaines échéances de vos biens</p></div><button className="more-button" aria-label="Plus d’options"><MoreHorizontal size={20} /></button></div>
@@ -188,7 +220,7 @@ export function ProprietaireDashboard() {
                 return (
                   <div className="deadline" key={idx}>
                     <div className="date-block"><strong>{day}</strong><span>{month}</span></div>
-                    <div><strong>Loyer attendu</strong><p>{e.bien_titre} · {(parseFloat(e.montant_attendu) * 0.9).toLocaleString('fr-FR')} Ar</p></div>
+                    <div><strong>Loyer de {e.locataire_nom || 'Locataire inconnu'}</strong><p>{e.bien_titre} · {(parseFloat(e.montant_attendu) * 0.9).toLocaleString('fr-FR')} Ar</p></div>
                     <ChevronRight size={17} />
                   </div>
                 );
