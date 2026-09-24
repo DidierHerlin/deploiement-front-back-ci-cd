@@ -8,12 +8,12 @@ import {
   Locataire, Contrat, Paiement 
 } from '@/lib/api'
 
-import { LocataireTable } from './components/LocataireTable'
-import { LocataireSearch } from './components/LocataireSearch'
-import { LocataireFilters } from './components/LocataireFilters'
-import { LocataireForm } from './components/LocataireForm'
-import { LocataireModal } from './components/LocataireModal'
-import { DisableLocataireModal } from './components/DisableLocataireModal'
+import { LocataireTable } from "@/components/organisms/LocataireTable"
+import { LocataireSearch } from "@/components/organisms/LocataireSearch"
+import { LocataireFilters } from "@/components/organisms/LocataireFilters"
+import { LocataireForm } from "@/components/organisms/LocataireForm"
+import { LocataireModal } from "@/components/organisms/LocataireModal"
+import { DisableLocataireModal } from "@/components/organisms/DisableLocataireModal"
 
 export default function LocatairePage() {
   const [locataires, setLocataires] = useState<Locataire[]>([])

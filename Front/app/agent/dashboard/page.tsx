@@ -5,17 +5,17 @@ import Link from 'next/link'
 import { Check, ArrowUpRight } from 'lucide-react'
 import { useAgentDashboard } from './hooks/useAgentDashboard'
 
-import { OccupationStats } from './components/OccupationStats'
-import { RevenusStats } from './components/RevenusStats'
-import { ImpayesStats } from './components/ImpayesStats'
-import { DisponibiliteStats } from './components/DisponibiliteStats'
-import EstatePanel from './components/EstatePanel'
-import RevenueChart from './components/RevenueChart'
-import ArrearsList from './components/ArrearsList'
-import ContractsList from './components/ContractsList'
-import PendingBanner from './components/PendingBanner'
-import DashboardFooter from './components/DashboardFooter'
-import { LoadingState, ErrorState } from '@/app/admin/dashboard/components/States'
+import { OccupationStats } from "@/components/molecules/OccupationStats"
+import { RevenusStats } from "@/components/molecules/RevenusStats"
+import { ImpayesStats } from "@/components/molecules/ImpayesStats"
+import { DisponibiliteStats } from "@/components/molecules/DisponibiliteStats"
+import EstatePanel from "@/components/organisms/EstatePanel"
+import { RevenueChart } from "@/components/organisms/reporting_RevenueChart"
+import ArrearsList from "@/components/organisms/ArrearsList"
+import ContractsList from "@/components/organisms/ContractsList"
+import PendingBanner from "@/components/molecules/PendingBanner"
+import DashboardFooter from "@/components/organisms/DashboardFooter"
+import { LoadingState, ErrorState } from "@/components/organisms/States"
 
 export default function AgentDashboardPage() {
   const { data, loading, error } = useAgentDashboard();

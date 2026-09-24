@@ -6,17 +6,17 @@ import { getProfil } from '@/lib/api'
 import { usePaiements } from '../paiements/hooks/usePaiements'
 import { useContrats } from '../contrat/hooks/useContrats'
 
-import { LocataireSidebar } from '../components/LocataireSidebar'
-import { LocataireTopbar } from '../components/LocataireTopbar'
-import { ProfileModal } from '../components/ProfileModal'
+import { LocataireSidebar } from "@/components/organisms/LocataireSidebar"
+import { LocataireTopbar } from "@/components/organisms/LocataireTopbar"
+import { ProfileModal } from "@/components/organisms/ProfileModal"
 
-import { DashboardWelcome } from './components/DashboardWelcome'
-import { DashboardStats } from './components/DashboardStats'
-import { DashboardContratCard } from './components/DashboardContratCard'
-import { DashboardProchaineEcheanceCard } from './components/DashboardProchaineEcheanceCard'
-import { DashboardPaiementsRecents } from './components/DashboardPaiementsRecents'
-import { DashboardDocumentsCard } from './components/DashboardDocumentsCard'
-import { NotificationList } from '../paiements/components/NotificationList'
+import { DashboardWelcome } from "@/components/organisms/DashboardWelcome"
+import { DashboardStats } from "@/components/molecules/DashboardStats"
+import { DashboardContratCard } from "@/components/molecules/DashboardContratCard"
+import { DashboardProchaineEcheanceCard } from "@/components/molecules/DashboardProchaineEcheanceCard"
+import { DashboardPaiementsRecents } from "@/components/organisms/DashboardPaiementsRecents"
+import { DashboardDocumentsCard } from "@/components/molecules/DashboardDocumentsCard"
+import { NotificationList } from "@/components/organisms/NotificationList"
 
 export default function LocataireDashboardPage() {
   const [user, setUser] = useState<any>(null);

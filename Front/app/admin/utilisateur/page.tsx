@@ -4,15 +4,15 @@ import { useMemo, useState, useEffect } from 'react'
 import { getAllUsers, deleteUser, createUser, updateUser, UserProfil } from '@/lib/api'
 
 // Composants globaux réutilisables
-import { UserTable } from '../components/UserTable'
-import { UserForm } from '../components/UserForm'
-import { UserModal } from '../components/UserModal'
-import { DeleteConfirmModal } from '../components/DeleteConfirmModal'
+import { UserTable } from "@/components/organisms/UserTable"
+import { UserForm } from "@/components/organisms/UserForm"
+import { UserModal } from "@/components/organisms/UserModal"
+import { DeleteConfirmModal } from "@/components/organisms/DeleteConfirmModal"
 
 // Composants spécifiques à la page Utilisateur
-import { UserPageHeader } from './components/UserPageHeader'
-import { UserSearch } from './components/UserSearch'
-import { UserFilters } from './components/UserFilters'
+import { UserPageHeader } from "@/components/organisms/UserPageHeader"
+import { UserSearch } from "@/components/organisms/UserSearch"
+import { UserFilters } from "@/components/organisms/UserFilters"
 
 export default function UtilisateursPage() {
   const [users, setUsers] = useState<UserProfil[]>([])

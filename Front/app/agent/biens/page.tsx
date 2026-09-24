@@ -3,14 +3,14 @@
 import { useMemo, useState } from 'react'
 import { Check } from 'lucide-react'
 import type { Property } from './types'
-import type { FormData } from './components/PropertyModal'
+import type { FormData } from "@/components/organisms/PropertyModal"
 
-import BiensHeader from './components/BiensHeader'
-import BiensToolbar from './components/BiensToolbar'
-import BiensSummary from './components/BiensSummary'
-import PropertiesGrid from './components/PropertiesGrid'
-import PropertyModal from './components/PropertyModal'
-import BiensFooter from './components/BiensFooter'
+import BiensHeader from "@/components/organisms/BiensHeader"
+import BiensToolbar from "@/components/organisms/BiensToolbar"
+import BiensSummary from "@/components/organisms/BiensSummary"
+import PropertiesGrid from "@/components/organisms/PropertiesGrid"
+import PropertyModal from "@/components/organisms/PropertyModal"
+import BiensFooter from "@/components/organisms/BiensFooter"
 
 const initialProperties: Property[] = [
   { id: 1, title: 'Appartement lumineux', address: '24 rue de Charonne, 75011 Paris',   type: 'Appartement', surface: '64',  rooms: '3', rent: '1 420', charges: '120', status: 'Loué',       color: 'sage',  description: 'Bel appartement traversant avec balcon.' },

@@ -2,13 +2,13 @@
 
 import React from 'react';
 import { useAdminDashboard } from './hooks/useAdminDashboard';
-import { BiensStats } from './components/BiensStats';
-import { ContratsStats } from './components/ContratsStats';
-import { PaiementsStats } from './components/PaiementsStats';
-import { UtilisateursStats } from './components/UtilisateursStats';
-import { RecentActivities } from './components/RecentActivities';
-import { DashboardCharts } from './components/DashboardCharts';
-import { LoadingState, ErrorState } from './components/States';
+import { BiensStats } from "@/components/molecules/BiensStats";
+import { ContratsStats } from "@/components/molecules/ContratsStats";
+import { PaiementsStats } from "@/components/molecules/PaiementsStats";
+import { UtilisateursStats } from "@/components/molecules/UtilisateursStats";
+import { RecentActivities } from "@/components/organisms/RecentActivities";
+import { DashboardCharts } from "@/components/organisms/DashboardCharts";
+import { LoadingState, ErrorState } from "@/components/organisms/States";
 
 export default function DashboardPage() {
   const { data, loading, error } = useAdminDashboard();

@@ -1,4 +1,4 @@
-import ProfilView from "@/components/profil/ProfilView";
+import ProfilView from "@/components/organisms/ProfilView";
 
 export default function AgentProfilPage() {
   return (

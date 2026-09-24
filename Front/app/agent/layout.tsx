@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { LayoutDashboard, Users, Building2, User, FileText, CircleDollarSign, CalendarCheck } from 'lucide-react'
-import Navbar from '@/components/Navbar'
+import Navbar from "@/components/organisms/Navbar"
 import { getProfil, UserProfil } from '@/lib/api'
 import './agent.css'
 

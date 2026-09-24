@@ -1,7 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
-import AuthGuard from '@/components/auth-guard'
-import { Toaster } from "@/components/ui/sonner"
+import AuthGuard from "@/components/organisms/auth-guard"
+import { Toaster } from "@/components/molecules/sonner"
 import './globals.css'
 import './admin/admin.css'
 

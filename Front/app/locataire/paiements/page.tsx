@@ -4,14 +4,14 @@ import '@/app/admin/admin.css'
 import { useState, useEffect } from 'react'
 import { getProfil } from '@/lib/api'
 
-import { LocataireSidebar } from '../components/LocataireSidebar'
-import { LocataireTopbar } from '../components/LocataireTopbar'
-import { ProfileModal } from '../components/ProfileModal'
+import { LocataireSidebar } from "@/components/organisms/LocataireSidebar"
+import { LocataireTopbar } from "@/components/organisms/LocataireTopbar"
+import { ProfileModal } from "@/components/organisms/ProfileModal"
 
-import { PaiementHeader } from './components/PaiementHeader'
-import { PaiementStats } from './components/PaiementStats'
-import { PaiementList } from './components/PaiementList'
-import { NotificationList } from './components/NotificationList'
+import { PaiementHeader } from "@/components/organisms/PaiementHeader"
+import { PaiementStats } from "@/components/molecules/paiement_PaiementStats"
+import { PaiementList } from "@/components/organisms/paiements_PaiementList"
+import { NotificationList } from "@/components/organisms/NotificationList"
 import { usePaiements } from './hooks/usePaiements'
 
 export default function PaiementsPage() {

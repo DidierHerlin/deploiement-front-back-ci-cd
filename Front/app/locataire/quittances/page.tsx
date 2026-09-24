@@ -6,11 +6,11 @@ import { getProfil } from '@/lib/api'
 import { usePaiements } from '../paiements/hooks/usePaiements'
 import { useContrats } from '../contrat/hooks/useContrats'
 
-import { LocataireSidebar } from '../components/LocataireSidebar'
-import { LocataireTopbar } from '../components/LocataireTopbar'
-import { ProfileModal } from '../components/ProfileModal'
+import { LocataireSidebar } from "@/components/organisms/LocataireSidebar"
+import { LocataireTopbar } from "@/components/organisms/LocataireTopbar"
+import { ProfileModal } from "@/components/organisms/ProfileModal"
 
-import { QuittanceList } from './components/QuittanceList'
+import { QuittanceList } from "@/components/organisms/QuittanceList"
 
 export default function LocataireQuittancesPage() {
   const [user, setUser] = useState<any>(null);

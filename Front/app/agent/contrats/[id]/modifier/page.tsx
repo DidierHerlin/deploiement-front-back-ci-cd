@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from "react"
 import { useRouter } from "next/navigation"
 import { getContrat, updateContrat, CreerContratPayload } from "@/lib/api"
-import ContratForm from "../../components/ContratForm"
+import ContratForm from "@/components/organisms/ContratForm"
 import { ArrowLeft } from "lucide-react"
 
 export default function ModifierContratPage({ params }: { params: Promise<{ id: string }> }) {

@@ -1,4 +1,4 @@
-import { getAccessToken, rafraichirToken, marquerDeconnecte, getRefreshToken, isTokenValid } from "./auth"
+﻿import { getAccessToken, rafraichirToken, marquerDeconnecte, getRefreshToken, isTokenValid } from "./auth"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000/api"
 
@@ -46,7 +46,7 @@ export interface BienListItem {
   prix: string | null
   statut: string
   photos?: string[] | null
-  proprietaire: { id: number; user: { nom: string; prenoms: string } }
+  proprietaire: { id: number; user: { id?: number; nom: string; prenoms: string } }
 }
 
 export interface Locataire {
@@ -925,3 +925,4 @@ export async function getReportingStats(): Promise<any> {
   const res = await fetchAPI<any>('/reporting/stats/');
   return res;
 }
+

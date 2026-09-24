@@ -5,9 +5,9 @@ import { useState, useEffect } from 'react'
 import { CalendarCheck, FileText, MessageSquare, Clock, CheckCircle, XCircle } from 'lucide-react'
 import { getProfil, getReservations, ReservationData } from '@/lib/api'
 
-import { LocataireSidebar } from '../components/LocataireSidebar'
-import { LocataireTopbar } from '../components/LocataireTopbar'
-import { ProfileModal } from '../components/ProfileModal'
+import { LocataireSidebar } from "@/components/organisms/LocataireSidebar"
+import { LocataireTopbar } from "@/components/organisms/LocataireTopbar"
+import { ProfileModal } from "@/components/organisms/ProfileModal"
 
 function StatutBadge({ statut }: { statut: string }) {
   const config: Record<string, { bg: string; color: string; label: string }> = {

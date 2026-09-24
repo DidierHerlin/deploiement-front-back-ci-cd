@@ -4,13 +4,13 @@ import '@/app/admin/admin.css'
 import { useState, useEffect } from 'react'
 import { getProfil, Contrat } from '@/lib/api'
 
-import { LocataireSidebar } from '../components/LocataireSidebar'
-import { LocataireTopbar } from '../components/LocataireTopbar'
-import { ProfileModal } from '../components/ProfileModal'
+import { LocataireSidebar } from "@/components/organisms/LocataireSidebar"
+import { LocataireTopbar } from "@/components/organisms/LocataireTopbar"
+import { ProfileModal } from "@/components/organisms/ProfileModal"
 
-import { ContratHeader } from './components/ContratHeader'
-import { ContratList } from './components/ContratList'
-import { ContratDetails } from './components/ContratDetails'
+import { ContratHeader } from "@/components/organisms/ContratHeader"
+import { ContratList } from "@/components/organisms/contrat_ContratList"
+import { ContratDetails } from "@/components/organisms/ContratDetails"
 import { useContrats } from './hooks/useContrats'
 
 export default function ContratPage() {

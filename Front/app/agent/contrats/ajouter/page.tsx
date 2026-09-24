@@ -3,7 +3,7 @@
 import { useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { creerContrat, CreerContratPayload } from "@/lib/api"
-import ContratForm from "../components/ContratForm"
+import ContratForm from "@/components/organisms/ContratForm"
 import { ArrowLeft, ClipboardList } from "lucide-react"
 
 function AjouterContratContent() {

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { WalletCards } from 'lucide-react'
 import { getPaiements, Paiement } from '@/lib/api'
-import { PaiementList } from '../components/paiements/PaiementList'
+import { PaiementList } from "@/components/organisms/paiements_PaiementList"
 
 export function PaiementsPage() {
   const [paiements, setPaiements] = useState<Paiement[]>([])
@@ -80,7 +80,7 @@ export function PaiementsPage() {
         {loading ? (
           <div className="p-8 text-center text-[#8993a3]">Chargement de vos paiements...</div>
         ) : (
-          <PaiementList paiements={filteredPaiements} />
+          <PaiementList paiements={filteredPaiements} onUpdate={() => fetchPaiements()} />
         )}
       </section>
     </>

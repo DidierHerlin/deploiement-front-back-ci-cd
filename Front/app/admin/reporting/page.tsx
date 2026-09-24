@@ -2,12 +2,12 @@
 
 import { RefreshCw } from 'lucide-react';
 import { useReporting } from './hooks/useReporting';
-import { ReportingStats } from './components/ReportingStats';
-import { OccupancyOverview } from './components/OccupancyOverview';
-import { RevenueChart } from './components/RevenueChart';
-import { UnpaidRentals } from './components/UnpaidRentals';
-import { ExpiringContracts } from './components/ExpiringContracts';
-import { ExportReports } from './components/ExportReports';
+import { ReportingStats } from "@/components/molecules/ReportingStats";
+import { OccupancyOverview } from "@/components/organisms/OccupancyOverview";
+import { RevenueChart } from "@/components/organisms/reporting_RevenueChart";
+import { UnpaidRentals } from "@/components/organisms/UnpaidRentals";
+import { ExpiringContracts } from "@/components/organisms/ExpiringContracts";
+import { ExportReports } from "@/components/organisms/ExportReports";
 
 export default function ReportingPage() {
   const { data, loading, error, refresh } = useReporting();

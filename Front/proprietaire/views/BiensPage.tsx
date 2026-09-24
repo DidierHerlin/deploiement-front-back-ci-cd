@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { Plus, Download } from 'lucide-react'
 import { getBiens, Bien } from '@/lib/api'
-import { BienList } from '../components/biens/BienList'
-import { BienForm } from '../components/biens/BienForm'
+import { BienList } from "@/components/organisms/BienList"
+import { BienForm } from "@/components/organisms/bien_BienForm"
 
 export function BiensPage() {
   const [biens, setBiens] = useState<Bien[]>([])

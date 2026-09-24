@@ -8,12 +8,12 @@ import {
   Contrat, Bien, Locataire, Paiement 
 } from '@/lib/api'
 
-import { ContratTable } from './components/ContratTable'
-import { ContratSearch } from './components/ContratSearch'
-import { ContratFilters } from './components/ContratFilters'
-import { ContratForm } from './components/ContratForm'
-import { ContratModal } from './components/ContratModal'
-import { ActionContratModal } from './components/ActionContratModal'
+import { ContratTable } from "@/components/organisms/ContratTable"
+import { ContratSearch } from "@/components/organisms/ContratSearch"
+import { ContratFilters } from "@/components/organisms/ContratFilters"
+import { ContratForm } from "@/components/organisms/contrat_ContratForm"
+import { ContratModal } from "@/components/organisms/ContratModal"
+import { ActionContratModal } from "@/components/organisms/ActionContratModal"
 
 export default function ContratPage() {
   const [contrats, setContrats] = useState<Contrat[]>([])

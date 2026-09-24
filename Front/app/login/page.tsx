@@ -1,7 +1,7 @@
 "use client"
 
 import { Suspense } from "react"
-import { LoginForm } from "@/components/login/login-form"
+import { LoginForm } from "@/components/organisms/login-form"
 
 export default function LoginPage() {
   return (

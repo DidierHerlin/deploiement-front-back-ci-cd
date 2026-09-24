@@ -1,6 +1,6 @@
 "use client";
 
-import ProfilView from "@/components/profil/ProfilView";
+import ProfilView from "@/components/organisms/ProfilView";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { FileText, Download } from 'lucide-react'
 import { getContrats, Contrat } from '@/lib/api'
-import { ContratList } from '../components/contrats/ContratList'
+import { ContratList } from "@/components/organisms/contrat_ContratList"
 
 export function ContratsPage() {
   const [contrats, setContrats] = useState<Contrat[]>([])

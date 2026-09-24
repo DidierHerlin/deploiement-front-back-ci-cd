@@ -3,9 +3,9 @@
 import { useState, type FormEvent } from "react"
 import Link from "next/link"
 import { ArrowLeft, CheckCircle2, LockKeyhole } from "lucide-react"
-import { ForgotPasswordForm } from "@/components/mot-de-passe-oublie/forgot-password-form"
-import { VerifyCodeForm } from "@/components/mot-de-passe-oublie/verify-code-form"
-import { ResetPasswordForm } from "@/components/mot-de-passe-oublie/reset-password-form"
+import { ForgotPasswordForm } from "@/components/organisms/forgot-password-form"
+import { VerifyCodeForm } from "@/components/organisms/verify-code-form"
+import { ResetPasswordForm } from "@/components/organisms/reset-password-form"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api"
 

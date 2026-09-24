@@ -7,14 +7,14 @@ import {
   getBiens, updateBien, Proprietaire, Bien
 } from '@/lib/api'
 
-import { ProprietaireTable } from './components/ProprietaireTable'
-import { ProprietaireSearch } from './components/ProprietaireSearch'
-import { ProprietaireFilters } from './components/ProprietaireFilters'
-import { ProprietaireForm } from './components/ProprietaireForm'
-import { ProprietaireModal } from './components/ProprietaireModal'
-import { DisableProprietaireModal } from './components/DisableProprietaireModal'
-import { ProprietaireBienTable } from './components/ProprietaireBienTable'
-import { AssignBienModal } from './components/AssignBienModal'
+import { ProprietaireTable } from "@/components/organisms/ProprietaireTable"
+import { ProprietaireSearch } from "@/components/organisms/ProprietaireSearch"
+import { ProprietaireFilters } from "@/components/organisms/ProprietaireFilters"
+import { ProprietaireForm } from "@/components/organisms/ProprietaireForm"
+import { ProprietaireModal } from "@/components/organisms/ProprietaireModal"
+import { DisableProprietaireModal } from "@/components/organisms/DisableProprietaireModal"
+import { ProprietaireBienTable } from "@/components/organisms/ProprietaireBienTable"
+import { AssignBienModal } from "@/components/organisms/AssignBienModal"
 import { updateUser } from '@/lib/api'
 
 export default function ProprietairePage() {

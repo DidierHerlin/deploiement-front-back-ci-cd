@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { getPaiements, Paiement } from '@/lib/api'
-import { PaiementStats } from './components/PaiementStats'
-import { PaiementSearch } from './components/PaiementSearch'
-import { PaiementFilters } from './components/PaiementFilters'
-import { PaiementTable } from './components/PaiementTable'
-import { PaiementForm } from './components/PaiementForm'
-import { PaiementDetails } from './components/PaiementDetails'
+import { PaiementStats } from "@/components/molecules/paiement_PaiementStats"
+import { PaiementSearch } from "@/components/organisms/PaiementSearch"
+import { PaiementFilters } from "@/components/organisms/PaiementFilters"
+import { PaiementTable } from "@/components/organisms/PaiementTable"
+import { PaiementForm } from "@/components/organisms/PaiementForm"
+import { PaiementDetails } from "@/components/organisms/PaiementDetails"
 
 export default function PaiementPage() {
   const [paiements, setPaiements] = useState<Paiement[]>([])

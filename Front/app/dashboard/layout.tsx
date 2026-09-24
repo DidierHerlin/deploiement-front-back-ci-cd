@@ -1,7 +1,7 @@
 'use client'
 
 import { LayoutDashboard, Users, Building2, FileText, Activity } from 'lucide-react'
-import Navbar from '@/components/Navbar'
+import Navbar from "@/components/organisms/Navbar"
 
 // Adapter uniquement les éléments de menu nécessaires au contexte du Dashboard.
 const dashboardNavItems = [

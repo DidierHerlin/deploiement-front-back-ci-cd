@@ -7,12 +7,12 @@ import {
   Bien, Proprietaire 
 } from '@/lib/api'
 
-import { BienTable } from './components/BienTable'
-import { BienSearch } from './components/BienSearch'
-import { BienFilters } from './components/BienFilters'
-import { BienForm } from './components/BienForm'
-import { BienModal } from './components/BienModal'
-import { DeleteBienModal } from './components/DeleteBienModal'
+import { BienTable } from "@/components/organisms/BienTable"
+import { BienSearch } from "@/components/organisms/BienSearch"
+import { BienFilters } from "@/components/organisms/BienFilters"
+import { BienForm } from "@/components/organisms/bien_BienForm"
+import { BienModal } from "@/components/organisms/BienModal"
+import { DeleteBienModal } from "@/components/organisms/bien_DeleteBienModal"
 
 export default function BienPage() {
   const [biens, setBiens] = useState<Bien[]>([])

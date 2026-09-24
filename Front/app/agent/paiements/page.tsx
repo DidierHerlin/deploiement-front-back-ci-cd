@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { getPaiements, Paiement } from '@/lib/api'
-import { PaiementList } from '@/proprietaire/components/paiements/PaiementList'
-import { PriorityPaiements } from './components/PriorityPaiements'
+import { PaiementList } from "@/components/organisms/paiements_PaiementList"
+import { PriorityPaiements } from "@/components/organisms/PriorityPaiements"
 
 export default function AgentPaiementsPage() {
   const [paiements, setPaiements] = useState<Paiement[]>([])
@@ -90,7 +90,7 @@ export default function AgentPaiementsPage() {
         {loading ? (
           <div className="agent-loading">Chargement des paiements...</div>
         ) : (
-          <PaiementList paiements={filteredPaiements} />
+          <PaiementList paiements={filteredPaiements} onUpdate={() => fetchPaiements()} />
         )}
       </section>
     </>
