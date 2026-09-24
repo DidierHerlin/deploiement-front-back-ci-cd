@@ -74,9 +74,8 @@ jobs:
 
       - name: Lancer les tests Django
         run: |
-          if coverage run manage.py test --verbosity=0 > test_output.log 2>&1; then
+          if python manage.py test --verbosity=0 > test_output.log 2>&1; then
             echo "Teste reçu avec succes"
-            coverage xml
           else
             cat test_output.log
             exit 1
