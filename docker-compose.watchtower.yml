@@ -1,0 +1,18 @@
+﻿version: '3.8'
+
+services:
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: always
+    volumes:
+      # Permet à Watchtower de communiquer avec Docker en local
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      # Intervalle de vérification en secondes (ici : toutes les 5 minutes)
+      - WATCHTOWER_POLL_INTERVAL=300
+      # Nettoie les anciennes images automatiquement après la mise à jour pour libérer de l'espace
+      - WATCHTOWER_CLEANUP=true
+      # (Optionnel) Limiter la mise à jour à des conteneurs précis au lieu de tous. 
+      # Décommentez et ajoutez le nom de vos conteneurs à surveiller à la fin du fichier :
+      # command: conteneur_backend conteneur_frontend
