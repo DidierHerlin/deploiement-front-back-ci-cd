@@ -105,16 +105,16 @@
 
   <table class="grid" role="presentation">
     <tr>
-      <th style="font-weight: normal; text-align: left;">
+      <td style="font-weight: normal; text-align: left;">
         <span class="label">Propriétaire / Bailleur</span>
         <strong>{{ proprietaire.user.get_full_name|default:"Non renseigné" }}</strong><br>
         {{ proprietaire.user.email }}
-      </th>
-      <th style="font-weight: normal; text-align: left;">
+      </td>
+      <td style="font-weight: normal; text-align: left;">
         <span class="label">Locataire</span>
         <strong>{{ locataire.user.get_full_name|default:"Non renseigné" }}</strong><br>
         {{ locataire.user.email }}
-      </th>
+      </td>
     </tr>
   </table>
 
