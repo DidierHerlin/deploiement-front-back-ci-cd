@@ -74,12 +74,19 @@ jobs:
 
       - name: Lancer les tests Django
         run: |
-          if python manage.py test --verbosity=0 > test_output.log 2>&1; then
+          if coverage run manage.py test --verbosity=0 > test_output.log 2>&1; then
             echo "Teste reçu avec succes"
+            coverage xml
           else
             cat test_output.log
             exit 1
           fi
+
+      - name: Sauvegarder le rapport de couverture
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: Back-end/configuration/coverage.xml
 
   code-quality:
     needs: backend-tests
@@ -112,6 +119,12 @@ jobs:
           fi
           echo "Tous les secrets SonarQube sont bien configurés."
 
+      - name: Récupérer le rapport de couverture
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: Back-end/configuration/
+
       - name: Analyse SonarQube
         uses: SonarSource/sonarqube-scan-action@v5
         env:
@@ -127,6 +140,7 @@ jobs:
             -Dsonar.tests=.
             -Dsonar.test.inclusions=**/test_*.py,**/tests.py,**/tests_*.py,test_reporting.py
             -Dsonar.python.version=3.11
+            -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.exclusions=**/migrations/**,**/__pycache__/**,**/.pytest_cache/**,manage.py,**/settings.py,settings.py,wsgi.py,asgi.py,**/test_*.py,**/tests.py,**/tests_*.py,test_reporting.py,test_runner.py,performance_test.py,check_user.py,scratch/**,**/media/**,coverage.xml,.coverage,**/*.log,**/*.txt,**/.venv/**,**/venv/**
             -Dsonar.cpd.exclusions=**/migrations/**,**/test_*.py,**/tests.py,**/tests_*.py,test_reporting.py,**/admin.py,**/apps.py,**/urls.py
             -Dsonar.coverage.exclusions=**/migrations/**,**/test_*.py,**/tests.py,**/tests_*.py,test_reporting.py,test_runner.py,performance_test.py,check_user.py,scratch/**,manage.py,**/settings.py,settings.py,wsgi.py,asgi.py,**/admin.py,**/apps.py,**/urls.py,**/__init__.py
