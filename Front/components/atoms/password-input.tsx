@@ -17,8 +17,8 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
         <LockKeyhole className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
         <input
           type={showPassword ? "text" : "password"}
-          className={`h-12 w-full rounded-xl border bg-background pl-10 pr-11 text-sm outline-none transition placeholder:text-muted-foreground focus:ring-4 focus:ring-ring/15 ${
-            error ? "border-destructive focus:border-destructive" : "border-input focus:border-primary"
+          className={`h-12 w-full rounded-xl border border-input/60 bg-white/50 pl-11 pr-11 text-sm outline-none transition-all placeholder:text-muted-foreground hover:bg-white focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 ${
+            error ? "border-destructive focus:border-destructive hover:border-destructive" : ""
           } ${className || ""}`}
           ref={ref}
           {...props}
