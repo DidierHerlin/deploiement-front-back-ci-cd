@@ -2,6 +2,8 @@ from pathlib import Path
 from datetime import timedelta
 from decouple import config, Csv
 import os
+import dj_database_url
+
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -78,15 +80,22 @@ db_host_env = config("DB_HOST", default="localhost")
 if db_host_env == "host.docker.internal" and not os.path.exists("/.dockerenv"):
     db_host_env = "localhost"
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": config("DB_NAME", default="gesion_immobilier_back_end"),
+#         "USER": config("DB_USER", default="postgres"),
+#         "PASSWORD": config("DB_PASSWORD", default=""),
+#         "HOST": db_host_env,
+#         "PORT": config("DB_PORT", default="5432"),
+#     }
+# }
+
+
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": config("DB_NAME", default="gesion_immobilier_back_end"),
-        "USER": config("DB_USER", default="postgres"),
-        "PASSWORD": config("DB_PASSWORD", default=""),
-        "HOST": db_host_env,
-        "PORT": config("DB_PORT", default="5432"),
-    }
+    "default": dj_database_url.config(
+        default=config("DATABASE_URL", default="postgres://postgres@localhost:5432/gesion_immobilier_back_end")
+    )
 }
 
 # ─── Validation des mots de passe ─────────────────────────────────────────────
