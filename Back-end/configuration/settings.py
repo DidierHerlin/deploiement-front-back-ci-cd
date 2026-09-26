@@ -94,9 +94,18 @@ if db_host_env == "host.docker.internal" and not os.path.exists("/.dockerenv"):
 
 DATABASES = {
     "default": dj_database_url.config(
-        default=config("DATABASE_URL", default="postgres://postgres@localhost:5432/gesion_immobilier_back_end")
+        default="postgres://postgres@localhost:5432/gesion_immobilier_back_end",
+        conn_max_age=600,
+        conn_health_checks=True,
     )
 }
+
+# Debug (à retirer après)
+import sys
+if "migrate" in sys.argv or "runserver" in sys.argv:
+    print(f"DB ENGINE: {DATABASES['default'].get('ENGINE')}")
+    print(f"DB HOST: {DATABASES['default'].get('HOST')}")
+    print(f"DB NAME: {DATABASES['default'].get('NAME')}")
 
 # ─── Validation des mots de passe ─────────────────────────────────────────────
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
