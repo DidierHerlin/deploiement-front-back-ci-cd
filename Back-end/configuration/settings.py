@@ -102,6 +102,12 @@ DATABASES = {
         conn_health_checks=True,
     )
 }
+# Debug (à retirer après)
+import sys
+if "migrate" in sys.argv or "runserver" in sys.argv:
+    print(f"DB ENGINE: {DATABASES['default'].get('ENGINE')}")
+    print(f"DB HOST: {DATABASES['default'].get('HOST')}")
+    print(f"DB NAME: {DATABASES['default'].get('NAME')}")
 
 # ─── Validation des mots de passe ─────────────────────────────────────────────
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
