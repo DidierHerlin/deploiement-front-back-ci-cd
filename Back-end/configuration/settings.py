@@ -94,7 +94,12 @@ if db_host_env == "host.docker.internal" and not os.path.exists("/.dockerenv"):
 
 DATABASES = {
     "default": dj_database_url.config(
-        default=config("DATABASE_URL", default="postgres://postgres@localhost:5432/gesion_immobilier_back_end")
+        default=config(
+            "DATABASE_URL",
+            default="postgres://postgres@localhost:5432/gesion_immobilier_back_end"
+        ),
+        conn_max_age=600,
+        conn_health_checks=True,
     )
 }
 
@@ -167,13 +172,13 @@ SIMPLE_JWT = {
 
 CORS_ALLOWED_ORIGINS = config(
     "CORS_ALLOWED_ORIGINS",
-    default="http://localhost:3000,http://127.0.0.1:3000",
+    default="http://localhost:3000,http://127.0.0.1:3000,https://immobilier-drf-production.up.railway.app",
     cast=Csv(),
 )
 FRONTEND_URL = config("FRONTEND_URL", default="http://localhost:3000")
 CSRF_TRUSTED_ORIGINS = config(
     "CSRF_TRUSTED_ORIGINS",
-    default="http://localhost:3000,http://127.0.0.1:3000",
+    default="http://localhost:3000,http://127.0.0.1:3000,https://immobilier-drf-production.up.railway.app",
     cast=Csv(),
 )
 
