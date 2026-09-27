@@ -10,7 +10,6 @@ export function ContratsStats({ data }: { data: AdminDashboardData }) {
   const locations = contrats.filter(c => c.type_contrat === 'LOCATION').length;
   const ventes = contrats.filter(c => c.type_contrat === 'ACHAT').length;
   
-  // Contrats expirant dans les 30 prochains jours
   const now = new Date();
   const next30 = new Date();
   next30.setDate(now.getDate() + 30);

@@ -2,17 +2,15 @@
 
 import React, { useState } from 'react';
 import { ArrowDownToLine, Loader2 } from 'lucide-react';
-import { getProfil } from '@/lib/api'; // On a besoin de lib/api pour le fetchAuth?
+import { getProfil } from '@/lib/api'; 
 
-// Note: On utilise le token de l'API pour sécuriser le téléchargement.
-// On récupère le token du localStorage comme le fait lib/api.ts
 
 export function ContratDownloadButton({ contratId, typeContrat }: { contratId: number, typeContrat: string }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   if (typeContrat !== 'LOCATION') {
-    return null; // On ne télécharge que les contrats de location selon les specs.
+    return null; 
   }
 
   const handleDownload = async () => {
@@ -26,24 +24,20 @@ export function ContratDownloadButton({ contratId, typeContrat }: { contratId: n
       const blob = await fetchBlob(`/contrats/${contratId}/telecharger/`);
 
       const filename = `Contrat_Bail_${contratId}.pdf`;
-
-      // Déclencher le téléchargement
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+          a.style.display = 'none';
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            } catch (err: any) {
+               setError(err.message);
+            } finally {
+              setLoading(false); 
+        }
   };
 
   return (

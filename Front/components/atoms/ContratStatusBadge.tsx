@@ -6,15 +6,15 @@ export function ContratStatusBadge({ statut }: { statut: string }) {
 
   switch (statut) {
     case 'ACTIF':
-      badgeClass += ' paid'; // Vert
+      badgeClass += ' paid';
       label = 'Actif';
       break;
     case 'RESILIE':
-      badgeClass += ' failed'; // Rouge/Gris selon CSS
+      badgeClass += ' failed'; 
       label = 'Résilié';
       break;
     case 'TERMINE':
-      badgeClass += ' default'; // Gris
+      badgeClass += ' default'; 
       label = 'Terminé';
       break;
     default:

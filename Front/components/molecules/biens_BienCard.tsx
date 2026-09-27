@@ -23,9 +23,7 @@ export default function BienCard({ bien, onReserver }: BienCardProps) {
 
   return (
     <div className="panel" style={{ display: 'flex', flexDirection: 'column', gap: 12, overflow: 'hidden', padding: 0 }}>
-      {/* Photo */}
       {bien.photos && bien.photos.length > 0 ? (
-        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={bien.photos[0]}
           alt={bien.titre}
@@ -54,14 +52,12 @@ export default function BienCard({ bien, onReserver }: BienCardProps) {
         </span>
       </div>
 
-      {/* Infos */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, fontSize: 12, color: 'var(--muted-foreground)' }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Tag size={13} /> {typeLabel}</span>
         {bien.surface && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Maximize size={13} /> {bien.surface} m²</span>}
         {bien.nombre_pieces && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><DoorOpen size={13} /> {bien.nombre_pieces} pièce(s)</span>}
       </div>
 
-      {/* Prix */}
       <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--primary)' }}>
         {isLocation
           ? `${Number(bien.loyer_mensuel || 0).toLocaleString()} Ar / mois`
@@ -69,7 +65,6 @@ export default function BienCard({ bien, onReserver }: BienCardProps) {
         }
       </div>
 
-      {/* Bouton Réserver */}
       <button
         onClick={() => onReserver(bien)}
         style={{
