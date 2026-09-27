@@ -125,7 +125,7 @@ export function LoginForm() {
           </span>
           <h2 className="mb-4 text-4xl font-bold leading-tight">Gérez votre immobilier<br />en toute simplicité</h2>
           <p className="mb-8 text-lg text-white/90">
-            ImmoConnect centralise la gestion de vos biens immobiliers. Rejoignez des milliers de propriétaires, 
+            ImmoConnect centralise la gestion de vos biens immobiliers. Rejoignez des milliers de propriétaires, locataires et professionnels.
           </p>
           
           <ul className="mb-10 space-y-4 text-sm text-white/80">
