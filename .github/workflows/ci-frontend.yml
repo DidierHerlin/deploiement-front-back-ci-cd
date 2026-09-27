@@ -94,4 +94,4 @@ jobs:
       - name: Deployer le Frontend sur Railway
         run: railway redeploy --service="ba9608b2-ae95-4ee3-b526-78c1f66f7aae" --from-source --yes
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_FRONTEND }}
