@@ -92,15 +92,17 @@ if db_host_env == "host.docker.internal" and not os.path.exists("/.dockerenv"):
 # }
 
 
+import os
+
 DATABASES = {
-    "default": dj_database_url.config(
-        default=config(
-            "DATABASE_URL",
-            default="postgres://postgres@localhost:5432/gesion_immobilier_back_end"
-        ),
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("PGDATABASE"),
+        "USER": os.environ.get("PGUSER"),
+        "PASSWORD": os.environ.get("PGPASSWORD"),
+        "HOST": os.environ.get("PGHOST"),
+        "PORT": os.environ.get("PGPORT", "5432"),
+    }
 }
 # Debug (à retirer après)
 import sys
