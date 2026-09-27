@@ -185,3 +185,19 @@ jobs:
 
 
 
+
+  deploy-to-railway:
+    needs: docker-publish
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Installer Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Déployer le Backend sur Railway
+        run: railway up --service=${{ secrets.RAILWAY_BACKEND_SERVICE_ID }} --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
