@@ -104,9 +104,18 @@ DATABASES = {
         "PORT": os.environ.get("PGPORT", "5432"),
     }
 }
+
+if not os.environ.get("PGDATABASE"):
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
+
 # Debug (à retirer après)
 import sys
-if "migrate" in sys.argv or "runserver" in sys.argv:
+if "migrate" in sys.argv or "runserver" in sys.argv or "test" in sys.argv:
     print(f"DB ENGINE: {DATABASES['default'].get('ENGINE')}")
     print(f"DB HOST: {DATABASES['default'].get('HOST')}")
     print(f"DB NAME: {DATABASES['default'].get('NAME')}")
