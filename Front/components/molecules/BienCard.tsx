@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { Bien } from '@/lib/api'
@@ -47,11 +47,11 @@ export function BienCard({ bien, onEdit, onDelete }: BienCardProps) {
   return (
     <div className="flex flex-col border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow h-full group">
       <div className="h-48 bg-gray-100 relative overflow-hidden flex-shrink-0">
-        {bien.photos && bien.photos.length > 0 ? (
+        {bien.photos && bien?.photos?.length > 0 ? (
           <>
             <img src={bien.photos[photoIndex]} alt={bien.titre} className="w-full h-full object-cover transition-opacity duration-300" />
             
-            {bien.photos.length > 1 && (
+            {bien?.photos?.length > 1 && (
               <>
                 <button 
                   onClick={prevPhoto}
@@ -67,7 +67,7 @@ export function BienCard({ bien, onEdit, onDelete }: BienCardProps) {
                 </button>
                 
                 <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
-                  {bien.photos.map((_, idx) => (
+                  {(Array.isArray(bien?.photos) ? bien.photos : []).map((_, idx) => (
                     <div 
                       key={idx} 
                       className={`h-1.5 rounded-full transition-all ${idx === photoIndex ? 'w-4 bg-white' : 'w-1.5 bg-white/60'}`}
@@ -83,17 +83,17 @@ export function BienCard({ bien, onEdit, onDelete }: BienCardProps) {
           </div>
         )}
         <div className="absolute top-3 right-3 flex gap-2">
-          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${getStatusColor(bien.statut)}`}>
-            {bien.statut}
+          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${getStatusColor((bien?.statut || ''))}`}>
+            {(bien?.statut || '')}
           </span>
           <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white text-gray-700 shadow-sm">
-            {bien.mode_transaction === 'LOCATION' ? 'À LOUER' : 'À VENDRE'}
+            {(bien?.mode_transaction || '') === 'LOCATION' ? 'À LOUER' : 'À VENDRE'}
           </span>
         </div>
       </div>
       
       <div className="p-5 flex flex-col flex-1">
-        <div className="text-xs font-semibold text-blue-600 mb-1">{getTypeLabel(bien.type)}</div>
+        <div className="text-xs font-semibold text-blue-600 mb-1">{getTypeLabel(bien?.type || '')}</div>
         <h3 className="font-bold text-[#17202b] text-base mb-2 line-clamp-1" title={bien.titre}>{bien.titre}</h3>
         
         <div className="flex items-start gap-1.5 text-gray-500 text-xs mb-4 h-8">
@@ -102,13 +102,13 @@ export function BienCard({ bien, onEdit, onDelete }: BienCardProps) {
         </div>
         
         <div className="grid grid-cols-2 gap-y-2 text-xs text-gray-600 mb-4 mt-auto">
-          {bien.type !== 'TERRAIN' && (
+          {(bien?.type || '') !== 'TERRAIN' && (
             <div>
               <span className="block text-gray-400 text-[10px] uppercase font-semibold">Surface</span>
               <strong className="text-gray-800">{bien.surface} m²</strong>
             </div>
           )}
-          {bien.type !== 'TERRAIN' && bien.nombre_pieces && (
+          {(bien?.type || '') !== 'TERRAIN' && bien.nombre_pieces && (
             <div>
               <span className="block text-gray-400 text-[10px] uppercase font-semibold">Pièces</span>
               <strong className="text-gray-800">{bien.nombre_pieces}</strong>
@@ -118,7 +118,7 @@ export function BienCard({ bien, onEdit, onDelete }: BienCardProps) {
         
         <div className="border-t border-gray-100 pt-4 flex items-center justify-between mt-auto">
           <div className="font-bold text-[#17202b] text-lg">
-            {bien.mode_transaction === 'LOCATION' && bien.loyer_mensuel ? (
+            {(bien?.mode_transaction || '') === 'LOCATION' && bien.loyer_mensuel ? (
               <>{parseFloat(bien.loyer_mensuel).toLocaleString('fr-FR')} Ar <span className="text-xs font-normal text-gray-500">/ mois</span></>
             ) : bien.prix ? (
               <>{parseFloat(bien.prix).toLocaleString('fr-FR')} Ar</>

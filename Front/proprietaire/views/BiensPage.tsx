@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { Plus, Download } from 'lucide-react'
@@ -50,8 +50,8 @@ export function BiensPage() {
   }
 
   // Déduire les options uniques dynamiquement d'après la base (les biens chargés)
-  const uniqueTypes = Array.from(new Set(biens.map(b => b.type))).sort()
-  const uniqueStatuts = Array.from(new Set(biens.map(b => b.statut))).sort()
+  const uniqueTypes = Array.from(new Set(biens.map(b => b?.type).filter(Boolean))).sort()
+  const uniqueStatuts = Array.from(new Set(biens.map(b => b?.statut).filter(Boolean))).sort()
 
   const filteredBiens = biens.filter(bien => {
     if (filterStatut && bien.statut !== filterStatut) return false
