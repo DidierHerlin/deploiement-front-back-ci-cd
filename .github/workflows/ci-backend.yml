@@ -194,6 +194,6 @@ jobs:
         run: npm install -g @railway/cli
 
       - name: Deployer le Backend sur Railway
-        run: cd Back-end/configuration && railway up --service="f1c69b08-b530-4199-b944-d71c1fdf18f7" --detach
+        run: railway redeploy --service="f1c69b08-b530-4199-b944-d71c1fdf18f7" --from-source --yes
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
