@@ -92,20 +92,31 @@ if db_host_env == "host.docker.internal" and not os.path.exists("/.dockerenv"):
 # }
 
 
-import os
+# 1. Priorité absolue à DATABASE_URL (fournie par Railway ou le .env local)
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("PGDATABASE"),
-        "USER": os.environ.get("PGUSER"),
-        "PASSWORD": os.environ.get("PGPASSWORD"),
-        "HOST": os.environ.get("PGHOST"),
-        "PORT": os.environ.get("PGPORT", "5432"),
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
-
-if not os.environ.get("PGDATABASE"):
+# 2. Sinon, on utilise les variables PG* (Railway) si elles sont définies
+elif os.environ.get("PGHOST"):
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ.get("PGDATABASE", "railway"),
+            "USER": os.environ.get("PGUSER", "postgres"),
+            "PASSWORD": os.environ.get("PGPASSWORD", ""),
+            "HOST": os.environ.get("PGHOST"),
+            "PORT": os.environ.get("PGPORT", "5432"),
+        }
+    }
+# 3. Fallback local : SQLite
+else:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -113,12 +124,12 @@ if not os.environ.get("PGDATABASE"):
         }
     }
 
-# Debug (à retirer après)
+# Debug temporaire (à retirer une fois que tout fonctionne)
 import sys
-if "migrate" in sys.argv or "runserver" in sys.argv or "test" in sys.argv:
+if any(cmd in sys.argv for cmd in ("migrate", "runserver", "test")):
     print(f"DB ENGINE: {DATABASES['default'].get('ENGINE')}")
-    print(f"DB HOST: {DATABASES['default'].get('HOST')}")
-    print(f"DB NAME: {DATABASES['default'].get('NAME')}")
+    print(f"DB HOST:   {DATABASES['default'].get('HOST')}")
+    print(f"DB NAME:   {DATABASES['default'].get('NAME')}")
 
 # ─── Validation des mots de passe ─────────────────────────────────────────────
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
