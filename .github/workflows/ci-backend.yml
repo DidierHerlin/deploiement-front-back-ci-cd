@@ -64,18 +64,18 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Installer les d�pendances
+      - name: Installer les dépendances
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: V�rifier la configuration Django
+      - name: Vérifier la configuration Django
         run: python manage.py check
 
       - name: Lancer les tests Django
         run: |
           if python manage.py test --verbosity=0 > test_output.log 2>&1; then
-            echo "Teste re�u avec succes"
+            echo "Teste reçu avec succes"
           else
             cat test_output.log
             exit 1
@@ -97,7 +97,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: V�rifier que les secrets SonarQube sont configur�s
+      - name: Vérifier que les secrets SonarQube sont configurés
         run: |
           MISSING=0
           if [ -z "${{ secrets.SONAR_TOKEN }}" ]; then
@@ -116,9 +116,9 @@ jobs:
             echo "::error::Un ou plusieurs secrets SonarQube sont manquants. Le job s'arr�te ici avec un message clair au lieu de l'erreur cryptique du scanner."
             exit 1
           fi
-          echo "Tous les secrets SonarQube sont bien configur�s."
+          echo "Tous les secrets SonarQube sont bien configurés."
 
-      - name: R�cup�rer le rapport de couverture
+      - name: Récupérer le rapport de couverture
         uses: actions/download-artifact@v4
         with:
           name: coverage-report
@@ -194,6 +194,6 @@ jobs:
         run: npm install -g @railway/cli
 
       - name: Deployer le Backend sur Railway
-        run: railway up --service="f1c69b08-b530-4199-b944-d71c1fdf18f7" --detach
+        run: cd Back-end/configuration && railway up --service="f1c69b08-b530-4199-b944-d71c1fdf18f7" --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
