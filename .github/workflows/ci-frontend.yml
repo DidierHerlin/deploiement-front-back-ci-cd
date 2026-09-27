@@ -79,3 +79,19 @@ jobs:
         run: docker build -t login-page-immobilier:pr ./Front
 
 
+
+  deploy-to-railway:
+    needs: docker-publish
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Installer Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deployer le Frontend sur Railway
+        run: railway redeploy --service="REMPLACEZ_PAR_L_ID_DU_FRONTEND" --from-source --yes
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
