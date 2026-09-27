@@ -1,6 +1,6 @@
-﻿import { getAccessToken, rafraichirToken, marquerDeconnecte, getRefreshToken, isTokenValid } from "./auth"
+import { getAccessToken, rafraichirToken, marquerDeconnecte, getRefreshToken, isTokenValid } from "./auth"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000/api"
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://immobilier-drf-production.up.railway.app/api"
 
 // -- CACHE SYSTEM --
 const apiCache = new Map<string, { data: any, timestamp: number }>()
@@ -13,8 +13,7 @@ function getCacheKey(path: string, options: RequestInit) {
 export function invalidateCache() {
   apiCache.clear()
 }
-// -----------------
-// Types métier
+
 
 export interface Bien {
   id: number
@@ -87,7 +86,6 @@ export interface CreerContratPayload {
   prix?: string | null
 }
 
-// Fetch authentifié — avec retry sur token expiré
 
 function gererExpirationSession() {
   if (typeof window !== "undefined") {
@@ -104,8 +102,7 @@ async function fetchAPI<T>(
 ): Promise<T> {
   let token = getAccessToken()
   const method = (options.method || 'GET').toUpperCase()
-
-  // -- VÉRIFICATION DU CACHE --
+// -- V�RIFICATION DU CACHE --
   if (method === 'GET') {
     const cacheKey = getCacheKey(path, options)
     const cached = apiCache.get(cacheKey)
@@ -114,18 +111,17 @@ async function fetchAPI<T>(
     }
   }
 
-  // -- VÉRIFICATION ET RAFRAÎCHISSEMENT DU TOKEN AVANT REQUÊTE --
   if (!path.startsWith("/auth/") && !path.includes("login") && !path.includes("register")) {
     if (!isTokenValid(token)) {
       const refresh = getRefreshToken()
       if (!isTokenValid(refresh)) {
         gererExpirationSession()
-        throw new Error("Session expirée — veuillez vous reconnecter.")
+        throw new Error("Session expir�e � veuillez vous reconnecter.")
       }
       token = await rafraichirToken()
       if (!token) {
         gererExpirationSession()
-        throw new Error("Session expirée — veuillez vous reconnecter.")
+        throw new Error("Session expir�e � veuillez vous reconnecter.")
       }
     }
   }
@@ -136,8 +132,8 @@ async function fetchAPI<T>(
     ...((options.headers as Record<string, string>) ?? {}),
   })
 
-  const TIMEOUT_MS = 30_000  // 30 secondes pour les tableaux de bord chargés
-  const MAX_RETRIES = 1      // 1 retry en cas d'erreur réseau transitoire
+  const TIMEOUT_MS = 30_000  // 30 secondes pour les tableaux de bord charg�s
+  const MAX_RETRIES = 1      // 1 retry en cas d'erreur r�seau transitoire
 
   async function doFetch(tokenValue: string | null): Promise<Response> {
     const controller = new AbortController()
@@ -157,7 +153,7 @@ async function fetchAPI<T>(
     }
   }
 
-  // Retry avec backoff exponentiel pour les erreurs réseau / timeout
+  // Retry avec backoff exponentiel pour les erreurs r�seau / timeout
   let lastError: any = null
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
@@ -168,13 +164,13 @@ async function fetchAPI<T>(
         token = await rafraichirToken()
         if (!token) {
           gererExpirationSession()
-          throw new Error("Session expirée — veuillez vous reconnecter.")
+          throw new Error("Session expir�e � veuillez vous reconnecter.")
         }
         res = await doFetch(token)
 
         if (res.status === 401) {
           gererExpirationSession()
-          throw new Error("Session expirée — veuillez vous reconnecter.")
+          throw new Error("Session expir�e � veuillez vous reconnecter.")
         }
       }
 
@@ -184,7 +180,7 @@ async function fetchAPI<T>(
           const body = await res.json()
           detail = JSON.stringify(body)
         } catch {
-          // Impossible de parser le body — on garde le code HTTP
+          // Impossible de parser le body � on garde le code HTTP
         }
         throw new Error(`Erreur API (${res.status}) sur ${path} : ${detail}`)
       }
@@ -195,8 +191,8 @@ async function fetchAPI<T>(
           invalidateCache()
           if (typeof window !== "undefined" && !path.includes('marquer-lu')) {
             import("sonner").then(({ toast }) => {
-              if (method === 'DELETE') toast.success("Suppression effectuée avec succès")
-              else toast.success("Opération réussie")
+              if (method === 'DELETE') toast.success("Suppression effectu�e avec succ�s")
+              else toast.success("Op�ration r�ussie")
             })
           }
         }
@@ -216,20 +212,20 @@ async function fetchAPI<T>(
          invalidateCache()
          if (typeof window !== "undefined" && !path.includes('marquer-lu')) {
            import("sonner").then(({ toast }) => {
-             let msg = "Opération réussie"
+             let msg = "Op�ration r�ussie"
              if (method === 'POST') {
-               if (path.includes('valider')) msg = "Paiement validé avec succès"
-               else if (path.includes('refuser')) msg = "Paiement refusé"
-               else if (path.includes('annuler')) msg = "Paiement annulé"
-               else if (path.includes('resilier')) msg = "Contrat résilié"
-               else if (path.includes('terminer')) msg = "Contrat terminé"
-               else if (path.includes('finaliser_vente')) msg = "Vente finalisée"
-               else if (path.includes('repondre')) msg = "Réponse envoyée"
-               else msg = "Ajout effectué avec succès"
+               if (path.includes('valider')) msg = "Paiement valid� avec succ�s"
+               else if (path.includes('refuser')) msg = "Paiement refus�"
+               else if (path.includes('annuler')) msg = "Paiement annul�"
+               else if (path.includes('resilier')) msg = "Contrat r�sili�"
+               else if (path.includes('terminer')) msg = "Contrat termin�"
+               else if (path.includes('finaliser_vente')) msg = "Vente finalis�e"
+               else if (path.includes('repondre')) msg = "R�ponse envoy�e"
+               else msg = "Ajout effectu� avec succ�s"
              } else if (method === 'PATCH' || method === 'PUT') {
-               msg = "Mise à jour effectuée avec succès"
+               msg = "Mise � jour effectu�e avec succ�s"
              } else if (method === 'DELETE') {
-               msg = "Suppression effectuée avec succès"
+               msg = "Suppression effectu�e avec succ�s"
              }
              toast.success(msg)
            })
@@ -244,24 +240,24 @@ async function fetchAPI<T>(
         || error.message?.includes('ECONNREFUSED')
 
       if (isNetworkError && attempt < MAX_RETRIES) {
-        // Attendre avant de réessayer (backoff exponentiel : 1s, 2s)
+        // Attendre avant de r�essayer (backoff exponentiel : 1s, 2s)
         lastError = error
         await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
         continue
       }
 
       if (error.name === 'AbortError') {
-        throw new Error("Délai d'attente dépassé (timeout). Veuillez vérifier votre connexion.")
+        throw new Error("D�lai d'attente d�pass� (timeout). Veuillez v�rifier votre connexion.")
       }
       throw error
     }
   }
 
-  // Dernier recours — ne devrait jamais arriver
-  throw lastError ?? new Error("Erreur réseau inattendue.")
+  // Dernier recours � ne devrait jamais arriver
+  throw lastError ?? new Error("Erreur r�seau inattendue.")
 }
 
-// API — Biens
+// API � Biens
 
 export async function getBiens(): Promise<Bien[]> {
   const res = await fetchAPI<{
@@ -295,7 +291,7 @@ export async function deleteBien(id: number): Promise<void> {
 }
 
 
-// Récupère la liste des biens disponibles.
+// R�cup�re la liste des biens disponibles.
 
 export async function getBiensDisponibles(): Promise<BienListItem[]> {
   const res = await fetchAPI<{
@@ -307,9 +303,9 @@ export async function getBiensDisponibles(): Promise<BienListItem[]> {
 }
 
 
-// Récupère le détail d'un bien par son id.
+// R�cup�re le d�tail d'un bien par son id.
 
-// Pour télécharger un fichier (PDF quittance, etc.)
+// Pour t�l�charger un fichier (PDF quittance, etc.)
 export async function fetchBlob(
   path: string,
   options: RequestInit = {}
@@ -320,12 +316,12 @@ export async function fetchBlob(
     const refresh = getRefreshToken()
     if (!isTokenValid(refresh)) {
       gererExpirationSession()
-      throw new Error("Session expirée — veuillez vous reconnecter.")
+      throw new Error("Session expir�e � veuillez vous reconnecter.")
     }
     token = await rafraichirToken()
     if (!token) {
       gererExpirationSession()
-      throw new Error("Session expirée — veuillez vous reconnecter.")
+      throw new Error("Session expir�e � veuillez vous reconnecter.")
     }
   }
 
@@ -335,8 +331,8 @@ export async function fetchBlob(
     ...((options.headers as Record<string, string>) ?? {}),
   })
 
-  const TIMEOUT_MS = 60_000  // 60 secondes (les PDF peuvent être longs à générer)
-  const MAX_RETRIES = 0      // 0 retry pour éviter plusieurs popups IDM (Internet Download Manager)
+  const TIMEOUT_MS = 60_000  // 60 secondes (les PDF peuvent �tre longs � g�n�rer)
+  const MAX_RETRIES = 0      // 0 retry pour �viter plusieurs popups IDM (Internet Download Manager)
 
   async function doFetch(tokenValue: string | null): Promise<Response> {
     const controller = new AbortController()
@@ -367,13 +363,13 @@ export async function fetchBlob(
         token = await rafraichirToken()
         if (!token) {
           gererExpirationSession()
-          throw new Error("Session expirée — veuillez vous reconnecter.")
+          throw new Error("Session expir�e � veuillez vous reconnecter.")
         }
         res = await doFetch(token)
 
         if (res.status === 401) {
           gererExpirationSession()
-          throw new Error("Session expirée — veuillez vous reconnecter.")
+          throw new Error("Session expir�e � veuillez vous reconnecter.")
         }
       }
 
@@ -384,7 +380,7 @@ export async function fetchBlob(
           const errorBody = await res.json()
           detail = errorBody.error || errorBody.detail || JSON.stringify(errorBody)
         } catch {
-          // Le body n'est pas du JSON — on garde le code HTTP
+          // Le body n'est pas du JSON � on garde le code HTTP
         }
         throw new Error(detail)
       }
@@ -404,13 +400,13 @@ export async function fetchBlob(
       }
 
       if (error.name === 'AbortError') {
-        throw new Error("Délai d'attente dépassé lors du téléchargement. Veuillez réessayer.")
+        throw new Error("D�lai d'attente d�pass� lors du t�l�chargement. Veuillez r�essayer.")
       }
       throw error
     }
   }
 
-  throw lastError ?? new Error("Impossible de télécharger le fichier. Vérifiez que le serveur est accessible.")
+  throw lastError ?? new Error("Impossible de t�l�charger le fichier. V�rifiez que le serveur est accessible.")
 }
 
 export async function getBienDetail(id: number): Promise<Bien> {
@@ -419,7 +415,7 @@ export async function getBienDetail(id: number): Promise<Bien> {
 }
 
 
-// Création contrat 
+// Cr�ation contrat 
 
 export interface BienInfo {
   loyer_mensuel: string | null
@@ -436,7 +432,7 @@ export async function getBienInfo(bienId: number): Promise<BienInfo> {
 }
 
 
-//  API — Locataires
+//  API � Locataires
 
 export interface Proprietaire {
   id: number
@@ -473,7 +469,7 @@ export async function getLocataireDetail(id: number): Promise<Locataire> {
   return res.data
 }
 
-// API — Contrats
+// API � Contrats
 
 export async function getContrats(): Promise<Contrat[]> {
   const res = await fetchAPI<{
@@ -503,7 +499,7 @@ export async function updateContrat(id: number, payload: Partial<CreerContratPay
   })
 }
 
-// API — Paiements
+// API � Paiements
 
 export interface Paiement {
   id: number
@@ -544,7 +540,7 @@ export async function getPaiements(): Promise<Paiement[]> {
 
   if (!Array.isArray(paiements)) return []
 
-  // S'il y a plus de résultats que la première page, récupérer les pages restantes en parallèle
+  // S'il y a plus de r�sultats que la premi�re page, r�cup�rer les pages restantes en parall�le
   if (res.count > PAGE_SIZE) {
     const totalPages = Math.ceil(res.count / PAGE_SIZE)
     const pagePromises: Promise<Paiement[]>[] = []
@@ -637,7 +633,7 @@ export async function downloadQuittance(id: number, reference: string = "quittan
     
     if (!response.ok) {
       const rawText = await response.text()
-      let errorMsg = "Erreur lors du téléchargement de la quittance."
+      let errorMsg = "Erreur lors du t�l�chargement de la quittance."
       try {
         const errorData = JSON.parse(rawText)
         if (errorData.error) errorMsg = errorData.error
@@ -662,7 +658,7 @@ export async function downloadQuittance(id: number, reference: string = "quittan
   }
 }
 
-// API — Profil
+// API � Profil
 
 export interface Notification {
   id: number;
@@ -707,16 +703,16 @@ export interface UserProfil {
 }
 
 // Construit une URL image affichable : accepte URL absolue (backend),
-// blob:, data:, ou chemin relatif /media/... (préfixé par le host backend).
+// blob:, data:, ou chemin relatif /media/... (pr�fix� par le host backend).
 export function resolveMediaUrl(url: string | null | undefined): string | null {
   if (!url) return null
   if (url.startsWith("http") || url.startsWith("blob:") || url.startsWith("data:")) return url
-  const base = process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") || "http://localhost:8000"
+  const base = process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") || "https://immobilier-drf-production.up.railway.app"
   return `${base}${url.startsWith("/") ? url : `/${url}`}`
 }
 
 // Raccourci : extrait la photo affichable depuis un user/profil
-// (le backend renvoie `photo_url`, `photo_profil` étant write-only).
+// (le backend renvoie `photo_url`, `photo_profil` �tant write-only).
 export function getUserPhotoSrc(user: { photo_url?: string | null; photo_profil?: string | null } | null | undefined): string | null {
   if (!user) return null
   return resolveMediaUrl(user.photo_url ?? user.photo_profil)
@@ -735,12 +731,12 @@ export async function updateProfil(payload: FormData): Promise<UserProfil> {
     const refresh = getRefreshToken()
     if (!isTokenValid(refresh)) {
       gererExpirationSession()
-      throw new Error("Session expirée — veuillez vous reconnecter.")
+      throw new Error("Session expir�e � veuillez vous reconnecter.")
     }
     token = await rafraichirToken()
     if (!token) {
       gererExpirationSession()
-      throw new Error("Session expirée — veuillez vous reconnecter.")
+      throw new Error("Session expir�e � veuillez vous reconnecter.")
     }
   }
 
@@ -759,7 +755,7 @@ export async function updateProfil(payload: FormData): Promise<UserProfil> {
     token = await rafraichirToken()
     if (!token) {
       gererExpirationSession()
-      throw new Error("Session expirée — veuillez vous reconnecter.")
+      throw new Error("Session expir�e � veuillez vous reconnecter.")
     }
     options.headers = {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -768,7 +764,7 @@ export async function updateProfil(payload: FormData): Promise<UserProfil> {
     
     if (res.status === 401) {
       gererExpirationSession()
-      throw new Error("Session expirée — veuillez vous reconnecter.")
+      throw new Error("Session expir�e � veuillez vous reconnecter.")
     }
   }
 
@@ -784,7 +780,7 @@ export async function updateProfil(payload: FormData): Promise<UserProfil> {
   const data = await res.json() as { success: boolean; user: UserProfil }
   invalidateCache()
   if (typeof window !== "undefined") {
-    import("sonner").then(({ toast }) => toast.success("Profil mis à jour avec succès"))
+    import("sonner").then(({ toast }) => toast.success("Profil mis � jour avec succ�s"))
   }
   return data.user
 }
@@ -808,7 +804,7 @@ export async function updateUser(id: number, payload: any): Promise<any> {
 export async function createUser(payload: { nom: string; prenoms: string; email: string; role: string; password: string }): Promise<any> {
   const roleMap: Record<string, string> = {
     'Locataire': 'locataires/register/',
-    'Propriétaire': 'proprietaires/register/',
+    'Propri�taire': 'proprietaires/register/',
     'Agent': 'agents/register/',
     'Admin': 'agents/register/' // fallback if admin registration not split, or maybe it fails
   }
@@ -868,7 +864,7 @@ export async function getEcheances(): Promise<any[]> {
   return res.results || [];
 }
 
-// API — Réservations
+// API � R�servations
 
 export interface ReservationData {
   id: number

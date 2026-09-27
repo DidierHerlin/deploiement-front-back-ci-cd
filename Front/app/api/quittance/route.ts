@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Missing id or token" }, { status: 400 })
   }
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api"
+  const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://immobilier-drf-production.up.railway.app/api"
   
   try {
     const res = await fetch(`${API_URL}/paiements/${id}/quittance/`, {

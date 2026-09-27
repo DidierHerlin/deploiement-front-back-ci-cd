@@ -3,7 +3,7 @@
 const AUTH_COOKIE = "auth"
 const AUTH_MAX_AGE_SECONDES = 60 * 60 * 24 * 14
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api"
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://immobilier-drf-production.up.railway.app/api"
 
 //Stockage des tokens JWT 
 export function sauvegarderTokens(access: string, refresh: string) {

@@ -7,7 +7,7 @@ import { ArrowRight, LockKeyhole, Mail, Phone, UserRound, Wallet } from "lucide-
 import { PasswordInput } from "@/components/atoms/password-input"
 import { toast } from "sonner"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api"
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://immobilier-drf-production.up.railway.app/api"
 
 type Role = "LOCATAIRE" | "PROPRIETAIRE" | "AGENT"
 
