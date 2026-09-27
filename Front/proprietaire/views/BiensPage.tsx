@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Download } from 'lucide-react'
 import { getBiens, Bien } from '@/lib/api'
 import { BienList } from "@/components/organisms/BienList"
-import { BienForm } from "@/components/organisms/bien_BienForm"
+import { BienForm } from "@/components/organisms/BienForm"
 
 export function BiensPage() {
   const [biens, setBiens] = useState<Bien[]>([])
@@ -54,8 +54,8 @@ export function BiensPage() {
   const uniqueStatuts = Array.from(new Set(biens.map(b => b?.statut).filter(Boolean))).sort()
 
   const filteredBiens = biens.filter(bien => {
-    if (filterStatut && bien.statut !== filterStatut) return false
-    if (filterType && bien.type !== filterType) return false
+    if (filterStatut && bien?.statut !== filterStatut) return false
+    if (filterType && bien?.type !== filterType) return false
     return true
   }).sort((a, b) => {
     // Afficher en premier les biens 'DISPONIBLE'
