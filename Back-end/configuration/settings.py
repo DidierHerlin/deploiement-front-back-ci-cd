@@ -200,7 +200,7 @@ SIMPLE_JWT = {
 
 CORS_ALLOWED_ORIGINS = config(
     "CORS_ALLOWED_ORIGINS",
-    default="http://localhost:3000,http://127.0.0.1:3000,https://immobilier-drf-production.up.railway.app",
+    default="http://localhost:3000,http://127.0.0.1:3000,https://immobilier-drf-production.up.railway.app,http://16.16.115.111:8000/",
     cast=Csv(),
 )
 FRONTEND_URL = config("FRONTEND_URL", default="http://localhost:3000")

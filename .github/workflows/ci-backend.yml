@@ -200,11 +200,12 @@ jobs:
           DB_USER: "postgres"
           DB_PORT: "5432"
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          AWS_EC2_IP: ${{ secrets.AWS_EC2_IP }}
         with:
           host: ${{ secrets.AWS_EC2_IP }}
           username: ubuntu
           key: ${{ secrets.AWS_EC2_SSH_KEY }}
-          envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME
+          envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME, AWS_EC2_IP
           script: |
             mkdir -p /home/ubuntu/gestion-immobilier
             cd /home/ubuntu/gestion-immobilier
@@ -218,6 +219,9 @@ jobs:
             echo "DB_PORT=$DB_PORT" >> .env
             echo "SECRET_KEY=$SECRET_KEY" >> .env
             echo "DOCKERHUB_USERNAME=$DOCKERHUB_USERNAME" >> .env
+            echo "ALLOWED_HOSTS=*" >> .env
+            echo "CORS_ALLOWED_ORIGINS=http://$AWS_EC2_IP:3000,http://localhost:3000" >> .env
+            echo "CSRF_TRUSTED_ORIGINS=http://$AWS_EC2_IP:3000,http://localhost:3000" >> .env
             
             # 2. On cre le docker-compose pour la PRODUCTION (utilise les images du Hub)
             cat << 'EOF' > docker-compose.yml
