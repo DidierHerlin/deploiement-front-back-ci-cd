@@ -197,7 +197,7 @@ jobs:
           target: "/home/ubuntu/gestion-immobilier"
           strip_components: 2
 
-      - name: Connexion et déploiement sur AWS
+      - name: Connexion et dÃ©ploiement sur AWS
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.AWS_EC2_IP }}
