@@ -182,18 +182,18 @@ jobs:
         if: github.event_name == 'pull_request'
         run: docker build -t immobilier-drf:pr ./Back-end/configuration
 
-  deploy-to-railway:
+  deploiement-AWS:
     needs: docker-publish
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout du code
-        uses: actions/checkout@v4
-
-      - name: Installer Railway CLI
-        run: npm install -g @railway/cli
-
-      - name: Deployer le Backend sur Railway
-        run: railway redeploy --service="f1c69b08-b530-4199-b944-d71c1fdf18f7" --from-source --yes
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      - name: Connexion et déploiement sur AWS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.AWS_EC2_IP }}
+          username: ubuntu
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/mon-projet
+            docker-compose pull
+            docker-compose up -d

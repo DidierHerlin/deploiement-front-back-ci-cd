@@ -80,18 +80,18 @@ jobs:
 
 
 
-  deploy-to-railway:
+  deploy-to-aws-ec2:
     needs: docker-publish
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout du code
-        uses: actions/checkout@v4
-
-      - name: Installer Railway CLI
-        run: npm install -g @railway/cli
-
-      - name: Deployer le Frontend sur Railway
-        run: railway redeploy --service="ba9608b2-ae95-4ee3-b526-78c1f66f7aae" --from-source --yes
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_FRONTEND }}
+      - name: Connexion SSH et déploiement sur AWS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.AWS_EC2_IP }}
+          username: ubuntu
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/mon-projet
+            docker-compose pull
+            docker-compose up -d
