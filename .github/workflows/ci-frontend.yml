@@ -80,6 +80,7 @@ jobs:
 
 
 
+
   deploiement-AWS:
     needs: docker-publish
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -98,7 +99,7 @@ jobs:
           target: "/home/ubuntu/gestion-immobilier"
           strip_components: 2
 
-      - name: Connexion SSH et dï¿½ploiement sur AWS
+      - name: Connexion SSH et déploiement sur AWS
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.AWS_EC2_IP }}
