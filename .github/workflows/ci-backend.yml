@@ -183,17 +183,27 @@ jobs:
         run: docker build -t immobilier-drf:pr ./Back-end/configuration
 
   deploiement-AWS:
-    needs: docker-publish
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
     steps:
-      - name: Connexion et dÃ©ploiement sur AWS
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Copier docker-compose sur AWS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.AWS_EC2_IP }}
+          username: ubuntu
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          source: "Back-end/configuration/docker-compose.yml"
+          target: "/home/ubuntu/gestion-immobilier"
+          strip_components: 2
+
+      - name: Connexion et déploiement sur AWS
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.AWS_EC2_IP }}
           username: ubuntu
           key: ${{ secrets.AWS_EC2_SSH_KEY }}
           script: |
-            cd /home/ubuntu/mon-projet
+            cd /home/ubuntu/gestion-immobilier
             sudo docker compose pull
             sudo docker compose up -d
