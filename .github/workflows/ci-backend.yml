@@ -190,17 +190,7 @@ jobs:
       - name: Checkout du code
         uses: actions/checkout@v4
 
-      - name: Copier docker-compose sur AWS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.AWS_EC2_IP }}
-          username: ubuntu
-          key: ${{ secrets.AWS_EC2_SSH_KEY }}
-          source: "Back-end/configuration/docker-compose.yml"
-          target: "/home/ubuntu/gestion-immobilier"
-          strip_components: 2
-
-      - name: Connexion et déploiement sur AWS
+      - name: Connexion et dÃ©ploiement sur AWS
         uses: appleboy/ssh-action@v1.0.3
         env:
           DB_HOST: ${{ secrets.AWS_RDS_ENDPOINT }}
@@ -209,14 +199,17 @@ jobs:
           DB_NAME: "gestion_immobilier"
           DB_USER: "postgres"
           DB_PORT: "5432"
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         with:
           host: ${{ secrets.AWS_EC2_IP }}
           username: ubuntu
           key: ${{ secrets.AWS_EC2_SSH_KEY }}
-          envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT
+          envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME
           script: |
+            mkdir -p /home/ubuntu/gestion-immobilier
             cd /home/ubuntu/gestion-immobilier
             
+            # 1. On cre le fichier .env
             > .env
             echo "DB_HOST=$DB_HOST" >> .env
             echo "DB_NAME=$DB_NAME" >> .env
@@ -224,6 +217,29 @@ jobs:
             echo "DB_PASSWORD=$DB_PASSWORD" >> .env
             echo "DB_PORT=$DB_PORT" >> .env
             echo "SECRET_KEY=$SECRET_KEY" >> .env
+            echo "DOCKERHUB_USERNAME=$DOCKERHUB_USERNAME" >> .env
+            
+            # 2. On cre le docker-compose pour la PRODUCTION (utilise les images du Hub)
+            cat << 'EOF' > docker-compose.yml
+            services:
+              web:
+                image: $/immobilier-drf:latest
+                restart: unless-stopped
+                env_file:
+                  - .env
+                ports:
+                  - "8000:8000"
+                command: >-
+                  sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+
+              frontend:
+                image: $/login-page-immobilier:latest
+                restart: unless-stopped
+                ports:
+                  - "3000:3000"
+                depends_on:
+                  - web
+            EOF
             
             sudo docker compose pull
             sudo docker compose up -d
