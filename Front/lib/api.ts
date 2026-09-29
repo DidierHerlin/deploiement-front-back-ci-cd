@@ -247,6 +247,11 @@ async function fetchAPI<T>(
   throw lastError ?? new Error("Erreur réseau inattendue.")
 }
 
+// API Dashboard Admin
+export async function getAdminDashboardStats(): Promise<any> {
+  return await fetchAPI<any>("/admin/dashboard/")
+}
+
 // API Biens
 
 export async function getBiens(): Promise<Bien[]> {

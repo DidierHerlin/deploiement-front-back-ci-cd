@@ -1,26 +1,50 @@
 import { useState, useEffect } from 'react';
-import { 
-  getBiens, 
-  getContrats, 
-  getPaiements, 
-  getAllUsers, 
-  getProprietaires, 
-  getLocataires,
-  Bien,
-  Contrat,
-  Paiement,
-  UserProfil,
-  Proprietaire,
-  Locataire
-} from '@/lib/api';
+import { getAdminDashboardStats } from '@/lib/api';
 
 export interface AdminDashboardData {
-  biens: Bien[];
-  contrats: Contrat[];
-  paiements: Paiement[];
-  users: UserProfil[];
-  proprietaires: Proprietaire[];
-  locataires: Locataire[];
+  biens: {
+    total: number;
+    maisons: number;
+    appartements: number;
+    terrains: number;
+    locations: number;
+    ventes: number;
+    dispo: number;
+    loue: number;
+    vendu: number;
+    travaux: number;
+  };
+  contrats: {
+    total: number;
+    actifs: number;
+    expiring: number;
+    locations: number;
+    ventes: number;
+  };
+  paiements: {
+    valides: number;
+    enAttente: number;
+    enRetard: number;
+    partiels: number;
+    totalRevenus: number;
+    totalAttendu: number;
+  };
+  utilisateurs: {
+    total: number;
+    admins: number;
+    agents: number;
+    proprietaires: number;
+    locataires: number;
+  };
+  recentEvents: Array<{
+    id: string;
+    type: string;
+    date: string;
+    title: string;
+    text: string;
+    icon: any;
+    color: string;
+  }>;
 }
 
 export function useAdminDashboard() {
@@ -32,25 +56,10 @@ export function useAdminDashboard() {
     async function fetchData() {
       try {
         setLoading(true);
-        const [biens, contrats, paiements, users, proprietaires, locataires] = await Promise.all([
-          getBiens(),
-          getContrats(),
-          getPaiements(),
-          getAllUsers(),
-          getProprietaires(),
-          getLocataires()
-        ]);
-
-        setData({
-          biens,
-          contrats,
-          paiements,
-          users,
-          proprietaires,
-          locataires
-        });
+        const stats = await getAdminDashboardStats();
+        setData(stats);
       } catch (err: any) {
-        setError(err.message || "Erreur lors du chargement des données du tableau de bord");
+        setError(err.message || "Erreur lors du chargement des donnes du tableau de bord");
       } finally {
         setLoading(false);
       }
