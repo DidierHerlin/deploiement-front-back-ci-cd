@@ -1,6 +1,8 @@
 import { getAccessToken, rafraichirToken, marquerDeconnecte, getRefreshToken, isTokenValid } from "./auth"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://immobilier-drf-production.up.railway.app/api"
+// const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://immobilier-drf-production.up.railway.app/api"
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://16.16.115.111:8000/api"
 
 // -- CACHE SYSTEM --
 const apiCache = new Map<string, { data: any, timestamp: number }>()
