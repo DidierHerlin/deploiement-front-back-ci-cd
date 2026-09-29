@@ -1,20 +1,13 @@
 import React from 'react';
 import { ArrowRight, AlertTriangle } from 'lucide-react';
-import { AgentDashboardData } from '../hooks/useAgentDashboard';
+import { AgentDashboardData } from '../../app/agent/dashboard/hooks/useAgentDashboard';
 import Link from 'next/link';
 
 export function ImpayesStats({ data }: { data: AgentDashboardData }) {
-  const { paiements } = data;
+  const { impayes } = data;
   
-  const retards = paiements.filter(p => {
-    if (p.statut === 'PAYE' || p.statut === 'VALIDE' || p.statut === 'ANNULE') return false;
-    const limit = new Date();
-    limit.setDate(limit.getDate() - 5);
-    return new Date(p.date_echeance) < limit;
-  });
-  
-  const impayesTotal = retards.reduce((sum, p) => sum + parseFloat(p.montant_restant || p.montant || '0'), 0);
-  const locatairesImpayes = new Set(retards.map(p => p.locataire_nom)).size;
+  const impayesTotal = impayes.totalAmount;
+  const locatairesImpayes = impayes.totalLocataires;
 
   return (
     <section className="panel" style={{ display: 'flex', flexDirection: 'column' }}>
@@ -24,7 +17,7 @@ export function ImpayesStats({ data }: { data: AgentDashboardData }) {
           <p>Retards de plus de 5 jours</p>
         </div>
         <div style={{ padding: '8px 12px', background: '#fff0f1', color: 'var(--red)', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <AlertTriangle size={14} /> {retards.length} alerte(s)
+          <AlertTriangle size={14} /> {impayes.list.length} alerte(s)
         </div>
       </div>
       

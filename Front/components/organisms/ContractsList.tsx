@@ -1,22 +1,9 @@
 'use client'
 import { CalendarDays } from 'lucide-react'
-import { AgentDashboardData } from '../hooks/useAgentDashboard';
+import { AgentDashboardData } from '../../app/agent/dashboard/hooks/useAgentDashboard';
 
 export default function ContractsList({ data }: { data: AgentDashboardData }) {
-  const { contrats } = data;
-
-  const now = new Date();
-  const getDaysDiff = (dateStr: string) => {
-    const end = new Date(dateStr);
-    const diffTime = end.getTime() - now.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
-
-  const upcomingContracts = contrats
-    .filter(c => c.statut === 'ACTIF' && c.date_fin)
-    .sort((a, b) => new Date(a.date_fin!).getTime() - new Date(b.date_fin!).getTime())
-    .filter(c => getDaysDiff(c.date_fin!) >= 0 && getDaysDiff(c.date_fin!) <= 60)
-    .slice(0, 4);
+  const upcomingContracts = data.upcomingContracts;
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });

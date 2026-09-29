@@ -57,7 +57,7 @@ export default function AgentDashboardPage() {
       <div className="admin-grid">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', minWidth: 0 }}>
           <EstatePanel data={data} />
-          <RevenueChart data={data} />
+          <RevenueChart chartData={data.revenus.chartData} />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', minWidth: 0 }}>
           <ArrearsList data={data} onToast={showToast} />

@@ -1,32 +1,13 @@
 import React from 'react';
 import { ArrowRight, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { AgentDashboardData } from '../hooks/useAgentDashboard';
+import { AgentDashboardData } from '../../app/agent/dashboard/hooks/useAgentDashboard';
 import Link from 'next/link';
 
 export function RevenusStats({ data }: { data: AgentDashboardData }) {
-  const { paiements } = data;
+  const { revenus } = data;
   
-  const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
-
-  const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
-  const yearOfLastMonth = currentMonth === 0 ? currentYear - 1 : currentYear;
-
-  let revCurrent = 0;
-  let revLast = 0;
-
-  paiements.forEach(p => {
-    if (p.statut === 'PAYE' && p.date_paiement) {
-      const d = new Date(p.date_paiement);
-      const val = parseFloat(p.loyer_contrat || '0');
-      if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
-        revCurrent += val;
-      } else if (d.getMonth() === lastMonth && d.getFullYear() === yearOfLastMonth) {
-        revLast += val;
-      }
-    }
-  });
+  const revCurrent = revenus.currentMonth;
+  const revLast = revenus.lastMonth;
 
   const trend = revLast > 0 ? ((revCurrent - revLast) / revLast) * 100 : 0;
   const isPositive = trend >= 0;

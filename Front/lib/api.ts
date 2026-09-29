@@ -252,6 +252,11 @@ export async function getAdminDashboardStats(): Promise<any> {
   return await fetchAPI<any>("/admin/dashboard/")
 }
 
+// API Dashboard Agent
+export async function getAgentDashboardStats(): Promise<any> {
+  return await fetchAPI<any>("/agent/dashboard/")
+}
+
 // API Biens
 
 export async function getBiens(): Promise<Bien[]> {

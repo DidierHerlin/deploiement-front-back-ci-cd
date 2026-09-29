@@ -1,18 +1,13 @@
 'use client'
 import { useState } from 'react'
 import { Check, Mail } from 'lucide-react'
-import { AgentDashboardData } from '../hooks/useAgentDashboard';
+import { AgentDashboardData } from '../../app/agent/dashboard/hooks/useAgentDashboard';
 
 export default function ArrearsList({ data, onToast }: { data: AgentDashboardData, onToast: (msg: string) => void }) {
-  const { paiements } = data;
+  const { impayes } = data;
   const [sent, setSent] = useState<string[]>([]);
 
-  const arrears = paiements.filter(p => {
-    if (p.statut === 'PAYE' || p.statut === 'VALIDE' || p.statut === 'ANNULE') return false;
-    const limit = new Date();
-    limit.setDate(limit.getDate() - 5);
-    return new Date(p.date_echeance) < limit;
-  }).slice(0, 5);
+  const arrears = impayes.list;
 
   const sendReminder = (name: string) => {
     setSent((c) => [...c, name])
@@ -44,7 +39,7 @@ export default function ArrearsList({ data, onToast }: { data: AgentDashboardDat
               <tr><td colSpan={5} style={{ textAlign: 'center', padding: '20px' }}>Aucun retard de paiement.</td></tr>
             ) : (
               arrears.map((item) => {
-                const amount = parseFloat(item.montant_restant || item.montant || '0');
+                const amount = item.montant;
                 const diffTime = Math.abs(new Date().getTime() - new Date(item.date_echeance).getTime());
                 const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                 

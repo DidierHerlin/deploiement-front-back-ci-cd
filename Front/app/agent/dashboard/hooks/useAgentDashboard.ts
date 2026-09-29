@@ -1,20 +1,35 @@
 import { useState, useEffect } from 'react';
-import { 
-  getBiens, 
-  getContrats, 
-  getPaiements, 
-  getLocataires,
-  Bien,
-  Contrat,
-  Paiement,
-  Locataire
-} from '@/lib/api';
+import { getAgentDashboardStats } from '@/lib/api';
 
 export interface AgentDashboardData {
-  biens: Bien[];
-  contrats: Contrat[];
-  paiements: Paiement[];
-  locataires: Locataire[];
+  biens: {
+    total: number;
+    dispo: number;
+    loue: number;
+    travaux: number;
+  };
+  revenus: {
+    currentMonth: number;
+    lastMonth: number;
+    chartData: Array<{ name: string; Revenus: number }>;
+  };
+  impayes: {
+    totalAmount: number;
+    totalLocataires: number;
+    list: Array<{
+      id: number;
+      locataire_nom: string;
+      bien_titre: string;
+      montant: number;
+      date_echeance: string;
+    }>;
+  };
+  upcomingContracts: Array<{
+    id: number;
+    locataire_nom: string;
+    bien_titre: string;
+    date_fin: string;
+  }>;
 }
 
 export function useAgentDashboard() {
@@ -26,19 +41,8 @@ export function useAgentDashboard() {
     async function fetchData() {
       try {
         setLoading(true);
-        const [biens, contrats, paiements, locataires] = await Promise.all([
-          getBiens(),
-          getContrats(),
-          getPaiements(),
-          getLocataires()
-        ]);
-
-        setData({
-          biens,
-          contrats,
-          paiements,
-          locataires
-        });
+        const stats = await getAgentDashboardStats();
+        setData(stats);
       } catch (err: any) {
         setError(err.message || "Erreur lors du chargement des données du tableau de bord");
       } finally {

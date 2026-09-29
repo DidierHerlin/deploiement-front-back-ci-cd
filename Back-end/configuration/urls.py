@@ -4,6 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from reporting_views import ReportingStatsView
 from admin_dashboard_views import AdminDashboardView
+from agent_dashboard_views import AgentDashboardView
 
 from drf_spectacular.views import (
     SpectacularAPIView,
@@ -21,6 +22,7 @@ urlpatterns = [
     path('api/', include('reservation.urls')),
     path('api/reporting/stats/', ReportingStatsView.as_view(), name='reporting-stats'),
     path('api/admin/dashboard/', AdminDashboardView.as_view(), name='admin-dashboard'),
+    path('api/agent/dashboard/', AgentDashboardView.as_view(), name='agent-dashboard'),
 
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),

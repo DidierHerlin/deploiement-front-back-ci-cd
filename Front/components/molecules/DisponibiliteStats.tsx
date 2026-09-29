@@ -1,13 +1,13 @@
 import React from 'react';
-import { ArrowRight, Home } from 'lucide-react';
-import { AgentDashboardData } from '../hooks/useAgentDashboard';
+import { ArrowRight } from 'lucide-react';
+import { AgentDashboardData } from '../../app/agent/dashboard/hooks/useAgentDashboard';
 import Link from 'next/link';
 
 export function DisponibiliteStats({ data }: { data: AgentDashboardData }) {
   const { biens } = data;
   
-  const dispo = biens.filter(b => b.statut === 'DISPONIBLE').length;
-  const travaux = biens.filter(b => b.statut === 'EN_TRAVAUX').length;
+  const dispo = biens.dispo;
+  const travaux = biens.travaux;
   const total = dispo + travaux;
 
   return (

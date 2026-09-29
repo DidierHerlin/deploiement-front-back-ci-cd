@@ -8,6 +8,22 @@ import { RevenueChart } from "@/components/organisms/reporting_RevenueChart";
 import { UnpaidRentals } from "@/components/organisms/UnpaidRentals";
 import { ExpiringContracts } from "@/components/organisms/ExpiringContracts";
 import { ExportReports } from "@/components/organisms/ExportReports";
+import { Paiement } from "@/lib/api";
+
+function buildChartData(paiements: Paiement[]) {
+  if (!paiements) return [];
+  const revenuesByMonth: Record<string, number> = {};
+  const paiementsPayes = paiements.filter(p => p.statut === 'PAYE' && p.date_paiement);
+  paiementsPayes.forEach(p => {
+    const d = new Date(p.date_paiement!);
+    const monthKey = d.toLocaleString('fr-FR', { month: 'short', year: 'numeric' });
+    revenuesByMonth[monthKey] = (revenuesByMonth[monthKey] || 0) + parseFloat(p.montant || '0');
+  });
+  return Object.keys(revenuesByMonth).map(month => ({
+    name: month,
+    Revenus: revenuesByMonth[month]
+  }));
+}
 
 export default function ReportingPage() {
   const { data, loading, error, refresh } = useReporting();
@@ -62,7 +78,7 @@ export default function ReportingPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <OccupancyOverview data={data} />
-        <RevenueChart data={data} />
+        <RevenueChart chartData={buildChartData(data.paiements)} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

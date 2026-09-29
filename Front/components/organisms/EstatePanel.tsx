@@ -1,14 +1,14 @@
 'use client'
 import { ArrowUpRight, MoreHorizontal } from 'lucide-react'
-import { AgentDashboardData } from '../hooks/useAgentDashboard';
+import { AgentDashboardData } from '../../app/agent/dashboard/hooks/useAgentDashboard';
 
 export default function EstatePanel({ data }: { data: AgentDashboardData }) {
   const { biens } = data;
   
-  const totalBiens = biens.length;
-  const loues = biens.filter(b => b.statut === 'LOUE').length;
-  const dispos = biens.filter(b => b.statut === 'DISPONIBLE').length;
-  const travaux = biens.filter(b => b.statut === 'EN_TRAVAUX').length;
+  const totalBiens = biens.total;
+  const loues = biens.loue;
+  const dispos = biens.dispo;
+  const travaux = biens.travaux;
 
   const getPct = (val: number) => totalBiens > 0 ? ((val / totalBiens) * 100).toFixed(1) : '0.0';
   
@@ -25,7 +25,7 @@ export default function EstatePanel({ data }: { data: AgentDashboardData }) {
   return (
     <article className="panel estate-panel">
       <div className="panel-header">
-        <div><p className="section-kicker">VUE D&apos;ENSEMBLE</p><h2>État du parc immobilier</h2></div>
+        <div><p className="section-kicker">VUE D'ENSEMBLE</p><h2>État du parc immobilier</h2></div>
         <button className="more-button" aria-label="Plus d'options"><MoreHorizontal size={19} /></button>
       </div>
       <div className="estate-body">
