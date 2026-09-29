@@ -123,7 +123,7 @@ export function LoginForm() {
           <span className="mb-4 inline-block rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs font-semibold tracking-wider text-white backdrop-blur-md">
             PLATEFORME N°1
           </span>
-          <h2 className="mb-4 text-4xl font-bold leading-tight">Gérez votre immobilier<br /></h2>
+          <h2 className="mb-4 text-4xl font-bold leading-tight">Gérez votre immobilier<br />en toute simplicité</h2>
           <p className="mb-8 text-lg text-white/90">
             ImmoConnect centralise la gestion de vos biens immobiliers. Rejoignez des milliers de propriétaires, locataires et professionnels.
           </p>
