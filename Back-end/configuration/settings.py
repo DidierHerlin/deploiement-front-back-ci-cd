@@ -75,7 +75,7 @@ if os.environ.get("DB_HOST"):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": "gestion-immobilier",  # Nom exact forcé, ignore le secret GitHub incorrect
+            "NAME": "postgres",  # On force le nom de la base existante sur RDS
             "USER": os.environ.get("DB_USER", "postgres"),
             "PASSWORD": os.environ.get("DB_PASSWORD", ""),
             "HOST": os.environ.get("DB_HOST"),
