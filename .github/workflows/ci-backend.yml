@@ -22,13 +22,13 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_DB: gesion_immobilier_back_end
+          POSTGRES_DB: gestion_immobilier_back_end
           POSTGRES_USER: postgres
           POSTGRES_HOST_AUTH_METHOD: trust
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready -U postgres -d gesion_immobilier_back_end"
+          --health-cmd="pg_isready -U postgres -d gestion_immobilier_back_end"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -36,7 +36,7 @@ jobs:
     env:
       SECRET_KEY: test-secret-key
       DEBUG: "True"
-      DB_NAME: gesion_immobilier_back_end
+      DB_NAME: gestion_immobilier_back_end
       DB_USER: postgres
       DB_PASSWORD: ""
       DB_HOST: localhost
@@ -63,23 +63,21 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
       - name: Installer les dépendances
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install coverage
 
       - name: Vérifier la configuration Django
         run: python manage.py check
 
-      - name: Lancer les tests Django
+      - name: Lancer les tests Django et générer la couverture
         run: |
-          if python manage.py test --verbosity=0 > test_output.log 2>&1; then
-            echo "Teste reçu avec succes"
-          else
-            cat test_output.log
-            exit 1
-          fi
+          coverage run manage.py test
+          coverage xml
 
       - name: Sauvegarder le rapport de couverture
         uses: actions/upload-artifact@v4
@@ -96,27 +94,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Vérifier que les secrets SonarQube sont configurés
-        run: |
-          MISSING=0
-          if [ -z "${{ secrets.SONAR_TOKEN }}" ]; then
-            echo "::error::Le secret SONAR_TOKEN est vide ou absent. Va sur https://sonarcloud.io/account/security pour en g�n�rer un, puis ajoute-le dans Settings > Secrets and variables > Actions."
-            MISSING=1
-          fi
-          if [ -z "${{ secrets.SONAR_HOST_URL }}" ]; then
-            echo "::error::Le secret SONAR_HOST_URL est vide ou absent. Sa valeur doit �tre exactement : https://sonarcloud.io"
-            MISSING=1
-          fi
-          if [ -z "${{ secrets.SONAR_PROJECT_KEY }}" ]; then
-            echo "::error::Le secret SONAR_PROJECT_KEY est vide ou absent. R�cup�re-le dans l'URL de ton projet sur sonarcloud.io (param�tre ?id=...)."
-            MISSING=1
-          fi
-          if [ "$MISSING" = "1" ]; then
-            echo "::error::Un ou plusieurs secrets SonarQube sont manquants. Le job s'arr�te ici avec un message clair au lieu de l'erreur cryptique du scanner."
-            exit 1
-          fi
-          echo "Tous les secrets SonarQube sont bien configurés."
 
       - name: Récupérer le rapport de couverture
         uses: actions/download-artifact@v4
@@ -163,24 +140,23 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Set image name
-        if: github.event_name == 'push'
-        run: echo "IMAGE_NAME=${{ secrets.DOCKERHUB_USERNAME }}/immobilier-drf" >> $GITHUB_ENV
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/immobilier-drf
 
       - name: Build and push Docker image
-        if: github.event_name == 'push'
         uses: docker/build-push-action@v6
         with:
           context: ./Back-end/configuration
           file: ./Back-end/configuration/Dockerfile
-          push: true
+          push: ${{ github.event_name == 'push' }}
           tags: |
-            ${{ env.IMAGE_NAME }}:latest
-            ${{ env.IMAGE_NAME }}:${{ github.sha }}
-
-      - name: Build image only on PR
-        if: github.event_name == 'pull_request'
-        run: docker build -t immobilier-drf:pr ./Back-end/configuration
+            ${{ secrets.DOCKERHUB_USERNAME }}/immobilier-drf:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/immobilier-drf:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   deploiement-AWS:
     needs: docker-publish
@@ -210,20 +186,19 @@ jobs:
             mkdir -p /home/ubuntu/gestion-immobilier
             cd /home/ubuntu/gestion-immobilier
             
-            # 1. On cre le fichier .env
-            > .env
-            echo "DB_HOST=$DB_HOST" >> .env
-            echo "DB_NAME=$DB_NAME" >> .env
-            echo "DB_USER=$DB_USER" >> .env
-            echo "DB_PASSWORD=$DB_PASSWORD" >> .env
-            echo "DB_PORT=$DB_PORT" >> .env
-            echo "SECRET_KEY=$SECRET_KEY" >> .env
-            echo "DOCKERHUB_USERNAME=$DOCKERHUB_USERNAME" >> .env
-            echo "ALLOWED_HOSTS=*" >> .env
-            echo "CORS_ALLOWED_ORIGINS=http://$AWS_EC2_IP:3000,http://localhost:3000" >> .env
-            echo "CSRF_TRUSTED_ORIGINS=http://$AWS_EC2_IP:3000,http://localhost:3000" >> .env
+            cat << EOF > .env
+            DB_HOST=$DB_HOST
+            DB_NAME=$DB_NAME
+            DB_USER=$DB_USER
+            DB_PASSWORD=$DB_PASSWORD
+            DB_PORT=$DB_PORT
+            SECRET_KEY=$SECRET_KEY
+            DOCKERHUB_USERNAME=$DOCKERHUB_USERNAME
+            ALLOWED_HOSTS=*
+            CORS_ALLOWED_ORIGINS=http://$AWS_EC2_IP:3000,http://localhost:3000
+            CSRF_TRUSTED_ORIGINS=http://$AWS_EC2_IP:3000,http://localhost:3000
+            EOF
             
-            # 2. On cre le docker-compose pour la PRODUCTION (utilise les images du Hub)
             cat << 'EOF' > docker-compose.yml
             services:
               web:
