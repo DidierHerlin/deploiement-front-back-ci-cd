@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from decimal import Decimal
 from typing import Any
@@ -11,7 +11,7 @@ from utilisateur.serializers import ProprietaireSimpleSerializer
 from . import validators
 from .models import Bien
 
-_valider_prix_positif = validators.PositiveValueValidator("Le prix ne peut pas être négatif.")
+_valider_prix_positif = validators.PositiveValueValidator("Le prix ne peut pas Ãªtre nÃ©gatif.")
 
 
 class BienSerializer(serializers.ModelSerializer):
@@ -21,7 +21,7 @@ class BienSerializer(serializers.ModelSerializer):
         source="proprietaire",
         write_only=True,
         required=False,
-        help_text="Requis pour un agent ou administrateur ; interdit pour un propriétaire.",
+        help_text="Requis pour un agent ou administrateur ; interdit pour un propriÃ©taire.",
     )
 
     class Meta:
@@ -66,7 +66,7 @@ class BienSerializer(serializers.ModelSerializer):
             validators.validate_photos(value)
         except DjangoValidationError as exc:
             raise serializers.ValidationError(
-                "Le champ 'photos' doit être une liste d'URLs (chaînes)."
+                "Le champ 'photos' doit Ãªtre une liste d'URLs (chaÃ®nes)."
             ) from exc
         return value
 
@@ -76,7 +76,7 @@ class BienSerializer(serializers.ModelSerializer):
 
         if value in (Bien.StatutBien.LOUE, Bien.StatutBien.VENDU) and not est_admin:
             raise serializers.ValidationError(
-                f"Le statut '{value}' est attribué automatiquement par un contrat et ne peut pas être défini manuellement."
+                f"Le statut '{value}' est attribuÃ© automatiquement par un contrat et ne peut pas Ãªtre dÃ©fini manuellement."
             )
         return value
 
@@ -96,7 +96,7 @@ class BienSerializer(serializers.ModelSerializer):
     def _valider_proprietaire(self, attrs: dict, user: Any) -> None:
         if user.role == Utilisateur.Role.PROPRIETAIRE and "proprietaire" in attrs:
             raise serializers.ValidationError({
-                "proprietaire_id": "Vous n'êtes pas autorisé à spécifier un propriétaire : ce champ est automatiquement associé à votre compte."
+                "proprietaire_id": "Vous n'Ãªtes pas autorisÃ© Ã  spÃ©cifier un propriÃ©taire : ce champ est automatiquement associÃ© Ã  votre compte."
             })
 
         creation = self.instance is None
@@ -114,28 +114,28 @@ class BienSerializer(serializers.ModelSerializer):
             if loyer is None:
                 raise serializers.ValidationError({"loyer_mensuel": "Le loyer mensuel est obligatoire pour une location."})
             if prix is not None:
-                raise serializers.ValidationError({"prix": "Le prix ne doit pas être renseigné pour une location."})
+                raise serializers.ValidationError({"prix": "Le prix ne doit pas Ãªtre renseignÃ© pour une location."})
         elif mode == Bien.ModeTransaction.VENTE:
             if prix is None:
                 raise serializers.ValidationError({"prix": "Le prix est obligatoire pour une vente."})
             if loyer is not None:
-                raise serializers.ValidationError({"loyer_mensuel": "Le loyer mensuel ne doit pas être renseigné pour une vente."})
+                raise serializers.ValidationError({"loyer_mensuel": "Le loyer mensuel ne doit pas Ãªtre renseignÃ© pour une vente."})
 
     def _valider_type_bien(self, attrs: dict) -> None:
         type_bien = attrs.get("type", getattr(self.instance, "type", None))
         nombre_pieces = attrs.get("nombre_pieces", getattr(self.instance, "nombre_pieces", None))
         if type_bien == Bien.TypeBien.TERRAIN and nombre_pieces is not None:
-            raise serializers.ValidationError({"nombre_pieces": "Le nombre de pièces n'est pas applicable pour un terrain."})
+            raise serializers.ValidationError({"nombre_pieces": "Le nombre de piÃ¨ces n'est pas applicable pour un terrain."})
         if type_bien != Bien.TypeBien.TERRAIN and nombre_pieces is None:
-            raise serializers.ValidationError({"nombre_pieces": "Le nombre de pièces est obligatoire pour ce type de bien."})
+            raise serializers.ValidationError({"nombre_pieces": "Le nombre de piÃ¨ces est obligatoire pour ce type de bien."})
 
     def _valider_modifiabilite(self) -> None:
         if not self.instance:
             return
         if self.instance.statut in (Bien.StatutBien.LOUE, Bien.StatutBien.VENDU):
-            raise serializers.ValidationError("Ce bien est déjà loué ou vendu et ne peut pas être modifié.")
+            raise serializers.ValidationError("Ce bien est dÃ©jÃ  louÃ© ou vendu et ne peut pas Ãªtre modifiÃ©.")
 
-    # Création / mise à jour
+    # CrÃ©ation / mise Ã  jour
     def create(self, validated_data: dict) -> Bien:
         request = self.context["request"]
         user = request.user
@@ -145,7 +145,7 @@ class BienSerializer(serializers.ModelSerializer):
                 validated_data["proprietaire"] = user.profil_proprietaire
             except Proprietaire.DoesNotExist as exc:
                 raise serializers.ValidationError(
-                    "Aucun profil propriétaire n'est associé à ce compte utilisateur."
+                    "Aucun profil propriÃ©taire n'est associÃ© Ã  ce compte utilisateur."
                 ) from exc
 
         return Bien.objects.create(**validated_data)
@@ -161,11 +161,14 @@ class BienSerializer(serializers.ModelSerializer):
 
 
 class BienListSerializer(serializers.ModelSerializer):
-    # Liste : inclut 'photos' pour que les cartes affichent l'image.
-    # (base64 stocké en JSON ; OK à petite échelle, à optimiser
-    # en thumbnails / ImageField si le volume grandit.)
     proprietaire = ProprietaireSimpleSerializer(read_only=True)
+    photos = serializers.SerializerMethodField()
 
     class Meta:
         model = Bien
-        fields = ["id", "titre", "type", "mode_transaction", "adresse", "surface", "nombre_pieces", "loyer_mensuel", "prix", "statut", "proprietaire", "photos"]
+        fields = ['id', 'titre', 'type', 'mode_transaction', 'adresse', 'surface', 'nombre_pieces', 'loyer_mensuel', 'prix', 'statut', 'proprietaire', 'photos']
+
+    def get_photos(self, obj) -> list:
+        if obj.photos and isinstance(obj.photos, list) and len(obj.photos) > 0:
+            return [obj.photos[0]]
+        return []
