@@ -88,16 +88,18 @@ class BienViewSet(viewsets.ModelViewSet):
                 "results": serializer.data,
             })
 
+        # Pas de pagination active : évaluer le queryset une seule fois
         serializer = self.get_serializer(queryset, many=True)
+        data = serializer.data
         return Response({
             "success": True,
-            "count": queryset.count(),
-            "results": serializer.data,
+            "count": len(data),   # len() au lieu de queryset.count() — évite une 2e requête SQL
+            "results": data,
         })
 
     def disponibles(self, request: Request, *args, **kwargs) -> Response:
         queryset = self._appliquer_filtres_recherche(
-            self.queryset.filter(statut=Bien.StatutBien.DISPONIBLE)
+            Bien.objects.select_related("proprietaire__user").filter(statut=Bien.StatutBien.DISPONIBLE)
         )
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -105,10 +107,11 @@ class BienViewSet(viewsets.ModelViewSet):
             return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(queryset, many=True)
+        data = serializer.data
         return Response({
             "success": True,
-            "count": queryset.count(),
-            "results": serializer.data,
+            "count": len(data),
+            "results": data,
         })
 
     def retrieve(self, request: Request, *args, **kwargs) -> Response:

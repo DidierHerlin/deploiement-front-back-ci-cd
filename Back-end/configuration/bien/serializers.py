@@ -160,13 +160,27 @@ class BienSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
+
+class BienProprietaireSerializer(serializers.ModelSerializer):
+    """Serializer minimal pour le proprietaire dans la liste des biens."""
+    nom = serializers.CharField(source="user.nom", read_only=True)
+    prenoms = serializers.CharField(source="user.prenoms", read_only=True)
+    email = serializers.EmailField(source="user.email", read_only=True)
+
+    class Meta:
+        from utilisateur.models import Proprietaire
+        model = Proprietaire
+        fields = ["id", "nom", "prenoms", "email"]
+
+
 class BienListSerializer(serializers.ModelSerializer):
-    proprietaire = ProprietaireSimpleSerializer(read_only=True)
-    
+    """Serializer allegé pour la liste — champs nécessaires a l'affichage uniquement."""
+    proprietaire = BienProprietaireSerializer(read_only=True)
 
     class Meta:
         model = Bien
-        fields = ['id', 'titre', 'type', 'mode_transaction', 'adresse', 'surface', 'nombre_pieces', 'loyer_mensuel', 'prix', 'statut', 'proprietaire', 'photos']
-
-    
-
+        fields = [
+            'id', 'titre', 'type', 'mode_transaction', 'adresse',
+            'surface', 'nombre_pieces', 'loyer_mensuel', 'prix',
+            'statut', 'proprietaire', 'photos',
+        ]

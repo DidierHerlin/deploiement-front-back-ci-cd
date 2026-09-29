@@ -19,7 +19,7 @@ export default function BienPage() {
   const [proprietaires, setProprietaires] = useState<Proprietaire[]>([])
   const [loading, setLoading] = useState(true)
   
-  // Filters state
+  // Filters state (appliqués côté client sur les données déjà chargées)
   const [query, setQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState('Tous')
   const [operationFilter, setOperationFilter] = useState('Toutes')
@@ -39,10 +39,11 @@ export default function BienPage() {
   const [newBien, setNewBien] = useState<Partial<Bien>>(defaultNewBien)
 
   useEffect(() => {
-    fetchData()
+    // Chargement initial : biens + proprietaires en parallèle
+    fetchInitialData()
   }, [])
 
-  async function fetchData() {
+  async function fetchInitialData() {
     setLoading(true)
     try {
       const [biensData, propsData] = await Promise.all([
@@ -55,6 +56,16 @@ export default function BienPage() {
       console.error(e)
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Rechargement biens uniquement (sans recharger les proprietaires)
+  async function refreshBiens() {
+    try {
+      const biensData = await getBiens()
+      setBiens(biensData)
+    } catch (e) {
+      console.error(e)
     }
   }
 
@@ -89,12 +100,19 @@ export default function BienPage() {
       if (payload.mode_transaction === 'VENTE') payload.loyer_mensuel = null
 
       if (editingBien) {
-        await updateBien(editingBien.id, payload)
+        const updated = await updateBien(editingBien.id, payload)
+        // Mise à jour locale optimiste — évite de recharger toute la liste
+        if (updated) {
+          setBiens(prev => prev.map(b => b.id === editingBien.id ? { ...b, ...updated } : b))
+        } else {
+          await refreshBiens()
+        }
       } else {
         await createBien(payload)
+        // Recharge uniquement la liste des biens (pas les proprietaires)
+        await refreshBiens()
       }
       
-      await fetchData()
       setShowForm(false)
       setEditingBien(null)
       setNewBien(defaultNewBien)
@@ -116,7 +134,8 @@ export default function BienPage() {
     if (!bienToDelete) return
     try {
       await deleteBien(bienToDelete)
-      await fetchData()
+      // Mise à jour locale — retire le bien supprimé sans recharger l'API
+      setBiens(prev => prev.filter(b => b.id !== bienToDelete))
       setBienToDelete(null)
     } catch (e: any) {
       alert("Erreur lors de la suppression: " + e.message)
