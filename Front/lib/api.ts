@@ -1,10 +1,6 @@
 import { getAccessToken, rafraichirToken, marquerDeconnecte, getRefreshToken, isTokenValid } from "./auth"
-
-// const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://immobilier-drf-production.up.railway.app/api"
-
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://16.16.115.111:8000/api"
 
-// -- CACHE SYSTEM --
 const apiCache = new Map<string, { data: any, timestamp: number }>()
 const CACHE_TTL_MS = 60 * 1000 // 1 minute
 
@@ -104,7 +100,6 @@ async function fetchAPI<T>(
 ): Promise<T> {
   let token = getAccessToken()
   const method = (options.method || 'GET').toUpperCase()
-// -- V�RIFICATION DU CACHE --
   if (method === 'GET') {
     const cacheKey = getCacheKey(path, options)
     const cached = apiCache.get(cacheKey)
@@ -118,12 +113,12 @@ async function fetchAPI<T>(
       const refresh = getRefreshToken()
       if (!isTokenValid(refresh)) {
         gererExpirationSession()
-        throw new Error("Session expir�e � veuillez vous reconnecter.")
+        throw new Error("Session expirée veuillez vous reconnecter.")
       }
       token = await rafraichirToken()
       if (!token) {
         gererExpirationSession()
-        throw new Error("Session expir�e � veuillez vous reconnecter.")
+        throw new Error("Session expirée veuillez vous reconnecter.")
       }
     }
   }
@@ -134,8 +129,8 @@ async function fetchAPI<T>(
     ...((options.headers as Record<string, string>) ?? {}),
   })
 
-  const TIMEOUT_MS = 30_000  // 30 secondes pour les tableaux de bord charg�s
-  const MAX_RETRIES = 1      // 1 retry en cas d'erreur r�seau transitoire
+  const TIMEOUT_MS = 30_000  
+  const MAX_RETRIES = 1     
 
   async function doFetch(tokenValue: string | null): Promise<Response> {
     const controller = new AbortController()
@@ -155,24 +150,21 @@ async function fetchAPI<T>(
     }
   }
 
-  // Retry avec backoff exponentiel pour les erreurs r�seau / timeout
   let lastError: any = null
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
       let res = await doFetch(token)
-
-      // Tentative de refresh si 401
       if (res.status === 401) {
         token = await rafraichirToken()
         if (!token) {
           gererExpirationSession()
-          throw new Error("Session expir�e � veuillez vous reconnecter.")
+          throw new Error("Session expirée veuillez vous reconnecter.")
         }
         res = await doFetch(token)
 
         if (res.status === 401) {
           gererExpirationSession()
-          throw new Error("Session expir�e � veuillez vous reconnecter.")
+          throw new Error("Session expirée veuillez vous reconnecter.")
         }
       }
 
@@ -182,19 +174,17 @@ async function fetchAPI<T>(
           const body = await res.json()
           detail = JSON.stringify(body)
         } catch {
-          // Impossible de parser le body � on garde le code HTTP
         }
         throw new Error(`Erreur API (${res.status}) sur ${path} : ${detail}`)
       }
 
-      // 204 No Content
       if (res.status === 204) {
         if (method !== 'GET') {
           invalidateCache()
           if (typeof window !== "undefined" && !path.includes('marquer-lu')) {
             import("sonner").then(({ toast }) => {
-              if (method === 'DELETE') toast.success("Suppression effectu�e avec succ�s")
-              else toast.success("Op�ration r�ussie")
+              if (method === 'DELETE') toast.success("Suppression effectuée avec succès")
+              else toast.success("Opération réussie")
             })
           }
         }
@@ -214,20 +204,20 @@ async function fetchAPI<T>(
          invalidateCache()
          if (typeof window !== "undefined" && !path.includes('marquer-lu')) {
            import("sonner").then(({ toast }) => {
-             let msg = "Op�ration r�ussie"
+             let msg = "Opération réussie"
              if (method === 'POST') {
-               if (path.includes('valider')) msg = "Paiement valid� avec succ�s"
-               else if (path.includes('refuser')) msg = "Paiement refus�"
-               else if (path.includes('annuler')) msg = "Paiement annul�"
-               else if (path.includes('resilier')) msg = "Contrat r�sili�"
-               else if (path.includes('terminer')) msg = "Contrat termin�"
-               else if (path.includes('finaliser_vente')) msg = "Vente finalis�e"
-               else if (path.includes('repondre')) msg = "R�ponse envoy�e"
-               else msg = "Ajout effectu� avec succ�s"
+               if (path.includes('valider')) msg = "Paiement validé avec succès"
+               else if (path.includes('refuser')) msg = "Paiement refusé"
+               else if (path.includes('annuler')) msg = "Paiement annulé"
+               else if (path.includes('resilier')) msg = "Contrat résilié"
+               else if (path.includes('terminer')) msg = "Contrat terminé"
+               else if (path.includes('finaliser_vente')) msg = "Vente finalisée"
+               else if (path.includes('repondre')) msg = "Réponse envoyée"
+               else msg = "Ajout effectué avec succès"
              } else if (method === 'PATCH' || method === 'PUT') {
-               msg = "Mise � jour effectu�e avec succ�s"
+               msg = "Mise à jour effectuée avec succès"
              } else if (method === 'DELETE') {
-               msg = "Suppression effectu�e avec succ�s"
+               msg = "Suppression effectuée avec succès"
              }
              toast.success(msg)
            })
@@ -782,7 +772,7 @@ export async function updateProfil(payload: FormData): Promise<UserProfil> {
   const data = await res.json() as { success: boolean; user: UserProfil }
   invalidateCache()
   if (typeof window !== "undefined") {
-    import("sonner").then(({ toast }) => toast.success("Profil mis � jour avec succ�s"))
+    import("sonner").then(({ toast }) => toast.success("Profil mis à jour avec succès"))
   }
   return data.user
 }

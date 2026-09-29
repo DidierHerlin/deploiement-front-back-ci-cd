@@ -121,7 +121,11 @@ class BienViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         with transaction.atomic():
-            bien = serializer.save()
+            user = request.user
+            if user.role == Utilisateur.Role.PROPRIETAIRE:
+                bien = serializer.save(proprietaire=user.profil_proprietaire)
+            else:
+                bien = serializer.save()
 
         logger.info("Bien créé : %s (id=%s) par %s", bien.titre, bien.id, request.user.email)
 
