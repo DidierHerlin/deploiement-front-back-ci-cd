@@ -76,6 +76,8 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:${{ github.sha }}
+          build-args: |
+            NEXT_PUBLIC_API_URL=http://${{ secrets.AWS_EC2_IP }}:8000/api
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
