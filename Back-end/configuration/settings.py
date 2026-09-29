@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 from datetime import timedelta
 from decouple import config, Csv
 import os
@@ -9,14 +9,14 @@ import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ─── Sécurité ────────────────────────────────────────────────────────────────
+# â”€â”€â”€ SÃ©curitÃ© â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 SECRET_KEY = config("SECRET_KEY", default="django-insecure-cle-par-defaut-pour-le-dev")
 DEBUG = config("DEBUG", default=False, cast=bool)
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv())
 
-# ─── Applications ─────────────────────────────────────────────────────────────
+# â”€â”€â”€ Applications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -72,10 +72,10 @@ WSGI_APPLICATION = "wsgi.application"
 CORS_ALLOW_CREDENTIALS = True
 CORS_EXPOSE_HEADERS = ["Content-Disposition"]
 
-# ─── Base de données ──────────────────────────────────────────────────────────
+# â”€â”€â”€ Base de donnÃ©es â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Détection automatique : Si .env dit "host.docker.internal" mais qu'on n'est pas dans Docker, on force "localhost"
+# DÃ©tection automatique : Si .env dit "host.docker.internal" mais qu'on n'est pas dans Docker, on force "localhost"
 db_host_env = config("DB_HOST", default="localhost")
 if db_host_env == "host.docker.internal" and not os.path.exists("/.dockerenv"):
     db_host_env = "localhost"
@@ -92,7 +92,7 @@ if db_host_env == "host.docker.internal" and not os.path.exists("/.dockerenv"):
 # }
 
 
-# 1. Priorité absolue à DATABASE_URL (fournie par Railway ou le .env local)
+# 1. PrioritÃ© absolue Ã  DATABASE_URL (fournie par Railway ou le .env local)
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if DATABASE_URL:
@@ -103,7 +103,18 @@ if DATABASE_URL:
             conn_health_checks=True,
         )
     }
-# 2. Sinon, on utilise les variables PG* (Railway) si elles sont définies
+# 2. Sinon, on utilise les variables PG* (Railway) si elles sont dÃ©finies
+elif os.environ.get("DB_HOST"):
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ.get("DB_NAME", "gestion_immobilier"),
+            "USER": os.environ.get("DB_USER", "postgres"),
+            "PASSWORD": os.environ.get("DB_PASSWORD", ""),
+            "HOST": os.environ.get("DB_HOST"),
+            "PORT": os.environ.get("DB_PORT", "5432"),
+        }
+    }
 elif os.environ.get("PGHOST"):
     DATABASES = {
         "default": {
@@ -124,14 +135,14 @@ else:
         }
     }
 
-# Debug temporaire (à retirer une fois que tout fonctionne)
+# Debug temporaire (Ã  retirer une fois que tout fonctionne)
 import sys
 if any(cmd in sys.argv for cmd in ("migrate", "runserver", "test")):
     print(f"DB ENGINE: {DATABASES['default'].get('ENGINE')}")
     print(f"DB HOST:   {DATABASES['default'].get('HOST')}")
     print(f"DB NAME:   {DATABASES['default'].get('NAME')}")
 
-# ─── Validation des mots de passe ─────────────────────────────────────────────
+# â”€â”€â”€ Validation des mots de passe â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -157,7 +168,7 @@ PASSWORD_HASHERS = [
 
 PASSWORD_RESET_TIMEOUT = 60 * 60 * 24 * 3  # 3 jours
 
-# ─── Django REST Framework ────────────────────────────────────────────────────
+# â”€â”€â”€ Django REST Framework â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -175,15 +186,15 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 20,
 }
 
-# ─── Documentation OpenAPI ────────────────────────────────────────────────────
+# â”€â”€â”€ Documentation OpenAPI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "API Gestion Immobilière",
-    "DESCRIPTION": "Documentation de l'API REST — cahier des charges Master II",
+    "TITLE": "API Gestion ImmobiliÃ¨re",
+    "DESCRIPTION": "Documentation de l'API REST â€” cahier des charges Master II",
     "VERSION": "1.0.0",
 }
 
-# ─── JWT ──────────────────────────────────────────────────────────────────────
+# â”€â”€â”€ JWT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(os.getenv("ACCESS_TOKEN_LIFETIME_MIN", 30))),
@@ -196,7 +207,7 @@ SIMPLE_JWT = {
     "USER_ID_CLAIM": "user_id",
 }
 
-# ─── CORS ─────────────────────────────────────────────────────────────────────
+# â”€â”€â”€ CORS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 CORS_ALLOWED_ORIGINS = config(
     "CORS_ALLOWED_ORIGINS",
@@ -210,7 +221,7 @@ CSRF_TRUSTED_ORIGINS = config(
     cast=Csv(),
 )
 
-# ─── Internationalisation ────────────────────────────────────────────────────
+# â”€â”€â”€ Internationalisation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 LANGUAGE_CODE = "fr-fr"
@@ -218,14 +229,14 @@ TIME_ZONE = config("TIME_ZONE", default="Indian/Antananarivo")
 USE_I18N = True
 USE_TZ = True
 
-# ─── Fichiers statiques & médias ─────────────────────────────────────────────
+# â”€â”€â”€ Fichiers statiques & mÃ©dias â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-# ─── Clé primaire par défaut ──────────────────────────────────────────────────
+# â”€â”€â”€ ClÃ© primaire par dÃ©faut â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -240,5 +251,6 @@ EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER)
 
-# ─── Tests ───────────────────────────────────────────────────────────────────
+# â”€â”€â”€ Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 TEST_RUNNER = "test_runner.CoverageRunner"
+
