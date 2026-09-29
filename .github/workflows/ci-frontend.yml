@@ -27,13 +27,15 @@ jobs:
       - name: Checkout du code
         uses: actions/checkout@v4
 
+      - name: Activer pnpm via corepack
+        run: corepack enable pnpm
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
-      - name: Activer pnpm via corepack
-        run: corepack enable pnpm
+          cache: 'pnpm'
+          cache-dependency-path: './Front/pnpm-lock.yaml'
 
       - name: Installer les dépendances
         run: pnpm install --frozen-lockfile
@@ -59,24 +61,85 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Set image name
-        if: github.event_name == 'push'
-        run: echo "IMAGE_NAME=${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier" >> $GITHUB_ENV
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier
 
       - name: Build and push Docker image
-        if: github.event_name == 'push'
         uses: docker/build-push-action@v6
         with:
           context: ./Front
           file: ./Front/Dockerfile
-          push: true
+          push: ${{ github.event_name == 'push' }}
           tags: |
-            ${{ env.IMAGE_NAME }}:latest
-            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Build image only on PR
-        if: github.event_name == 'pull_request'
-        run: docker build -t login-page-immobilier:pr ./Front
+  deploiement-AWS:
+    needs: docker-publish
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
 
+      - name: Connexion et déploiement sur AWS
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          DB_HOST: ${{ secrets.AWS_RDS_ENDPOINT }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          DB_NAME: "gestion_immobilier"
+          DB_USER: "postgres"
+          DB_PORT: "5432"
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          AWS_EC2_IP: ${{ secrets.AWS_EC2_IP }}
+        with:
+          host: ${{ secrets.AWS_EC2_IP }}
+          username: ubuntu
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME, AWS_EC2_IP
+          script: |
+            mkdir -p /home/ubuntu/gestion-immobilier
+            cd /home/ubuntu/gestion-immobilier
+            
+            cat << EOF > .env
+            DB_HOST=$DB_HOST
+            DB_NAME=$DB_NAME
+            DB_USER=$DB_USER
+            DB_PASSWORD=$DB_PASSWORD
+            DB_PORT=$DB_PORT
+            SECRET_KEY=$SECRET_KEY
+            DOCKERHUB_USERNAME=$DOCKERHUB_USERNAME
+            ALLOWED_HOSTS=*
+            CORS_ALLOWED_ORIGINS=http://16.16.115.111:3000,http://localhost:3000
+            CSRF_TRUSTED_ORIGINS=http://16.16.115.111:3000,http://localhost:3000
+            EOF
+            
+            cat << 'EOF' > docker-compose.yml
+            services:
+              web:
+                image: didierherlin/immobilier-drf:latest
+                restart: unless-stopped
+                env_file:
+                  - .env
+                ports:
+                  - "8000:8000"
+                command: >-
+                  sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
 
-
+              frontend:
+                image: didierherlin/login-page-immobilier:latest
+                restart: unless-stopped
+                ports:
+                  - "3000:3000"
+                depends_on:
+                  - web
+            EOF
+            
+            sudo docker compose pull
+            sudo docker compose up -d
