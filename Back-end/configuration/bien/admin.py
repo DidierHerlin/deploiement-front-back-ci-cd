@@ -62,3 +62,9 @@ class BienAdmin(admin.ModelAdmin):
         if db_field.name in self.HELP_TEXTS:
             kwargs["help_text"] = self.HELP_TEXTS[db_field.name]
         return super().formfield_for_dbfield(db_field, request, **kwargs)
+
+    def get_queryset(self, request: HttpRequest) -> models.QuerySet:
+        # Optimisation critique : on ignore la colonne 'photos' (qui contient des mégaoctets de Base64) 
+        # lors de l'affichage de la liste globale dans l'admin Django.
+        qs = super().get_queryset(request)
+        return qs.defer("photos")

@@ -162,13 +162,11 @@ class BienSerializer(serializers.ModelSerializer):
 
 class BienListSerializer(serializers.ModelSerializer):
     proprietaire = ProprietaireSimpleSerializer(read_only=True)
-    photos = serializers.SerializerMethodField()
+    
 
     class Meta:
         model = Bien
         fields = ['id', 'titre', 'type', 'mode_transaction', 'adresse', 'surface', 'nombre_pieces', 'loyer_mensuel', 'prix', 'statut', 'proprietaire', 'photos']
 
-    def get_photos(self, obj) -> list:
-        if obj.photos and isinstance(obj.photos, list) and len(obj.photos) > 0:
-            return [obj.photos[0]]
-        return []
+    
+
