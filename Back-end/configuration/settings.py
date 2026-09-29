@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 from datetime import timedelta
 from decouple import config, Csv
 import os
@@ -75,7 +75,7 @@ if os.environ.get("DB_HOST"):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.environ.get("DB_NAME", "gestion-immobilier"),
+            "NAME": "gestion-immobilier",  # Nom exact forcé, ignore le secret GitHub incorrect
             "USER": os.environ.get("DB_USER", "postgres"),
             "PASSWORD": os.environ.get("DB_PASSWORD", ""),
             "HOST": os.environ.get("DB_HOST"),

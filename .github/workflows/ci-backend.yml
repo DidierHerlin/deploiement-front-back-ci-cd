@@ -170,7 +170,7 @@ jobs:
           DB_HOST: ${{ secrets.AWS_RDS_ENDPOINT }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          DB_NAME: "gestion_immobilier"
+          DB_NAME: "gestion-immobilier"
           DB_USER: "postgres"
           DB_PORT: "5432"
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
