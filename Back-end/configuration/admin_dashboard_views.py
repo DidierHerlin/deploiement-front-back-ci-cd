@@ -49,11 +49,11 @@ class AdminDashboardView(APIView):
         # 3. Paiements Stats
         paiements_qs = Paiement.objects.all()
         paiements_aggs = paiements_qs.aggregate(
-            valides=Count('id', filter=Q(statut=Paiement.StatutPaiement.PAYE) | Q(statut='VALIDE')),
+            valides=Count('id', filter=Q(statut=Paiement.StatutPaiement.PAYE)),
             enAttente=Count('id', filter=Q(statut=Paiement.StatutPaiement.EN_ATTENTE)),
-            enRetard=Count('id', filter=Q(est_en_retard=True)),
+            enRetard=Count('id', filter=Q(statut=Paiement.StatutPaiement.EN_RETARD)),
             partiels=Count('id', filter=Q(est_partiel=True)),
-            totalRevenus=Sum('montant_paye', filter=Q(statut=Paiement.StatutPaiement.PAYE) | Q(statut='VALIDE')),
+            totalRevenus=Sum('montant_paye', filter=Q(statut=Paiement.StatutPaiement.PAYE)),
             totalAttendu=Sum('montant', filter=Q(statut=Paiement.StatutPaiement.EN_ATTENTE))
         )
 
@@ -81,7 +81,7 @@ class AdminDashboardView(APIView):
                 'color': 'blue'
             })
             
-        recent_paiements = Paiement.objects.filter(statut__in=[Paiement.StatutPaiement.PAYE, 'VALIDE']).order_by('-date_paiement')[:5]
+        recent_paiements = Paiement.objects.filter(statut=Paiement.StatutPaiement.PAYE).order_by('-date_paiement')[:5]
         for p in recent_paiements:
             montant = float(p.montant_paye) if p.montant_paye else 0.0
             recent_events.append({
