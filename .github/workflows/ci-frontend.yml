@@ -100,11 +100,12 @@ jobs:
           DB_PORT: "5432"
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           AWS_EC2_IP: ${{ secrets.AWS_EC2_IP }}
+          DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:${{ github.sha }}
         with:
           host: ${{ secrets.AWS_EC2_IP }}
           username: ubuntu
           key: ${{ secrets.AWS_EC2_SSH_KEY }}
-          envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME, AWS_EC2_IP
+          envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME, AWS_EC2_IP, DOCKER_IMAGE
           script: |
             # Installation automatique de k3s s'il n'est pas présent
             if ! command -v k3s &> /dev/null; then
@@ -135,7 +136,7 @@ jobs:
                 spec:
                   containers:
                     - name: frontend
-                      image: ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:${{ github.sha }}
+                      image: $DOCKER_IMAGE
                       imagePullPolicy: Always
                       ports:
                         - containerPort: 3000

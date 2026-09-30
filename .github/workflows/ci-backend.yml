@@ -176,11 +176,13 @@ jobs:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           AWS_EC2_IP: ${{ secrets.AWS_EC2_IP }}
           ENABLE_HPA: ${{ secrets.ENABLE_HPA }}
+          GIT_SHA: ${{ github.sha }}
+          DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/immobilier-drf:${{ github.sha }}
         with:
           host: ${{ secrets.AWS_EC2_IP }}
           username: ubuntu
           key: ${{ secrets.AWS_EC2_SSH_KEY }}
-          envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME, AWS_EC2_IP, ENABLE_HPA
+          envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME, AWS_EC2_IP, ENABLE_HPA, GIT_SHA, DOCKER_IMAGE
           script: |
             # Installation automatique de k3s s'il n'est pas présent
             if ! command -v k3s &> /dev/null; then
@@ -225,7 +227,7 @@ jobs:
                 spec:
                   containers:
                     - name: backend
-                      image: ${{ secrets.DOCKERHUB_USERNAME }}/immobilier-drf:${{ github.sha }}
+                      image: $DOCKER_IMAGE
                       imagePullPolicy: Always
                       command: ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
                       ports:
