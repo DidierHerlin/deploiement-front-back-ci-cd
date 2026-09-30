@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react"
 import Link from "next/link"
-import { ArrowLeft, CheckCircle2, LockKeyhole } from "lucide-react"
+import { ArrowLeft, CheckCircle2, LockKeyhole,ArrowRight } from "lucide-react"
 import { ForgotPasswordForm } from "@/components/organisms/forgot-password-form"
 import { VerifyCodeForm } from "@/components/organisms/verify-code-form"
 import { ResetPasswordForm } from "@/components/organisms/reset-password-form"
