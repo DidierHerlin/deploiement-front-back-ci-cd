@@ -175,11 +175,12 @@ jobs:
           DB_PORT: "5432"
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           AWS_EC2_IP: ${{ secrets.AWS_EC2_IP }}
+          ENABLE_HPA: ${{ secrets.ENABLE_HPA }}
         with:
           host: ${{ secrets.AWS_EC2_IP }}
           username: ubuntu
           key: ${{ secrets.AWS_EC2_SSH_KEY }}
-          envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME, AWS_EC2_IP
+          envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME, AWS_EC2_IP, ENABLE_HPA
           script: |
             # Installation automatique de k3s s'il n'est pas présent
             if ! command -v k3s &> /dev/null; then
@@ -260,3 +261,58 @@ jobs:
             
             # Attendre que le déploiement soit terminé (Zero downtime)
             sudo k3s kubectl rollout status deployment/backend -n immobilier
+            
+            # ─────────────────────────────────────────────────────
+            #  Auto-Scaling (HPA) — Activé uniquement si
+            #  le secret GitHub ENABLE_HPA=true est défini.
+            #  Sur t3.small : ne pas activer (ressources insuffisantes)
+            #  Sur une vraie infra : ajouter ENABLE_HPA=true dans
+            #  Settings → Secrets and variables → Actions
+            # ─────────────────────────────────────────────────────
+            if [ "$ENABLE_HPA" = "true" ]; then
+              echo "✅ ENABLE_HPA=true détecté — Application du HPA..."
+              cat << 'EOF' > hpa.yaml
+            apiVersion: autoscaling/v2
+            kind: HorizontalPodAutoscaler
+            metadata:
+              name: backend-hpa
+              namespace: immobilier
+            spec:
+              scaleTargetRef:
+                apiVersion: apps/v1
+                kind: Deployment
+                name: backend
+              minReplicas: 1
+              maxReplicas: 3
+              metrics:
+                - type: Resource
+                  resource:
+                    name: cpu
+                    target:
+                      type: Utilization
+                      averageUtilization: 70
+                - type: Resource
+                  resource:
+                    name: memory
+                    target:
+                      type: Utilization
+                      averageUtilization: 80
+              behavior:
+                scaleUp:
+                  stabilizationWindowSeconds: 60
+                  policies:
+                    - type: Pods
+                      value: 1
+                      periodSeconds: 60
+                scaleDown:
+                  stabilizationWindowSeconds: 300
+                  policies:
+                    - type: Pods
+                      value: 1
+                      periodSeconds: 120
+            EOF
+              sudo k3s kubectl apply -f hpa.yaml
+              echo "✅ HPA backend appliqué avec succès !"
+            else
+              echo "ℹ️  ENABLE_HPA non défini — HPA ignoré (mode économie de ressources)"
+            fi
