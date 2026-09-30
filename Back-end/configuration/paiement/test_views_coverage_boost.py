@@ -15,7 +15,7 @@ class AdditionalViewsCoverageTests(APITestCase):
         self.proprietaire_user = Utilisateur.objects.create_user(email="prop_cov@test.com", password="pwd", nom="P", prenoms="P", role=Utilisateur.Role.PROPRIETAIRE)
         
         # Obtenir ou créer profils
-        self.prop = getattr(self.proprietaire_user, 'profil_proprietaire', None) or Proprietaire.objects.create(user=self.proprietaire_user)
+        self.prop = getattr(self.proprietaire_user, 'profil_proprietaire', None) or Proprietaire.objects.create(user=self.proprietaire_user, iban="MG123")
         self.loc = getattr(self.locataire_user, 'profil_locataire', None) or Locataire.objects.create(user=self.locataire_user)
         
         self.bien = Bien.objects.create(proprietaire=self.prop, titre="Bien test", type="APPARTEMENT", mode_transaction="LOCATION", surface=10, nombre_pieces=1, loyer_mensuel=100, adresse="Test")

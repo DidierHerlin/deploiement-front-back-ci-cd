@@ -1,4 +1,4 @@
-﻿from django.test import TestCase
+from django.test import TestCase
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 from utilisateur.models import Utilisateur, Locataire, Proprietaire
@@ -9,7 +9,7 @@ from paiement.models import Paiement
 class EcheancesBatchTests(TestCase):
     def setUp(self):
         self.proprio_user = Utilisateur.objects.create_user(email='p@test.com', password='pwd', role=Utilisateur.Role.PROPRIETAIRE)
-        self.proprio = Proprietaire.objects.create(user=self.proprio_user)
+        self.proprio = Proprietaire.objects.create(user=self.proprio_user, iban="MG123")
         self.loc_user = Utilisateur.objects.create_user(email='l@test.com', password='pwd', role=Utilisateur.Role.LOCATAIRE)
         self.locataire = Locataire.objects.create(user=self.loc_user)
 

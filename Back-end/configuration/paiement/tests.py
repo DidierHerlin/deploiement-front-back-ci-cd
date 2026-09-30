@@ -53,6 +53,7 @@ class PaiementAPITestCase(APITestCase):
             statut=Contrat.StatutContrat.ACTIF
         )
         self.client.force_authenticate(user=self.agent)
+        Paiement.objects.all().delete()
 
     def test_creer_paiement_complet(self):
         url = reverse("paiement-list")

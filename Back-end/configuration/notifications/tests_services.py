@@ -18,7 +18,7 @@ class NotificationServiceTests(TestCase):
         self.prop_user = Utilisateur.objects.create_user(email="prop@test.com", password="pwd", nom="P", role=Utilisateur.Role.PROPRIETAIRE)
         
         self.loc = Locataire.objects.create(user=self.locataire_user)
-        self.prop = Proprietaire.objects.create(user=self.prop_user)
+        self.prop = Proprietaire.objects.create(user=self.prop_user, iban="MG123")
         
         self.bien = Bien.objects.create(proprietaire=self.prop, titre="Appartement", adresse="Test", loyer_mensuel=500, type="APPARTEMENT", mode_transaction="LOCATION", surface=50, nombre_pieces=2)
         

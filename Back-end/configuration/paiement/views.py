@@ -119,7 +119,7 @@ class PaiementViewSet(viewsets.ModelViewSet):
             return Response({"error": "Un paiement validÃ© ne peut pas Ãªtre refusÃ©."},
                             status=status.HTTP_400_BAD_REQUEST)
         
-        paiement.statut = Paiement.StatutPaiement.ECHOUE
+        paiement.statut = Paiement.StatutPaiement.ANNULE
         paiement.save(update_fields=["statut"])
         
         return Response(PaiementSerializer(paiement).data)

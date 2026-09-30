@@ -16,7 +16,7 @@ class ReportingStatsTests(APITestCase):
         self.agent = Utilisateur.objects.create_user(email='agent@test.com', password='password123', role=Utilisateur.Role.AGENT)
         # Proprio
         self.proprio_user = Utilisateur.objects.create_user(email='proprio@test.com', password='password123', role=Utilisateur.Role.PROPRIETAIRE)
-        self.proprio = Proprietaire.objects.create(user=self.proprio_user)
+        self.proprio = Proprietaire.objects.create(user=self.proprio_user, iban="MG123")
         # Locataire
         self.loc_user = Utilisateur.objects.create_user(email='loc@test.com', password='password123', role=Utilisateur.Role.LOCATAIRE)
         self.locataire = Locataire.objects.create(user=self.loc_user)

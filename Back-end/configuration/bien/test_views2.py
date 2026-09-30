@@ -24,7 +24,7 @@ class BienViewsTests(APITestCase):
             role=Utilisateur.Role.LOCATAIRE
         )
         self.bien = Bien.objects.create(
-            proprietaire=(getattr(self.proprio_user, 'profil_proprietaire', None) or __import__('utilisateur.models', fromlist=['Proprietaire']).Proprietaire.objects.create(user=self.proprio_user)),
+            proprietaire=(getattr(self.proprio_user, 'profil_proprietaire', None) or __import__('utilisateur.models', fromlist=['Proprietaire']).Proprietaire.objects.create(user=self.proprio_user, iban="MG123")),
             titre="Appart test",
             type=Bien.TypeBien.APPARTEMENT,
             mode_transaction=Bien.ModeTransaction.LOCATION,
@@ -54,7 +54,7 @@ class BienViewsTests(APITestCase):
     def test_create_bien_admin(self):
         self.client.force_authenticate(user=self.admin)
         data = {
-            "proprietaire_id": (getattr(self.proprio_user, 'profil_proprietaire', None) or __import__('utilisateur.models', fromlist=['Proprietaire']).Proprietaire.objects.create(user=self.proprio_user)).id,
+            "proprietaire_id": (getattr(self.proprio_user, 'profil_proprietaire', None) or __import__('utilisateur.models', fromlist=['Proprietaire']).Proprietaire.objects.create(user=self.proprio_user, iban="MG123")).id,
             "titre": "Nouveau bien",
             "type": Bien.TypeBien.MAISON,
             "mode_transaction": Bien.ModeTransaction.VENTE,

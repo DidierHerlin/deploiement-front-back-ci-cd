@@ -6,7 +6,7 @@ from bien.models import Bien
 class BienModelTests(TestCase):
     def setUp(self):
         self.user = Utilisateur.objects.create_user(email="prop@test.com", password="pwd", role=Utilisateur.Role.PROPRIETAIRE)
-        self.proprietaire = Proprietaire.objects.create(user=self.user)
+        self.proprietaire = Proprietaire.objects.create(user=self.user, iban="MG123")
 
     def test_create_bien_location_valide(self):
         bien = Bien(

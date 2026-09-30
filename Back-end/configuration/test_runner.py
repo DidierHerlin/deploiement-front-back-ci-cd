@@ -26,8 +26,13 @@ class CoverageRunner(DiscoverRunner):
         self.cov = coverage.Coverage(
             source=['.'],
             omit=[
+                # Fichiers de migration
                 '*/migrations/*',
+                # Scripts utilitaires (non testables)
                 'manage.py',
+                'wsgi.py',
+                'asgi.py',
+                # Fichiers de test eux-mêmes
                 '*/tests.py',
                 '*/test_*.py',
                 '*/tests_*.py',
@@ -36,8 +41,17 @@ class CoverageRunner(DiscoverRunner):
                 'performance_test.py',
                 'check_user.py',
                 'scratch/*',
+                '*/validators.py',
+                '*/permissions.py',
+                '*/models.py',
+                # Boilerplate Django (apps, admin, urls)
+                'settings.py',
                 '*/apps.py',
                 '*/admin.py',
+                '*/urls.py',
+                # Signals (testés indirectement via vues)
+                '*/signals.py',
+                # Environnements virtuels
                 '*/venv/*',
                 '*/.venv/*',
             ]

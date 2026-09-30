@@ -10,7 +10,7 @@ from contrats.models import Contrat
 class ContratModelTests(TestCase):
     def setUp(self):
         self.u1 = Utilisateur.objects.create_user(email="p@t.com", password="pwd", role=Utilisateur.Role.PROPRIETAIRE)
-        self.prop = Proprietaire.objects.create(user=self.u1)
+        self.prop = Proprietaire.objects.create(user=self.u1, iban="MG123")
         self.u2 = Utilisateur.objects.create_user(email="l@t.com", password="pwd", role=Utilisateur.Role.LOCATAIRE)
         self.loc = Locataire.objects.create(user=self.u2)
 
