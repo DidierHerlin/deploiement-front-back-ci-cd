@@ -11,7 +11,7 @@ from utilisateur.serializers import ProprietaireSimpleSerializer
 from . import validators
 from .models import Bien
 
-_valider_prix_positif = validators.PositiveValueValidator("Le prix ne peut pas Ãªtre nÃ©gatif.")
+_valider_prix_positif = validators.PositiveValueValidator("Le prix ne peut pas être négatif.")
 
 
 class BienSerializer(serializers.ModelSerializer):
@@ -21,7 +21,7 @@ class BienSerializer(serializers.ModelSerializer):
         source="proprietaire",
         write_only=True,
         required=False,
-        help_text="Requis pour un agent ou administrateur ; interdit pour un propriÃ©taire.",
+        help_text="Requis pour un agent ou administrateur ; interdit pour un propriétaires.",
     )
 
     class Meta:
@@ -76,7 +76,7 @@ class BienSerializer(serializers.ModelSerializer):
 
         if value in (Bien.StatutBien.LOUE, Bien.StatutBien.VENDU) and not est_admin:
             raise serializers.ValidationError(
-                f"Le statut '{value}' est attribuÃ© automatiquement par un contrat et ne peut pas Ãªtre dÃ©fini manuellement."
+                f"Le statut '{value}' est attribué automatiquement par un contrat et ne peut pas être défini manuellement."
             )
         return value
 
@@ -96,7 +96,7 @@ class BienSerializer(serializers.ModelSerializer):
     def _valider_proprietaire(self, attrs: dict, user: Any) -> None:
         if user.role == Utilisateur.Role.PROPRIETAIRE and "proprietaire" in attrs:
             raise serializers.ValidationError({
-                "proprietaire_id": "Vous n'Ãªtes pas autorisÃ© Ã  spÃ©cifier un propriÃ©taire : ce champ est automatiquement associÃ© Ã  votre compte."
+                "proprietaire_id": "Vous n'êtes pas autorisé à spécifier un propriétaire : ce champ est automatiquement associé à votre compte."
             })
 
         creation = self.instance is None
@@ -114,12 +114,12 @@ class BienSerializer(serializers.ModelSerializer):
             if loyer is None:
                 raise serializers.ValidationError({"loyer_mensuel": "Le loyer mensuel est obligatoire pour une location."})
             if prix is not None:
-                raise serializers.ValidationError({"prix": "Le prix ne doit pas Ãªtre renseignÃ© pour une location."})
+                raise serializers.ValidationError({"prix": "Le prix ne doit pas être renseigné pour une location."})
         elif mode == Bien.ModeTransaction.VENTE:
             if prix is None:
                 raise serializers.ValidationError({"prix": "Le prix est obligatoire pour une vente."})
             if loyer is not None:
-                raise serializers.ValidationError({"loyer_mensuel": "Le loyer mensuel ne doit pas Ãªtre renseignÃ© pour une vente."})
+                raise serializers.ValidationError({"loyer_mensuel": "Le loyer mensuel ne doit pas être renseigné pour une vente."})
 
     def _valider_type_bien(self, attrs: dict) -> None:
         type_bien = attrs.get("type", getattr(self.instance, "type", None))
@@ -133,9 +133,8 @@ class BienSerializer(serializers.ModelSerializer):
         if not self.instance:
             return
         if self.instance.statut in (Bien.StatutBien.LOUE, Bien.StatutBien.VENDU):
-            raise serializers.ValidationError("Ce bien est dÃ©jÃ  louÃ© ou vendu et ne peut pas Ãªtre modifiÃ©.")
+            raise serializers.ValidationError("Ce bien est déjà loué ou vendu et ne peut pas être modifié.")
 
-    # CrÃ©ation / mise Ã  jour
     def create(self, validated_data: dict) -> Bien:
         request = self.context["request"]
         user = request.user
@@ -145,7 +144,7 @@ class BienSerializer(serializers.ModelSerializer):
                 validated_data["proprietaire"] = user.profil_proprietaire
             except Proprietaire.DoesNotExist as exc:
                 raise serializers.ValidationError(
-                    "Aucun profil propriÃ©taire n'est associÃ© Ã  ce compte utilisateur."
+                    "Aucun profil propriétaire n'est associé à ce compte utilisateur."
                 ) from exc
 
         return Bien.objects.create(**validated_data)

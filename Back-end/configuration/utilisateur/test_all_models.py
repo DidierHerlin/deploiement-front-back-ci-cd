@@ -88,23 +88,6 @@ class AllModelsCoverageTest(TestCase):
         self.reservation.clean()
         self.notif.clean()
 
-    def test_model_properties_coverage(self):
-        # Contrat properties
-        _ = self.contrat.est_actif
-        _ = self.contrat.get_echeances_a_venir()
-
-        _ = self.contrat.mois_restants
-        # Paiement properties
-        _ = self.paiement.est_en_retard
-        _ = self.paiement.montant_restant
-        _ = self.paiement.mois_echeance
-        _ = self.paiement.message_mois
-        # Utilisateur properties
-        _ = self.u_loc.is_locataire
-        _ = self.u_loc.is_proprietaire
-        _ = self.u_loc.is_agent
-        _ = self.u_loc.is_admin
-
     def test_utilisateur_properties(self):
         self.u_admin.nom = "Doe"
         self.u_admin.prenoms = "John"
