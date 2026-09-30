@@ -124,7 +124,8 @@ jobs:
             sudo k3s kubectl create namespace immobilier --dry-run=client -o yaml | sudo k3s kubectl apply -f -
             
             # Création à la volée du fichier de déploiement optimisé pour le frontend
-            cat << 'EOF' > frontend-deployment.yaml
+            # NOTE : heredoc SANS guillemets autour de EOF → $DOCKER_IMAGE est interpolé par le shell
+            cat << EOF > frontend-deployment.yaml
             apiVersion: apps/v1
             kind: Deployment
             metadata:
@@ -162,7 +163,7 @@ jobs:
               name: frontend
               namespace: immobilier
             spec:
-              type: LoadBalancer
+              type: ClusterIP
               selector:
                 app: frontend
               ports:
@@ -172,6 +173,7 @@ jobs:
             EOF
             
             echo "🚀 Application du déploiement frontend..."
+            cat frontend-deployment.yaml | grep image  # Vérification : l'image doit être résolue, pas littérale
             sudo k3s kubectl apply -f frontend-deployment.yaml
             
             echo "⏳ Attente du démarrage (timeout 3 min)..."
