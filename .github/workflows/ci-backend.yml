@@ -246,6 +246,7 @@ jobs:
               name: backend
               namespace: immobilier
             spec:
+              type: LoadBalancer
               selector:
                 app: backend
               ports:

@@ -4,6 +4,7 @@ metadata:
   name: frontend
   namespace: immobilier
 spec:
+  type: LoadBalancer
   selector:
     app: frontend
   ports:
