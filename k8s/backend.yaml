@@ -41,7 +41,7 @@ metadata:
   name: backend
   namespace: immobilier
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: backend
   ports:

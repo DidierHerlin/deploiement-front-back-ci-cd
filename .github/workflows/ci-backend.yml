@@ -216,7 +216,8 @@ jobs:
               --namespace=immobilier
             
             # Création à la volée du fichier de déploiement optimisé
-            cat << 'EOF' > backend-deployment.yaml
+            # NOTE : heredoc SANS guillemets autour de EOF → $DOCKER_IMAGE est interpolé par le shell
+            cat << EOF > backend-deployment.yaml
             apiVersion: apps/v1
             kind: Deployment
             metadata:
@@ -258,7 +259,7 @@ jobs:
               name: backend
               namespace: immobilier
             spec:
-              type: LoadBalancer
+              type: ClusterIP
               selector:
                 app: backend
               ports:
@@ -268,6 +269,7 @@ jobs:
             EOF
             
             echo "🚀 Application du déploiement backend..."
+            cat backend-deployment.yaml | grep image  # Vérification : l'image doit être résolue, pas littérale
             sudo k3s kubectl apply -f backend-deployment.yaml
             
             echo "⏳ Attente du démarrage (timeout 3 min)..."
