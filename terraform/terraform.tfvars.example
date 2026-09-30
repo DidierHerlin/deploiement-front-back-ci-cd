@@ -1,7 +1,0 @@
-aws_region        = "eu-north-1"
-db_identifier     = "database-gestion-immobilier"
-ec2_instance_type = "t3.micro"
-
-# Ne décommentez pas et ne mettez pas de mot de passe sensible ici si ce fichier est versionné !
-# Créez plutôt un fichier `terraform.tfvars` (qui doit être ignoré par git) et mettez :
-# db_password = "votre-vrai-mot-de-passe"

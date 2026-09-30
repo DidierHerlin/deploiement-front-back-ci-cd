@@ -66,25 +66,56 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_EXPOSE_HEADERS = ["Content-Disposition"]
 
 
-db_host_env = config("DB_HOST", default="localhost")
-if db_host_env == "host.docker.internal" and not os.path.exists("/.dockerenv"):
-    db_host_env = "localhost"
+# ─── Configuration Base de données ───────────────────────────────────────────
+# Priorité :
+#   1. USE_SQLITE=true          → SQLite local (dev rapide, no postgres needed)
+#   2. DATABASE_URL=postgresql://... → PostgreSQL via URL (Railway, RDS...)
+#   3. DB_HOST défini           → PostgreSQL via variables séparées
+#   4. Aucune config            → SQLite local (fallback)
+# ─────────────────────────────────────────────────────────────────────────────
 
+USE_SQLITE = config("USE_SQLITE", default=False, cast=bool)
+DATABASE_URL = config("DATABASE_URL", default="")
 
-# Configuration Base de données (AWS RDS ou Local)
-if os.environ.get("DB_HOST"):
+if USE_SQLITE:
+    # Mode SQLite explicite — utile pour dev local sans Docker
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
+
+elif DATABASE_URL:
+    # Mode PostgreSQL via URL complète (Railway, RDS, Docker Compose...)
+    import dj_database_url
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+
+elif config("DB_HOST", default=""):
+    # Mode PostgreSQL via variables séparées (k8s, EC2, docker-compose)
+    db_host = config("DB_HOST", default="localhost")
+    # Si on tourne hors Docker et que l'hôte est host.docker.internal → localhost
+    if db_host == "host.docker.internal" and not os.path.exists("/.dockerenv"):
+        db_host = "localhost"
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": "postgres",  # On force le nom de la base existante sur RDS
-            "USER": os.environ.get("DB_USER", "postgres"),
-            "PASSWORD": os.environ.get("DB_PASSWORD", ""),
-            "HOST": os.environ.get("DB_HOST"),
-            "PORT": os.environ.get("DB_PORT", "5432"),
+            "NAME": config("DB_NAME", default="gesion_immobilier_back_end"),
+            "USER": config("DB_USER", default="postgres"),
+            "PASSWORD": config("DB_PASSWORD", default=""),
+            "HOST": db_host,
+            "PORT": config("DB_PORT", default="5432"),
         }
     }
+
 else:
-    # Fallback local : SQLite
+    # Fallback SQLite — aucune variable DB définie (dev local simple)
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -93,10 +124,13 @@ else:
     }
 
 import sys
-if any(cmd in sys.argv for cmd in ("migrate", "runserver", "test")):
-    print(f"DB ENGINE: {DATABASES['default'].get('ENGINE')}")
-    print(f"DB HOST:   {DATABASES['default'].get('HOST')}")
-    print(f"DB NAME:   {DATABASES['default'].get('NAME')}")
+if any(cmd in sys.argv for cmd in ("migrate", "runserver", "test", "shell")):
+    db_engine = DATABASES["default"].get("ENGINE", "")
+    db_name   = DATABASES["default"].get("NAME", "")
+    db_host   = DATABASES["default"].get("HOST", "local")
+    print(f"[DB] ENGINE : {db_engine}")
+    print(f"[DB] HOST   : {db_host}")
+    print(f"[DB] NAME   : {db_name}")
 
 AUTH_PASSWORD_VALIDATORS = [
     {

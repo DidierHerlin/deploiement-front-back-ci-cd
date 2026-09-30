@@ -1,0 +1,134 @@
+services:
+
+  db:
+    image: postgres:16-alpine
+    container_name: immobilier-db
+    restart: unless-stopped
+    profiles: ["postgres", "prod"]
+    environment:
+      POSTGRES_DB: gesion_immobilier_back_end
+      POSTGRES_USER: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gesion_immobilier_back_end"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - immobilier-net
+
+  backend-sqlite:
+    build:
+      context: ./Back-end/configuration
+      dockerfile: Dockerfile
+    container_name: immobilier-backend-sqlite
+    restart: unless-stopped
+    profiles: ["sqlite"]
+    environment:
+      USE_SQLITE: "true"
+      SECRET_KEY: ${SECRET_KEY:-django-insecure-cle-par-defaut-pour-le-dev}
+      DEBUG: ${DEBUG:-True}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./Back-end/configuration:/app          
+      - media_data:/app/media
+      - sqlite_data:/app                       
+    command: >-
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    networks:
+      - immobilier-net
+
+  backend-postgres:
+    build:
+      context: ./Back-end/configuration
+      dockerfile: Dockerfile
+    container_name: immobilier-backend
+    restart: unless-stopped
+    profiles: ["postgres"]
+    environment:
+      USE_SQLITE: "false"
+      DB_NAME: gesion_immobilier_back_end
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD:-}
+      DB_HOST: db
+      DB_PORT: "5432"
+      SECRET_KEY: ${SECRET_KEY:-django-insecure-cle-par-defaut-pour-le-dev}
+      DEBUG: ${DEBUG:-True}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./Back-end/configuration:/app         
+      - media_data:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >-
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    networks:
+      - immobilier-net
+
+  backend-prod:
+    image: didierherlin/immobilier-drf:latest
+    container_name: immobilier-backend-prod
+    restart: unless-stopped
+    profiles: ["prod"]
+    environment:
+      USE_SQLITE: "false"
+      DB_NAME: gesion_immobilier_back_end
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD:-}
+      DB_HOST: db
+      DB_PORT: "5432"
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: "False"
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+    ports:
+      - "8000:8000"
+    volumes:
+      - media_data:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >-
+      sh -c "python manage.py migrate &&
+             gunicorn --bind 0.0.0.0:8000 --workers 3 wsgi:application"
+    networks:
+      - immobilier-net
+
+  frontend:
+    build:
+      context: ./Front
+      dockerfile: Dockerfile
+    container_name: immobilier-frontend
+    restart: unless-stopped
+    profiles: ["sqlite", "postgres", "prod"]
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api}
+      PORT: "3000"
+    ports:
+      - "3000:3000"
+    networks:
+      - immobilier-net
+
+volumes:
+  postgres_data:
+  media_data:
+  sqlite_data:
+
+networks:
+  immobilier-net:
+    driver: bridge
