@@ -184,15 +184,24 @@ jobs:
           key: ${{ secrets.AWS_EC2_SSH_KEY }}
           envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME, AWS_EC2_IP, ENABLE_HPA, GIT_SHA, DOCKER_IMAGE
           script: |
+            # ── Mode verbose : affiche chaque commande + stoppe sur erreur ──
+            set -ex
+
             # Installation automatique de k3s s'il n'est pas présent
             if ! command -v k3s &> /dev/null; then
-                curl -sfL https://get.k3s.io | sh -
+                echo "📦 Installation de K3s..."
+                curl -sfL https://get.k3s.io | sh - 2>&1 | tail -5
+                sleep 10
+            else
+                echo "✅ K3s déjà installé : $(k3s --version)"
             fi
             
             # Création du namespace
+            echo "🔧 Création du namespace immobilier..."
             sudo k3s kubectl create namespace immobilier --dry-run=client -o yaml | sudo k3s kubectl apply -f -
             
             # Mise à jour des secrets Kubernetes
+            echo "🔑 Mise à jour des secrets RDS..."
             sudo k3s kubectl delete secret backend-secrets -n immobilier --ignore-not-found
             sudo k3s kubectl create secret generic backend-secrets \
               --from-literal=DB_NAME=$DB_NAME \
@@ -258,11 +267,13 @@ jobs:
                   targetPort: 8000
             EOF
             
-            # Application du déploiement
+            echo "🚀 Application du déploiement backend..."
             sudo k3s kubectl apply -f backend-deployment.yaml
             
-            # Attendre que le déploiement soit terminé (Zero downtime)
-            sudo k3s kubectl rollout status deployment/backend -n immobilier
+            echo "⏳ Attente du démarrage (timeout 3 min)..."
+            sudo k3s kubectl rollout status deployment/backend -n immobilier --timeout=180s \
+              && echo "✅ Backend déployé avec succès !" \
+              || (echo "❌ ERREUR déploiement backend !" && sudo k3s kubectl describe pod -n immobilier -l app=backend && exit 1)
             
             # ─────────────────────────────────────────────────────
             #  Auto-Scaling (HPA) — Activé uniquement si
