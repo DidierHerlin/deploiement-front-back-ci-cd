@@ -158,7 +158,7 @@ export function SignupForm() {
         </div>
 
         <div className="relative z-10 text-sm text-white/60">
-          © {new Date().getFullYear()} ImmoConnect. Tous droits réservés.
+          {new Date().getFullYear()} ImmoConnect. Tous droits réservés.
         </div>
       </section>
 

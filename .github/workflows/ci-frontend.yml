@@ -106,42 +106,63 @@ jobs:
           key: ${{ secrets.AWS_EC2_SSH_KEY }}
           envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME, AWS_EC2_IP
           script: |
-            mkdir -p /home/ubuntu/gestion-immobilier
-            cd /home/ubuntu/gestion-immobilier
+            # Installation automatique de k3s s'il n'est pas présent
+            if ! command -v k3s &> /dev/null; then
+                curl -sfL https://get.k3s.io | sh -
+            fi
             
-            cat << EOF > .env
-            DB_HOST=$DB_HOST
-            DB_NAME=$DB_NAME
-            DB_USER=$DB_USER
-            DB_PASSWORD=$DB_PASSWORD
-            DB_PORT=$DB_PORT
-            SECRET_KEY=$SECRET_KEY
-            DOCKERHUB_USERNAME=$DOCKERHUB_USERNAME
-            ALLOWED_HOSTS=*
-            CORS_ALLOWED_ORIGINS=http://16.16.115.111:3000,http://localhost:3000
-            CSRF_TRUSTED_ORIGINS=http://16.16.115.111:3000,http://localhost:3000
+            # Création du namespace
+            sudo k3s kubectl create namespace immobilier --dry-run=client -o yaml | sudo k3s kubectl apply -f -
+            
+            # Création à la volée du fichier de déploiement optimisé pour le frontend
+            cat << 'EOF' > frontend-deployment.yaml
+            apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: frontend
+              namespace: immobilier
+            spec:
+              replicas: 1
+              strategy:
+                type: RollingUpdate
+              selector:
+                matchLabels:
+                  app: frontend
+              template:
+                metadata:
+                  labels:
+                    app: frontend
+                spec:
+                  containers:
+                    - name: frontend
+                      image: ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:${{ github.sha }}
+                      imagePullPolicy: Always
+                      ports:
+                        - containerPort: 3000
+                      resources:
+                        requests:
+                          memory: "256Mi"
+                          cpu: "100m"
+                        limits:
+                          memory: "512Mi"
+                          cpu: "500m"
+            ---
+            apiVersion: v1
+            kind: Service
+            metadata:
+              name: frontend
+              namespace: immobilier
+            spec:
+              selector:
+                app: frontend
+              ports:
+                - protocol: TCP
+                  port: 3000
+                  targetPort: 3000
             EOF
             
-            cat << 'EOF' > docker-compose.yml
-            services:
-              web:
-                image: didierherlin/immobilier-drf:latest
-                restart: unless-stopped
-                env_file:
-                  - .env
-                ports:
-                  - "8000:8000"
-                command: >-
-                  sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
-
-              frontend:
-                image: didierherlin/login-page-immobilier:latest
-                restart: unless-stopped
-                ports:
-                  - "3000:3000"
-                depends_on:
-                  - web
-            EOF
+            # Application du déploiement
+            sudo k3s kubectl apply -f frontend-deployment.yaml
             
-            sudo docker compose pull
-            sudo docker compose up -d
+            # Attendre que le déploiement soit terminé (Zero downtime)
+            sudo k3s kubectl rollout status deployment/frontend -n immobilier

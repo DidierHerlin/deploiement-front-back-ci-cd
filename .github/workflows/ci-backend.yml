@@ -181,42 +181,81 @@ jobs:
           key: ${{ secrets.AWS_EC2_SSH_KEY }}
           envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME, AWS_EC2_IP
           script: |
-            mkdir -p /home/ubuntu/gestion-immobilier
-            cd /home/ubuntu/gestion-immobilier
+            # Installation automatique de k3s s'il n'est pas présent
+            if ! command -v k3s &> /dev/null; then
+                curl -sfL https://get.k3s.io | sh -
+            fi
             
-            cat << EOF > .env
-            DB_HOST=$DB_HOST
-            DB_NAME=$DB_NAME
-            DB_USER=$DB_USER
-            DB_PASSWORD=$DB_PASSWORD
-            DB_PORT=$DB_PORT
-            SECRET_KEY=$SECRET_KEY
-            DOCKERHUB_USERNAME=$DOCKERHUB_USERNAME
-            ALLOWED_HOSTS=*
-            CORS_ALLOWED_ORIGINS=http://$AWS_EC2_IP:3000,http://localhost:3000
-            CSRF_TRUSTED_ORIGINS=http://$AWS_EC2_IP:3000,http://localhost:3000
+            # Création du namespace
+            sudo k3s kubectl create namespace immobilier --dry-run=client -o yaml | sudo k3s kubectl apply -f -
+            
+            # Mise à jour des secrets Kubernetes
+            sudo k3s kubectl delete secret backend-secrets -n immobilier --ignore-not-found
+            sudo k3s kubectl create secret generic backend-secrets \
+              --from-literal=DB_NAME=$DB_NAME \
+              --from-literal=DB_USER=$DB_USER \
+              --from-literal=DB_PASSWORD=$DB_PASSWORD \
+              --from-literal=DB_HOST=$DB_HOST \
+              --from-literal=DB_PORT=$DB_PORT \
+              --from-literal=SECRET_KEY=$SECRET_KEY \
+              --from-literal=ALLOWED_HOSTS="*" \
+              --from-literal=CORS_ALLOWED_ORIGINS="http://$AWS_EC2_IP:3000,http://localhost:3000" \
+              --from-literal=CSRF_TRUSTED_ORIGINS="http://$AWS_EC2_IP:3000,http://localhost:3000" \
+              --namespace=immobilier
+            
+            # Création à la volée du fichier de déploiement optimisé
+            cat << 'EOF' > backend-deployment.yaml
+            apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: backend
+              namespace: immobilier
+            spec:
+              replicas: 1
+              strategy:
+                type: RollingUpdate
+              selector:
+                matchLabels:
+                  app: backend
+              template:
+                metadata:
+                  labels:
+                    app: backend
+                spec:
+                  containers:
+                    - name: backend
+                      image: ${{ secrets.DOCKERHUB_USERNAME }}/immobilier-drf:${{ github.sha }}
+                      imagePullPolicy: Always
+                      command: ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
+                      ports:
+                        - containerPort: 8000
+                      resources:
+                        requests:
+                          memory: "256Mi"
+                          cpu: "100m"
+                        limits:
+                          memory: "512Mi"
+                          cpu: "500m"
+                      envFrom:
+                        - secretRef:
+                            name: backend-secrets
+            ---
+            apiVersion: v1
+            kind: Service
+            metadata:
+              name: backend
+              namespace: immobilier
+            spec:
+              selector:
+                app: backend
+              ports:
+                - protocol: TCP
+                  port: 8000
+                  targetPort: 8000
             EOF
             
-            cat << 'EOF' > docker-compose.yml
-            services:
-              web:
-                image: didierherlin/immobilier-drf:latest
-                restart: unless-stopped
-                env_file:
-                  - .env
-                ports:
-                  - "8000:8000"
-                command: >-
-                  sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
-
-              frontend:
-                image: didierherlin/login-page-immobilier:latest
-                restart: unless-stopped
-                ports:
-                  - "3000:3000"
-                depends_on:
-                  - web
-            EOF
+            # Application du déploiement
+            sudo k3s kubectl apply -f backend-deployment.yaml
             
-            sudo docker compose pull
-            sudo docker compose up -d
+            # Attendre que le déploiement soit terminé (Zero downtime)
+            sudo k3s kubectl rollout status deployment/backend -n immobilier

@@ -5,6 +5,11 @@ metadata:
   namespace: immobilier
 spec:
   replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: frontend
@@ -15,25 +20,14 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: didierherlin/login-page-immobilier:latest
-          imagePullPolicy: IfNotPresent
+          image: didierherlin/immobilier-next:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 3000
-          env:
-            # Assurer que le conteneur démarre et a les mêmes variables d'environnement au cas où (standalone mode)
-            - name: NEXT_PUBLIC_API_URL
-              value: "http://immobilier.local/api"
-            - name: PORT
-              value: "3000"
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 3000
-            initialDelaySeconds: 10
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 3000
-            initialDelaySeconds: 30
-            periodSeconds: 20
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
