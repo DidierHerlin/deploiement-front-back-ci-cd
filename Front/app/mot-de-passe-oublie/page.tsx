@@ -7,7 +7,7 @@ import { ForgotPasswordForm } from "@/components/organisms/forgot-password-form"
 import { VerifyCodeForm } from "@/components/organisms/verify-code-form"
 import { ResetPasswordForm } from "@/components/organisms/reset-password-form"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://immobilier-drf-production.up.railway.app/api"
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://16.16.115.111:8000/api"
 
 type Etape = "email" | "code" | "nouveau-mdp" | "succes"
 

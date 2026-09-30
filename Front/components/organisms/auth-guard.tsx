@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { marquerDeconnecte, getAccessToken, rafraichirToken } from "@/lib/auth"
 import { estPublique } from "@/lib/routes-publiques"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://immobilier-drf-production.up.railway.app/api"
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://16.16.115.111:8000/api"
 
 export default function AuthGuard({ children }: { children: ReactNode }) {
   const pathname = usePathname()

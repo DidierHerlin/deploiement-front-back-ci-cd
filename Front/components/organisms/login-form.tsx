@@ -7,7 +7,7 @@ import { marquerConnecte, sauvegarderTokens, getAccessToken } from "@/lib/auth"
 import { PasswordInput } from "@/components/atoms/password-input"
 import { toast } from "sonner"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://immobilier-drf-production.up.railway.app/api"
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://16.16.115.111:8000/api"
 
 // Redirection par défaut après connexion, si aucun ?redirect= n'est fourni par le middleware.
 function redirectionParRole(role: string) {
