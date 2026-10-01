@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import JsonResponse
 from reporting_views import ReportingStatsView
 from admin_dashboard_views import AdminDashboardView
 from agent_dashboard_views import AgentDashboardView
@@ -12,7 +13,13 @@ from drf_spectacular.views import (
     SpectacularRedocView,
 )
 
+def health_check(request):
+    return JsonResponse({"status": "ok"})
+
 urlpatterns = [
+    path("health/", health_check, name="health"),
+    path("api/health/", health_check, name="api-health"),
+    path("api/health", health_check),
     path("admin/", admin.site.urls),
     path("api/", include("utilisateur.urls")),
     path("api/", include("notifications.urls")),
