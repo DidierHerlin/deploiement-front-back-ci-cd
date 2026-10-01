@@ -227,6 +227,9 @@ jobs:
               replicas: 1
               strategy:
                 type: RollingUpdate
+                rollingUpdate:
+                  maxSurge: 1
+                  maxUnavailable: 0
               selector:
                 matchLabels:
                   app: backend
@@ -239,16 +242,22 @@ jobs:
                     - name: backend
                       image: $DOCKER_IMAGE
                       imagePullPolicy: Always
-                      command: ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
+                      command: ["sh", "-c", "python manage.py migrate && gunicorn --bind 0.0.0.0:8000 --workers 2 wsgi:application"]
                       ports:
                         - containerPort: 8000
                       resources:
                         requests:
-                          memory: "256Mi"
+                          memory: "150Mi"
                           cpu: "100m"
                         limits:
-                          memory: "512Mi"
-                          cpu: "500m"
+                          memory: "250Mi"
+                          cpu: "400m"
+                      readinessProbe:
+                        httpGet:
+                          path: /api/health/
+                          port: 8000
+                        initialDelaySeconds: 10
+                        periodSeconds: 5
                       envFrom:
                         - secretRef:
                             name: backend-secrets
