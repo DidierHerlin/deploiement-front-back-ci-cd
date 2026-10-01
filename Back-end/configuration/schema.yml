@@ -1,0 +1,3395 @@
+openapi: 3.0.3
+info:
+  title: API Gestion Immobilier
+  version: 1.0.0
+  description: Documentation de l'API REST  cahier des charges Master II
+paths:
+  /api/admin/dashboard/:
+    get:
+      operationId: admin_dashboard_retrieve
+      tags:
+      - admin
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/agent/dashboard/:
+    get:
+      operationId: agent_dashboard_retrieve
+      tags:
+      - agent
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/agents/register/:
+    post:
+      operationId: agents_register_create
+      description: |-
+        Inscription des agents immobiliers.
+        RG : un compte AGENT est créé inactif et doit être validé par un
+        administrateur avant de pouvoir se connecter.
+      tags:
+      - agents
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: |-
+        Connexion utilisateur — retourne un couple (access, refresh) de tokens JWT
+        ainsi que le profil de l'utilisateur connecté.
+
+        Utilise UtilisateurTokenObtainPairSerializer (déjà défini dans
+        serializers.py), qui enrichit le payload du token avec le rôle et
+        ajoute le profil utilisateur dans la réponse.
+
+        RG-04 : un compte désactivé (is_active=False) ne peut plus se connecter —
+        ce comportement est garanti nativement par TokenObtainPairSerializer,
+        qui vérifie `user.is_active` avant d'émettre un token.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UtilisateurTokenObtainPair'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UtilisateurTokenObtainPair'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UtilisateurTokenObtainPair'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UtilisateurTokenObtainPair'
+          description: ''
+  /api/auth/logout/:
+    post:
+      operationId: auth_logout_create
+      description: |-
+        Déconnexion utilisateur — blackliste le refresh token transmis
+        (rest_framework_simplejwt.token_blacklist doit être dans INSTALLED_APPS).
+
+        Le client doit envoyer son refresh token dans le corps de la requête :
+            POST /api/auth/logout/
+            { "refresh": "<refresh_token>" }
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/refresh/:
+    post:
+      operationId: auth_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/biens/:
+    get:
+      operationId: biens_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - biens
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedBienListList'
+          description: ''
+    post:
+      operationId: biens_create
+      tags:
+      - biens
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Bien'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Bien'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Bien'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bien'
+          description: ''
+  /api/biens/{id}/:
+    get:
+      operationId: biens_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - biens
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bien'
+          description: ''
+    put:
+      operationId: biens_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - biens
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Bien'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Bien'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Bien'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bien'
+          description: ''
+    patch:
+      operationId: biens_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - biens
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBien'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBien'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBien'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bien'
+          description: ''
+    delete:
+      operationId: biens_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - biens
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/biens/disponible/:
+    get:
+      operationId: biens_disponible_retrieve
+      tags:
+      - biens
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BienList'
+          description: ''
+  /api/contrats/:
+    get:
+      operationId: contrats_list
+      description: |-
+        CRUD complet sur les contrats (location et achat), avec actions
+        métier dédiées :
+
+            GET  /contrats/bien_info/?bien_id=<id>   Infos d'un bien DISPONIBLE
+            POST /contrats/{id}/resilier/            Location ACTIF -> RESILIE
+            POST /contrats/{id}/terminer/            Location ACTIF -> TERMINE
+            POST /contrats/{id}/finaliser_vente/     Achat ACTIF -> VENDU
+            GET  /contrats/echeances/                Liste des échéances à venir (J-5)
+      parameters:
+      - in: query
+        name: bien
+        schema:
+          type: integer
+      - in: query
+        name: locataire
+        schema:
+          type: integer
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: statut
+        schema:
+          type: string
+          enum:
+          - ACTIF
+          - RESERVE
+          - RESILIE
+          - TERMINE
+          - VENDU
+        description: |-
+          * `RESERVE` - Réservé
+          * `ACTIF` - Actif
+          * `RESILIE` - Résilié
+          * `TERMINE` - Terminé
+          * `VENDU` - Vendu
+      - in: query
+        name: type_contrat
+        schema:
+          type: string
+          title: Type de contrat
+          enum:
+          - ACHAT
+          - LOCATION
+        description: |-
+          * `LOCATION` - Location
+          * `ACHAT` - Achat
+      tags:
+      - contrats
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedContratListList'
+          description: ''
+    post:
+      operationId: contrats_create
+      description: |-
+        CRUD complet sur les contrats (location et achat), avec actions
+        métier dédiées :
+
+            GET  /contrats/bien_info/?bien_id=<id>   Infos d'un bien DISPONIBLE
+            POST /contrats/{id}/resilier/            Location ACTIF -> RESILIE
+            POST /contrats/{id}/terminer/            Location ACTIF -> TERMINE
+            POST /contrats/{id}/finaliser_vente/     Achat ACTIF -> VENDU
+            GET  /contrats/echeances/                Liste des échéances à venir (J-5)
+      tags:
+      - contrats
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Contrat'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Contrat'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Contrat'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contrat'
+          description: ''
+  /api/contrats/{id}/:
+    get:
+      operationId: contrats_retrieve
+      description: |-
+        CRUD complet sur les contrats (location et achat), avec actions
+        métier dédiées :
+
+            GET  /contrats/bien_info/?bien_id=<id>   Infos d'un bien DISPONIBLE
+            POST /contrats/{id}/resilier/            Location ACTIF -> RESILIE
+            POST /contrats/{id}/terminer/            Location ACTIF -> TERMINE
+            POST /contrats/{id}/finaliser_vente/     Achat ACTIF -> VENDU
+            GET  /contrats/echeances/                Liste des échéances à venir (J-5)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Contrat.
+        required: true
+      tags:
+      - contrats
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContratList'
+          description: ''
+    put:
+      operationId: contrats_update
+      description: |-
+        CRUD complet sur les contrats (location et achat), avec actions
+        métier dédiées :
+
+            GET  /contrats/bien_info/?bien_id=<id>   Infos d'un bien DISPONIBLE
+            POST /contrats/{id}/resilier/            Location ACTIF -> RESILIE
+            POST /contrats/{id}/terminer/            Location ACTIF -> TERMINE
+            POST /contrats/{id}/finaliser_vente/     Achat ACTIF -> VENDU
+            GET  /contrats/echeances/                Liste des échéances à venir (J-5)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Contrat.
+        required: true
+      tags:
+      - contrats
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Contrat'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Contrat'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Contrat'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contrat'
+          description: ''
+    patch:
+      operationId: contrats_partial_update
+      description: |-
+        CRUD complet sur les contrats (location et achat), avec actions
+        métier dédiées :
+
+            GET  /contrats/bien_info/?bien_id=<id>   Infos d'un bien DISPONIBLE
+            POST /contrats/{id}/resilier/            Location ACTIF -> RESILIE
+            POST /contrats/{id}/terminer/            Location ACTIF -> TERMINE
+            POST /contrats/{id}/finaliser_vente/     Achat ACTIF -> VENDU
+            GET  /contrats/echeances/                Liste des échéances à venir (J-5)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Contrat.
+        required: true
+      tags:
+      - contrats
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedContrat'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedContrat'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedContrat'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contrat'
+          description: ''
+    delete:
+      operationId: contrats_destroy
+      description: |-
+        CRUD complet sur les contrats (location et achat), avec actions
+        métier dédiées :
+
+            GET  /contrats/bien_info/?bien_id=<id>   Infos d'un bien DISPONIBLE
+            POST /contrats/{id}/resilier/            Location ACTIF -> RESILIE
+            POST /contrats/{id}/terminer/            Location ACTIF -> TERMINE
+            POST /contrats/{id}/finaliser_vente/     Achat ACTIF -> VENDU
+            GET  /contrats/echeances/                Liste des échéances à venir (J-5)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Contrat.
+        required: true
+      tags:
+      - contrats
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/contrats/{id}/finaliser_vente/:
+    post:
+      operationId: contrats_finaliser_vente_create
+      description: |-
+        CRUD complet sur les contrats (location et achat), avec actions
+        métier dédiées :
+
+            GET  /contrats/bien_info/?bien_id=<id>   Infos d'un bien DISPONIBLE
+            POST /contrats/{id}/resilier/            Location ACTIF -> RESILIE
+            POST /contrats/{id}/terminer/            Location ACTIF -> TERMINE
+            POST /contrats/{id}/finaliser_vente/     Achat ACTIF -> VENDU
+            GET  /contrats/echeances/                Liste des échéances à venir (J-5)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Contrat.
+        required: true
+      tags:
+      - contrats
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Contrat'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Contrat'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Contrat'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contrat'
+          description: ''
+  /api/contrats/{id}/resilier/:
+    post:
+      operationId: contrats_resilier_create
+      description: |-
+        CRUD complet sur les contrats (location et achat), avec actions
+        métier dédiées :
+
+            GET  /contrats/bien_info/?bien_id=<id>   Infos d'un bien DISPONIBLE
+            POST /contrats/{id}/resilier/            Location ACTIF -> RESILIE
+            POST /contrats/{id}/terminer/            Location ACTIF -> TERMINE
+            POST /contrats/{id}/finaliser_vente/     Achat ACTIF -> VENDU
+            GET  /contrats/echeances/                Liste des échéances à venir (J-5)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Contrat.
+        required: true
+      tags:
+      - contrats
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Contrat'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Contrat'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Contrat'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contrat'
+          description: ''
+  /api/contrats/{id}/telecharger/:
+    get:
+      operationId: contrats_telecharger_retrieve
+      description: Endpoint telecharger PDF (RG-10 et sécurité garanties par get_queryset)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Contrat.
+        required: true
+      tags:
+      - contrats
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contrat'
+          description: ''
+  /api/contrats/{id}/terminer/:
+    post:
+      operationId: contrats_terminer_create
+      description: |-
+        CRUD complet sur les contrats (location et achat), avec actions
+        métier dédiées :
+
+            GET  /contrats/bien_info/?bien_id=<id>   Infos d'un bien DISPONIBLE
+            POST /contrats/{id}/resilier/            Location ACTIF -> RESILIE
+            POST /contrats/{id}/terminer/            Location ACTIF -> TERMINE
+            POST /contrats/{id}/finaliser_vente/     Achat ACTIF -> VENDU
+            GET  /contrats/echeances/                Liste des échéances à venir (J-5)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Contrat.
+        required: true
+      tags:
+      - contrats
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Contrat'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Contrat'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Contrat'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contrat'
+          description: ''
+  /api/contrats/bien-info/:
+    get:
+      operationId: contrats_bien_info_retrieve
+      description: |-
+        CRUD complet sur les contrats (location et achat), avec actions
+        métier dédiées :
+
+            GET  /contrats/bien_info/?bien_id=<id>   Infos d'un bien DISPONIBLE
+            POST /contrats/{id}/resilier/            Location ACTIF -> RESILIE
+            POST /contrats/{id}/terminer/            Location ACTIF -> TERMINE
+            POST /contrats/{id}/finaliser_vente/     Achat ACTIF -> VENDU
+            GET  /contrats/echeances/                Liste des échéances à venir (J-5)
+      tags:
+      - contrats
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contrat'
+          description: ''
+  /api/contrats/echeances/:
+    get:
+      operationId: contrats_echeances_retrieve
+      description: |-
+        Retourne les échéances à venir (non payées) pour les contrats de location
+        de l'utilisateur connecté, dans la fenêtre J-5 (5 jours avant l'échéance).
+        Accessible selon le rôle (ADMIN, AGENT, LOCATAIRE, PROPRIETAIRE).
+      tags:
+      - contrats
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contrat'
+          description: ''
+  /api/locataires/:
+    get:
+      operationId: locataires_retrieve
+      description: Liste de tous les locataires (agent/admin uniquement)
+      tags:
+      - locataires
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/locataires/{id}/:
+    get:
+      operationId: locataires_retrieve_2
+      description: |-
+        GET /api/locataires/me/     → Profil du locataire connecté
+        GET /api/locataires/<id>/   → Profil spécifique (agent/admin uniquement)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - locataires
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: locataires_update
+      description: Mise à jour de la fiche (le locataire modifie son propre profil).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - locataires
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: locataires_destroy
+      description: Suppression (agent/admin uniquement).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - locataires
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/locataires/me/:
+    get:
+      operationId: locataires_me_retrieve
+      description: |-
+        GET /api/locataires/me/     → Profil du locataire connecté
+        GET /api/locataires/<id>/   → Profil spécifique (agent/admin uniquement)
+      tags:
+      - locataires
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: locataires_me_update
+      description: Mise à jour de la fiche (le locataire modifie son propre profil).
+      tags:
+      - locataires
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: locataires_me_destroy
+      description: Suppression (agent/admin uniquement).
+      tags:
+      - locataires
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/locataires/register/:
+    post:
+      operationId: locataires_register_create
+      description: |-
+        Inscription des locataires.
+        RG : un locataire est activé automatiquement (ROLES_AUTO_ACTIFS du manager).
+      tags:
+      - locataires
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/mot-de-passe/demande/:
+    post:
+      operationId: mot_de_passe_demande_create
+      description: 'Étape 1 : Demande de réinitialisation - Envoie un code par email'
+      tags:
+      - mot-de-passe
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/mot-de-passe/reinitialiser/:
+    post:
+      operationId: mot_de_passe_reinitialiser_create
+      description: 'Étape 3 : Réinitialisation finale du mot de passe'
+      tags:
+      - mot-de-passe
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/mot-de-passe/verifier-code/:
+    post:
+      operationId: mot_de_passe_verifier_code_create
+      description: 'Étape 2 : Vérification du code'
+      tags:
+      - mot-de-passe
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/notifications/:
+    get:
+      operationId: notifications_retrieve
+      description: |-
+        GET /api/notifications/
+        Filtres optionnels : ?lu=false, ?type=RETARD_PAIEMENT
+      tags:
+      - notifications
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/notifications/{id}/:
+    get:
+      operationId: notifications_retrieve_2
+      description: |-
+        GET /api/notifications/<id>/ — détail + marque comme lue automatiquement
+        DELETE /api/notifications/<id>/ — suppression
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - notifications
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: notifications_destroy
+      description: |-
+        GET /api/notifications/<id>/ — détail + marque comme lue automatiquement
+        DELETE /api/notifications/<id>/ — suppression
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - notifications
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/notifications/creer/:
+    post:
+      operationId: notifications_creer_create
+      description: |-
+        POST /api/notifications/creer/
+        Réservé aux administrateurs. Déclenche automatiquement l'envoi d'email
+        via le signal post_save défini dans models/notification.py.
+      tags:
+      - notifications
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/notifications/marquer-lu/:
+    post:
+      operationId: notifications_marquer_lu_create
+      description: |-
+        POST /api/notifications/marquer-lu/
+        Body : { "notification_ids": [1, 2, 3] } — vide = tout marquer comme lu.
+      tags:
+      - notifications
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/notifications/non-lues/count/:
+    get:
+      operationId: notifications_non_lues_count_retrieve
+      description: GET /api/notifications/non-lues/count/
+      tags:
+      - notifications
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/paiements/:
+    get:
+      operationId: paiements_list
+      parameters:
+      - in: query
+        name: contrat
+        schema:
+          type: integer
+      - in: query
+        name: est_partiel
+        schema:
+          type: boolean
+      - in: query
+        name: mode_paiement
+        schema:
+          type: string
+          nullable: true
+          title: Mode de paiement
+          enum:
+          - AIRTEL_MONEY
+          - CHEQUE
+          - ESPECE
+          - MVOLA
+          - ORANGE_MONEY
+          - VIREMENT
+        description: |-
+          * `MVOLA` - Mvola
+          * `ORANGE_MONEY` - Orange Money
+          * `AIRTEL_MONEY` - Airtel Money
+          * `VIREMENT` - Virement
+          * `CHEQUE` - Chèque
+          * `ESPECE` - Espèce
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: statut
+        schema:
+          type: string
+          enum:
+          - ANNULE
+          - EN_ATTENTE
+          - EN_RETARD
+          - PARTIEL
+          - PAYE
+        description: |-
+          * `EN_ATTENTE` - En attente
+          * `PAYE` - Payé
+          * `PARTIEL` - Partiel
+          * `EN_RETARD` - En retard
+          * `ANNULE` - Annulé
+      tags:
+      - paiements
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPaiementList'
+          description: ''
+    post:
+      operationId: paiements_create
+      tags:
+      - paiements
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Paiement'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Paiement'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Paiement'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paiement'
+          description: ''
+  /api/paiements/{id}/:
+    get:
+      operationId: paiements_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Paiement.
+        required: true
+      tags:
+      - paiements
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paiement'
+          description: ''
+    put:
+      operationId: paiements_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Paiement.
+        required: true
+      tags:
+      - paiements
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Paiement'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Paiement'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Paiement'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paiement'
+          description: ''
+    patch:
+      operationId: paiements_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Paiement.
+        required: true
+      tags:
+      - paiements
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPaiement'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPaiement'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPaiement'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paiement'
+          description: ''
+    delete:
+      operationId: paiements_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Paiement.
+        required: true
+      tags:
+      - paiements
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/paiements/{id}/annuler/:
+    post:
+      operationId: paiements_annuler_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Paiement.
+        required: true
+      tags:
+      - paiements
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Paiement'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Paiement'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Paiement'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paiement'
+          description: ''
+  /api/paiements/{id}/quittance/:
+    get:
+      operationId: paiements_quittance_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Paiement.
+        required: true
+      tags:
+      - paiements
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paiement'
+          description: ''
+  /api/paiements/{id}/refuser/:
+    post:
+      operationId: paiements_refuser_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Paiement.
+        required: true
+      tags:
+      - paiements
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Paiement'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Paiement'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Paiement'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paiement'
+          description: ''
+  /api/paiements/{id}/valider/:
+    post:
+      operationId: paiements_valider_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Paiement.
+        required: true
+      tags:
+      - paiements
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Paiement'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Paiement'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Paiement'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paiement'
+          description: ''
+  /api/paiements/impayes/:
+    get:
+      operationId: paiements_impayes_retrieve
+      tags:
+      - paiements
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paiement'
+          description: ''
+  /api/profil/:
+    get:
+      operationId: profil_retrieve
+      description: Récupérer ou modifier le profil de l'utilisateur connecté
+      tags:
+      - profil
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: profil_update
+      description: Récupérer ou modifier le profil de l'utilisateur connecté
+      tags:
+      - profil
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: profil_partial_update
+      description: Récupérer ou modifier le profil de l'utilisateur connecté
+      tags:
+      - profil
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/profil/changer-mot-de-passe/:
+    post:
+      operationId: profil_changer_mot_de_passe_create
+      description: Changement de mot de passe (nécessite l'ancien mot de passe)
+      tags:
+      - profil
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/profil/modifier/:
+    put:
+      operationId: profil_modifier_update
+      description: Mise à jour complète du profil utilisateur
+      tags:
+      - profil
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/profil/photo/:
+    post:
+      operationId: profil_photo_create
+      description: Mise à jour de la photo de profil uniquement
+      tags:
+      - profil
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/profil/photo/supprimer/:
+    delete:
+      operationId: profil_photo_supprimer_destroy
+      description: Suppression de la photo de profil
+      tags:
+      - profil
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/proprietaires/:
+    get:
+      operationId: proprietaires_retrieve
+      description: Liste de tous les propriétaires (agent/admin uniquement)
+      tags:
+      - proprietaires
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/proprietaires/{id}/:
+    get:
+      operationId: proprietaires_retrieve_2
+      description: |-
+        GET /api/proprietaires/me/     → Profil du propriétaire connecté
+        GET /api/proprietaires/<id>/   → Profil spécifique (agent/admin uniquement)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - proprietaires
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: proprietaires_update
+      description: Mise à jour de la fiche (le propriétaire modifie son propre profil).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - proprietaires
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: proprietaires_destroy
+      description: Suppression (agent/admin uniquement).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - proprietaires
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/proprietaires/me/:
+    get:
+      operationId: proprietaires_me_retrieve
+      description: |-
+        GET /api/proprietaires/me/     → Profil du propriétaire connecté
+        GET /api/proprietaires/<id>/   → Profil spécifique (agent/admin uniquement)
+      tags:
+      - proprietaires
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: proprietaires_me_update
+      description: Mise à jour de la fiche (le propriétaire modifie son propre profil).
+      tags:
+      - proprietaires
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: proprietaires_me_destroy
+      description: Suppression (agent/admin uniquement).
+      tags:
+      - proprietaires
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/proprietaires/register/:
+    post:
+      operationId: proprietaires_register_create
+      description: |-
+        Inscription des propriétaires.
+        RG : un compte PROPRIETAIRE est créé inactif et doit être validé par un
+        administrateur ou un agent avant de pouvoir se connecter (voir manager).
+      tags:
+      - proprietaires
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/reporting/stats/:
+    get:
+      operationId: reporting_stats_retrieve
+      tags:
+      - reporting
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/reservations/:
+    get:
+      operationId: reservations_list
+      description: |-
+        CRUD sur les réservations, avec action métier dédiée :
+
+            POST /reservations/              Créer une réservation (LOCATAIRE)
+            GET  /reservations/              Lister les réservations
+            GET  /reservations/{id}/         Détail d'une réservation
+            POST /reservations/{id}/repondre/ Répondre à une réservation (ADMIN/AGENT)
+      parameters:
+      - in: query
+        name: bien
+        schema:
+          type: integer
+      - in: query
+        name: locataire
+        schema:
+          type: integer
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: statut
+        schema:
+          type: string
+          enum:
+          - ANNULEE
+          - EN_ATTENTE
+          - TRAITEE
+        description: |-
+          * `EN_ATTENTE` - En attente
+          * `TRAITEE` - Traitée
+          * `ANNULEE` - Annulée
+      - in: query
+        name: type_reservation
+        schema:
+          type: string
+          title: Type de réservation
+          enum:
+          - ACHAT
+          - LOCATION
+        description: |-
+          * `LOCATION` - Location
+          * `ACHAT` - Achat
+      tags:
+      - reservations
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedReservationDetailList'
+          description: ''
+    post:
+      operationId: reservations_create
+      description: |-
+        CRUD sur les réservations, avec action métier dédiée :
+
+            POST /reservations/              Créer une réservation (LOCATAIRE)
+            GET  /reservations/              Lister les réservations
+            GET  /reservations/{id}/         Détail d'une réservation
+            POST /reservations/{id}/repondre/ Répondre à une réservation (ADMIN/AGENT)
+      tags:
+      - reservations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Reservation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Reservation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Reservation'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+          description: ''
+  /api/reservations/{id}/:
+    get:
+      operationId: reservations_retrieve
+      description: |-
+        CRUD sur les réservations, avec action métier dédiée :
+
+            POST /reservations/              Créer une réservation (LOCATAIRE)
+            GET  /reservations/              Lister les réservations
+            GET  /reservations/{id}/         Détail d'une réservation
+            POST /reservations/{id}/repondre/ Répondre à une réservation (ADMIN/AGENT)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Réservation.
+        required: true
+      tags:
+      - reservations
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservationDetail'
+          description: ''
+    put:
+      operationId: reservations_update
+      description: |-
+        CRUD sur les réservations, avec action métier dédiée :
+
+            POST /reservations/              Créer une réservation (LOCATAIRE)
+            GET  /reservations/              Lister les réservations
+            GET  /reservations/{id}/         Détail d'une réservation
+            POST /reservations/{id}/repondre/ Répondre à une réservation (ADMIN/AGENT)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Réservation.
+        required: true
+      tags:
+      - reservations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Reservation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Reservation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Reservation'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+          description: ''
+    patch:
+      operationId: reservations_partial_update
+      description: |-
+        CRUD sur les réservations, avec action métier dédiée :
+
+            POST /reservations/              Créer une réservation (LOCATAIRE)
+            GET  /reservations/              Lister les réservations
+            GET  /reservations/{id}/         Détail d'une réservation
+            POST /reservations/{id}/repondre/ Répondre à une réservation (ADMIN/AGENT)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Réservation.
+        required: true
+      tags:
+      - reservations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedReservation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedReservation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedReservation'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+          description: ''
+    delete:
+      operationId: reservations_destroy
+      description: |-
+        CRUD sur les réservations, avec action métier dédiée :
+
+            POST /reservations/              Créer une réservation (LOCATAIRE)
+            GET  /reservations/              Lister les réservations
+            GET  /reservations/{id}/         Détail d'une réservation
+            POST /reservations/{id}/repondre/ Répondre à une réservation (ADMIN/AGENT)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Réservation.
+        required: true
+      tags:
+      - reservations
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/reservations/{id}/repondre/:
+    post:
+      operationId: reservations_repondre_create
+      description: |-
+        POST /reservations/{id}/repondre/
+        Permet à l'admin ou l'agent de répondre à une réservation.
+        Body : { "reponse_admin": "...", "statut": "TRAITEE" | "ANNULEE" }
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Réservation.
+        required: true
+      tags:
+      - reservations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Reservation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Reservation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Reservation'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+          description: ''
+  /api/schema/:
+    get:
+      operationId: schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - ckb
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - ug
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - schema
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/tous-utilisateurs/:
+    get:
+      operationId: tous_utilisateurs_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - tous-utilisateurs
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedBasicUserList'
+          description: ''
+    post:
+      operationId: tous_utilisateurs_create
+      tags:
+      - tous-utilisateurs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BasicUser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BasicUser'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BasicUser'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BasicUser'
+          description: ''
+  /api/tous-utilisateurs/{id}/:
+    get:
+      operationId: tous_utilisateurs_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - tous-utilisateurs
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BasicUser'
+          description: ''
+    put:
+      operationId: tous_utilisateurs_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - tous-utilisateurs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BasicUser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BasicUser'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BasicUser'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BasicUser'
+          description: ''
+    patch:
+      operationId: tous_utilisateurs_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - tous-utilisateurs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBasicUser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBasicUser'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBasicUser'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BasicUser'
+          description: ''
+    delete:
+      operationId: tous_utilisateurs_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - tous-utilisateurs
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/utilisateurs/{id}/activer/:
+    post:
+      operationId: utilisateurs_activer_create
+      description: |-
+        Activation manuelle d'un compte PROPRIETAIRE ou AGENT créé inactif
+        (agent/admin uniquement).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - utilisateurs
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+components:
+  schemas:
+    BasicUser:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          title: Adresse email
+          maxLength: 254
+        nom:
+          type: string
+          maxLength: 100
+        prenoms:
+          type: string
+          title: Prénoms
+          maxLength: 150
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          title: Rôle
+        is_active:
+          type: boolean
+        date_creation:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de création
+        photo_profil:
+          type: string
+          format: uri
+          nullable: true
+          title: Photo de profil
+          description: 'Photo de profil (optionnel). Formats acceptés : JPG, PNG,
+            GIF'
+          pattern: (?:jpg|jpeg|png|gif)$
+        telephone:
+          type: string
+          nullable: true
+          title: Téléphone
+          maxLength: 30
+      required:
+      - date_creation
+      - email
+      - id
+      - nom
+      - prenoms
+    Bien:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        proprietaire:
+          allOf:
+          - $ref: '#/components/schemas/ProprietaireSimple'
+          readOnly: true
+        proprietaire_id:
+          type: integer
+          writeOnly: true
+          description: Requis pour un agent ou administrateur ; interdit pour un propriétaires.
+        titre:
+          type: string
+          maxLength: 200
+        type:
+          allOf:
+          - $ref: '#/components/schemas/TypeEnum'
+          title: Type de bien
+        mode_transaction:
+          allOf:
+          - $ref: '#/components/schemas/ModeTransactionEnum'
+          title: Mode de transaction
+        adresse:
+          type: string
+          maxLength: 255
+        surface:
+          type: number
+          format: double
+          title: Surface (m²)
+        nombre_pieces:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: Nombre de pièces
+        loyer_mensuel:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        prix:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          nullable: true
+          title: Prix de vente
+        statut:
+          $ref: '#/components/schemas/Statut3b2Enum'
+        photos:
+          nullable: true
+      required:
+      - adresse
+      - id
+      - proprietaire
+      - surface
+      - titre
+      - type
+    BienList:
+      type: object
+      description: Serializer allegé pour la liste — champs nécessaires a l'affichage
+        uniquement.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        titre:
+          type: string
+          maxLength: 200
+        type:
+          allOf:
+          - $ref: '#/components/schemas/TypeEnum'
+          title: Type de bien
+        mode_transaction:
+          allOf:
+          - $ref: '#/components/schemas/ModeTransactionEnum'
+          title: Mode de transaction
+        adresse:
+          type: string
+          maxLength: 255
+        surface:
+          type: number
+          format: double
+          title: Surface (m²)
+        nombre_pieces:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: Nombre de pièces
+        loyer_mensuel:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        prix:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          nullable: true
+          title: Prix de vente
+        statut:
+          $ref: '#/components/schemas/Statut3b2Enum'
+        proprietaire:
+          allOf:
+          - $ref: '#/components/schemas/BienProprietaire'
+          readOnly: true
+        photos:
+          nullable: true
+      required:
+      - adresse
+      - id
+      - proprietaire
+      - surface
+      - titre
+      - type
+    BienProprietaire:
+      type: object
+      description: Serializer minimal pour le proprietaire dans la liste des biens.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        nom:
+          type: string
+          readOnly: true
+        prenoms:
+          type: string
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+      required:
+      - email
+      - id
+      - nom
+      - prenoms
+    BlankEnum:
+      enum:
+      - ''
+    Contrat:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        bien:
+          type: integer
+          title: Bien concerné
+        locataire:
+          type: integer
+          title: Locataire / Acheteur
+        type_contrat:
+          allOf:
+          - $ref: '#/components/schemas/TypeContratEnum'
+          title: Type de contrat
+        type_paiement_achat:
+          nullable: true
+          title: Type de paiement (achat)
+          oneOf:
+          - $ref: '#/components/schemas/TypePaiementAchatEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        date_debut:
+          type: string
+          format: date
+          nullable: true
+          title: Date de début
+        date_fin:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+          title: Date de fin
+        date_paiement:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+          title: Date de paiement
+        loyer:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Loyer mensuel
+        depot_garantie:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Dépôt de garantie
+        prix:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          nullable: true
+          title: Prix de vente
+        statut:
+          $ref: '#/components/schemas/Statut759Enum'
+        document_pdf:
+          type: string
+          nullable: true
+          title: Chemin du document PDF
+          maxLength: 255
+        date_creation:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Créé le
+      required:
+      - bien
+      - date_creation
+      - date_fin
+      - date_paiement
+      - id
+      - locataire
+    ContratList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        bien:
+          type: integer
+          title: Bien concerné
+        bien_titre:
+          type: string
+          readOnly: true
+        bien_type:
+          type: string
+          readOnly: true
+        locataire:
+          type: integer
+          title: Locataire / Acheteur
+        locataire_nom:
+          type: string
+          readOnly: true
+        locataire_prenoms:
+          type: string
+          readOnly: true
+        type_contrat:
+          allOf:
+          - $ref: '#/components/schemas/TypeContratEnum'
+          title: Type de contrat
+        type_paiement_achat:
+          nullable: true
+          title: Type de paiement (achat)
+          oneOf:
+          - $ref: '#/components/schemas/TypePaiementAchatEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        date_debut:
+          type: string
+          format: date
+          nullable: true
+          title: Date de début
+        date_fin:
+          type: string
+          format: date
+          nullable: true
+          title: Date de fin
+        date_paiement:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+          title: Date de paiement
+        loyer:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Loyer mensuel
+        depot_garantie:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Dépôt de garantie
+        prix:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          nullable: true
+          title: Prix de vente
+        statut:
+          $ref: '#/components/schemas/Statut759Enum'
+        document_pdf:
+          type: string
+          nullable: true
+          title: Chemin du document PDF
+          maxLength: 255
+        date_creation:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Créé le
+      required:
+      - bien
+      - bien_titre
+      - bien_type
+      - date_creation
+      - date_paiement
+      - id
+      - locataire
+      - locataire_nom
+      - locataire_prenoms
+    ModePaiementEnum:
+      enum:
+      - MVOLA
+      - ORANGE_MONEY
+      - AIRTEL_MONEY
+      - VIREMENT
+      - CHEQUE
+      - ESPECE
+      type: string
+      description: |-
+        * `MVOLA` - Mvola
+        * `ORANGE_MONEY` - Orange Money
+        * `AIRTEL_MONEY` - Airtel Money
+        * `VIREMENT` - Virement
+        * `CHEQUE` - Chèque
+        * `ESPECE` - Espèce
+    ModeTransactionEnum:
+      enum:
+      - LOCATION
+      - VENTE
+      type: string
+      description: |-
+        * `LOCATION` - Location
+        * `VENTE` - Vente
+    NullEnum:
+      enum:
+      - null
+    PaginatedBasicUserList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/BasicUser'
+    PaginatedBienListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/BienList'
+    PaginatedContratListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContratList'
+    PaginatedPaiementList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Paiement'
+    PaginatedReservationDetailList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReservationDetail'
+    Paiement:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        contrat:
+          type: integer
+          title: Contrat associé
+        num_echeance:
+          type: integer
+          readOnly: true
+          nullable: true
+          title: Numéro d'échéance
+          description: Position de cette échéance dans l'échéancier (1 = première)
+        date_echeance:
+          type: string
+          format: date
+          readOnly: true
+          title: Date d'échéance
+          description: Date à laquelle le paiement est attendu
+        date_paiement_prevue:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+          title: Date de paiement prévue
+          description: Date de paiement prévue générée automatiquement
+        date_paiement:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+          title: Date de paiement
+          description: Date effective du paiement (remplie lors de l'enregistrement)
+        date_versement_partiel:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+          title: Date du versement partiel
+          description: Date à laquelle le versement partiel a été effectué
+        montant_attendu:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+          description: Montant attendu pour cette échéance (rempli automatiquement
+            par l'échéancier)
+        montant:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          description: Montant payé (doit correspondre au montant attendu du contrat,
+            sauf paiement partiel)
+        montant_paye:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          title: Montant payé
+          description: Montant effectivement payé pour cette échéance
+        montant_restant:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        mode_paiement:
+          nullable: true
+          title: Mode de paiement
+          oneOf:
+          - $ref: '#/components/schemas/ModePaiementEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        reference:
+          type: string
+          nullable: true
+          title: Référence de transaction
+          description: Obligatoire pour les paiements par Mobile Money
+          maxLength: 100
+        statut:
+          $ref: '#/components/schemas/PaiementStatutEnum'
+        est_partiel:
+          type: boolean
+          title: Paiement partiel
+          description: Cocher si le paiement ne couvre pas la totalité du montant
+            attendu
+        date_creation:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de création
+        locataire_nom:
+          type: string
+          readOnly: true
+        bien_titre:
+          type: string
+          readOnly: true
+        loyer_contrat:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        est_en_retard:
+          type: boolean
+          readOnly: true
+        message_mois:
+          type: string
+          readOnly: true
+        part_proprietaire:
+          type: number
+          format: double
+          nullable: true
+          readOnly: true
+        commission_agent:
+          type: number
+          format: double
+          nullable: true
+          readOnly: true
+      required:
+      - bien_titre
+      - commission_agent
+      - contrat
+      - date_creation
+      - date_echeance
+      - date_paiement
+      - date_paiement_prevue
+      - date_versement_partiel
+      - est_en_retard
+      - id
+      - locataire_nom
+      - loyer_contrat
+      - message_mois
+      - montant
+      - montant_attendu
+      - montant_restant
+      - num_echeance
+      - part_proprietaire
+    PaiementStatutEnum:
+      enum:
+      - EN_ATTENTE
+      - PAYE
+      - PARTIEL
+      - EN_RETARD
+      - ANNULE
+      type: string
+      description: |-
+        * `EN_ATTENTE` - En attente
+        * `PAYE` - Payé
+        * `PARTIEL` - Partiel
+        * `EN_RETARD` - En retard
+        * `ANNULE` - Annulé
+    PatchedBasicUser:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          title: Adresse email
+          maxLength: 254
+        nom:
+          type: string
+          maxLength: 100
+        prenoms:
+          type: string
+          title: Prénoms
+          maxLength: 150
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          title: Rôle
+        is_active:
+          type: boolean
+        date_creation:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de création
+        photo_profil:
+          type: string
+          format: uri
+          nullable: true
+          title: Photo de profil
+          description: 'Photo de profil (optionnel). Formats acceptés : JPG, PNG,
+            GIF'
+          pattern: (?:jpg|jpeg|png|gif)$
+        telephone:
+          type: string
+          nullable: true
+          title: Téléphone
+          maxLength: 30
+    PatchedBien:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        proprietaire:
+          allOf:
+          - $ref: '#/components/schemas/ProprietaireSimple'
+          readOnly: true
+        proprietaire_id:
+          type: integer
+          writeOnly: true
+          description: Requis pour un agent ou administrateur ; interdit pour un propriétaires.
+        titre:
+          type: string
+          maxLength: 200
+        type:
+          allOf:
+          - $ref: '#/components/schemas/TypeEnum'
+          title: Type de bien
+        mode_transaction:
+          allOf:
+          - $ref: '#/components/schemas/ModeTransactionEnum'
+          title: Mode de transaction
+        adresse:
+          type: string
+          maxLength: 255
+        surface:
+          type: number
+          format: double
+          title: Surface (m²)
+        nombre_pieces:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: Nombre de pièces
+        loyer_mensuel:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        prix:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          nullable: true
+          title: Prix de vente
+        statut:
+          $ref: '#/components/schemas/Statut3b2Enum'
+        photos:
+          nullable: true
+    PatchedContrat:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        bien:
+          type: integer
+          title: Bien concerné
+        locataire:
+          type: integer
+          title: Locataire / Acheteur
+        type_contrat:
+          allOf:
+          - $ref: '#/components/schemas/TypeContratEnum'
+          title: Type de contrat
+        type_paiement_achat:
+          nullable: true
+          title: Type de paiement (achat)
+          oneOf:
+          - $ref: '#/components/schemas/TypePaiementAchatEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        date_debut:
+          type: string
+          format: date
+          nullable: true
+          title: Date de début
+        date_fin:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+          title: Date de fin
+        date_paiement:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+          title: Date de paiement
+        loyer:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Loyer mensuel
+        depot_garantie:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Dépôt de garantie
+        prix:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          nullable: true
+          title: Prix de vente
+        statut:
+          $ref: '#/components/schemas/Statut759Enum'
+        document_pdf:
+          type: string
+          nullable: true
+          title: Chemin du document PDF
+          maxLength: 255
+        date_creation:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Créé le
+    PatchedPaiement:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        contrat:
+          type: integer
+          title: Contrat associé
+        num_echeance:
+          type: integer
+          readOnly: true
+          nullable: true
+          title: Numéro d'échéance
+          description: Position de cette échéance dans l'échéancier (1 = première)
+        date_echeance:
+          type: string
+          format: date
+          readOnly: true
+          title: Date d'échéance
+          description: Date à laquelle le paiement est attendu
+        date_paiement_prevue:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+          title: Date de paiement prévue
+          description: Date de paiement prévue générée automatiquement
+        date_paiement:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+          title: Date de paiement
+          description: Date effective du paiement (remplie lors de l'enregistrement)
+        date_versement_partiel:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+          title: Date du versement partiel
+          description: Date à laquelle le versement partiel a été effectué
+        montant_attendu:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+          description: Montant attendu pour cette échéance (rempli automatiquement
+            par l'échéancier)
+        montant:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          description: Montant payé (doit correspondre au montant attendu du contrat,
+            sauf paiement partiel)
+        montant_paye:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          title: Montant payé
+          description: Montant effectivement payé pour cette échéance
+        montant_restant:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+          nullable: true
+        mode_paiement:
+          nullable: true
+          title: Mode de paiement
+          oneOf:
+          - $ref: '#/components/schemas/ModePaiementEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        reference:
+          type: string
+          nullable: true
+          title: Référence de transaction
+          description: Obligatoire pour les paiements par Mobile Money
+          maxLength: 100
+        statut:
+          $ref: '#/components/schemas/PaiementStatutEnum'
+        est_partiel:
+          type: boolean
+          title: Paiement partiel
+          description: Cocher si le paiement ne couvre pas la totalité du montant
+            attendu
+        date_creation:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de création
+        locataire_nom:
+          type: string
+          readOnly: true
+        bien_titre:
+          type: string
+          readOnly: true
+        loyer_contrat:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        est_en_retard:
+          type: boolean
+          readOnly: true
+        message_mois:
+          type: string
+          readOnly: true
+        part_proprietaire:
+          type: number
+          format: double
+          nullable: true
+          readOnly: true
+        commission_agent:
+          type: number
+          format: double
+          nullable: true
+          readOnly: true
+    PatchedReservation:
+      type: object
+      description: Serializer pour la création et la mise à jour de réservations.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        locataire:
+          type: integer
+          readOnly: true
+        bien:
+          type: integer
+          title: Bien concerné
+        commentaire:
+          type: string
+          description: Commentaire ou message du locataire.
+        type_reservation:
+          allOf:
+          - $ref: '#/components/schemas/TypeReservationEnum'
+          title: Type de réservation
+        statut:
+          allOf:
+          - $ref: '#/components/schemas/Statut3b4Enum'
+          readOnly: true
+        reponse_admin:
+          type: string
+          readOnly: true
+          title: Réponse de l'administrateur
+          description: Réponse de l'admin ou de l'agent immobilier au locataire.
+        contrat:
+          type: integer
+          readOnly: true
+          nullable: true
+          title: Contrat associé
+        date_creation:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de création
+    ProprietaireSimple:
+      type: object
+      description: 'Version simplifiée pour les listes (ex : filtre des biens par
+        propriétaire).'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          allOf:
+          - $ref: '#/components/schemas/UtilisateurSimple'
+          readOnly: true
+        iban:
+          type: string
+          maxLength: 34
+        contact:
+          type: string
+          nullable: true
+          maxLength: 20
+      required:
+      - iban
+      - id
+      - user
+    Reservation:
+      type: object
+      description: Serializer pour la création et la mise à jour de réservations.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        locataire:
+          type: integer
+          readOnly: true
+        bien:
+          type: integer
+          title: Bien concerné
+        commentaire:
+          type: string
+          description: Commentaire ou message du locataire.
+        type_reservation:
+          allOf:
+          - $ref: '#/components/schemas/TypeReservationEnum'
+          title: Type de réservation
+        statut:
+          allOf:
+          - $ref: '#/components/schemas/Statut3b4Enum'
+          readOnly: true
+        reponse_admin:
+          type: string
+          readOnly: true
+          title: Réponse de l'administrateur
+          description: Réponse de l'admin ou de l'agent immobilier au locataire.
+        contrat:
+          type: integer
+          readOnly: true
+          nullable: true
+          title: Contrat associé
+        date_creation:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de création
+      required:
+      - bien
+      - contrat
+      - date_creation
+      - id
+      - locataire
+      - reponse_admin
+      - statut
+      - type_reservation
+    ReservationDetail:
+      type: object
+      description: Serializer enrichi pour la lecture (list / retrieve).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        locataire:
+          type: integer
+        bien:
+          type: integer
+          title: Bien concerné
+        commentaire:
+          type: string
+          description: Commentaire ou message du locataire.
+        type_reservation:
+          allOf:
+          - $ref: '#/components/schemas/TypeReservationEnum'
+          title: Type de réservation
+        statut:
+          $ref: '#/components/schemas/Statut3b4Enum'
+        reponse_admin:
+          type: string
+          title: Réponse de l'administrateur
+          description: Réponse de l'admin ou de l'agent immobilier au locataire.
+        contrat:
+          type: integer
+          nullable: true
+          title: Contrat associé
+        date_creation:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de création
+        locataire_nom:
+          type: string
+          readOnly: true
+        locataire_prenoms:
+          type: string
+          readOnly: true
+        locataire_email:
+          type: string
+          readOnly: true
+        locataire_telephone:
+          type: string
+          readOnly: true
+          default: ''
+        bien_titre:
+          type: string
+          readOnly: true
+        bien_type:
+          type: string
+          readOnly: true
+        bien_adresse:
+          type: string
+          readOnly: true
+        bien_surface:
+          type: number
+          format: double
+          readOnly: true
+        bien_loyer_mensuel:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        bien_prix:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          readOnly: true
+        bien_mode_transaction:
+          type: string
+          readOnly: true
+        bien_statut:
+          type: string
+          readOnly: true
+        bien_nombre_pieces:
+          type: integer
+          readOnly: true
+      required:
+      - bien
+      - bien_adresse
+      - bien_loyer_mensuel
+      - bien_mode_transaction
+      - bien_nombre_pieces
+      - bien_prix
+      - bien_statut
+      - bien_surface
+      - bien_titre
+      - bien_type
+      - date_creation
+      - id
+      - locataire
+      - locataire_email
+      - locataire_nom
+      - locataire_prenoms
+      - locataire_telephone
+      - type_reservation
+    RoleEnum:
+      enum:
+      - ADMIN
+      - AGENT
+      - PROPRIETAIRE
+      - LOCATAIRE
+      type: string
+      description: |-
+        * `ADMIN` - Administrateur
+        * `AGENT` - Agent immobilier
+        * `PROPRIETAIRE` - Propriétaire
+        * `LOCATAIRE` - Locataire
+    Statut3b2Enum:
+      enum:
+      - DISPONIBLE
+      - LOUE
+      - VENDU
+      - EN_TRAVAUX
+      - RESERVE
+      type: string
+      description: |-
+        * `DISPONIBLE` - Disponible
+        * `LOUE` - Loué
+        * `VENDU` - Vendu
+        * `EN_TRAVAUX` - En travaux
+        * `RESERVE` - Réservé
+    Statut3b4Enum:
+      enum:
+      - EN_ATTENTE
+      - TRAITEE
+      - ANNULEE
+      type: string
+      description: |-
+        * `EN_ATTENTE` - En attente
+        * `TRAITEE` - Traitée
+        * `ANNULEE` - Annulée
+    Statut759Enum:
+      enum:
+      - RESERVE
+      - ACTIF
+      - RESILIE
+      - TERMINE
+      - VENDU
+      type: string
+      description: |-
+        * `RESERVE` - Réservé
+        * `ACTIF` - Actif
+        * `RESILIE` - Résilié
+        * `TERMINE` - Terminé
+        * `VENDU` - Vendu
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TypeContratEnum:
+      enum:
+      - LOCATION
+      - ACHAT
+      type: string
+      description: |-
+        * `LOCATION` - Location
+        * `ACHAT` - Achat
+    TypeEnum:
+      enum:
+      - APPARTEMENT
+      - MAISON
+      - LOCAL_COMMERCIAL
+      - TERRAIN
+      type: string
+      description: |-
+        * `APPARTEMENT` - Appartement
+        * `MAISON` - Maison
+        * `LOCAL_COMMERCIAL` - Local commercial
+        * `TERRAIN` - Terrain
+    TypePaiementAchatEnum:
+      enum:
+      - TOTALITE
+      - PARTIEL
+      type: string
+      description: |-
+        * `TOTALITE` - Totalité
+        * `PARTIEL` - Partiel
+    TypeReservationEnum:
+      enum:
+      - LOCATION
+      - ACHAT
+      type: string
+      description: |-
+        * `LOCATION` - Location
+        * `ACHAT` - Achat
+    UtilisateurSimple:
+      type: object
+      description: 'Version simplifiée pour les listes (ex : sélection d''un locataire
+        dans un contrat).'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          title: Adresse email
+          maxLength: 254
+        nom:
+          type: string
+          maxLength: 100
+        prenoms:
+          type: string
+          title: Prénoms
+          maxLength: 150
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          title: Rôle
+        photo_url:
+          type: string
+          readOnly: true
+      required:
+      - email
+      - id
+      - nom
+      - photo_url
+      - prenoms
+    UtilisateurTokenObtainPair:
+      type: object
+      properties:
+        email:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+      required:
+      - email
+      - password
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
