@@ -258,6 +258,11 @@ jobs:
                           port: 8000
                         initialDelaySeconds: 10
                         periodSeconds: 5
+                      env:
+                        - name: CORS_ALLOWED_ORIGINS
+                          value: "http://$AWS_EC2_IP:3000,http://localhost:3000"
+                        - name: CSRF_TRUSTED_ORIGINS
+                          value: "http://$AWS_EC2_IP:3000,http://localhost:3000"
                       envFrom:
                         - secretRef:
                             name: backend-secrets
@@ -268,7 +273,7 @@ jobs:
               name: backend
               namespace: immobilier
             spec:
-              type: ClusterIP
+              type: LoadBalancer
               selector:
                 app: backend
               ports:

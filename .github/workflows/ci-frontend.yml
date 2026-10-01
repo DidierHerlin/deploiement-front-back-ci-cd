@@ -172,7 +172,7 @@ jobs:
               name: frontend
               namespace: immobilier
             spec:
-              type: ClusterIP
+              type: LoadBalancer
               selector:
                 app: frontend
               ports:
