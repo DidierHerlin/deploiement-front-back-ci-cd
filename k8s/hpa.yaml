@@ -1,117 +1,63 @@
-# ============================================================
-#  HorizontalPodAutoscaler (HPA) — Gestion Immobilier
-# ============================================================
-#
-#  ⚠️  NOTE : Ce fichier est fourni à titre de RÉFÉRENCE.
-#  Il n'est PAS appliqué en production car l'instance EC2
-#  t3.small (2 Go RAM) n'a pas assez de ressources pour
-#  faire tourner plusieurs réplicas simultanément.
-#
-#  Pour l'activer sur une infrastructure plus puissante :
-#    sudo k3s kubectl apply -f k8s/hpa.yaml
-#
-#  Prérequis pour que le HPA fonctionne :
-#    - Metrics Server installé (inclus dans K3s par défaut)
-#    - Au moins 4 Go de RAM disponibles sur le cluster
-# ============================================================
-
-# ─────────────────────────────────────────
-#  HPA — Backend Django (API)
-# ─────────────────────────────────────────
-# Règle : Si le CPU dépasse 70% en moyenne sur tous les pods
-#         → K3s créera automatiquement jusqu'à 3 pods backend.
-#         Si le trafic redescend → retour à 1 pod minimum.
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: backend-hpa
+  name: backend
   namespace: immobilier
-  labels:
-    app: backend
-    managed-by: "k3s"
 spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: backend
-  minReplicas: 1   # Minimum : 1 pod toujours actif
-  maxReplicas: 3   # Maximum : 3 pods sous forte charge
-  metrics:
-    # Critère 1 : Utilisation CPU
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 70  # Scale si CPU > 70%
-    # Critère 2 : Utilisation RAM
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: 80  # Scale si RAM > 80%
-  behavior:
-    scaleUp:
-      stabilizationWindowSeconds: 60   # Attendre 60s avant d'ajouter un pod
-      policies:
-        - type: Pods
-          value: 1                     # Ajouter 1 pod à la fois (progressif)
-          periodSeconds: 60
-    scaleDown:
-      stabilizationWindowSeconds: 300  # Attendre 5 min avant de supprimer un pod
-      policies:
-        - type: Pods
-          value: 1                     # Supprimer 1 pod à la fois (prudent)
-          periodSeconds: 120
-
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: didierherlin/immobilier-drf:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              memory: "100Mi"
+              cpu: "50m"
+            limits:
+              memory: "200Mi"
+              cpu: "150m"
+          readinessProbe:
+            httpGet:
+              path: /health/
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health/
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            failureThreshold: 3
+          envFrom:
+            - secretRef:
+                name: backend-secrets
 ---
-
-# ─────────────────────────────────────────
-#  HPA — Frontend Next.js
-# ─────────────────────────────────────────
-# Même logique que le backend, mais le frontend consomme
-# moins de CPU. Seuil plus élevé (80%) avant de scaler.
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
+apiVersion: v1
+kind: Service
 metadata:
-  name: frontend-hpa
+  name: backend
   namespace: immobilier
-  labels:
-    app: frontend
-    managed-by: "k3s"
 spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: frontend
-  minReplicas: 1   # Minimum : 1 pod toujours actif
-  maxReplicas: 2   # Maximum : 2 pods (frontend consomme plus de RAM)
-  metrics:
-    # Critère 1 : Utilisation CPU
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 80  # Scale si CPU > 80%
-    # Critère 2 : Utilisation RAM
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: 85  # Scale si RAM > 85%
-  behavior:
-    scaleUp:
-      stabilizationWindowSeconds: 60
-      policies:
-        - type: Pods
-          value: 1
-          periodSeconds: 60
-    scaleDown:
-      stabilizationWindowSeconds: 300
-      policies:
-        - type: Pods
-          value: 1
-          periodSeconds: 120
+  type: ClusterIP
+  selector:
+    app: backend
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
