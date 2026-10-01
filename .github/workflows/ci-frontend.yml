@@ -172,13 +172,14 @@ jobs:
               name: frontend
               namespace: immobilier
             spec:
-              type: LoadBalancer
+              type: NodePort
               selector:
                 app: frontend
               ports:
                 - protocol: TCP
                   port: 3000
                   targetPort: 3000
+                  nodePort: 3000
             EOF
             
             echo "🚀 Application du déploiement frontend..."

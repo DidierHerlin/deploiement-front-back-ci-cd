@@ -273,13 +273,14 @@ jobs:
               name: backend
               namespace: immobilier
             spec:
-              type: LoadBalancer
+              type: NodePort
               selector:
                 app: backend
               ports:
                 - protocol: TCP
                   port: 8000
                   targetPort: 8000
+                  nodePort: 8000
             EOF
             
             echo "🚀 Application du déploiement backend..."
