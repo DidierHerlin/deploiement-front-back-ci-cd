@@ -50,7 +50,7 @@ class AllModelsCoverageTest(TestCase):
 
         # Paiement
         self.paiement = Paiement.objects.create(
-            contrat=self.contrat, date_echeance=date.today() + relativedelta(months=10),
+            contrat=self.contrat, date_echeance=date.today() + relativedelta(months=15),
             montant=500000, montant_attendu=500000
         )
 
