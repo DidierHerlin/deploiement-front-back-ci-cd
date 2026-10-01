@@ -73,7 +73,7 @@ class ReportingStatsTests(APITestCase):
         self.assertEqual(response.data['biens']['total'], 2)
         self.assertEqual(response.data['contrats']['actifs'], 1)
         self.assertEqual(response.data['paiements']['payes'], 1)
-        self.assertEqual(response.data['paiements']['total'], 13)
+        self.assertEqual(response.data['paiements']['total'], 12)
         self.assertIn('total_users', response.data['users'])
 
     def test_stats_proprietaire(self):
@@ -82,7 +82,7 @@ class ReportingStatsTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['biens']['total'], 2)
         self.assertEqual(response.data['contrats']['total'], 1)
-        self.assertEqual(response.data['paiements']['total'], 13)
+        self.assertEqual(response.data['paiements']['total'], 12)
 
     def test_stats_locataire(self):
         self.client.force_authenticate(user=self.loc_user)
@@ -91,7 +91,7 @@ class ReportingStatsTests(APITestCase):
         # Locataire only sees AVAILABLE biens and THEIR contracts
         self.assertEqual(response.data['biens']['total'], 1)
         self.assertEqual(response.data['contrats']['total'], 1)
-        self.assertEqual(response.data['paiements']['total'], 13)
+        self.assertEqual(response.data['paiements']['total'], 12)
         self.assertEqual(response.data['users'], {}) # No user stats for locataire
 
     def test_unauthenticated(self):

@@ -37,21 +37,21 @@ def _make_bien(proprietaire, titre="Bien Test", statut=Bien.StatutBien.DISPONIBL
 
 def _make_contrat(bien, locataire, date_debut=None):
     if date_debut is None:
-        date_debut = date.today() - relativedelta(months=2 + 100)
+        date_debut = date.today() - relativedelta(months=2)
     return Contrat.objects.create(
         bien=bien, locataire=locataire,
         type_contrat=Contrat.TypeContrat.LOCATION,
         date_debut=date_debut,
-        date_fin=date_debut + relativedelta(months=1 + 1002),
+        date_fin=date_debut + relativedelta(months=12),
         loyer=500_000, depot_garantie=500_000,
     )
 
 
-def _make_paiement(contrat, delta_months=1 + 100, statut=Paiement.StatutPaiement.EN_ATTENTE):
-    """Crée un paiement avec une date_echeance unique (today + delta_months)."""
+def _make_paiement(contrat, delta_months=100, statut=Paiement.StatutPaiement.EN_ATTENTE):
+    """Crée un paiement avec une date_echeance unique."""
     return Paiement.objects.create(
         contrat=contrat,
-        date_echeance=date.today() + relativedelta(months=delta_months + 100),
+        date_echeance=date.today() + relativedelta(months=delta_months),
         montant=500_000, montant_attendu=500_000,
         statut=statut,
     )
