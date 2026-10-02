@@ -21,6 +21,8 @@ spec:
       containers:
         - name: backend
           image: didierherlin/immobilier-drf:latest
+          command: ["gunicorn"]
+          args: ["--bind", "0.0.0.0:8000", "--workers", "1", "wsgi:application"]
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
