@@ -242,15 +242,15 @@ jobs:
                     - name: backend
                       image: $DOCKER_IMAGE
                       imagePullPolicy: Always
-                      command: ["sh", "-c", "python manage.py migrate && gunicorn --bind 0.0.0.0:8000 --workers 2 wsgi:application"]
+                      command: ["sh", "-c", "python manage.py migrate && gunicorn --bind 0.0.0.0:8000 --workers 1 wsgi:application"]
                       ports:
                         - containerPort: 8000
                       resources:
                         requests:
-                          memory: "150Mi"
+                          memory: "250Mi"
                           cpu: "100m"
                         limits:
-                          memory: "250Mi"
+                          memory: "450Mi"
                           cpu: "400m"
                       readinessProbe:
                         httpGet:
@@ -313,7 +313,7 @@ jobs:
                 kind: Deployment
                 name: backend
               minReplicas: 1
-              maxReplicas: 3
+              maxReplicas: 2
               metrics:
                 - type: Resource
                   resource:
