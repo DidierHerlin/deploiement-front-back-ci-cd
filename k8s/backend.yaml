@@ -26,11 +26,24 @@ spec:
             - containerPort: 8000
           resources:
             requests:
-              memory: "256Mi"
+              memory: "250Mi"
               cpu: "100m"
             limits:
-              memory: "512Mi"
+              memory: "450Mi"
               cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /api/health/
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health/
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            failureThreshold: 3
           envFrom:
             - secretRef:
                 name: backend-secrets
