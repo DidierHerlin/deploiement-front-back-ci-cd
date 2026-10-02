@@ -1,7 +1,8 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
-import { Bien } from '@/lib/api'
+import { Bien, resolveMediaUrl } from '@/lib/api'
+import Image from 'next/image'
 import { Building2, MapPin, Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface BienCardProps {
@@ -49,7 +50,7 @@ export function BienCard({ bien, onEdit, onDelete }: BienCardProps) {
       <div className="h-48 bg-gray-100 relative overflow-hidden flex-shrink-0">
         {bien.photos && bien?.photos?.length > 0 ? (
           <>
-            <img src={bien.photos[photoIndex]} alt={bien.titre} className="w-full h-full object-cover transition-opacity duration-300" />
+            <Image src={resolveMediaUrl(bien.photos[photoIndex])!} alt={bien.titre} fill className="object-cover transition-opacity duration-300" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
             
             {bien?.photos?.length > 1 && (
               <>

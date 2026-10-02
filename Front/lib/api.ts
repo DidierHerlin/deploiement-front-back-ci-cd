@@ -259,12 +259,13 @@ export async function getAgentDashboardStats(): Promise<any> {
 
 // API Biens
 
-export async function getBiens(): Promise<Bien[]> {
+export async function getBiens(page: number = 1, page_size: number = 100): Promise<Bien[]> {
   const res = await fetchAPI<{
     success: boolean
     count: number
     results: Bien[]
-  }>("/biens/")
+  }>(`/biens/?page=${page}&page_size=${page_size}`)
+  
   return res.results || (res as any)
 }
 

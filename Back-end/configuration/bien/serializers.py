@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from decimal import Decimal
 from typing import Any
@@ -136,8 +136,12 @@ class BienSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Ce bien est déjà loué ou vendu et ne peut pas être modifié.")
 
     def create(self, validated_data: dict) -> Bien:
+        from .utils import save_base64_photos
         request = self.context["request"]
         user = request.user
+
+        if "photos" in validated_data and validated_data["photos"]:
+            validated_data["photos"] = save_base64_photos(validated_data["photos"])
 
         if user.role == Utilisateur.Role.PROPRIETAIRE:
             try:
@@ -150,8 +154,12 @@ class BienSerializer(serializers.ModelSerializer):
         return Bien.objects.create(**validated_data)
 
     def update(self, instance: Bien, validated_data: dict) -> Bien:
+        from .utils import save_base64_photos
         request = self.context["request"]
         user = request.user
+
+        if "photos" in validated_data and validated_data["photos"]:
+            validated_data["photos"] = save_base64_photos(validated_data["photos"])
 
         if user.role == Utilisateur.Role.PROPRIETAIRE:
             validated_data.pop("proprietaire", None)
@@ -175,11 +183,25 @@ class BienProprietaireSerializer(serializers.ModelSerializer):
 class BienListSerializer(serializers.ModelSerializer):
     """Serializer allegé pour la liste — champs nécessaires a l'affichage uniquement."""
     proprietaire = BienProprietaireSerializer(read_only=True)
+    photo_cover = serializers.SerializerMethodField()
 
     class Meta:
         model = Bien
         fields = [
             'id', 'titre', 'type', 'mode_transaction', 'adresse',
             'surface', 'nombre_pieces', 'loyer_mensuel', 'prix',
-            'statut', 'proprietaire', 'photos',
+            'statut', 'proprietaire', 'photos', 'photo_cover',
         ]
+
+    def get_photo_cover(self, obj: Bien) -> str | None:
+        if obj.photos and isinstance(obj.photos, list) and len(obj.photos) > 0:
+            return obj.photos[0]
+        return None
+
+    def to_representation(self, instance):
+        # We override to_representation to completely replace 'photos' with just the first photo 
+        # to preserve frontend compatibility without sending huge arrays.
+        data = super().to_representation(instance)
+        if data.get('photos') and len(data['photos']) > 1:
+            data['photos'] = [data['photos'][0]]
+        return data
