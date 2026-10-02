@@ -57,50 +57,45 @@ export function ProprietaireDashboard() {
   const [notificationsList, setNotificationsList] = useState<Notification[]>([])
   const [echeancesList, setEcheancesList] = useState<any[]>([])
 
+  const [loading, setLoading] = useState(true)
+
   useEffect(() => {
-    getProfil()
-      .then(profil => {
-        setUserName(profil.prenoms || profil.nom || 'Propriétaire')
-        setUserId(profil.id)
+    setLoading(true)
+    Promise.all([
+      getProfil().catch(err => {
+        console.error("Erreur profil", err)
+        return { prenoms: '', nom: '', id: null }
+      }),
+      getBiens().catch(err => {
+        console.error("Erreur biens", err)
+        return []
+      }),
+      getPaiements().catch(err => {
+        console.error("Erreur paiements", err)
+        return []
+      }),
+      getNotifications().catch(err => {
+        console.error("Erreur notifications", err)
+        return []
+      }),
+      getEcheances().catch(err => {
+        console.error("Erreur echeances", err)
+        return []
       })
-      .catch(err => {
-        console.error("Erreur chargement profil", err)
-        setUserName('') // fallback silencieux
-      })
-
-    getBiens()
-      .then(data => {
-        setBiensList(data || [])
-      })
-      .catch(err => {
-        console.error("Erreur chargement biens", err)
-      })
-
-    getPaiements()
-      .then(data => {
-        setPaiementsList(data || [])
-      })
-      .catch(err => {
-        console.error("Erreur chargement paiements", err)
-      })
-
-    getNotifications()
-      .then(data => {
-        if (Array.isArray(data)) setNotificationsList(data)
-      })
-      .catch(err => console.error("Erreur chargement notifications", err))
-
-    getEcheances()
-      .then(data => {
-        setEcheancesList(data || [])
-      })
-      .catch(err => console.error("Erreur chargement echeances", err))
+    ]).then(([profil, biens, paiements, notifications, echeances]) => {
+      setUserName(profil.prenoms || profil.nom || 'Propriétaire')
+      setUserId(profil.id)
+      setBiensList(biens || [])
+      setPaiementsList(paiements || [])
+      setNotificationsList(Array.isArray(notifications) ? notifications : [])
+      setEcheancesList(echeances || [])
+      setLoading(false)
+    })
   }, [])
 
-  const ownerBiens = biensList.filter(b => b.proprietaire?.user?.id === userId)
-  const ownerBiensTitres = new Set(ownerBiens.map(b => b.titre))
-  const ownerPaiements = paiementsList.filter(p => ownerBiensTitres.has(p.bien_titre))
-  const ownerEcheances = echeancesList.filter(e => ownerBiensTitres.has(e.bien_titre))
+  const ownerBiens = biensList
+  const ownerPaiements = paiementsList
+  const ownerEcheances = echeancesList
 
   const filtered = ownerBiens.filter((item) => `${item.titre} ${item.adresse}`.toLowerCase().includes(query.toLowerCase()))
   

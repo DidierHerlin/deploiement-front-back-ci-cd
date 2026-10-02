@@ -52,8 +52,8 @@ class AdminDashboardView(APIView):
             valides=Count('id', filter=Q(statut=Paiement.StatutPaiement.PAYE)),
             enAttente=Count('id', filter=Q(statut=Paiement.StatutPaiement.EN_ATTENTE)),
             enRetard=Count('id', filter=Q(statut=Paiement.StatutPaiement.EN_RETARD)),
-            partiels=Count('id', filter=Q(est_partiel=True)),
-            totalRevenus=Sum('montant_paye', filter=Q(statut=Paiement.StatutPaiement.PAYE)),
+            partiels=Count('id', filter=Q(statut=Paiement.StatutPaiement.PARTIEL)),
+            totalRevenus=Sum('montant', filter=Q(statut=Paiement.StatutPaiement.PAYE)),
             totalAttendu=Sum('montant', filter=Q(statut=Paiement.StatutPaiement.EN_ATTENTE))
         )
 
@@ -68,7 +68,8 @@ class AdminDashboardView(APIView):
 
         # 5. Recent Events
         recent_events = []
-        recent_contrats = Contrat.objects.order_by('-date_creation')[:5]
+        
+        recent_contrats = Contrat.objects.select_related('bien').order_by('-date_creation')[:5]
         for c in recent_contrats:
             titre_bien = c.bien.titre if c.bien else f"Bien #{c.bien_id}"
             recent_events.append({
@@ -83,15 +84,27 @@ class AdminDashboardView(APIView):
             
         recent_paiements = Paiement.objects.filter(statut=Paiement.StatutPaiement.PAYE).order_by('-date_paiement')[:5]
         for p in recent_paiements:
-            montant = float(p.montant_paye) if p.montant_paye else 0.0
+            montant = float(p.montant) if p.montant else 0.0
             recent_events.append({
                 'id': f'p-{p.id}',
                 'type': 'PAIEMENT',
                 'date': p.date_paiement.isoformat() if p.date_paiement else None,
-                'title': 'Paiement reu',
-                'text': f"Rglement de {montant:,.0f} Ar effectu.".replace(',', ' '),
+                'title': 'Paiement reçu',
+                'text': f"Règlement de {montant:,.0f} Ar effectué.".replace(',', ' '),
                 'icon': 'Wallet',
                 'color': 'green'
+            })
+            
+        recent_biens = Bien.objects.order_by('-id')[:5]
+        for b in recent_biens:
+            recent_events.append({
+                'id': f'b-{b.id}',
+                'type': 'BIEN',
+                'date': timezone.now().isoformat(), # Fallback for Bien since it has no date
+                'title': 'Nouveau bien ajouté',
+                'text': f"Le bien {b.titre} a été ajouté au catalogue.",
+                'icon': 'Home',
+                'color': 'orange'
             })
             
         # Sort and take top 5
