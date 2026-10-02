@@ -1,19 +1,4 @@
 services:
-  db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: gesion_immobilier_back_end
-      POSTGRES_USER: postgres
-      POSTGRES_HOST_AUTH_METHOD: trust
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d gesion_immobilier_back_end"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
   web:
     build:
       context: .
@@ -22,19 +7,12 @@ services:
     env_file:
       - .env
     environment:
-      DB_NAME: gesion_immobilier_back_end
-      DB_USER: postgres
-      DB_PASSWORD:
-      DB_HOST: db
-      DB_PORT: 5432
+      USE_SQLITE: "true"
     ports:
       - "8000:8000"
     volumes:
       - .:/app
       - media_data:/app/media
-    depends_on:
-      db:
-        condition: service_healthy
     command: >-
       sh -c "pip install --no-cache-dir xhtml2pdf bcrypt &&
       python manage.py migrate &&
@@ -54,7 +32,7 @@ services:
 
   frontend:
     build:
-      context: ../../../login-page-immobilier
+      context: ../../Front
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
@@ -65,7 +43,6 @@ services:
       - web
 
 volumes:
-  postgres_data:
   media_data:
   sonarqube_data:
   sonarqube_extensions:

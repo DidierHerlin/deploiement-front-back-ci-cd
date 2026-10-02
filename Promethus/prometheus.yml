@@ -1,0 +1,8 @@
+    global:
+      scrape_interval: 15s
+    
+    scrape_configs:
+      - job_name: 'aws-vps'
+        static_configs:
+          # host.docker.internal permet au conteneur Docker local de lire le port 9100 du tunnel SSH
+          - targets: ['host.docker.internal:9100'] 

@@ -13,6 +13,9 @@ from drf_spectacular.views import (
     SpectacularRedocView,
 )
 
+from django.views.decorators.http import require_GET
+
+@require_GET
 def health_check(request):
     return JsonResponse({"status": "ok"})
 
