@@ -111,6 +111,8 @@ elif config("DB_HOST", default=""):
             "PASSWORD": config("DB_PASSWORD", default=""),
             "HOST": db_host,
             "PORT": config("DB_PORT", default="5432"),
+            "CONN_MAX_AGE": config("CONN_MAX_AGE", default=600, cast=int),
+            "CONN_HEALTH_CHECKS": True,
         }
     }
 

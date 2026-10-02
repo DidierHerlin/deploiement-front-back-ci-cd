@@ -75,44 +75,32 @@ class BienViewSet(viewsets.ModelViewSet):
 
     # Bien CRUD
 
-    def list(self, request: Request, *args, **kwargs) -> Response:
-        queryset = self.filter_queryset(self.get_queryset())
+    def _paginate_or_serialize(self, queryset: QuerySet[Bien]) -> Response:
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
-            return Response({
-                "success": True,
-                "count": self.paginator.page.paginator.count,
-                "next": self.paginator.get_next_link(),
-                "previous": self.paginator.get_previous_link(),
-                "results": serializer.data,
-            })
+            response = self.get_paginated_response(serializer.data)
+            # Ajout du champ "success" pour maintenir la compatibilité du format attendu
+            if isinstance(response.data, dict):
+                response.data["success"] = True
+            return response
 
-        # Pas de pagination active : évaluer le queryset une seule fois
         serializer = self.get_serializer(queryset, many=True)
-        data = serializer.data
         return Response({
             "success": True,
-            "count": len(data),   # len() au lieu de queryset.count() — évite une 2e requête SQL
-            "results": data,
+            "count": queryset.count(),
+            "results": serializer.data,
         })
+
+    def list(self, request: Request, *args, **kwargs) -> Response:
+        queryset = self.filter_queryset(self.get_queryset())
+        return self._paginate_or_serialize(queryset)
 
     def disponibles(self, request: Request, *args, **kwargs) -> Response:
         queryset = self._appliquer_filtres_recherche(
-            Bien.objects.select_related("proprietaire__user").filter(statut=Bien.StatutBien.DISPONIBLE)
+            self.get_queryset().filter(statut=Bien.StatutBien.DISPONIBLE)
         )
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        data = serializer.data
-        return Response({
-            "success": True,
-            "count": len(data),
-            "results": data,
-        })
+        return self._paginate_or_serialize(queryset)
 
     def retrieve(self, request: Request, *args, **kwargs) -> Response:
         instance = self.get_object()

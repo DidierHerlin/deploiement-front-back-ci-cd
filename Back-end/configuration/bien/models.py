@@ -85,6 +85,10 @@ class Bien(models.Model):
         verbose_name = "Bien"
         verbose_name_plural = "Biens"
         ordering = ["-id"]
+        indexes = [
+            models.Index(fields=["statut", "type", "mode_transaction"], name="idx_bien_recherche"),
+            models.Index(fields=["proprietaire"], name="idx_bien_proprietaire"),
+        ]
         constraints = [
             # Contraintes de positivité
             models.CheckConstraint(check=models.Q(surface__gte=0), name="bien_surface_positive"),

@@ -85,3 +85,29 @@ class BienViewsTests(APITestCase):
         self.client.force_authenticate(user=self.admin)
         response = self.client.delete(f'/api/biens/{self.bien.id}/')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_list_biens_filtering(self):
+        self.client.force_authenticate(user=self.admin)
+        # Create a second bien with different properties
+        Bien.objects.create(
+            proprietaire=self.bien.proprietaire,
+            titre="Maison Vente",
+            type=Bien.TypeBien.MAISON,
+            mode_transaction=Bien.ModeTransaction.VENTE,
+            adresse="Test",
+            surface=100,
+            nombre_pieces=4,
+            prix=100000,
+            statut=Bien.StatutBien.DISPONIBLE
+        )
+        response = self.client.get('/api/biens/?type=MAISON&mode_transaction=VENTE')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(response.data['results'][0]['titre'], "Maison Vente")
+
+    def test_disponibles_filtering(self):
+        self.client.force_authenticate(user=self.locataire_user)
+        response = self.client.get('/api/biens/disponible/?statut=DISPONIBLE')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)
+        self.assertTrue(response.data['success'])
