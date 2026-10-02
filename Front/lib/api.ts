@@ -257,6 +257,11 @@ export async function getAgentDashboardStats(): Promise<any> {
   return await fetchAPI<any>("/agent/dashboard/")
 }
 
+// API Dashboard Propriétaire
+export async function getProprietaireDashboardStats(): Promise<any> {
+  return await fetchAPI<any>("/dashboard/proprietaire-optimized/")
+}
+
 // API Biens
 
 export async function getBiens(page: number = 1, page_size: number = 100): Promise<Bien[]> {

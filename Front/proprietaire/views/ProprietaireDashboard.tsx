@@ -41,7 +41,7 @@ const notifications = [
 
 import { StatCard } from "@/components/molecules/locataire_StatCard"
 import '../styles/dashboard.css'
-import { getBiens, BienListItem, getPaiements, Paiement, getNotifications, getEcheances, Notification } from '@/lib/api'
+import { getProprietaireDashboardStats } from '@/lib/api'
 
 export function ProprietaireDashboard() {
   const [active, setActive] = useState('Vue d’ensemble')
@@ -52,11 +52,7 @@ export function ProprietaireDashboard() {
   const [userName, setUserName] = useState<string | null>(null)
   const [userId, setUserId] = useState<number | null>(null)
   
-  const [biensList, setBiensList] = useState<BienListItem[]>([])
-  const [paiementsList, setPaiementsList] = useState<Paiement[]>([])
-  const [notificationsList, setNotificationsList] = useState<Notification[]>([])
-  const [echeancesList, setEcheancesList] = useState<any[]>([])
-
+  const [dashboardData, setDashboardData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -66,123 +62,71 @@ export function ProprietaireDashboard() {
         console.error("Erreur profil", err)
         return { prenoms: '', nom: '', id: null }
       }),
-      getBiens().catch(err => {
-        console.error("Erreur biens", err)
-        return []
-      }),
-      getPaiements().catch(err => {
-        console.error("Erreur paiements", err)
-        return []
-      }),
-      getNotifications().catch(err => {
-        console.error("Erreur notifications", err)
-        return []
-      }),
-      getEcheances().catch(err => {
-        console.error("Erreur echeances", err)
-        return []
+      getProprietaireDashboardStats().catch(err => {
+        console.error("Erreur dashboard stats", err)
+        return null
       })
-    ]).then(([profil, biens, paiements, notifications, echeances]) => {
+    ]).then(([profil, stats]) => {
       setUserName(profil.prenoms || profil.nom || 'Propriétaire')
       setUserId(profil.id)
-      setBiensList(biens || [])
-      setPaiementsList(paiements || [])
-      setNotificationsList(Array.isArray(notifications) ? notifications : [])
-      setEcheancesList(echeances || [])
+      setDashboardData(stats)
       setLoading(false)
     })
   }, [])
 
-  const ownerBiens = biensList
-  const ownerPaiements = paiementsList
-  const ownerEcheances = echeancesList
-
-  const filtered = ownerBiens.filter((item) => `${item.titre} ${item.adresse}`.toLowerCase().includes(query.toLowerCase()))
-  
-  // Remplacer les faux paiements de la table par les vrais
-  const validPaiements = ownerPaiements.filter(p => p.statut === 'PAYE' || p.statut === 'EN_RETARD')
-  const visiblePayments = showAllPayments ? validPaiements : validPaiements.slice(0, 3)
-
-  const totalBiens = ownerBiens.length
-  const loues = ownerBiens.filter(b => b.statut === 'LOUE').length
-  const vendus = ownerBiens.filter(b => b.statut === 'VENDU').length
-  const disponibles = ownerBiens.filter(b => b.statut === 'DISPONIBLE').length
-
-  const biensDetail = []
-  if (loues > 0) biensDetail.push(`${loues} loué${loues > 1 ? 's' : ''}`)
-  if (vendus > 0) biensDetail.push(`${vendus} vendu${vendus > 1 ? 's' : ''}`)
-  if (disponibles > 0) biensDetail.push(`${disponibles} disponible${disponibles > 1 ? 's' : ''}`)
-
-  const biensDetailStr = biensDetail.length > 0 ? biensDetail.join(' · ') : 'Aucun bien enregistré'
-
-  const tauxOccupation = totalBiens > 0 ? Math.round((loues / totalBiens) * 100) : 0
-  const tauxDetailStr = totalBiens > 0 ? `${loues} bien${loues > 1 ? 's' : ''} sur ${totalBiens} occupé${loues > 1 ? 's' : ''}` : "Aucun bien à occuper"
-
-  // Calculs Revenus
-  const now = new Date()
-  const currentMonth = now.getMonth()
-  const currentYear = now.getFullYear()
-  
-  const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1
-  const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear
-
-  let revenuCeMois = 0
-  let revenuMoisDernier = 0
-
-  const chartData: any[] = []
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(currentYear, currentMonth - i, 1)
-    chartData.push({
-      name: d.toLocaleString('fr-FR', { month: 'short' }).replace('.', ''),
-      month: d.getMonth(),
-      year: d.getFullYear(),
-      total: 0
-    })
+  if (loading || !dashboardData) {
+    return <div style={{ padding: '20px', color: '#6b7280' }}>Chargement du tableau de bord...</div>
   }
 
-  ownerPaiements.forEach(p => {
-    if (p.statut === 'PAYE' && p.date_paiement) {
-      const d = new Date(p.date_paiement)
-      const amt = (parseFloat(p.montant_paye as string) || parseFloat(p.montant as string) || parseFloat(p.montant_attendu as string) || 0)
-      
-      if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
-        revenuCeMois += amt
-      } else if (d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear) {
-        revenuMoisDernier += amt
-      }
+  const { biens, revenus, prochaine_echeance, recent_echeances, recent_paiements, recent_notifications } = dashboardData
 
-      const target = chartData.find(c => c.month === d.getMonth() && c.year === d.getFullYear())
-      if (target) {
-        target.total += amt
-      }
+  const chartData = (revenus.chart_data || []).map((d: any) => {
+    const dateObj = new Date(d.year, d.month - 1, 1)
+    return {
+      ...d,
+      name: dateObj.toLocaleString('fr-FR', { month: 'short' }).replace('.', '')
     }
   })
 
   let evolutionText = "stable vs mois dernier"
-  if (revenuMoisDernier > 0) {
-    const pourcentageEvolution = ((revenuCeMois - revenuMoisDernier) / revenuMoisDernier) * 100
+  if (revenus.mois_dernier > 0) {
+    const pourcentageEvolution = ((revenus.ce_mois - revenus.mois_dernier) / revenus.mois_dernier) * 100
     const sign = pourcentageEvolution > 0 ? '+' : ''
     evolutionText = `${sign}${pourcentageEvolution.toFixed(1).replace('.', ',')}% vs mois dernier`
-  } else if (revenuCeMois > 0) {
+  } else if (revenus.ce_mois > 0) {
     evolutionText = "+100% vs mois dernier"
   } else {
     evolutionText = "Aucun revenu ce mois-ci"
   }
 
+  const biensDetail = []
+  if (biens.loues > 0) biensDetail.push(`${biens.loues} loué${biens.loues > 1 ? 's' : ''}`)
+  if (biens.disponibles > 0) biensDetail.push(`${biens.disponibles} disponible${biens.disponibles > 1 ? 's' : ''}`)
+  const biensDetailStr = biensDetail.length > 0 ? biensDetail.join(' · ') : 'Aucun bien enregistré'
+  const tauxDetailStr = biens.total > 0 ? `${biens.loues} bien${biens.loues > 1 ? 's' : ''} sur ${biens.total} occupé${biens.loues > 1 ? 's' : ''}` : "Aucun bien à occuper"
+
+  const totalBiens = biens.total
+  const revenuCeMois = revenus.ce_mois
+  const tauxOccupation = biens.taux_occupation
+
   let prochaineEcheanceStr = '-'
   let loyersAttendusStr = 'Aucune échéance à venir'
-  let toneEcheance = 'green' // green by default if no deadlines
+  let toneEcheance = 'green'
 
-  if (ownerEcheances.length > 0) {
-    const firstDate = ownerEcheances[0].date_echeance
-    const count = ownerEcheances.filter(e => e.date_echeance === firstDate).length
-    const dateObj = new Date(firstDate)
+  if (prochaine_echeance && prochaine_echeance.date) {
+    const dateObj = new Date(prochaine_echeance.date)
     const day = dateObj.getDate().toString().padStart(2, '0')
     const month = dateObj.toLocaleString('fr-FR', { month: 'short' })
     prochaineEcheanceStr = `${day} ${month}.`
-    loyersAttendusStr = `${count} loyer${count > 1 ? 's' : ''} attendu${count > 1 ? 's' : ''}`
+    loyersAttendusStr = `${prochaine_echeance.nombre} loyer${prochaine_echeance.nombre > 1 ? 's' : ''} attendu${prochaine_echeance.nombre > 1 ? 's' : ''}`
     toneEcheance = 'red'
   }
+
+  const filtered = (biens.recent_biens || []).filter((item: any) => `${item.titre} ${item.adresse}`.toLowerCase().includes(query.toLowerCase()))
+  const validPaiements = recent_paiements || []
+  const visiblePayments = showAllPayments ? validPaiements : validPaiements.slice(0, 3)
+  const ownerEcheances = recent_echeances || []
+  const notificationsList = recent_notifications || []
 
   return (
     <>

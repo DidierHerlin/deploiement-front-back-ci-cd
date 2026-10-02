@@ -173,29 +173,57 @@ class ProprietaireDashboardOptimizedView(APIView):
             "locataire_nom": p.contrat.locataire.user.get_full_name() if p.contrat.locataire.user else "Inconnu",
             "bien_titre": p.contrat.bien.titre,
             "montant": float(p.montant or 0),
-            "date_paiement": p.date_paiement.isoformat()
+            "date_paiement": p.date_paiement.isoformat(),
+            "statut": p.statut
         } for p in recent_paiements_qs]
 
-        # 4. Prochaine cheance
+        # 4. Prochaine échéance
         echeances_qs = Paiement.objects.filter(
             contrat__bien__proprietaire__user=user,
             statut__in=[Paiement.StatutPaiement.EN_ATTENTE, Paiement.StatutPaiement.EN_RETARD],
             date_echeance__gte=now.date()
-        ).order_by('date_echeance')
+        ).select_related('contrat__locataire__user', 'contrat__bien').order_by('date_echeance')
         
         prochaine_echeance = echeances_qs.first()
         prochaine_date = prochaine_echeance.date_echeance if prochaine_echeance else None
         loyers_attendus = echeances_qs.filter(date_echeance=prochaine_date).count() if prochaine_date else 0
+        
+        recent_echeances = [{
+            "id": e.id,
+            "date_echeance": e.date_echeance.isoformat(),
+            "locataire_nom": e.contrat.locataire.user.get_full_name() if (e.contrat and e.contrat.locataire and e.contrat.locataire.user) else "Inconnu",
+            "bien_titre": e.contrat.bien.titre if (e.contrat and e.contrat.bien) else "Inconnu",
+            "montant_attendu": float(e.montant_attendu or e.montant or 0)
+        } for e in echeances_qs[:3]]
 
         # 5. Notifications
-        unread_notifs = Notification.objects.filter(utilisateur=user, lu=False).count()
+        notifs_qs = Notification.objects.filter(utilisateur=user).order_by('-date_creation')
+        unread_notifs = notifs_qs.filter(lu=False).count()
+        recent_notifications = [{
+            "id": n.id,
+            "titre": n.titre,
+            "message": n.message,
+            "date_creation": n.date_creation.isoformat() if n.date_creation else None,
+            "type_display": getattr(n, 'type_display', n.titre)
+        } for n in notifs_qs[:3]]
+
+        # 6. Biens récents
+        biens_recents_qs = Bien.objects.filter(proprietaire__user=user).order_by('-id')[:3]
+        recent_biens = [{
+            "id": b.id,
+            "titre": b.titre,
+            "adresse": b.adresse,
+            "statut": b.statut,
+            "loyer_mensuel": float(b.loyer_mensuel or b.prix or 0)
+        } for b in biens_recents_qs]
 
         return Response({
             "biens": {
                 "total": total_biens,
                 "loues": loues,
                 "disponibles": dispos,
-                "taux_occupation": taux_occupation
+                "taux_occupation": taux_occupation,
+                "recent_biens": recent_biens
             },
             "revenus": {
                 "ce_mois": float(revenu_ce_mois),
@@ -206,6 +234,8 @@ class ProprietaireDashboardOptimizedView(APIView):
                 "date": prochaine_date.isoformat() if prochaine_date else None,
                 "nombre": loyers_attendus
             },
+            "recent_echeances": recent_echeances,
             "recent_paiements": recent_paiements,
-            "unread_notifications": unread_notifs
+            "unread_notifications": unread_notifs,
+            "recent_notifications": recent_notifications
         })
