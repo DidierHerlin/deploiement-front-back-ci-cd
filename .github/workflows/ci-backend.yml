@@ -273,11 +273,11 @@ jobs:
                       envFrom:
                         - secretRef:
                             name: backend-secrets
-                volumes:
-                  - name: media-storage
-                    hostPath:
-                      path: /opt/immobilier/media
-                      type: DirectoryOrCreate
+                  volumes:
+                    - name: media-storage
+                      hostPath:
+                        path: /opt/immobilier/media
+                        type: DirectoryOrCreate
             ---
             apiVersion: v1
             kind: Service
