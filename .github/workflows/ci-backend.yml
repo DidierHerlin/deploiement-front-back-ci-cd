@@ -178,11 +178,13 @@ jobs:
           ENABLE_HPA: ${{ secrets.ENABLE_HPA }}
           GIT_SHA: ${{ github.sha }}
           DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/immobilier-drf:${{ github.sha }}
+          EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
+          EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
         with:
           host: ${{ secrets.AWS_EC2_IP }}
           username: ubuntu
           key: ${{ secrets.AWS_EC2_SSH_KEY }}
-          envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME, AWS_EC2_IP, ENABLE_HPA, GIT_SHA, DOCKER_IMAGE
+          envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME, AWS_EC2_IP, ENABLE_HPA, GIT_SHA, DOCKER_IMAGE, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
           script: |
             # ── Mode verbose : affiche chaque commande + stoppe sur erreur ──
             set -ex
@@ -213,6 +215,8 @@ jobs:
               --from-literal=ALLOWED_HOSTS="*" \
               --from-literal=CORS_ALLOWED_ORIGINS="http://$AWS_EC2_IP:3000,http://localhost:3000" \
               --from-literal=CSRF_TRUSTED_ORIGINS="http://$AWS_EC2_IP:3000,http://localhost:3000" \
+              --from-literal=EMAIL_HOST_USER="$EMAIL_HOST_USER" \
+              --from-literal=EMAIL_HOST_PASSWORD="$EMAIL_HOST_PASSWORD" \
               --namespace=immobilier
             
             # Création à la volée du fichier de déploiement optimisé
