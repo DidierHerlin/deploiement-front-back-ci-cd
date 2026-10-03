@@ -1,25 +1,12 @@
-'use client'
+﻿import sys
 
-import React, { useState, useEffect } from 'react';
-import { Menu, ChevronRight, Bell, ChevronDown, CheckCheck } from 'lucide-react';
-import { getNotifications, markNotificationsAsRead, Notification } from '@/lib/api';
+with open(r'Front\components\organisms\LocataireTopbar.tsx', 'r', encoding='utf-8') as f:
+    content = f.read()
 
+imports = "import React, { useState, useEffect } from 'react';\nimport { Menu, ChevronRight, Bell, ChevronDown, CheckCheck } from 'lucide-react';\nimport { getNotifications, markNotificationsAsRead, Notification } from '@/lib/api';\n"
+content = content.replace("import React from 'react';\nimport { Menu, ChevronRight, Bell, ChevronDown } from 'lucide-react';", imports)
 
-interface LocataireTopbarProps {
-  setMobileNav: (open: boolean) => void;
-  setShowProfile: (open: boolean) => void;
-  activeLabel: string;
-  user: any;
-}
-
-import { getUserFullName, getUserInitials } from "@/components/organisms/userUtils";
-import { getUserPhotoSrc } from '@/lib/api';
-
-export function LocataireTopbar({ setMobileNav, setShowProfile, activeLabel, user }: LocataireTopbarProps) {
-  const fullName = getUserFullName(user);
-  const initials = getUserInitials(user);
-  const photoSrc = getUserPhotoSrc(user);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
+state = '''  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   useEffect(() => { getNotifications().then(setNotifications).catch(console.error) }, []);
   const unreadCount = notifications.filter(n => !n.lu).length;
@@ -32,18 +19,16 @@ export function LocataireTopbar({ setMobileNav, setShowProfile, activeLabel, use
       try { await markNotificationsAsRead(unreadIds); } catch (err) { console.error(err); }
     }
   };
+'''
+content = content.replace("const photoSrc = getUserPhotoSrc(user);", "const photoSrc = getUserPhotoSrc(user);\n" + state)
 
+old_wrap = '''        <div className="notification-wrap">
+          <button className="icon-button" aria-label="Notifications">
+            <Bell size={19} /><i />
+          </button>
+        </div>'''
 
-  return (
-    <header className="topbar">
-      <button className="menu-button" onClick={() => setMobileNav(true)}>
-        <Menu size={21} />
-      </button>
-      <div className="breadcrumbs">
-        <span>Espace locataire</span><ChevronRight size={15} /><strong>{activeLabel}</strong>
-      </div>
-      <div className="top-actions">
-        <div className="notification-wrap" style={{ position: 'relative' }}>
+new_wrap = '''        <div className="notification-wrap" style={{ position: 'relative' }}>
           <button className="icon-button" aria-label="Notifications" onClick={handleToggleNotifications}>
             <Bell size={19} />
             {unreadCount > 0 && <i style={{ position: 'absolute', top: 4, right: 6, width: 8, height: 8, borderRadius: '50%', background: '#ef4444', border: '2px solid white' }} />}
@@ -75,17 +60,17 @@ export function LocataireTopbar({ setMobileNav, setShowProfile, activeLabel, use
               </div>
             </div>
           )}
-        </div>
-        <button className="top-user top-user-button icon-button" onClick={() => setShowProfile(true)}>
-          {photoSrc ? (
-            <img src={photoSrc} alt={fullName} className="user-initial" style={{ padding: 0, objectFit: 'cover' }} />
-          ) : (
-            <div className="user-initial blue">{initials}</div>
-          )}
-          <span>{fullName}</span>
-          <ChevronDown size={15} />
-        </button>
-      </div>
-    </header>
-  );
-}
+        </div>'''
+
+if old_wrap not in content:
+    if old_wrap.replace('\n', '\r\n') in content:
+        content = content.replace(old_wrap.replace('\n', '\r\n'), new_wrap)
+    else:
+        print("COULD NOT FIND OLD WRAP in Locataire")
+        sys.exit(1)
+else:
+    content = content.replace(old_wrap, new_wrap)
+
+with open(r'Front\components\organisms\LocataireTopbar.tsx', 'w', encoding='utf-8') as f:
+    f.write(content)
+print("SUCCESS LOCATAIRE")

@@ -125,6 +125,7 @@ class Reservation(models.Model):
         """Crée une notification pour chaque ADMIN et AGENT."""
         from django.conf import settings as django_settings
         from notifications.models import Notification
+        from notifications.services import NotificationService
         from utilisateur.models import Utilisateur
 
         nom_locataire = self.locataire.user.get_full_name()
@@ -140,21 +141,17 @@ class Reservation(models.Model):
             is_active=True,
         )
 
-        notifications = []
         for user in destinataires:
-            notifications.append(
-                Notification(
-                    utilisateur=user,
-                    type="NOUVELLE_RESERVATION",
-                    message=message,
-                )
+            NotificationService.envoyer(
+                utilisateur=user,
+                type_notif=Notification.Type.NOUVELLE_RESERVATION,
+                titre="Nouvelle réservation",
+                message=message,
+                lien=f"/reservations/{self.id}"
             )
-        # bulk_create ne déclenche pas post_save, on crée un par un pour l'email
-        for notif in notifications:
-            notif.save()
 
         logger.info(
             "Notifications de réservation #%s envoyées à %d destinataire(s).",
             self.pk,
-            len(notifications),
+            len(destinataires),
         )

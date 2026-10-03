@@ -1,7 +1,9 @@
 'use client'
 
-import { MapPin, Maximize, DoorOpen, Tag, CalendarPlus } from 'lucide-react'
-import { BienListItem } from '@/lib/api'
+import { useState } from 'react'
+import { MapPin, Maximize, DoorOpen, Tag, CalendarPlus, ChevronLeft, ChevronRight } from 'lucide-react'
+import { BienListItem, resolveMediaUrl } from '@/lib/api'
+import Image from 'next/image'
 
 interface BienCardProps {
   bien: BienListItem
@@ -10,6 +12,7 @@ interface BienCardProps {
 
 export default function BienCard({ bien, onReserver }: BienCardProps) {
   const isLocation = bien.mode_transaction === 'LOCATION'
+  const [photoIndex, setPhotoIndex] = useState(0)
 
   const typeLabel = (() => {
     switch (bien.type) {
@@ -21,19 +24,63 @@ export default function BienCard({ bien, onReserver }: BienCardProps) {
     }
   })()
 
+  const nextPhoto = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (bien.photos) setPhotoIndex((prev) => (prev + 1) % bien.photos.length)
+  }
+
+  const prevPhoto = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (bien.photos) setPhotoIndex((prev) => (prev - 1 + bien.photos.length) % bien.photos.length)
+  }
+
   return (
-    <div className="panel" style={{ display: 'flex', flexDirection: 'column', gap: 12, overflow: 'hidden', padding: 0 }}>
-      {bien.photos && bien.photos.length > 0 ? (
-        <img
-          src={bien.photos[0]}
-          alt={bien.titre}
-          style={{ width: '100%', height: 180, objectFit: 'cover', display: 'block' }}
-        />
-      ) : (
-        <div style={{ width: '100%', height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9', color: '#94a3b8' }}>
-          <MapPin size={28} strokeWidth={1.2} />
-        </div>
-      )}
+    <div className="panel group" style={{ display: 'flex', flexDirection: 'column', gap: 12, overflow: 'hidden', padding: 0 }}>
+      <div style={{ position: 'relative', width: '100%', height: 180, background: '#f1f5f9', flexShrink: 0, overflow: 'hidden' }}>
+        {bien.photos && bien.photos.length > 0 ? (
+          <>
+            <Image
+              src={resolveMediaUrl(bien.photos[photoIndex])!}
+              alt={bien.titre}
+              fill
+              className="object-cover transition-opacity duration-300"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+            
+            {bien.photos.length > 1 && (
+              <>
+                <button 
+                  onClick={prevPhoto}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 text-gray-800 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-white transition-all shadow-sm"
+                  style={{ border: 'none', cursor: 'pointer', zIndex: 10 }}
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button 
+                  onClick={nextPhoto}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 text-gray-800 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-white transition-all shadow-sm"
+                  style={{ border: 'none', cursor: 'pointer', zIndex: 10 }}
+                >
+                  <ChevronRight size={18} />
+                </button>
+                
+                <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5" style={{ zIndex: 10 }}>
+                  {bien.photos.map((_, idx) => (
+                    <div 
+                      key={idx} 
+                      className={`h-1.5 rounded-full transition-all ${idx === photoIndex ? 'w-4 bg-white' : 'w-1.5 bg-white/60'}`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        ) : (
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
+            <MapPin size={28} strokeWidth={1.2} />
+          </div>
+        )}
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '0 16px 16px' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>

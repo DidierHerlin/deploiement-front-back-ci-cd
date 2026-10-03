@@ -125,10 +125,14 @@ class ReservationViewSet(viewsets.ModelViewSet):
         reservation.save(update_fields=["reponse_admin", "statut"])
 
         # Notifier le locataire
-        Notification.objects.create(
+        from notifications.services import NotificationService
+        
+        NotificationService.envoyer(
             utilisateur=reservation.locataire.user,
-            type=Notification.Type.NOUVELLE_RESERVATION,
+            type_notif=Notification.Type.NOUVELLE_RESERVATION,
+            titre="Réponse à votre réservation",
             message=serializer.validated_data["reponse_admin"],
+            lien=f"/reservations/{reservation.id}"
         )
 
         logger.info(

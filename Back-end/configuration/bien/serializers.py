@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from decimal import Decimal
 from typing import Any
@@ -32,6 +32,16 @@ class BienSerializer(serializers.ModelSerializer):
             "nombre_pieces", "loyer_mensuel", "prix", "statut", "photos",
         ]
         read_only_fields = ["id"]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get('request')
+        if request and data.get('photos'):
+            data['photos'] = [
+                request.build_absolute_uri(p) if isinstance(p, str) and p.startswith('/') else p 
+                for p in data['photos']
+            ]
+        return data
 
     def validate_surface(self, value: float) -> float:
         try:
@@ -193,11 +203,20 @@ class BienListSerializer(serializers.ModelSerializer):
 
     def get_photo_cover(self, obj: Bien) -> str | None:
         if obj.photos and isinstance(obj.photos, list) and len(obj.photos) > 0:
-            return obj.photos[0]
+            photo = obj.photos[0]
+            request = self.context.get('request')
+            if request and isinstance(photo, str) and photo.startswith('/'):
+                return request.build_absolute_uri(photo)
+            return photo
         return None
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        if data.get('photos') and len(data['photos']) > 1:
-            data['photos'] = [data['photos'][0]]
+        
+        request = self.context.get('request')
+        if request and data.get('photos'):
+            data['photos'] = [
+                request.build_absolute_uri(p) if isinstance(p, str) and p.startswith('/') else p 
+                for p in data['photos']
+            ]
         return data

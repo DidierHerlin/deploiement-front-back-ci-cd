@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 from datetime import timedelta
 from decouple import config, Csv
 import os
@@ -196,13 +196,13 @@ SIMPLE_JWT = {
 
 CORS_ALLOWED_ORIGINS = config(
     "CORS_ALLOWED_ORIGINS",
-    default="http://localhost:3000,http://127.0.0.1:3000,http://16.16.115.111:3000,http://16.16.115.111:8000",
+    default="http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://16.16.115.111:3000,http://16.16.115.111:8000",
     cast=Csv(),
 )
-FRONTEND_URL = config("FRONTEND_URL", default="http://localhost:3000")
+FRONTEND_URL = config("FRONTEND_URL", default="http://localhost:3000,http://localhost:3001")
 CSRF_TRUSTED_ORIGINS = config(
     "CSRF_TRUSTED_ORIGINS",
-    default="http://localhost:3000,http://127.0.0.1:3000",
+    default="http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000",
     cast=Csv(),
 )
 

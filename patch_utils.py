@@ -1,4 +1,7 @@
-import logging
+﻿# -*- coding: utf-8 -*-
+import codecs
+
+content = """import logging
 from io import BytesIO
 from django.template.loader import render_to_string
 from xhtml2pdf import pisa
@@ -81,3 +84,9 @@ def generate_quittance_pdf(paiement):
     except Exception as e:
         logger.error(f"Erreur lors de la sauvegarde du fichier PDF : {e}")
         raise Exception(f"Erreur de sauvegarde : {e}")
+"""
+
+with codecs.open(r'Back-end\configuration\paiement\utils.py', 'w', 'utf-8') as f:
+    f.write(content)
+
+print("SUCCESS UTILS")

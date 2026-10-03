@@ -1,4 +1,7 @@
-import React from 'react';
+﻿# -*- coding: utf-8 -*-
+import codecs
+
+content = """import React from 'react';
 import { CircleDollarSign, CalendarDays, WalletCards, FileText, Loader2, AlertCircle } from 'lucide-react';
 import { Contrat, Paiement } from '@/lib/api';
 import { StatCard } from "@/components/molecules/locataire_StatCard";
@@ -111,3 +114,9 @@ export function DashboardStats({ paiements, contratActif, loading, error }: Dash
     </section>
   );
 }
+"""
+
+with codecs.open(r'Front\components\molecules\DashboardStats.tsx', 'w', 'utf-8') as f:
+    f.write(content)
+
+print("SUCCESS DASHBOARD")

@@ -262,6 +262,9 @@ jobs:
                           port: 8000
                         initialDelaySeconds: 10
                         periodSeconds: 5
+                      volumeMounts:
+                        - name: media-storage
+                          mountPath: /app/media
                       env:
                         - name: CORS_ALLOWED_ORIGINS
                           value: "http://$AWS_EC2_IP:3000,http://localhost:3000"
@@ -270,6 +273,11 @@ jobs:
                       envFrom:
                         - secretRef:
                             name: backend-secrets
+                volumes:
+                  - name: media-storage
+                    hostPath:
+                      path: /opt/immobilier/media
+                      type: DirectoryOrCreate
             ---
             apiVersion: v1
             kind: Service

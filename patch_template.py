@@ -1,4 +1,7 @@
-<!DOCTYPE html>
+﻿# -*- coding: utf-8 -*-
+import codecs
+
+content = """<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -170,3 +173,9 @@
 
 </body>
 </html>
+"""
+
+with codecs.open(r'Back-end\configuration\paiement\templates\paiement\quittance_template.html', 'w', 'utf-8') as f:
+    f.write(content)
+
+print("SUCCESS TEMPLATE")
