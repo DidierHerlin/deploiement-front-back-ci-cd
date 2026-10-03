@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from decimal import Decimal
 from typing import Any
@@ -169,7 +169,6 @@ class BienSerializer(serializers.ModelSerializer):
 
 
 class BienProprietaireSerializer(serializers.ModelSerializer):
-    """Serializer minimal pour le proprietaire dans la liste des biens."""
     nom = serializers.CharField(source="user.nom", read_only=True)
     prenoms = serializers.CharField(source="user.prenoms", read_only=True)
     email = serializers.EmailField(source="user.email", read_only=True)
@@ -181,7 +180,6 @@ class BienProprietaireSerializer(serializers.ModelSerializer):
 
 
 class BienListSerializer(serializers.ModelSerializer):
-    """Serializer allegé pour la liste — champs nécessaires a l'affichage uniquement."""
     proprietaire = BienProprietaireSerializer(read_only=True)
     photo_cover = serializers.SerializerMethodField()
 
@@ -199,8 +197,6 @@ class BienListSerializer(serializers.ModelSerializer):
         return None
 
     def to_representation(self, instance):
-        # We override to_representation to completely replace 'photos' with just the first photo 
-        # to preserve frontend compatibility without sending huge arrays.
         data = super().to_representation(instance)
         if data.get('photos') and len(data['photos']) > 1:
             data['photos'] = [data['photos'][0]]

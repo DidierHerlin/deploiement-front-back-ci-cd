@@ -14,16 +14,12 @@ def save_base64_photos(photos_list):
                 ext = format.split('/')[-1].split(';')[0]
                 if ext.lower() == 'jpeg':
                     ext = 'jpg'
-                
-                # Decode base64
                 img_data = base64.b64decode(imgstr)
                 
-                # Resize and compress using Pillow
                 img = Image.open(io.BytesIO(img_data))
                 if img.mode != 'RGB':
                     img = img.convert('RGB')
                 
-                # Max dimension 1024px for thumbnails/viewing
                 img.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
                 
                 output = io.BytesIO()

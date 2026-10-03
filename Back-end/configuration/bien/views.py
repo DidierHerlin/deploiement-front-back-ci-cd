@@ -20,12 +20,9 @@ logger = logging.getLogger(__name__)
 class BienViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, PeutGererBien]
     serializer_class = BienSerializer
-    # 'photos' est inclus dans la liste pour l'affichage des cartes.
     queryset = Bien.objects.select_related("proprietaire__user")
-
     def get_serializer_class(self) -> type[BienSerializer | BienListSerializer]:
         return BienListSerializer if self.action in ("list", "disponibles") else BienSerializer
-
     def get_serializer_context(self) -> dict:
         context = super().get_serializer_context()
         context["request"] = self.request
@@ -36,7 +33,6 @@ class BienViewSet(viewsets.ModelViewSet):
         user = self.request.user
         queryset = super().get_queryset()
 
-        # ADMIN / AGENT : accès total, aucun filtrage de visibilité.
         if user.role in (Utilisateur.Role.ADMIN, Utilisateur.Role.AGENT):
             return self._appliquer_filtres_recherche(queryset)
         if user.role == Utilisateur.Role.PROPRIETAIRE:
@@ -52,12 +48,10 @@ class BienViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(proprietaire=proprietaire)
             return self._appliquer_filtres_recherche(queryset)
 
-        # LOCATAIRE : uniquement les biens disponibles, en lecture seule.
         if user.role == Utilisateur.Role.LOCATAIRE:
             queryset = queryset.filter(statut=Bien.StatutBien.DISPONIBLE)
             return self._appliquer_filtres_recherche(queryset)
 
-        # Tout autre rôle éventuel (futur) : aucun accès par défaut.
         return Bien.objects.none()
 
     def _appliquer_filtres_recherche(self, queryset: QuerySet[Bien]) -> QuerySet[Bien]:
@@ -73,14 +67,12 @@ class BienViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(mode_transaction=mode_transaction)
         return queryset
 
-    # Bien CRUD
 
     def _paginate_or_serialize(self, queryset: QuerySet[Bien]) -> Response:
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             response = self.get_paginated_response(serializer.data)
-            # Ajout du champ "success" pour maintenir la compatibilité du format attendu
             if isinstance(response.data, dict):
                 response.data["success"] = True
             return response
@@ -152,8 +144,6 @@ class BienViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request: Request, *args, **kwargs) -> Response:
         bien = self.get_object()
-
-        # Vérification supplémentaire : on ne supprime pas un bien loué ou vendu
         if bien.statut in (Bien.StatutBien.LOUE, Bien.StatutBien.VENDU):
             return self._reponse_conflit(
                 f"Ce bien a le statut '{bien.get_statut_display()}' et ne peut pas être supprimé."
