@@ -276,7 +276,7 @@ jobs:
                     - name: backend
                       image: $DOCKER_IMAGE
                       imagePullPolicy: Always
-                      command: ["sh", "-c", "python manage.py migrate && gunicorn --bind 0.0.0.0:8000 --workers 1 wsgi:application"]
+                      command: ["sh", "-c", "python manage.py migrate && gunicorn --bind 0.0.0.0:8000 --workers 2 --timeout 60 --keep-alive 5 wsgi:application"]
                       ports:
                         - containerPort: 8000
                       resources:
