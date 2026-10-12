@@ -1,8 +1,4 @@
-"""
-Tests complets pour l'application Utilisateur.
-Couvre : modèles, inscription, authentification, profil, locataires, propriétaires,
-réinitialisation de mot de passe, dashboards et reporting.
-"""
+
 from datetime import date, timedelta
 from decimal import Decimal
 import io
@@ -796,3 +792,48 @@ class ProprietaireDashboardViewsComparisonTest(TestCase):
         self.assertEqual(data_old['biens']['loues'], data_new['biens']['loues'])
         self.assertEqual(data_old['revenus']['ce_mois'], data_new['revenus']['ce_mois'])
         self.assertEqual(data_old['prochaine_echeance']['nombre'], data_new['prochaine_echeance']['nombre'])
+
+    def test_dashboard_non_proprietaire_forbidden(self):
+        request = self.factory.get('/')
+        force_authenticate(request, user=self.loc_user)
+        resp_old = ProprietaireDashboardView.as_view()(request)
+        self.assertEqual(resp_old.status_code, status.HTTP_403_FORBIDDEN)
+        resp_new = ProprietaireDashboardOptimizedView.as_view()(request)
+        self.assertEqual(resp_new.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_dashboard_revenu_mois_dernier(self):
+        now = timezone.now()
+        last_month = 12 if now.month == 1 else now.month - 1
+        last_month_year = now.year - 1 if now.month == 1 else now.year
+        last_date = date(last_month_year, last_month, 15)
+
+        p1 = Paiement.objects.filter(contrat__bien__proprietaire=self.proprietaire).first()
+        if p1:
+            p1.statut = Paiement.StatutPaiement.PAYE
+            p1.date_paiement = now.date()
+            p1.montant = 1000
+            p1.montant_paye = 1000
+            p1.save()
+
+        b2 = Bien.objects.create(
+            proprietaire=self.proprietaire, titre="Bien 2", type=Bien.TypeBien.APPARTEMENT,
+            adresse="789 Rue", surface=55, nombre_pieces=2, loyer_mensuel=1200,
+            statut=Bien.StatutBien.DISPONIBLE
+        )
+        c2 = Contrat.objects.create(
+            bien=b2, locataire=self.locataire, type_contrat=Contrat.TypeContrat.LOCATION,
+            statut=Contrat.StatutContrat.ACTIF, date_debut=last_date,
+            date_fin=now.date() + timedelta(days=200), loyer=1200, depot_garantie=1200
+        )
+        p2 = Paiement.objects.filter(contrat=c2).first()
+        if p2:
+            p2.statut = Paiement.StatutPaiement.PAYE
+            p2.date_paiement = last_date
+            p2.montant = 1200
+            p2.montant_paye = 1200
+            p2.save()
+
+        data_old = self._call_view(ProprietaireDashboardView)
+        data_new = self._call_view(ProprietaireDashboardOptimizedView)
+        self.assertEqual(data_old['revenus']['mois_dernier'], data_new['revenus']['mois_dernier'])
+        self.assertEqual(data_old['revenus']['ce_mois'], data_new['revenus']['ce_mois'])
