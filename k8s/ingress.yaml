@@ -6,6 +6,21 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    # Compression — réduit la bande passante (crucial sur t3.small)
+    nginx.ingress.kubernetes.io/enable-gzip: "true"
+    nginx.ingress.kubernetes.io/gzip-min-length: "1000"
+    nginx.ingress.kubernetes.io/gzip-types: "application/json application/javascript text/css text/html text/plain"
+    # Timeouts
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "10"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+    # Keepalive — réutilise les connexions, économise CPU/RAM
+    nginx.ingress.kubernetes.io/upstream-keepalive-connections: "16"
+    # Rate limiting — protège un petit serveur contre les surcharges
+    nginx.ingress.kubernetes.io/limit-rps: "30"
+    nginx.ingress.kubernetes.io/limit-burst-multiplier: "5"
+    # Buffering — réduit la pression mémoire sur les upstreams
+    nginx.ingress.kubernetes.io/proxy-buffering: "on"
 spec:
   rules:
     - host: immobilier.local

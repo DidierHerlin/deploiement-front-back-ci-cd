@@ -1,5 +1,5 @@
 import { getAccessToken, rafraichirToken, marquerDeconnecte, getRefreshToken, isTokenValid } from "./auth"
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://16.16.115.111:8000/api"
+import { getApiUrl } from "./config"
 
 const apiCache = new Map<string, { data: any, timestamp: number }>()
 const CACHE_TTL_MS = 60 * 1000 // 1 minute
@@ -137,7 +137,7 @@ async function fetchAPI<T>(
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS)
 
     try {
-      const res = await fetch(`${API_URL}${path}`, {
+      const res = await fetch(`${getApiUrl()}${path}`, {
         ...options,
         headers: buildHeaders(tokenValue),
         signal: controller.signal,
@@ -342,7 +342,7 @@ export async function fetchBlob(
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS)
 
     try {
-      const res = await fetch(`${API_URL}${path}`, {
+      const res = await fetch(`${getApiUrl()}${path}`, {
         ...options,
         headers: buildHeaders(tokenValue),
         signal: controller.signal,
@@ -630,7 +630,7 @@ export async function downloadQuittance(id: number, reference: string = "quittan
   }
   
   try {
-    const response = await fetch(`${API_URL}/paiements/${id}/quittance/`, { headers })
+    const response = await fetch(`${getApiUrl()}/paiements/${id}/quittance/`, { headers })
     
     if (!response.ok) {
       const rawText = await response.text()
@@ -706,7 +706,7 @@ export interface UserProfil {
 export function resolveMediaUrl(url: string | null | undefined): string | null {
   if (!url) return null
   if (url.startsWith("http") || url.startsWith("blob:") || url.startsWith("data:")) return url
-  const base = process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") || "http://16.16.115.111:8000/api"
+  const base = getApiUrl().replace(/\/api\/?$/, "")
   return `${base}${url.startsWith("/") ? url : `/${url}`}`
 }
 
@@ -745,7 +745,7 @@ export async function updateProfil(payload: FormData): Promise<UserProfil> {
     }
   }
 
-  let res = await fetch(`${API_URL}/profil/`, options)
+  let res = await fetch(`${getApiUrl()}/profil/`, options)
 
   if (res.status === 401) {
     const { rafraichirToken } = await import("./auth")
@@ -757,7 +757,7 @@ export async function updateProfil(payload: FormData): Promise<UserProfil> {
     options.headers = {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     }
-    res = await fetch(`${API_URL}/profil/`, options)
+    res = await fetch(`${getApiUrl()}/profil/`, options)
     
     if (res.status === 401) {
       gererExpirationSession()

@@ -6,8 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { marquerConnecte, sauvegarderTokens, getAccessToken } from "@/lib/auth"
 import { PasswordInput } from "@/components/atoms/password-input"
 import { toast } from "sonner"
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://16.16.115.111:8000/api"
+import { getApiUrl } from "@/lib/config"
 
 // Redirection par défaut après connexion, si aucun ?redirect= n'est fourni par le middleware.
 function redirectionParRole(role: string) {
@@ -46,7 +45,7 @@ export function LoginForm() {
 
     let response: Response
     try {
-      response = await fetch(`${API_URL}/auth/login/`, {
+      response = await fetch(`${getApiUrl()}/auth/login/`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

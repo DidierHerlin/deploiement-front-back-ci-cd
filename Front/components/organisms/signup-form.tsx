@@ -6,8 +6,7 @@ import { useRouter } from "next/navigation"
 import { ArrowRight, LockKeyhole, Mail, Phone, UserRound, Wallet } from "lucide-react"
 import { PasswordInput } from "@/components/atoms/password-input"
 import { toast } from "sonner"
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://16.16.115.111:8000/api"
+import { getApiUrl } from "@/lib/config"
 
 type Role = "LOCATAIRE" | "PROPRIETAIRE" | "AGENT"
 
@@ -70,7 +69,7 @@ export function SignupForm() {
         : { email, nom, prenoms, telephone, password }
 
     try {
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      const response = await fetch(`${getApiUrl()}${endpoint}`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

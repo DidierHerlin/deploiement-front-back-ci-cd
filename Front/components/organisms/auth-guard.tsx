@@ -4,8 +4,7 @@ import { useEffect, useState, type ReactNode } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { marquerDeconnecte, getAccessToken, rafraichirToken } from "@/lib/auth"
 import { estPublique } from "@/lib/routes-publiques"
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://16.16.115.111:8000/api"
+import { getApiUrl } from "@/lib/config"
 
 export default function AuthGuard({ children }: { children: ReactNode }) {
   const pathname = usePathname()
@@ -36,7 +35,7 @@ export default function AuthGuard({ children }: { children: ReactNode }) {
       }
 
       try {
-        const response = await fetch(`${API_URL}/profil/`, {
+        const response = await fetch(`${getApiUrl()}/profil/`, {
           headers: { Authorization: `Bearer ${token}` },
         })
 
@@ -49,7 +48,7 @@ export default function AuthGuard({ children }: { children: ReactNode }) {
           if (annule) return
 
           if (nouveauToken) {
-            const retry = await fetch(`${API_URL}/profil/`, {
+            const retry = await fetch(`${getApiUrl()}/profil/`, {
               headers: { Authorization: `Bearer ${nouveauToken}` },
             })
             if (annule) return

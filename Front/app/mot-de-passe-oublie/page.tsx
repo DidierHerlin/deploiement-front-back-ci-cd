@@ -6,8 +6,7 @@ import { ArrowLeft, CheckCircle2, LockKeyhole,ArrowRight } from "lucide-react"
 import { ForgotPasswordForm } from "@/components/organisms/forgot-password-form"
 import { VerifyCodeForm } from "@/components/organisms/verify-code-form"
 import { ResetPasswordForm } from "@/components/organisms/reset-password-form"
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://16.16.115.111:8000/api"
+import { getApiUrl } from "@/lib/config"
 
 type Etape = "email" | "code" | "nouveau-mdp" | "succes"
 
@@ -27,7 +26,7 @@ export default function ForgotPasswordPage() {
     setIsLoading(true)
 
     try {
-      const response = await fetch(`${API_URL}/mot-de-passe/demande/`, {
+      const response = await fetch(`${getApiUrl()}/mot-de-passe/demande/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -53,7 +52,7 @@ export default function ForgotPasswordPage() {
     setIsLoading(true)
 
     try {
-      const response = await fetch(`${API_URL}/mot-de-passe/verifier-code/`, {
+      const response = await fetch(`${getApiUrl()}/mot-de-passe/verifier-code/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, code }),
@@ -89,7 +88,7 @@ export default function ForgotPasswordPage() {
     setIsLoading(true)
 
     try {
-      const response = await fetch(`${API_URL}/mot-de-passe/reinitialiser/`, {
+      const response = await fetch(`${getApiUrl()}/mot-de-passe/reinitialiser/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, code, new_password: newPassword }),

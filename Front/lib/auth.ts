@@ -1,10 +1,7 @@
-// lib/auth.ts
+import { getApiUrl } from "./config"
 
 const AUTH_COOKIE = "auth"
 const AUTH_MAX_AGE_SECONDES = 60 * 60 * 24 * 14
-
-// const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://16.16.115.111:8000/api"
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://16.16.115.111:8000/api"
 
 
 //Stockage des tokens JWT 
@@ -71,7 +68,7 @@ export async function rafraichirToken(): Promise<string | null> {
     }
 
     try {
-      const response = await fetch(`${API_URL}/auth/refresh/`, {
+      const response = await fetch(`${getApiUrl()}/auth/refresh/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refresh }),
@@ -110,7 +107,7 @@ export async function deconnecter() {
 
   try {
     if (refresh) {
-      await fetch(`${API_URL}/auth/logout/`, {
+      await fetch(`${getApiUrl()}/auth/logout/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
