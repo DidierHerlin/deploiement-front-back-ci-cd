@@ -11,6 +11,7 @@ on:
     paths:
       - 'Front/**'
       - '.github/workflows/ci-frontend.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -46,16 +47,47 @@ jobs:
   docker-publish:
     needs: frontend-build
     runs-on: ubuntu-latest
+    outputs:
+      ec2_ip: ${{ steps.resolve-ip.outputs.ec2_ip }}
 
     steps:
       - name: Checkout du code
         uses: actions/checkout@v4
 
+      - name: Résoudre l'adresse IP cible de l'EC2
+        id: resolve-ip
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
+          AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
+          STATIC_IP: ${{ secrets.AWS_EC2_IP }}
+        run: |
+          TARGET_IP="$STATIC_IP"
+          if [ -n "$AWS_INSTANCE_ID" ] && [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
+            echo "🔍 Détection dynamique de l'IP EC2 via AWS CLI..."
+            DYNAMIC_IP=$(aws ec2 describe-instances \
+              --instance-ids "$AWS_INSTANCE_ID" \
+              --region "$AWS_REGION" \
+              --query "Reservations[0].Instances[0].PublicIpAddress" \
+              --output text 2>/dev/null || echo "")
+            if [ -n "$DYNAMIC_IP" ] && [ "$DYNAMIC_IP" != "None" ]; then
+              echo "✅ IP dynamique AWS détectée : $DYNAMIC_IP"
+              TARGET_IP="$DYNAMIC_IP"
+            fi
+          fi
+          if [ -z "$TARGET_IP" ]; then
+            echo "❌ ERREUR : Aucune adresse IP trouvée. Veuillez renseigner AWS_EC2_IP ou AWS_INSTANCE_ID."
+            exit 1
+          fi
+          echo "🌐 IP utilisée : $TARGET_IP"
+          echo "ec2_ip=$TARGET_IP" >> $GITHUB_OUTPUT
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to Docker Hub
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -72,18 +104,18 @@ jobs:
         with:
           context: ./Front
           file: ./Front/Dockerfile
-          push: ${{ github.event_name == 'push' }}
+          push: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:${{ github.sha }}
           build-args: |
-            NEXT_PUBLIC_API_URL=http://${{ secrets.AWS_EC2_IP }}:8000/api
+            NEXT_PUBLIC_API_URL=http://${{ steps.resolve-ip.outputs.ec2_ip }}:8000/api
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
   deploiement-AWS:
     needs: docker-publish
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout du code
@@ -92,20 +124,14 @@ jobs:
       - name: Connexion et déploiement sur AWS
         uses: appleboy/ssh-action@v1.0.3
         env:
-          DB_HOST: ${{ secrets.AWS_RDS_ENDPOINT }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          DB_NAME: "postgres"
-          DB_USER: "postgres"
-          DB_PORT: "5432"
+          AWS_EC2_IP: ${{ needs.docker-publish.outputs.ec2_ip }}
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          AWS_EC2_IP: ${{ secrets.AWS_EC2_IP }}
           DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:${{ github.sha }}
         with:
-          host: ${{ secrets.AWS_EC2_IP }}
+          host: ${{ needs.docker-publish.outputs.ec2_ip }}
           username: ubuntu
           key: ${{ secrets.AWS_EC2_SSH_KEY }}
-          envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME, AWS_EC2_IP, DOCKER_IMAGE
+          envs: AWS_EC2_IP, DOCKERHUB_USERNAME, DOCKER_IMAGE
           script: |
             # ── Mode verbose : affiche chaque commande + stoppe sur erreur ──
             set -ex
@@ -189,4 +215,4 @@ jobs:
             echo "⏳ Attente du démarrage (timeout 3 min)..."
             sudo k3s kubectl rollout status deployment/frontend -n immobilier --timeout=180s \
               && echo "✅ Frontend déployé avec succès !" \
-              || (echo "❌ ERREUR déploiement frontend !" && sudo k3s kubectl describe pod -n immobilier -l app=frontend && exit 1)
+              || (echo "❌ ERREUR déploiement frontend !" && sudo k3s kubectl describe pod -n immobilier -l app=frontend && sudo k3s kubectl logs -n immobilier -l app=frontend --tail=50 && exit 1)
