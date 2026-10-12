@@ -5,6 +5,7 @@ from django.dispatch import receiver
 
 from bien.models import Bien
 
+
 from .models import Contrat
 
 logger = logging.getLogger(__name__)
@@ -21,10 +22,6 @@ def _appliquer_statut_si_change(bien: Bien, nouveau_statut: str, message: str, *
 def mettre_a_jour_statut_bien(bien: Bien) -> None:
     if bien.statut == Bien.StatutBien.VENDU:
         return
-
-    # Filtre défensif sur type_contrat=LOCATION : redondant avec le
-    # CheckConstraint qui interdit à un contrat ACHAT d'être ACTIF, mais
-    # rend l'intention explicite sans obliger à consulter models.py.
     a_un_contrat_actif = Contrat.objects.filter(
         bien=bien,
         type_contrat=Contrat.TypeContrat.LOCATION,

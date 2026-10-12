@@ -1,6 +1,6 @@
 """
-Tests complets pour les vues de Reservation.
-Couverture : list, retrieve, create, repondre, filtres, permissions.
+Tests complets pour l'application Reservation.
+Couvre : list, retrieve, create, repondre, filtres, permissions, et modèle.
 """
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -59,7 +59,6 @@ class ReservationListTests(APITestCase):
         self.assertEqual(response.data["count"], 1)
 
     def test_list_as_locataire_sees_own_only(self):
-        # Autre locataire
         other_user = make_user("other@r.com", Utilisateur.Role.LOCATAIRE)
         other_loc = Locataire.objects.create(user=other_user)
         bien2 = make_bien(self.prop, titre="Bien2")
@@ -120,7 +119,6 @@ class ReservationCreateTests(APITestCase):
         self.assertTrue(response.data["success"])
 
     def test_create_reservation_bien_non_disponible(self):
-        """Bien déjà loué -> validation error."""
         self.bien.statut = Bien.StatutBien.LOUE
         self.bien.save(update_fields=["statut"])
         self.client.force_authenticate(user=self.loc_user)
@@ -129,7 +127,6 @@ class ReservationCreateTests(APITestCase):
         self.assertIn(response.status_code, [status.HTTP_400_BAD_REQUEST, status.HTTP_403_FORBIDDEN])
 
     def test_create_notification_for_admin_on_reservation(self):
-        """Une notification doit être envoyée aux admins à la création."""
         notif_count_before = Notification.objects.filter(utilisateur=self.admin).count()
         self.client.force_authenticate(user=self.loc_user)
         data = {"bien": self.bien.id, "type_reservation": "LOCATION"}
@@ -176,7 +173,6 @@ class ReservationRepondreTests(APITestCase):
         self.assertEqual(self.reservation.statut, Reservation.StatutReservation.ANNULEE)
 
     def test_repondre_already_treated_returns_400(self):
-        """Répondre à une réservation déjà traitée -> 400."""
         self.reservation.statut = Reservation.StatutReservation.TRAITEE
         self.reservation.save(update_fields=["statut"])
         self.client.force_authenticate(user=self.admin)
@@ -187,7 +183,6 @@ class ReservationRepondreTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_repondre_notifie_locataire(self):
-        """La réponse doit créer une notification pour le locataire."""
         count_before = Notification.objects.filter(utilisateur=self.loc_user).count()
         self.client.force_authenticate(user=self.admin)
         data = {"reponse_admin": "OK", "statut": "TRAITEE"}
@@ -196,7 +191,6 @@ class ReservationRepondreTests(APITestCase):
         self.assertGreater(count_after, count_before)
 
     def test_repondre_as_locataire_forbidden(self):
-        """Un locataire ne peut pas répondre à une réservation."""
         self.client.force_authenticate(user=self.loc_user)
         data = {"reponse_admin": "Hack", "statut": "TRAITEE"}
         response = self.client.post(
@@ -225,7 +219,6 @@ class ReservationModelTests(APITestCase):
         self.assertIn("Location", s)
 
     def test_validation_type_location_sur_bien_vente(self):
-        """Réserver un bien de vente en mode LOCATION -> erreur."""
         bien_vente = make_bien(self.prop, titre="Bien Vente", mode=Bien.ModeTransaction.VENTE)
         self.client.force_authenticate(user=self.loc_user)
         data = {"bien": bien_vente.id, "type_reservation": "LOCATION"}
