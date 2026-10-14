@@ -88,20 +88,15 @@ export default function BienPage() {
     try {
       const payload: any = { ...newBien }
       
-      // Conversion de `proprietaire` en `proprietaire_id` pour le serializer Django
       if (payload.proprietaire) {
         payload.proprietaire_id = typeof payload.proprietaire === 'object' ? payload.proprietaire.id : payload.proprietaire
         delete payload.proprietaire
-      }
-      
-      // Nettoyage du payload selon le type
+      }      
       if (payload.type === 'TERRAIN') payload.nombre_pieces = null
       if (payload.mode_transaction === 'LOCATION') payload.prix = null
       if (payload.mode_transaction === 'VENTE') payload.loyer_mensuel = null
-
       if (editingBien) {
         const updated = await updateBien(editingBien.id, payload)
-        // Mise à jour locale optimiste — évite de recharger toute la liste
         if (updated) {
           setBiens(prev => prev.map(b => b.id === editingBien.id ? { ...b, ...updated } : b))
         } else {
@@ -109,7 +104,6 @@ export default function BienPage() {
         }
       } else {
         await createBien(payload)
-        // Recharge uniquement la liste des biens (pas les proprietaires)
         await refreshBiens()
       }
       

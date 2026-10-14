@@ -5,7 +5,6 @@ from bien.models import Bien
 from utilisateur.models import Locataire
 from dateutil.relativedelta import relativedelta
 
-
 class Contrat(models.Model):
 
     class TypeContrat(models.TextChoices):

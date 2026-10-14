@@ -12,6 +12,6 @@
       grafana:
         image: grafana/grafana:latest
         ports:
-          - "3001:3000" # J'utilise 3001 au cas où votre frontend local tourne déjà sur 3000
+          - "3001:3000" 
         depends_on:
           - prometheus

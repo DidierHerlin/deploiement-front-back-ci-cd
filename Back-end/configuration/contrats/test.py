@@ -749,3 +749,107 @@ class ContratEcheancesTests(APITestCase):
         self.client.force_authenticate(user=self.agent)
         response = self.client.get(f'/api/contrats/{self.contrat.id}/telecharger/')
         self.assertIn(response.status_code, [status.HTTP_200_OK, status.HTTP_500_INTERNAL_SERVER_ERROR])
+
+
+class ContratUtilsAndSerializerBoostTests(TestCase):
+    def setUp(self):
+        self.agent = make_user("agent_boost@c.com")
+        self.prop_user = make_user("prop_boost@c.com", Utilisateur.Role.PROPRIETAIRE)
+        self.prop = Proprietaire.objects.create(user=self.prop_user, iban="MG123")
+        self.loc_user = make_user("loc_boost@c.com", Utilisateur.Role.LOCATAIRE)
+        self.loc = Locataire.objects.create(user=self.loc_user)
+        self.bien = make_bien(self.prop, titre="Bien Boost Location")
+        self.contrat = make_contrat(self.bien, self.loc)
+
+    def test_formater_montant_ar(self):
+        from contrats.utils import formater_montant_ar
+        self.assertEqual(formater_montant_ar(None), "0")
+        self.assertEqual(formater_montant_ar(1000000), "1 000 000")
+        self.assertEqual(formater_montant_ar("invalid_val"), "invalid_val")
+
+    def test_generate_contrat_pdf_achat_returns_false(self):
+        from contrats.utils import generate_contrat_pdf
+        self.contrat.type_contrat = Contrat.TypeContrat.ACHAT
+        self.assertFalse(generate_contrat_pdf(self.contrat))
+
+    def test_generate_contrat_pdf_success_and_error(self):
+        from contrats.utils import generate_contrat_pdf
+        from unittest.mock import patch
+        pdf = generate_contrat_pdf(self.contrat)
+        self.assertTrue(bool(pdf))
+
+        with patch('contrats.utils.pisa.CreatePDF') as mock_pisa:
+            mock_status = type('Status', (), {'err': 1})()
+            mock_pisa.return_value = mock_status
+            self.assertFalse(generate_contrat_pdf(self.contrat))
+
+        with patch('contrats.utils.render_to_string', side_effect=Exception("Template error")):
+            self.assertFalse(generate_contrat_pdf(self.contrat))
+
+    def test_serializer_location_validations(self):
+        from contrats.serializers import ContratSerializer
+        from rest_framework.exceptions import ValidationError
+        serializer = ContratSerializer()
+        
+        with self.assertRaises(ValidationError):
+            serializer._valider_coherence_financiere({"type_contrat": Contrat.TypeContrat.LOCATION, "depot_garantie": 100}, None, Contrat.TypeContrat.LOCATION)
+            
+        with self.assertRaises(ValidationError):
+            serializer._valider_coherence_financiere({"type_contrat": Contrat.TypeContrat.LOCATION, "loyer": 100}, None, Contrat.TypeContrat.LOCATION)
+
+        with self.assertRaises(ValidationError):
+            serializer._valider_coherence_financiere({"type_contrat": Contrat.TypeContrat.LOCATION, "loyer": 100, "depot_garantie": 100, "prix": 500}, None, Contrat.TypeContrat.LOCATION)
+
+        with self.assertRaises(ValidationError):
+            serializer._valider_coherence_financiere({"type_contrat": Contrat.TypeContrat.LOCATION, "loyer": 100, "depot_garantie": 100, "type_paiement_achat": "COMPTANT"}, None, Contrat.TypeContrat.LOCATION)
+
+    def test_serializer_achat_validations(self):
+        from contrats.serializers import ContratSerializer
+        from rest_framework.exceptions import ValidationError
+        serializer = ContratSerializer()
+        
+        with self.assertRaises(ValidationError):
+            serializer._valider_coherence_financiere({"type_contrat": Contrat.TypeContrat.ACHAT, "prix": 1000}, None, Contrat.TypeContrat.ACHAT)
+            
+        with self.assertRaises(ValidationError):
+            serializer._valider_coherence_financiere({"type_contrat": Contrat.TypeContrat.ACHAT, "type_paiement_achat": "COMPTANT"}, None, Contrat.TypeContrat.ACHAT)
+
+        with self.assertRaises(ValidationError):
+            serializer._valider_coherence_financiere({"type_contrat": Contrat.TypeContrat.ACHAT, "prix": 1000, "type_paiement_achat": "COMPTANT", "loyer": 100}, None, Contrat.TypeContrat.ACHAT)
+
+        with self.assertRaises(ValidationError):
+            serializer._valider_coherence_financiere({"type_contrat": Contrat.TypeContrat.ACHAT, "prix": 1000, "type_paiement_achat": "COMPTANT", "depot_garantie": 100}, None, Contrat.TypeContrat.ACHAT)
+
+    def test_serializer_modification_validations(self):
+        from contrats.serializers import ContratSerializer
+        from rest_framework.exceptions import ValidationError
+        serializer = ContratSerializer()
+        
+        with self.assertRaises(ValidationError):
+            serializer._valider_modification(self.contrat, {"type_contrat": Contrat.TypeContrat.ACHAT}, Contrat.TypeContrat.ACHAT)
+
+        autre_bien = make_bien(self.prop, titre="Autre")
+        with self.assertRaises(ValidationError):
+            serializer._valider_modification(self.contrat, {"bien": autre_bien}, self.contrat.type_contrat)
+
+        autre_loc = Locataire.objects.create(user=make_user("autre_loc@c.com", Utilisateur.Role.LOCATAIRE))
+        with self.assertRaises(ValidationError):
+            serializer._valider_modification(self.contrat, {"locataire": autre_loc}, self.contrat.type_contrat)
+
+        self.contrat.statut = Contrat.StatutContrat.VENDU
+        with self.assertRaises(ValidationError):
+            serializer._valider_modification(self.contrat, {}, self.contrat.type_contrat)
+
+        self.contrat.statut = Contrat.StatutContrat.RESILIE
+        with self.assertRaises(ValidationError):
+            serializer._valider_modification(self.contrat, {"statut": Contrat.StatutContrat.ACTIF}, self.contrat.type_contrat)
+
+        self.contrat.statut = Contrat.StatutContrat.ACTIF
+        with self.assertRaises(ValidationError):
+            serializer._valider_modification(self.contrat, {"statut": Contrat.StatutContrat.VENDU}, Contrat.TypeContrat.LOCATION)
+
+        self.contrat.type_contrat = Contrat.TypeContrat.ACHAT
+        with self.assertRaises(ValidationError):
+            serializer._valider_modification(self.contrat, {"statut": Contrat.StatutContrat.RESILIE}, Contrat.TypeContrat.ACHAT)
+
+

@@ -674,6 +674,16 @@ class PaiementQuittanceTests(PaiementTestBase):
         response = self.client.get('/api/paiements/999/quittance/')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_quittance_paye_generation_and_download(self):
+        self.paiement.statut = Paiement.StatutPaiement.PAYE
+        self.paiement.montant_paye = self.paiement.montant
+        self.paiement.save()
+        self.client.force_authenticate(user=self.agent_user)
+        response = self.client.get(f"/api/paiements/{self.paiement.id}/quittance/", HTTP_ORIGIN="http://localhost:3000")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertIn("inline;", response["Content-Disposition"])
+
 
 class PaiementImpayesTests(PaiementTestBase):
     def test_impayes_as_admin(self):
@@ -693,3 +703,31 @@ class PaiementFiltreTests(PaiementTestBase):
         self.client.force_authenticate(user=self.agent_user)
         response = self.client.get(f"/api/paiements/?contrat={self.contrat.id}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class PaiementUtilsAndSerializerBoostTests(PaiementTestBase):
+    def test_formater_montant_ar(self):
+        from paiement.utils import formater_montant_ar
+        self.assertEqual(formater_montant_ar(None), "0")
+        self.assertEqual(formater_montant_ar("bad"), "bad")
+        self.assertEqual(formater_montant_ar(250000), "250 000")
+
+    def test_generate_quittance_pdf_non_paye(self):
+        from paiement.utils import generate_quittance_pdf
+        self.paiement.statut = Paiement.StatutPaiement.EN_ATTENTE
+        self.paiement.save()
+        filename = generate_quittance_pdf(self.paiement)
+        self.assertTrue(bool(filename))
+
+    def test_generate_quittance_pdf_errors(self):
+        from paiement.utils import generate_quittance_pdf
+        from unittest.mock import patch
+        with patch('paiement.utils.render_to_string', side_effect=Exception("Template error")):
+            with self.assertRaises(Exception):
+                generate_quittance_pdf(self.paiement)
+
+        with patch('paiement.utils.pisa.pisaDocument') as mock_pisa:
+            mock_pisa.return_value = type('Status', (), {'err': 1})()
+            with self.assertRaises(Exception):
+                generate_quittance_pdf(self.paiement)
+

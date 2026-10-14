@@ -837,3 +837,119 @@ class ProprietaireDashboardViewsComparisonTest(TestCase):
         data_new = self._call_view(ProprietaireDashboardOptimizedView)
         self.assertEqual(data_old['revenus']['mois_dernier'], data_new['revenus']['mois_dernier'])
         self.assertEqual(data_old['revenus']['ce_mois'], data_new['revenus']['ce_mois'])
+
+
+class UtilisateurViewsAndMixinsBoostTests(APITestCase):
+    def setUp(self):
+        self.user = Utilisateur.objects.create_user(
+            email="user_boost@test.com", password="password123",
+            nom="Boost", prenoms="User", role=Utilisateur.Role.LOCATAIRE
+        )
+
+    def test_login_invalid_credentials(self):
+        response = self.client.post("/api/auth/login/", {"email": "bad@test.com", "password": "wrong"})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertFalse(response.data["success"])
+
+    def test_logout(self):
+        from rest_framework_simplejwt.tokens import RefreshToken
+        refresh = str(RefreshToken.for_user(self.user))
+        self.client.force_authenticate(user=self.user)
+        # Sans token refresh
+        resp1 = self.client.post("/api/auth/logout/", {})
+        self.assertEqual(resp1.status_code, status.HTTP_400_BAD_REQUEST)
+        # Token refresh invalide
+        resp2 = self.client.post("/api/auth/logout/", {"refresh": "invalid_refresh_token"})
+        self.assertEqual(resp2.status_code, status.HTTP_400_BAD_REQUEST)
+        # Token refresh valide
+        resp3 = self.client.post("/api/auth/logout/", {"refresh": refresh})
+        self.assertEqual(resp3.status_code, status.HTTP_200_OK)
+
+    def test_photo_url_mixin(self):
+        from utilisateur.serializers.mixins import PhotoUrlMixin
+        class DummySerializer(PhotoUrlMixin):
+            def __init__(self, context=None):
+                self.context = context or {}
+        
+        class DummyPhoto:
+            url = "/media/test.jpg"
+
+        class DummyObj:
+            photo_profil = None
+        
+        mixin = DummySerializer()
+        obj = DummyObj()
+        self.assertIsNone(mixin.get_photo_url(obj))
+        
+        obj.photo_profil = DummyPhoto()
+        self.assertEqual(DummySerializer(context={}).get_photo_url(obj), "/media/test.jpg")
+        
+        rf = RequestFactory().get("/")
+        self.assertTrue(DummySerializer(context={"request": rf}).get_photo_url(obj).startswith("http"))
+
+    def test_profile_photo_views(self):
+        from PIL import Image
+        img = Image.new('RGB', (10, 10), color='blue')
+        buf = io.BytesIO()
+        img.save(buf, format='JPEG')
+        buf.seek(0)
+        photo = SimpleUploadedFile("profile.jpg", buf.read(), content_type="image/jpeg")
+
+        self.client.force_authenticate(user=self.user)
+        # Upload valid
+        resp = self.client.post("/api/profil/photo/", {"photo_profil": photo}, format="multipart")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Delete photo
+        resp_del = self.client.delete("/api/profil/photo/supprimer/")
+        self.assertEqual(resp_del.status_code, status.HTTP_200_OK)
+
+        # Delete when already deleted
+        resp_del2 = self.client.delete("/api/profil/photo/supprimer/")
+        self.assertEqual(resp_del2.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_change_password_view(self):
+        self.client.force_authenticate(user=self.user)
+        # Champs manquants
+        resp = self.client.post("/api/profil/changer-mot-de-passe/", {})
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Mauvais mot de passe actuel
+        resp = self.client.post("/api/profil/changer-mot-de-passe/", {
+            "current_password": "wrongpassword",
+            "new_password": "NewSecretPassword123!"
+        })
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Succès
+        resp = self.client.post("/api/profil/changer-mot-de-passe/", {
+            "current_password": "password123",
+            "new_password": "NewSecretPassword123!"
+        })
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    def test_locataire_profile_view_edge_cases(self):
+        admin = Utilisateur.objects.create_user(email="admin_loc_view@test.com", password="pass", role=Utilisateur.Role.ADMIN)
+        self.client.force_authenticate(user=admin)
+        resp = self.client.get("/api/locataires/me/")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        loc1_user = Utilisateur.objects.create_user(email="loc1@test.com", password="pass", role=Utilisateur.Role.LOCATAIRE)
+        loc1 = Locataire.objects.create(user=loc1_user)
+        self.client.force_authenticate(user=loc1_user)
+        resp = self.client.put("/api/locataires/999/", {"profession": "Ingénieur"})
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_proprietaire_profile_view_edge_cases(self):
+        admin = Utilisateur.objects.create_user(email="admin_prop_view@test.com", password="pass", role=Utilisateur.Role.ADMIN)
+        self.client.force_authenticate(user=admin)
+        resp = self.client.get("/api/proprietaires/me/")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        prop_user = Utilisateur.objects.create_user(email="prop_other@test.com", password="pass", role=Utilisateur.Role.PROPRIETAIRE)
+        Proprietaire.objects.create(user=prop_user, iban="MG0001")
+        self.client.force_authenticate(user=prop_user)
+        resp = self.client.get("/api/proprietaires/999/")
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+

@@ -453,3 +453,41 @@ class ProfileBiensTest(TestCase):
     def test_run_profile(self, mock_print):
         profile_biens.run_profile()
         self.assertTrue(mock_print.called)
+
+
+# ==============================================================================
+# 6. Tests Utils Photos Base64
+# ==============================================================================
+
+class SaveBase64PhotosUtilsTest(TestCase):
+    def test_save_base64_png(self):
+        from bien.utils import save_base64_photos
+        valid_b64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+        result = save_base64_photos([valid_b64])
+        self.assertEqual(len(result), 1)
+        self.assertTrue(result[0].endswith(".jpg"))
+
+    def test_save_base64_jpeg_and_rgba(self):
+        from PIL import Image
+        import base64
+        from bien.utils import save_base64_photos
+        img = Image.new('RGBA', (20, 20), color=(255, 0, 0, 128))
+        buf = io.BytesIO()
+        img.save(buf, format='PNG')
+        b64_str = f"data:image/jpeg;base64,{base64.b64encode(buf.getvalue()).decode()}"
+        result = save_base64_photos([b64_str])
+        self.assertEqual(len(result), 1)
+        self.assertTrue(result[0].endswith(".jpg"))
+
+    def test_save_base64_invalid_fallback(self):
+        from bien.utils import save_base64_photos
+        bad_b64 = "data:image/png;base64,invalid_base64_payload!!!"
+        result = save_base64_photos([bad_b64])
+        self.assertEqual(result, [bad_b64])
+
+    def test_non_base64_passthrough(self):
+        from bien.utils import save_base64_photos
+        url = "https://example.com/photo.jpg"
+        result = save_base64_photos([url])
+        self.assertEqual(result, [url])
+
