@@ -48,14 +48,14 @@ jobs:
     needs: frontend-build
     runs-on: ubuntu-latest
     outputs:
-      ec2_ip: ${{ steps.resolve-ip.outputs.ec2_ip }}
+      ec2_ip: ${{ steps.resolve_ip.outputs.ec2_ip }}
 
     steps:
       - name: Checkout du code
         uses: actions/checkout@v4
 
       - name: Résoudre l'adresse IP cible de l'EC2
-        id: resolve-ip
+        id: resolve_ip
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -109,7 +109,7 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:${{ github.sha }}
           build-args: |
-            NEXT_PUBLIC_API_URL=http://${{ steps.resolve-ip.outputs.ec2_ip }}:8000/api
+            NEXT_PUBLIC_API_URL=http://${{ steps.resolve_ip.outputs.ec2_ip }}:8000/api
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -121,14 +121,47 @@ jobs:
       - name: Checkout du code
         uses: actions/checkout@v4
 
+      - name: Résoudre l'adresse IP cible de l'EC2
+        id: resolve_ip
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
+          AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
+          STATIC_IP: ${{ secrets.AWS_EC2_IP }}
+          PREV_IP: ${{ needs.docker-publish.outputs.ec2_ip }}
+        run: |
+          TARGET_IP="$PREV_IP"
+          if [ -z "$TARGET_IP" ]; then
+            TARGET_IP="$STATIC_IP"
+          fi
+          if [ -n "$AWS_INSTANCE_ID" ] && [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
+            echo "🔍 Détection dynamique de l'IP EC2 via AWS CLI..."
+            DYNAMIC_IP=$(aws ec2 describe-instances \
+              --instance-ids "$AWS_INSTANCE_ID" \
+              --region "$AWS_REGION" \
+              --query "Reservations[0].Instances[0].PublicIpAddress" \
+              --output text 2>/dev/null || echo "")
+            if [ -n "$DYNAMIC_IP" ] && [ "$DYNAMIC_IP" != "None" ]; then
+              echo "✅ IP dynamique AWS détectée : $DYNAMIC_IP"
+              TARGET_IP="$DYNAMIC_IP"
+            fi
+          fi
+          if [ -z "$TARGET_IP" ]; then
+            echo "❌ ERREUR : Aucune adresse IP trouvée. Veuillez renseigner AWS_EC2_IP ou AWS_INSTANCE_ID."
+            exit 1
+          fi
+          echo "🌐 IP utilisée : $TARGET_IP"
+          echo "ec2_ip=$TARGET_IP" >> $GITHUB_OUTPUT
+
       - name: Connexion et déploiement sur AWS
         uses: appleboy/ssh-action@v1.0.3
         env:
-          AWS_EC2_IP: ${{ needs.docker-publish.outputs.ec2_ip }}
+          AWS_EC2_IP: ${{ steps.resolve_ip.outputs.ec2_ip }}
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:${{ github.sha }}
         with:
-          host: ${{ needs.docker-publish.outputs.ec2_ip }}
+          host: ${{ steps.resolve_ip.outputs.ec2_ip }}
           username: ubuntu
           key: ${{ secrets.AWS_EC2_SSH_KEY }}
           envs: AWS_EC2_IP, DOCKERHUB_USERNAME, DOCKER_IMAGE

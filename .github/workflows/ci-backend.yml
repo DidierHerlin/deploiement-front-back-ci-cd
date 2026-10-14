@@ -166,7 +166,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Résoudre l'adresse IP cible de l'EC2
-        id: resolve-ip
+        id: resolve_ip
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -204,14 +204,14 @@ jobs:
           DB_USER: "postgres"
           DB_PORT: "5432"
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          AWS_EC2_IP: ${{ steps.resolve-ip.outputs.ec2_ip }}
+          AWS_EC2_IP: ${{ steps.resolve_ip.outputs.ec2_ip }}
           ENABLE_HPA: ${{ secrets.ENABLE_HPA }}
           GIT_SHA: ${{ github.sha }}
           DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/immobilier-drf:${{ github.sha }}
           EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
           EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
         with:
-          host: ${{ steps.resolve-ip.outputs.ec2_ip }}
+          host: ${{ steps.resolve_ip.outputs.ec2_ip }}
           username: ubuntu
           key: ${{ secrets.AWS_EC2_SSH_KEY }}
           envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME, AWS_EC2_IP, ENABLE_HPA, GIT_SHA, DOCKER_IMAGE, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
