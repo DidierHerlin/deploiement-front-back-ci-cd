@@ -62,26 +62,7 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
           AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
           STATIC_IP: ${{ secrets.AWS_EC2_IP }}
-        run: |
-          TARGET_IP="$STATIC_IP"
-          if [ -n "$AWS_INSTANCE_ID" ] && [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
-            echo "🔍 Détection dynamique de l'IP EC2 via AWS CLI..."
-            DYNAMIC_IP=$(aws ec2 describe-instances \
-              --instance-ids "$AWS_INSTANCE_ID" \
-              --region "$AWS_REGION" \
-              --query "Reservations[0].Instances[0].PublicIpAddress" \
-              --output text 2>/dev/null || echo "")
-            if [ -n "$DYNAMIC_IP" ] && [ "$DYNAMIC_IP" != "None" ]; then
-              echo "✅ IP dynamique AWS détectée : $DYNAMIC_IP"
-              TARGET_IP="$DYNAMIC_IP"
-            fi
-          fi
-          if [ -z "$TARGET_IP" ]; then
-            echo "❌ ERREUR : Aucune adresse IP trouvée. Veuillez renseigner AWS_EC2_IP ou AWS_INSTANCE_ID."
-            exit 1
-          fi
-          echo "🌐 IP utilisée : $TARGET_IP"
-          echo "ec2_ip=$TARGET_IP" >> $GITHUB_OUTPUT
+        run: bash .github/scripts/resolve_ip.sh
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -130,29 +111,18 @@ jobs:
           AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
           STATIC_IP: ${{ secrets.AWS_EC2_IP }}
           PREV_IP: ${{ needs.docker-publish.outputs.ec2_ip }}
-        run: |
-          TARGET_IP="$PREV_IP"
-          if [ -z "$TARGET_IP" ]; then
-            TARGET_IP="$STATIC_IP"
-          fi
-          if [ -n "$AWS_INSTANCE_ID" ] && [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
-            echo "🔍 Détection dynamique de l'IP EC2 via AWS CLI..."
-            DYNAMIC_IP=$(aws ec2 describe-instances \
-              --instance-ids "$AWS_INSTANCE_ID" \
-              --region "$AWS_REGION" \
-              --query "Reservations[0].Instances[0].PublicIpAddress" \
-              --output text 2>/dev/null || echo "")
-            if [ -n "$DYNAMIC_IP" ] && [ "$DYNAMIC_IP" != "None" ]; then
-              echo "✅ IP dynamique AWS détectée : $DYNAMIC_IP"
-              TARGET_IP="$DYNAMIC_IP"
-            fi
-          fi
-          if [ -z "$TARGET_IP" ]; then
-            echo "❌ ERREUR : Aucune adresse IP trouvée. Veuillez renseigner AWS_EC2_IP ou AWS_INSTANCE_ID."
-            exit 1
-          fi
-          echo "🌐 IP utilisée : $TARGET_IP"
-          echo "ec2_ip=$TARGET_IP" >> $GITHUB_OUTPUT
+        run: bash .github/scripts/resolve_ip.sh
+
+      - name: Transférer les manifestes k8s sur le serveur EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ steps.resolve_ip.outputs.ec2_ip }}
+          username: ubuntu
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          source: "k8s/*"
+          target: "/home/ubuntu/k8s"
+          strip_components: 1
+          overwrite: true
 
       - name: Connexion et déploiement sur AWS
         uses: appleboy/ssh-action@v1.0.3
@@ -165,87 +135,4 @@ jobs:
           username: ubuntu
           key: ${{ secrets.AWS_EC2_SSH_KEY }}
           envs: AWS_EC2_IP, DOCKERHUB_USERNAME, DOCKER_IMAGE
-          script: |
-            # ── Mode verbose : affiche chaque commande + stoppe sur erreur ──
-            set -ex
-
-            # Installation automatique de k3s s'il n'est pas présent
-            if ! command -v k3s &> /dev/null; then
-                echo "Installation de K3s..."
-                curl -sfL https://get.k3s.io | sh - 2>&1 | tail -5
-                sleep 10
-            else
-                echo "✅ K3s déjà installé : $(k3s --version)"
-            fi
-            
-            # Création du namespace
-            echo "🔧 Création du namespace immobilier..."
-            sudo k3s kubectl create namespace immobilier --dry-run=client -o yaml | sudo k3s kubectl apply -f -
-            
-            # Création à la volée du fichier de déploiement optimisé pour le frontend
-            # NOTE : heredoc SANS guillemets autour de EOF → $DOCKER_IMAGE est interpolé par le shell
-            cat << EOF > frontend-deployment.yaml
-            apiVersion: apps/v1
-            kind: Deployment
-            metadata:
-              name: frontend
-              namespace: immobilier
-            spec:
-              replicas: 1
-              strategy:
-                type: RollingUpdate
-                rollingUpdate:
-                  maxSurge: 1
-                  maxUnavailable: 0
-              selector:
-                matchLabels:
-                  app: frontend
-              template:
-                metadata:
-                  labels:
-                    app: frontend
-                spec:
-                  containers:
-                    - name: frontend
-                      image: $DOCKER_IMAGE
-                      imagePullPolicy: Always
-                      ports:
-                        - containerPort: 3000
-                      resources:
-                        requests:
-                          memory: "150Mi"
-                          cpu: "100m"
-                        limits:
-                          memory: "256Mi"
-                          cpu: "400m"
-                      readinessProbe:
-                        httpGet:
-                          path: /
-                          port: 3000
-                        initialDelaySeconds: 15
-                        periodSeconds: 10
-            ---
-            apiVersion: v1
-            kind: Service
-            metadata:
-              name: frontend
-              namespace: immobilier
-            spec:
-              type: NodePort
-              selector:
-                app: frontend
-              ports:
-                - protocol: TCP
-                  port: 3000
-                  targetPort: 3000
-                  nodePort: 3000
-            EOF
-            
-            echo "🚀 Application du déploiement frontend..."
-            cat frontend-deployment.yaml | grep image  # Vérification : l'image doit être résolue, pas littérale
-            sudo k3s kubectl apply -f frontend-deployment.yaml
-            
-            echo "⏳ Attente du démarrage (timeout 3 min)..."
-            sudo k3s kubectl rollout status deployment/frontend -n immobilier --timeout=180s \
-              && echo "✅ Frontend déployé avec succès !" \
-              || (echo "❌ ERREUR déploiement frontend !" && sudo k3s kubectl describe pod -n immobilier -l app=frontend && sudo k3s kubectl logs -n immobilier -l app=frontend --tail=50 && exit 1)
+          script: bash /home/ubuntu/k8s/deploy-frontend.sh

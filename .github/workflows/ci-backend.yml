@@ -173,26 +173,18 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
           AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
           STATIC_IP: ${{ secrets.AWS_EC2_IP }}
-        run: |
-          TARGET_IP="$STATIC_IP"
-          if [ -n "$AWS_INSTANCE_ID" ] && [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
-            echo "🔍 Détection dynamique de l'IP EC2 via AWS CLI..."
-            DYNAMIC_IP=$(aws ec2 describe-instances \
-              --instance-ids "$AWS_INSTANCE_ID" \
-              --region "$AWS_REGION" \
-              --query "Reservations[0].Instances[0].PublicIpAddress" \
-              --output text 2>/dev/null || echo "")
-            if [ -n "$DYNAMIC_IP" ] && [ "$DYNAMIC_IP" != "None" ]; then
-              echo "✅ IP dynamique AWS détectée : $DYNAMIC_IP"
-              TARGET_IP="$DYNAMIC_IP"
-            fi
-          fi
-          if [ -z "$TARGET_IP" ]; then
-            echo "❌ ERREUR : Aucune adresse IP trouvée. Veuillez renseigner AWS_EC2_IP ou AWS_INSTANCE_ID."
-            exit 1
-          fi
-          echo "🌐 IP utilisée : $TARGET_IP"
-          echo "ec2_ip=$TARGET_IP" >> $GITHUB_OUTPUT
+        run: bash .github/scripts/resolve_ip.sh
+
+      - name: Transférer les manifestes k8s sur le serveur EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ steps.resolve_ip.outputs.ec2_ip }}
+          username: ubuntu
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          source: "k8s/*"
+          target: "/home/ubuntu/k8s"
+          strip_components: 1
+          overwrite: true
 
       - name: Connexion et déploiement sur AWS
         uses: appleboy/ssh-action@v1.0.3
@@ -215,171 +207,4 @@ jobs:
           username: ubuntu
           key: ${{ secrets.AWS_EC2_SSH_KEY }}
           envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME, AWS_EC2_IP, ENABLE_HPA, GIT_SHA, DOCKER_IMAGE, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
-          script: |
-            # ── Mode verbose : affiche chaque commande + stoppe sur erreur ──
-            set -ex
-
-            # Installation automatique de k3s s'il n'est pas présent
-            if ! command -v k3s &> /dev/null; then
-                echo "📦 Installation de K3s..."
-                curl -sfL https://get.k3s.io | sh - 2>&1 | tail -5
-                sleep 10
-            else
-                echo "✅ K3s déjà installé : $(k3s --version)"
-            fi
-            
-            # Création du namespace
-            echo "🔧 Création du namespace immobilier..."
-            sudo k3s kubectl create namespace immobilier --dry-run=client -o yaml | sudo k3s kubectl apply -f -
-            
-            # Mise à jour des secrets Kubernetes
-            echo "🔑 Mise à jour des secrets RDS..."
-            sudo k3s kubectl delete secret backend-secrets -n immobilier --ignore-not-found
-            sudo k3s kubectl create secret generic backend-secrets \
-              --from-literal=DB_NAME=$DB_NAME \
-              --from-literal=DB_USER=$DB_USER \
-              --from-literal=DB_PASSWORD=$DB_PASSWORD \
-              --from-literal=DB_HOST=$DB_HOST \
-              --from-literal=DB_PORT=$DB_PORT \
-              --from-literal=SECRET_KEY=$SECRET_KEY \
-              --from-literal=ALLOWED_HOSTS="*" \
-              --from-literal=CORS_ALLOWED_ORIGINS="http://$AWS_EC2_IP:3000,http://$AWS_EC2_IP:8000,http://localhost:3000,http://localhost:8000" \
-              --from-literal=CSRF_TRUSTED_ORIGINS="http://$AWS_EC2_IP:3000,http://$AWS_EC2_IP:8000,http://localhost:3000,http://localhost:8000" \
-              --from-literal=EMAIL_HOST_USER="$EMAIL_HOST_USER" \
-              --from-literal=EMAIL_HOST_PASSWORD="$EMAIL_HOST_PASSWORD" \
-              --namespace=immobilier
-            
-            # Création à la volée du fichier de déploiement optimisé
-            # NOTE : heredoc SANS guillemets autour de EOF → $DOCKER_IMAGE est interpolé par le shell
-            cat << EOF > backend-deployment.yaml
-            apiVersion: apps/v1
-            kind: Deployment
-            metadata:
-              name: backend
-              namespace: immobilier
-            spec:
-              replicas: 1
-              strategy:
-                type: RollingUpdate
-                rollingUpdate:
-                  maxSurge: 1
-                  maxUnavailable: 0
-              selector:
-                matchLabels:
-                  app: backend
-              template:
-                metadata:
-                  labels:
-                    app: backend
-                spec:
-                  containers:
-                    - name: backend
-                      image: $DOCKER_IMAGE
-                      imagePullPolicy: Always
-                      command: ["sh", "-c", "python manage.py migrate && gunicorn --bind 0.0.0.0:8000 --workers 2 --timeout 60 --keep-alive 5 wsgi:application"]
-                      ports:
-                        - containerPort: 8000
-                      resources:
-                        requests:
-                          memory: "250Mi"
-                          cpu: "100m"
-                        limits:
-                          memory: "450Mi"
-                          cpu: "400m"
-                      readinessProbe:
-                        httpGet:
-                          path: /api/health/
-                          port: 8000
-                        initialDelaySeconds: 15
-                        periodSeconds: 5
-                        failureThreshold: 6
-                      volumeMounts:
-                        - name: media-storage
-                          mountPath: /app/media
-                      env:
-                        - name: CORS_ALLOWED_ORIGINS
-                          value: "http://$AWS_EC2_IP:3000,http://$AWS_EC2_IP:8000,http://localhost:3000,http://localhost:8000"
-                        - name: CSRF_TRUSTED_ORIGINS
-                          value: "http://$AWS_EC2_IP:3000,http://$AWS_EC2_IP:8000,http://localhost:3000,http://localhost:8000"
-                      envFrom:
-                        - secretRef:
-                            name: backend-secrets
-                  volumes:
-                    - name: media-storage
-                      hostPath:
-                        path: /opt/immobilier/media
-                        type: DirectoryOrCreate
-            ---
-            apiVersion: v1
-            kind: Service
-            metadata:
-              name: backend
-              namespace: immobilier
-            spec:
-              type: NodePort
-              selector:
-                app: backend
-              ports:
-                - protocol: TCP
-                  port: 8000
-                  targetPort: 8000
-                  nodePort: 8000
-            EOF
-            
-            echo "🚀 Application du déploiement backend..."
-            cat backend-deployment.yaml | grep image  # Vérification : l'image doit être résolue, pas littérale
-            sudo k3s kubectl apply -f backend-deployment.yaml
-            
-            echo "⏳ Attente du démarrage (timeout 3 min)..."
-            sudo k3s kubectl rollout status deployment/backend -n immobilier --timeout=180s \
-              && echo "✅ Backend déployé avec succès !" \
-              || (echo "❌ ERREUR déploiement backend !" && sudo k3s kubectl describe pod -n immobilier -l app=backend && sudo k3s kubectl logs -n immobilier -l app=backend --tail=100 && exit 1)
-            
-            # ─────────────────────────────────────────────────────
-            #  Auto-Scaling (HPA) — Activé uniquement si
-            #  le secret GitHub ENABLE_HPA=true est défini.
-            #  Sur t3.small : ne pas activer (ressources insuffisantes)
-            #  Sur une vraie infra : ajouter ENABLE_HPA=true dans
-            #  Settings → Secrets and variables → Actions
-            # ─────────────────────────────────────────────────────
-            if [ "$ENABLE_HPA" = "true" ]; then
-              echo "✅ ENABLE_HPA=true détecté — Application du HPA..."
-              cat << 'EOF' > hpa.yaml
-            apiVersion: autoscaling/v2
-            kind: HorizontalPodAutoscaler
-            metadata:
-              name: backend-hpa
-              namespace: immobilier
-            spec:
-              scaleTargetRef:
-                apiVersion: apps/v1
-                kind: Deployment
-                name: backend
-              minReplicas: 1
-              maxReplicas: 2
-              metrics:
-                - type: Resource
-                  resource:
-                    name: cpu
-                    target:
-                      type: Utilization
-                      averageUtilization: 70
-              behavior:
-                scaleUp:
-                  stabilizationWindowSeconds: 60
-                  policies:
-                    - type: Pods
-                      value: 1
-                      periodSeconds: 60
-                scaleDown:
-                  stabilizationWindowSeconds: 300
-                  policies:
-                    - type: Pods
-                      value: 1
-                      periodSeconds: 120
-            EOF
-              sudo k3s kubectl apply -f hpa.yaml
-              echo "✅ HPA backend appliqué avec succès !"
-            else
-              echo "ℹ️  ENABLE_HPA non défini — HPA ignoré (mode économie de ressources)"
-            fi
+          script: bash /home/ubuntu/k8s/deploy-backend.sh
