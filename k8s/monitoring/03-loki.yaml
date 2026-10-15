@@ -35,6 +35,8 @@ data:
             period: 24h
 
     limits_config:
+      reject_old_samples: false
+      creation_grace_period: 720h
       retention_period: 72h
       max_query_length: 721h
       max_query_parallelism: 4

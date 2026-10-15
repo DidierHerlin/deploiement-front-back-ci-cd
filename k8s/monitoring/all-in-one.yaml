@@ -269,6 +269,8 @@ data:
             period: 24h
 
     limits_config:
+      reject_old_samples: false
+      creation_grace_period: 720h
       retention_period: 72h
       max_query_length: 721h
       max_query_parallelism: 4
@@ -277,6 +279,7 @@ data:
       working_directory: /loki/compactor
       compaction_interval: 10m
       retention_enabled: true
+      delete_request_store: filesystem
 
     analytics:
       reporting_enabled: false
@@ -352,7 +355,7 @@ data:
     server:
       http_listen_port: 9080
       grpc_listen_port: 0
-      log_level: warn
+      log_level: info
 
     positions:
       filename: /run/promtail-positions.yaml
@@ -361,31 +364,28 @@ data:
       - url: http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push
 
     scrape_configs:
-      - job_name: kubernetes-pods
-        kubernetes_sd_configs:
-          - role: pod
+      - job_name: k3s-containers
+        static_configs:
+          - targets:
+              - localhost
+            labels:
+              job: k3s-containers
+              __path__: /var/log/containers/*.log
+        relabel_configs:
+          - source_labels: [__path__]
+            regex: '.*/containers/(.+)_(.+)_(.+)-[a-f0-9]+\.log'
+            target_label: pod
+            replacement: $1
+          - source_labels: [__path__]
+            regex: '.*/containers/(.+)_(.+)_(.+)-[a-f0-9]+\.log'
+            target_label: namespace
+            replacement: $2
+          - source_labels: [__path__]
+            regex: '.*/containers/(.+)_(.+)_(.+)-[a-f0-9]+\.log'
+            target_label: container
+            replacement: $3
         pipeline_stages:
           - cri: {}
-        relabel_configs:
-          - source_labels: [__meta_kubernetes_pod_node_name]
-            target_label: node_name
-          - action: labelmap
-            regex: __meta_kubernetes_pod_label_(.+)
-          - action: replace
-            source_labels: [__meta_kubernetes_namespace]
-            target_label: namespace
-          - action: replace
-            source_labels: [__meta_kubernetes_pod_name]
-            target_label: pod
-          - action: replace
-            source_labels: [__meta_kubernetes_pod_container_name]
-            target_label: container
-          - replacement: /var/log/pods/*$1/*.log
-            separator: /
-            source_labels:
-              - __meta_kubernetes_pod_uid
-              - __meta_kubernetes_pod_container_name
-            target_label: __path__
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -453,6 +453,7 @@ data:
     datasources:
       - name: Prometheus
         type: prometheus
+        uid: Prometheus
         access: proxy
         url: http://prometheus.monitoring.svc.cluster.local:9090
         isDefault: true
@@ -460,6 +461,7 @@ data:
 
       - name: Loki
         type: loki
+        uid: Loki
         access: proxy
         url: http://loki.monitoring.svc.cluster.local:3100
         isDefault: false
