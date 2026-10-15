@@ -22,7 +22,7 @@ spec:
         - name: backend
           image: didierherlin/immobilier-drf:latest
           imagePullPolicy: Always
-          command: ["sh", "-c", "python manage.py migrate && gunicorn --bind 0.0.0.0:8000 --workers 2 --timeout 60 --keep-alive 5 wsgi:application"]
+          command: ["sh", "-c", "python manage.py migrate && gunicorn --bind 0.0.0.0:8000 --workers 2 --worker-tmp-dir /dev/shm --timeout 120 --graceful-timeout 30 --keep-alive 5 wsgi:application"]
           ports:
             - containerPort: 8000
           resources:
@@ -43,14 +43,14 @@ spec:
               path: /api/health/
               port: 8000
             initialDelaySeconds: 15
-            periodSeconds: 5
+            periodSeconds: 30
             failureThreshold: 6
           livenessProbe:
             httpGet:
               path: /api/health/
               port: 8000
             initialDelaySeconds: 20
-            periodSeconds: 20
+            periodSeconds: 60
             failureThreshold: 3
           volumeMounts:
             - name: media-storage
