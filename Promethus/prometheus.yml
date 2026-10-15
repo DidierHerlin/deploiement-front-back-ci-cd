@@ -1,8 +1,28 @@
-    global:
-      scrape_interval: 15s
-    
-    scrape_configs:
-      - job_name: 'aws-vps'
-        static_configs:
-          # host.docker.internal permet au conteneur Docker local de lire le port 9100 du tunnel SSH
-          - targets: ['host.docker.internal:9100'] 
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+scrape_configs:
+  # 1. Métriques système du VPS distant (Node Exporter relayé via tunnel SSH)
+  - job_name: 'aws-vps'
+    static_configs:
+      - targets: ['host.docker.internal:9100']
+        labels:
+          instance: 'aws-ec2-t3-small'
+          env: 'production'
+          service: 'node-exporter'
+
+  # 2. Métriques internes de Prometheus (supervision de la santé du scraper)
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          env: 'monitoring-local'
+
+  # 3. Métriques internes de Loki (santé et volume d'ingestion des logs)
+  - job_name: 'loki'
+    static_configs:
+      - targets: ['loki:3100']
+        labels:
+          env: 'monitoring-local'

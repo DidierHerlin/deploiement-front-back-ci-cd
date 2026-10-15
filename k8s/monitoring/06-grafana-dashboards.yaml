@@ -1,0 +1,424 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-provider
+  namespace: monitoring
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: 'soutenance'
+        orgId: 1
+        folder: 'Projet DevOps M2'
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 10
+        allowUiUpdates: true
+        options:
+          path: /var/lib/grafana/dashboards
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: monitoring
+data:
+  cluster-overview.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "id": 100,
+          "title": "Indicateurs Clés du Cluster K3s",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "orange", "value": 70 },
+                  { "color": "red", "value": 85 }
+                ]
+              },
+              "unit": "percent"
+            }
+          },
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+          "id": 1,
+          "options": {
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true
+          },
+          "title": "CPU Cluster Total",
+          "type": "gauge",
+          "targets": [
+            {
+              "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[2m])) * 100)",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 75 },
+                  { "color": "red", "value": 90 }
+                ]
+              },
+              "unit": "percent"
+            }
+          },
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+          "id": 2,
+          "options": {
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true
+          },
+          "title": "Mémoire RAM Utilisée",
+          "type": "gauge",
+          "targets": [
+            {
+              "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [{ "color": "blue", "value": null }]
+              },
+              "unit": "short"
+            }
+          },
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+          "id": 3,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+          },
+          "title": "Nombre de Pods Déployés",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "count(count by (pod) (container_cpu_usage_seconds_total))",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [{ "color": "purple", "value": null }]
+              },
+              "unit": "s"
+            }
+          },
+          "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+          "id": 4,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+          },
+          "title": "Uptime du Node",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "node_time_seconds - node_boot_time_seconds",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+          "id": 101,
+          "title": "Consommation CPU et RAM par Pod Applicatif",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15
+              },
+              "unit": "short"
+            }
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+          "id": 5,
+          "title": "CPU par Pod (Cores)",
+          "type": "timeseries",
+          "targets": [
+            {
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=~\"immobilier|monitoring\"}[2m])) by (pod)",
+              "legendFormat": "{{pod}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 20
+              },
+              "unit": "bytes"
+            }
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+          "id": 6,
+          "title": "Mémoire RAM par Pod (Working Set)",
+          "type": "timeseries",
+          "targets": [
+            {
+              "expr": "sum(container_memory_working_set_bytes{namespace=~\"immobilier|monitoring\", container!=\"\"}) by (pod)",
+              "legendFormat": "{{pod}}",
+              "refId": "A"
+            }
+          ]
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": ["k3s", "infrastructure", "devops-m2"],
+      "time": { "from": "now-30m", "to": "now" },
+      "timepicker": { "refresh_intervals": ["5s", "10s", "30s", "1m"] },
+      "timezone": "browser",
+      "title": "1. Cluster K3s & Infrastructure - Vue Soutenance",
+      "uid": "cluster-k3s-overview"
+    }
+
+  application-logs-metrics.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "liveNow": true,
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "id": 200,
+          "title": "Trafic & Activité Applicative (Backend DRF & Frontend Next.js)",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "loki", "uid": "Loki" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "blue", "value": null },
+                  { "color": "green", "value": 10 }
+                ]
+              },
+              "unit": "short"
+            }
+          },
+          "gridPos": { "h": 4, "w": 8, "x": 0, "y": 1 },
+          "id": 11,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false }
+          },
+          "title": "Total Requêtes HTTP Backend (sur la période)",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "sum(count_over_time({container=\"backend\"} |= \"HTTP\"[$__range]))",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "datasource": { "type": "loki", "uid": "Loki" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "red", "value": 1 }
+                ]
+              },
+              "unit": "short"
+            }
+          },
+          "gridPos": { "h": 4, "w": 8, "x": 8, "y": 1 },
+          "id": 12,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false }
+          },
+          "title": "Erreurs Détectées (5xx / Exceptions)",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "sum(count_over_time({namespace=\"immobilier\"} |~ \"(?i)(error|exception|fail|500)\"[$__range]))",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "datasource": { "type": "loki", "uid": "Loki" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [{ "color": "green", "value": null }]
+              },
+              "unit": "short"
+            }
+          },
+          "gridPos": { "h": 4, "w": 8, "x": 16, "y": 1 },
+          "id": 13,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false }
+          },
+          "title": "Volume Total de Lignes de Logs Ingestées",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "sum(count_over_time({namespace=\"immobilier\"}[$__range]))",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "datasource": { "type": "loki", "uid": "Loki" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "drawStyle": "bars",
+                "fillOpacity": 70,
+                "lineWidth": 1
+              },
+              "unit": "short"
+            }
+          },
+          "gridPos": { "h": 7, "w": 24, "x": 0, "y": 5 },
+          "id": 14,
+          "title": "Débit des Requêtes HTTP Backend en Temps Réel",
+          "type": "timeseries",
+          "targets": [
+            {
+              "expr": "sum(rate({container=\"backend\"} |= \"HTTP\"[1m]))",
+              "legendFormat": "Requêtes / sec",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 12 },
+          "id": 201,
+          "title": "Flux Centralisé des Logs Applicatifs (Loki Live Stream)",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "loki", "uid": "Loki" },
+          "gridPos": { "h": 12, "w": 24, "x": 0, "y": 13 },
+          "id": 15,
+          "options": {
+            "dedupStrategy": "none",
+            "enableLogDetails": true,
+            "prettifyLogMessage": true,
+            "showCommonLabels": false,
+            "showLabels": true,
+            "sortOrder": "Descending",
+            "wrapLogMessage": true
+          },
+          "title": "Console en Direct - Logs Pods Frontend & Backend (Namespace immobilier)",
+          "type": "logs",
+          "targets": [
+            {
+              "expr": "{namespace=\"immobilier\"}",
+              "refId": "A"
+            }
+          ]
+        }
+      ],
+      "refresh": "5s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": ["loki", "application", "devops-m2", "logs"],
+      "time": { "from": "now-15m", "to": "now" },
+      "timepicker": { "refresh_intervals": ["5s", "10s", "30s", "1m"] },
+      "timezone": "browser",
+      "title": "2. Application & Logs en Direct - Vue Soutenance",
+      "uid": "application-logs-live"
+    }

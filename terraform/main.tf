@@ -70,6 +70,14 @@ resource "aws_security_group" "gestion_immo_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    description = "Grafana Monitoring Dashboard"
+    from_port   = 3001
+    to_port     = 3001
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
 
   egress {
     description = "Tout le trafic sortant autorise"
