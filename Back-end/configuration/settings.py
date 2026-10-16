@@ -99,7 +99,7 @@ elif DATABASE_URL:
 
 elif config("DB_HOST", default=""):
     # Mode PostgreSQL via variables séparées (k8s, EC2, docker-compose)
-    db_host = config("DB_HOST", default="localhost")
+    db_host = config("DB_HOST", default="localhost").strip()
     # Si on tourne hors Docker et que l'hôte est host.docker.internal → localhost
     if db_host == "host.docker.internal" and not os.path.exists("/.dockerenv"):
         db_host = "localhost"

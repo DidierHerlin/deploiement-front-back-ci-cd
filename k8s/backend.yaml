@@ -22,7 +22,7 @@ spec:
         - name: backend
           image: didierherlin/immobilier-drf:latest
           imagePullPolicy: Always
-          command: ["sh", "-c", "python manage.py migrate && gunicorn --bind 0.0.0.0:8000 --workers 2 --worker-tmp-dir /dev/shm --timeout 120 --graceful-timeout 30 --keep-alive 5 wsgi:application"]
+          command: ["sh", "-c", "python wait_for_db.py && python manage.py migrate && gunicorn --bind 0.0.0.0:8000 --workers 2 --worker-tmp-dir /dev/shm --timeout 120 --graceful-timeout 30 --keep-alive 5 wsgi:application"]
           ports:
             - containerPort: 8000
           resources:
@@ -63,6 +63,16 @@ spec:
           hostPath:
             path: /opt/immobilier/media
             type: DirectoryOrCreate
+      dnsPolicy: ClusterFirst
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
+          - name: single-request-reopen
+          - name: timeout
+            value: "2"
+          - name: attempts
+            value: "3"
 ---
 apiVersion: v1
 kind: Service
