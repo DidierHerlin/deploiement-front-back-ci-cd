@@ -31,13 +31,6 @@ export function AssignBienModal({ targetProprietaire, allBiens, onClose, onAssig
 
   const selectedBien = availableBiens.find(b => b.id === Number(selectedBienId))
 
-  const getBienProprietaireName = (p?: Bien['proprietaire'] | null) => {
-    if (!p) return '-'
-    const prenoms = p.user?.prenoms || p.prenoms || ''
-    const nom = p.user?.nom || p.nom || ''
-    return `${prenoms} ${nom}`.trim() || p.email || (p.id ? `Propriétaire #${p.id}` : '-')
-  }
-
   return (
     <div className="modal-backdrop" role="presentation" style={{ zIndex: 1100 }}>
       <section className="modal" role="dialog" aria-modal="true" style={{ maxWidth: '500px' }}>
@@ -48,11 +41,11 @@ export function AssignBienModal({ targetProprietaire, allBiens, onClose, onAssig
 
         <form onSubmit={handleSubmit} style={{ marginTop: '20px' }}>
           <label>Sélectionner un bien
-            <select required value={selectedBienId} onChange={e => setSelectedBienId(e.target.value ? Number(e.target.value) : '')}>
+            <select required value={selectedBienId} onChange={e => setSelectedBienId(e.target.value)}>
               <option value="">-- Choisir un bien --</option>
               {availableBiens.map(b => (
                 <option key={b.id} value={b.id}>
-                  {b.titre} (Propriétaire actuel : {getBienProprietaireName(b.proprietaire)})
+                  {b.titre} (Propriétaire actuel : {b.proprietaire?.user?.prenoms} {b.proprietaire?.user?.nom})
                 </option>
               ))}
             </select>
@@ -60,7 +53,7 @@ export function AssignBienModal({ targetProprietaire, allBiens, onClose, onAssig
           
           {selectedBien && (
             <div style={{ padding: '10px', background: '#fffbeb', color: '#b45309', borderRadius: '4px', marginTop: '10px', fontSize: '13px' }}>
-              <strong>Attention :</strong> Le bien "{selectedBien.titre}" sera retiré à {getBienProprietaireName(selectedBien.proprietaire)} pour être réattribué à {targetProprietaire.user?.prenoms} {targetProprietaire.user?.nom}.
+              <strong>Attention :</strong> Le bien "{selectedBien.titre}" sera retiré à {selectedBien.proprietaire?.user?.prenoms} {selectedBien.proprietaire?.user?.nom} pour être réattribué à {targetProprietaire.user?.prenoms} {targetProprietaire.user?.nom}.
             </div>
           )}
 

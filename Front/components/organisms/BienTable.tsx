@@ -1,19 +1,18 @@
 import { useState } from 'react'
-import { Bien, Proprietaire } from '@/lib/api'
+import { Bien } from '@/lib/api'
 import { BienTableHeader } from "@/components/organisms/BienTableHeader"
 import { BienTableRow } from "@/components/organisms/BienTableRow"
 import { Pagination } from "@/components/molecules/pagination"
 
 type BienTableProps = {
   biens: Bien[]
-  proprietaires?: Proprietaire[]
   loading: boolean
   onView: (bien: Bien) => void
   onEdit: (bien: Bien) => void
   onDelete: (id: number) => void
 }
 
-export function BienTable({ biens, proprietaires, loading, onView, onEdit, onDelete }: BienTableProps) {
+export function BienTable({ biens, loading, onView, onEdit, onDelete }: BienTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 5;
   const totalPages = Math.ceil(biens.length / ITEMS_PER_PAGE);
@@ -32,7 +31,6 @@ export function BienTable({ biens, proprietaires, loading, onView, onEdit, onDel
                 <BienTableRow 
                   key={bien.id}
                   bien={bien}
-                  proprietaires={proprietaires}
                   onView={onView}
                   onEdit={onEdit}
                   onDelete={onDelete}

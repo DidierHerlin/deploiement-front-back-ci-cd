@@ -27,10 +27,6 @@ export function BienForm({ editingBien, newBien, setNewBien, proprietaires, onCl
   const isVente = newBien.mode_transaction === 'VENTE'
   const isLocation = newBien.mode_transaction === 'LOCATION'
 
-  const selectedProprietaireId = typeof newBien.proprietaire === 'object' && newBien.proprietaire !== null
-    ? (newBien.proprietaire.id ?? '')
-    : (newBien.proprietaire ?? '')
-
   return (
     <div className="modal-backdrop" role="presentation">
       <section className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" style={{ width: '90vw', maxWidth: '1200px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', padding: '20px' }}>
@@ -50,10 +46,10 @@ export function BienForm({ editingBien, newBien, setNewBien, proprietaires, onCl
             </label>
 
             <label style={{ minWidth: 0 }}>Propriétaire *
-              <select required value={selectedProprietaireId} onChange={handleProprietaireChange} style={{ width: '100%', textOverflow: 'ellipsis' }}>
+              <select required value={newBien.proprietaire?.id || newBien.proprietaire || ''} onChange={handleProprietaireChange} style={{ width: '100%', textOverflow: 'ellipsis' }}>
                 <option value="">-- Sélectionner un propriétaire --</option>
                 {proprietaires.map(p => (
-                  <option key={p.id} value={p.id}>{p.user?.prenoms} {p.user?.nom}</option>
+                  <option key={p.id} value={p.id}>{p.user.prenoms} {p.user.nom}</option>
                 ))}
               </select>
             </label>

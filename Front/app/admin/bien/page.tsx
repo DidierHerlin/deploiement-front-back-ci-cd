@@ -77,7 +77,7 @@ export default function BienPage() {
       const matchType = typeFilter === 'Tous' || bien.type === typeFilter
       const matchOp = operationFilter === 'Toutes' || bien.mode_transaction === operationFilter
       const matchStatut = statutFilter === 'Tous' || bien.statut === statutFilter
-      const matchProp = proprietaireFilter === 'Tous' || bien.proprietaire?.id?.toString() === proprietaireFilter
+      const matchProp = proprietaireFilter === 'Tous' || bien.proprietaire?.id.toString() === proprietaireFilter
       
       return matchQuery && matchType && matchOp && matchStatut && matchProp
     })
@@ -168,7 +168,6 @@ export default function BienPage() {
         
         <BienTable 
           biens={filteredBiens} 
-          proprietaires={proprietaires}
           loading={loading} 
           onView={setViewBien} 
           onEdit={openEditModal} 
@@ -190,7 +189,6 @@ export default function BienPage() {
       {viewBien && (
         <BienModal 
           bien={viewBien} 
-          proprietaires={proprietaires}
           onClose={() => setViewBien(null)} 
           onEdit={() => { setViewBien(null); openEditModal(viewBien); }} 
         />

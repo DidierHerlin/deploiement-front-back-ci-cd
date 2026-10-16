@@ -27,10 +27,7 @@ export interface Bien {
   photos: string[]
   proprietaire: {
     id: number
-    nom?: string
-    prenoms?: string
-    email?: string
-    user?: { id?: number; email?: string; nom: string; prenoms: string }
+    user: { id: number; email: string; nom: string; prenoms: string }
   }
 }
 
@@ -46,13 +43,7 @@ export interface BienListItem {
   prix: string | null
   statut: string
   photos?: string[] | null
-  proprietaire: {
-    id: number
-    nom?: string
-    prenoms?: string
-    email?: string
-    user?: { id?: number; email?: string; nom: string; prenoms: string }
-  }
+  proprietaire: { id: number; user: { id?: number; nom: string; prenoms: string } }
 }
 
 export interface Locataire {
