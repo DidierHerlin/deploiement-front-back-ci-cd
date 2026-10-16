@@ -705,7 +705,17 @@ export interface UserProfil {
 
 export function resolveMediaUrl(url: string | null | undefined): string | null {
   if (!url) return null
-  if (url.startsWith("http") || url.startsWith("blob:") || url.startsWith("data:")) return url
+  if (url.startsWith("blob:") || url.startsWith("data:")) return url
+
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    if (typeof window !== "undefined" && window.location?.hostname && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+      if (url.includes("localhost:8000") || url.includes("127.0.0.1:8000")) {
+        return url.replace(/localhost:8000|127\.0\.0\.1:8000/, `${window.location.hostname}:8000`)
+      }
+    }
+    return url
+  }
+
   const base = getApiUrl().replace(/\/api\/?$/, "")
   return `${base}${url.startsWith("/") ? url : `/${url}`}`
 }

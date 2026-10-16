@@ -4,7 +4,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: false,
+    unoptimized: true,
     dangerouslyAllowLocalIP: true,
     remotePatterns: [
       {

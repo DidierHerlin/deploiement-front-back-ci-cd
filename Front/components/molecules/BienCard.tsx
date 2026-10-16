@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { Bien, resolveMediaUrl } from '@/lib/api'
-import Image from 'next/image'
 import { Building2, MapPin, Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface BienCardProps {
@@ -35,24 +34,41 @@ export function BienCard({ bien, onEdit, onDelete }: BienCardProps) {
     return types[type] || type
   }
 
+  const photosList = Array.isArray(bien.photos) ? bien.photos : []
+  const currentPhoto = photosList[photoIndex]
+  const photoUrl = resolveMediaUrl(currentPhoto) || currentPhoto || ''
+
   const nextPhoto = (e: React.MouseEvent) => {
     e.stopPropagation()
-    setPhotoIndex((prev) => (prev + 1) % bien.photos.length)
+    if (photosList.length > 0) {
+      setPhotoIndex((prev) => (prev + 1) % photosList.length)
+    }
   }
 
   const prevPhoto = (e: React.MouseEvent) => {
     e.stopPropagation()
-    setPhotoIndex((prev) => (prev - 1 + bien.photos.length) % bien.photos.length)
+    if (photosList.length > 0) {
+      setPhotoIndex((prev) => (prev - 1 + photosList.length) % photosList.length)
+    }
   }
 
   return (
     <div className="flex flex-col border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow h-full group">
       <div className="h-48 bg-gray-100 relative overflow-hidden flex-shrink-0">
-        {bien.photos && bien?.photos?.length > 0 ? (
+        {photoUrl ? (
           <>
-            <Image src={resolveMediaUrl(bien.photos[photoIndex])!} alt={bien.titre} fill className="object-cover transition-opacity duration-300" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
+            <img 
+              src={photoUrl} 
+              alt={bien.titre} 
+              className="w-full h-full object-cover transition-opacity duration-300"
+              onError={(e) => {
+                if (currentPhoto && e.currentTarget.src !== currentPhoto) {
+                  e.currentTarget.src = currentPhoto
+                }
+              }}
+            />
             
-            {bien?.photos?.length > 1 && (
+            {photosList.length > 1 && (
               <>
                 <button 
                   onClick={prevPhoto}
@@ -68,7 +84,7 @@ export function BienCard({ bien, onEdit, onDelete }: BienCardProps) {
                 </button>
                 
                 <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
-                  {(Array.isArray(bien?.photos) ? bien.photos : []).map((_, idx) => (
+                  {photosList.map((_, idx) => (
                     <div 
                       key={idx} 
                       className={`h-1.5 rounded-full transition-all ${idx === photoIndex ? 'w-4 bg-white' : 'w-1.5 bg-white/60'}`}
