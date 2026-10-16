@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bien, createBien, updateBien } from '@/lib/api'
+import { Bien, createBien, updateBien, resolveMediaUrl } from '@/lib/api'
 import { X, Save, AlertCircle } from 'lucide-react'
 
 interface BienFormProps {
@@ -219,7 +219,16 @@ export function BienForm({ bien, onClose }: BienFormProps) {
             <div className="flex gap-3 overflow-x-auto pb-2 mt-1">
               {formData.photos.map((photo, index) => (
                 <div key={index} className="relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border border-gray-200 shadow-sm group">
-                  <img src={photo} alt={`Photo ${index + 1}`} className="w-full h-full object-cover" />
+                  <img 
+                    src={resolveMediaUrl(photo) || photo} 
+                    alt={`Photo ${index + 1}`} 
+                    className="w-full h-full object-cover" 
+                    onError={(e) => {
+                      if (photo && e.currentTarget.src !== photo) {
+                        e.currentTarget.src = photo
+                      }
+                    }}
+                  />
                   <button 
                     type="button" 
                     onClick={() => removePhoto(index)}

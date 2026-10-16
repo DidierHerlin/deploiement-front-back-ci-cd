@@ -1,5 +1,5 @@
 import { X, Building2, Pencil } from 'lucide-react'
-import { Bien } from '@/lib/api'
+import { Bien, resolveMediaUrl } from '@/lib/api'
 
 type BienModalProps = {
   bien: Bien
@@ -89,15 +89,23 @@ export function BienModal({ bien, onClose, onEdit }: BienModalProps) {
             <div style={{ marginTop: '20px' }}>
               <small style={{ color: '#586577', marginBottom: '10px', display: 'block' }}>Photos ({bien.photos.length})</small>
               <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '10px' }}>
-                {bien.photos.map((photoUrl, idx) => (
-                  <a key={idx} href={photoUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'block', flexShrink: 0 }}>
-                    <img 
-                      src={photoUrl} 
-                      alt={`Photo ${idx + 1} de ${bien.titre}`} 
-                      style={{ width: '120px', height: '80px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #e2e8f0' }} 
-                    />
-                  </a>
-                ))}
+                {bien.photos.map((photoUrl, idx) => {
+                  const resolvedUrl = resolveMediaUrl(photoUrl) || photoUrl
+                  return (
+                    <a key={idx} href={resolvedUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'block', flexShrink: 0 }}>
+                      <img 
+                        src={resolvedUrl} 
+                        alt={`Photo ${idx + 1} de ${bien.titre}`} 
+                        style={{ width: '120px', height: '80px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #e2e8f0' }} 
+                        onError={(e) => {
+                          if (photoUrl && e.currentTarget.src !== photoUrl) {
+                            e.currentTarget.src = photoUrl
+                          }
+                        }}
+                      />
+                    </a>
+                  )
+                })}
               </div>
             </div>
           )}

@@ -34,5 +34,9 @@ def save_base64_photos(photos_list):
                 print(f"Error decoding base64 image: {e}")
                 new_photos.append(photo) # fallback
         else:
-            new_photos.append(photo)
+            if isinstance(photo, str) and "/media/" in photo:
+                media_idx = photo.index("/media/")
+                new_photos.append(photo[media_idx:])
+            else:
+                new_photos.append(photo)
     return new_photos

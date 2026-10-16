@@ -216,7 +216,20 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+
+MEDIA_ROOT_ENV = config("MEDIA_ROOT", default="")
+if MEDIA_ROOT_ENV:
+    MEDIA_ROOT = Path(MEDIA_ROOT_ENV)
+elif Path("/app/media").exists() or (Path("/app").is_dir() and Path(__file__).resolve().parent == Path("/app")):
+    MEDIA_ROOT = Path("/app/media")
+else:
+    MEDIA_ROOT = BASE_DIR / "media"
+
+try:
+    MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
+    (MEDIA_ROOT / "biens").mkdir(parents=True, exist_ok=True)
+except Exception:
+    pass
 
 
 

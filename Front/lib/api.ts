@@ -709,8 +709,15 @@ export function resolveMediaUrl(url: string | null | undefined): string | null {
 
   if (url.startsWith("http://") || url.startsWith("https://")) {
     if (typeof window !== "undefined" && window.location?.hostname && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
-      if (url.includes("localhost:8000") || url.includes("127.0.0.1:8000")) {
-        return url.replace(/localhost:8000|127\.0\.0\.1:8000/, `${window.location.hostname}:8000`)
+      try {
+        const parsed = new URL(url)
+        if (parsed.pathname.startsWith("/media/")) {
+          return `${window.location.protocol}//${window.location.hostname}:8000${parsed.pathname}`
+        }
+      } catch {
+        if (url.includes("localhost:8000") || url.includes("127.0.0.1:8000")) {
+          return url.replace(/localhost:8000|127\.0\.0\.1:8000/, `${window.location.hostname}:8000`)
+        }
       }
     }
     return url

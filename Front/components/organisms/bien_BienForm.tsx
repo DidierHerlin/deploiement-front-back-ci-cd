@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { X, Building2, Trash2 } from 'lucide-react'
-import { Bien, Proprietaire } from '@/lib/api'
+import { Bien, Proprietaire, resolveMediaUrl } from '@/lib/api'
 
 type BienFormProps = {
   editingBien: Bien | null
@@ -143,7 +143,16 @@ export function BienForm({ editingBien, newBien, setNewBien, proprietaires, onCl
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '10px' }}>
                   {newBien.photos.map((dataUrl, idx) => (
                     <div key={idx} style={{ position: 'relative', width: '100px', height: '100px' }}>
-                      <img src={dataUrl} alt="Aperçu" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px', border: '1px solid #e2e8f0' }} />
+                      <img 
+                        src={resolveMediaUrl(dataUrl) || dataUrl} 
+                        alt="Aperçu" 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px', border: '1px solid #e2e8f0' }} 
+                        onError={(e) => {
+                          if (dataUrl && e.currentTarget.src !== dataUrl) {
+                            e.currentTarget.src = dataUrl
+                          }
+                        }}
+                      />
                       <button 
                         type="button" 
                         onClick={() => handleRemovePhoto(idx)}
