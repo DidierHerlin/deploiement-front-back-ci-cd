@@ -1,13 +1,14 @@
 import { X, Building2, Pencil } from 'lucide-react'
-import { Bien } from '@/lib/api'
+import { Bien, Proprietaire } from '@/lib/api'
 
 type BienModalProps = {
   bien: Bien
+  proprietaires?: Proprietaire[]
   onClose: () => void
   onEdit: () => void
 }
 
-export function BienModal({ bien, onClose, onEdit }: BienModalProps) {
+export function BienModal({ bien, proprietaires, onClose, onEdit }: BienModalProps) {
   const getPrixLoyer = () => {
     if (bien.mode_transaction === 'VENTE') {
       return bien.prix ? `${Number(bien.prix).toLocaleString('fr-FR')} Ar` : 'N/A'
@@ -37,6 +38,25 @@ export function BienModal({ bien, onClose, onEdit }: BienModalProps) {
     return map[statut] || statut
   }
 
+  const getProprietaireName = () => {
+    const p = bien.proprietaire
+    if (!p) return '-'
+    const prenoms = p.user?.prenoms || p.prenoms || ''
+    const nom = p.user?.nom || p.nom || ''
+    const fullName = `${prenoms} ${nom}`.trim()
+    if (fullName) return fullName
+
+    if (p.id && proprietaires && proprietaires.length > 0) {
+      const found = proprietaires.find(item => item.id === p.id)
+      if (found?.user) {
+        const foundName = `${found.user.prenoms || ''} ${found.user.nom || ''}`.trim()
+        if (foundName) return foundName
+      }
+    }
+
+    return p.email || (p.id ? `Propriétaire #${p.id}` : '-')
+  }
+
   return (
     <div className="modal-backdrop" role="presentation">
       <section className="modal" role="dialog" aria-modal="true" aria-labelledby="detail-title" style={{ width: '90vw', maxWidth: '1200px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', padding: '20px' }}>
@@ -55,7 +75,7 @@ export function BienModal({ bien, onClose, onEdit }: BienModalProps) {
             </div>
             <div>
               <small style={{ color: '#586577' }}>Propriétaire</small>
-              <p style={{ fontWeight: 500 }}>{bien.proprietaire?.user?.prenoms} {bien.proprietaire?.user?.nom}</p>
+              <p style={{ fontWeight: 500 }}>{getProprietaireName()}</p>
             </div>
             <div>
               <small style={{ color: '#586577' }}>Type / Opération</small>

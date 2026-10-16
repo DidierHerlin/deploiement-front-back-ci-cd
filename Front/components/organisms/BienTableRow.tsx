@@ -1,14 +1,15 @@
 import { Eye, Pencil, Trash2 } from 'lucide-react'
-import { Bien } from '@/lib/api'
+import { Bien, Proprietaire } from '@/lib/api'
 
 type BienTableRowProps = {
   bien: Bien
+  proprietaires?: Proprietaire[]
   onView: (bien: Bien) => void
   onEdit: (bien: Bien) => void
   onDelete: (id: number) => void
 }
 
-export function BienTableRow({ bien, onView, onEdit, onDelete }: BienTableRowProps) {
+export function BienTableRow({ bien, proprietaires, onView, onEdit, onDelete }: BienTableRowProps) {
   const formatStatut = (statut: string) => {
     switch(statut) {
       case 'DISPONIBLE': return <span className="status paid"><i />Disponible</span>
@@ -38,6 +39,25 @@ export function BienTableRow({ bien, onView, onEdit, onDelete }: BienTableRowPro
     return map[type] || type
   }
 
+  const getProprietaireName = () => {
+    const p = bien.proprietaire
+    if (!p) return '-'
+    const prenoms = p.user?.prenoms || p.prenoms || ''
+    const nom = p.user?.nom || p.nom || ''
+    const fullName = `${prenoms} ${nom}`.trim()
+    if (fullName) return fullName
+
+    if (p.id && proprietaires && proprietaires.length > 0) {
+      const found = proprietaires.find(item => item.id === p.id)
+      if (found?.user) {
+        const foundName = `${found.user.prenoms || ''} ${found.user.nom || ''}`.trim()
+        if (foundName) return foundName
+      }
+    }
+
+    return p.email || (p.id ? `Propriétaire #${p.id}` : '-')
+  }
+
   return (
     <tr>
       <td>#{bien.id}</td>
@@ -49,7 +69,7 @@ export function BienTableRow({ bien, onView, onEdit, onDelete }: BienTableRowPro
       </td>
       <td><span className="role-badge">{formatType(bien.type)}</span></td>
       <td>{bien.surface} m²</td>
-      <td>{bien.proprietaire?.user?.prenoms} {bien.proprietaire?.user?.nom}</td>
+      <td>{getProprietaireName()}</td>
       <td><span className="role-badge">{bien.mode_transaction === 'VENTE' ? 'Vente' : 'Location'}</span></td>
       <td><strong>{getPrixLoyer()}</strong></td>
       <td>{formatStatut(bien.statut)}</td>
