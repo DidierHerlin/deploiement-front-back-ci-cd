@@ -77,7 +77,7 @@ export function PaiementDetails({ paiement, onClose, onValiderDemande, onRefuser
             <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
               <h3 style={{ fontSize: '14px', marginBottom: '15px', color: '#334155', borderBottom: '1px solid #cbd5e1', paddingBottom: '5px' }}>Informations générales</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div><small style={{ color: '#64748b' }}>Statut</small><div><PaiementStatusBadge statut={paiement.statut} /></div></div>
+                <div><small style={{ color: '#64748b' }}>Statut</small><div><PaiementStatusBadge statut={paiement.statut} contratStatut={paiement.contrat_statut || (typeof paiement.contrat === 'object' && paiement.contrat !== null ? (paiement.contrat as any).statut : undefined)} /></div></div>
                 <div><small style={{ color: '#64748b' }}>Échéance N°</small><div style={{ fontWeight: 500 }}>{paiement.num_echeance || '-'}</div></div>
                 <div><small style={{ color: '#64748b' }}>Période</small><div style={{ fontWeight: 500 }}>{paiement.message_mois || '-'}</div></div>
                 <div><small style={{ color: '#64748b' }}>Mode de paiement</small><div style={{ fontWeight: 500 }}>{(paiement.demande_en_cours ? paiement.demande_en_cours.moyen_paiement : paiement.mode_paiement) || '-'}</div></div>

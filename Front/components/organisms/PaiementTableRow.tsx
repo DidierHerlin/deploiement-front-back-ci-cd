@@ -1,16 +1,17 @@
 import { Eye, Edit, Download, Smartphone, CheckCircle2, XCircle } from 'lucide-react'
-import { Paiement, downloadQuittance } from '@/lib/api'
+import { Paiement, Contrat, downloadQuittance } from '@/lib/api'
 import { PaiementStatusBadge } from "@/components/atoms/paiement_PaiementStatusBadge"
 
 type PaiementTableRowProps = {
   paiement: Paiement
+  contrats?: Contrat[]
   onView: (p: Paiement) => void
   onEdit: (p: Paiement) => void
   onValiderDemande?: (p: Paiement) => void
   onRefuserDemande?: (p: Paiement) => void
 }
 
-export function PaiementTableRow({ paiement, onView, onEdit, onValiderDemande, onRefuserDemande }: PaiementTableRowProps) {
+export function PaiementTableRow({ paiement, contrats, onView, onEdit, onValiderDemande, onRefuserDemande }: PaiementTableRowProps) {
   const formatDate = (d: string | null) => {
     if (!d) return '-'
     return new Date(d).toLocaleDateString('fr-FR')
@@ -23,6 +24,16 @@ export function PaiementTableRow({ paiement, onView, onEdit, onValiderDemande, o
 
   const isMobileMoneyPending = paiement.statut === 'EN_ATTENTE' && 
     (['MVOLA', 'ORANGE_MONEY', 'AIRTEL_MONEY'].includes(paiement.mode_paiement || '') || !!paiement.demande_en_cours)
+
+  const directContratStatut = (paiement as any).contrat_statut
+  const nestedContratStatut = typeof paiement.contrat === 'object' && paiement.contrat !== null
+    ? (paiement.contrat as any).statut
+    : undefined
+  const listContratStatut = contrats && typeof paiement.contrat === 'number'
+    ? contrats.find(c => c.id === paiement.contrat)?.statut
+    : undefined
+  const contratStatut = directContratStatut || nestedContratStatut || listContratStatut
+  const isContratResilie = Boolean(contratStatut && ['RESILIE', 'RÉSILIÉ'].includes(contratStatut.trim().toUpperCase()))
 
   return (
     <tr style={{ backgroundColor: isMobileMoneyPending ? '#f0fdf4' : undefined }}>
@@ -41,7 +52,7 @@ export function PaiementTableRow({ paiement, onView, onEdit, onValiderDemande, o
         {paiement.date_paiement && <div style={{ fontSize: '13px' }}><span style={{ color: '#10b981' }}>Payé:</span> {formatDate(paiement.date_paiement)}</div>}
       </td>
       <td>
-        <PaiementStatusBadge statut={paiement.statut} />
+        <PaiementStatusBadge statut={paiement.statut} contratStatut={contratStatut} />
       </td>
       <td>
         {isMobileMoneyPending ? (
@@ -99,7 +110,7 @@ export function PaiementTableRow({ paiement, onView, onEdit, onValiderDemande, o
               <Download size={16} />
             </button>
           )}
-          {paiement.statut !== 'PAYE' && paiement.statut !== 'ANNULE' && (
+          {paiement.statut !== 'PAYE' && paiement.statut !== 'ANNULE' && paiement.statut !== 'RESILIE' && !isContratResilie && (
             <button className="action-icon" onClick={() => onEdit(paiement)} title="Enregistrer / Valider">
               <Edit size={16} />
             </button>

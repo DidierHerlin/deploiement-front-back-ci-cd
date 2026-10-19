@@ -1,13 +1,19 @@
 type PaiementStatusBadgeProps = {
   statut: string
+  contratStatut?: string | null
 }
 
-export function PaiementStatusBadge({ statut }: PaiementStatusBadgeProps) {
+export function PaiementStatusBadge({ statut, contratStatut }: PaiementStatusBadgeProps) {
   let color = '#64748b'
   let bg = '#f1f5f9'
   let label = statut
 
-  switch (statut) {
+  const isContratResilie = Boolean(contratStatut && ['RESILIE', 'RÉSILIÉ'].includes(contratStatut.trim().toUpperCase()))
+  const effectiveStatut = (isContratResilie && (statut === 'ANNULE' || !statut)) || statut === 'RESILIE'
+    ? 'RESILIE'
+    : statut
+
+  switch (effectiveStatut) {
     case 'PAYE':
       color = '#059669'
       bg = '#d1fae5'
@@ -32,6 +38,11 @@ export function PaiementStatusBadge({ statut }: PaiementStatusBadgeProps) {
       color = '#475569'
       bg = '#e2e8f0'
       label = 'Annulé'
+      break
+    case 'RESILIE':
+      color = '#dc2626'
+      bg = '#fee2e2'
+      label = 'Résilié'
       break
   }
 

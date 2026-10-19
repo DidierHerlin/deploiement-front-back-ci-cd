@@ -1,7 +1,7 @@
 'use client'
 
 import '@/app/admin/admin.css'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { getProfil, Paiement } from '@/lib/api'
 import { Smartphone, Receipt, ListFilter, AlertCircle, Clock, PlusCircle } from 'lucide-react'
 
@@ -16,6 +16,7 @@ import { NotificationList } from "@/components/organisms/NotificationList"
 import { DemandePaiementModal } from "@/components/organisms/DemandePaiementModal"
 import { DemandesPaiementList } from "@/components/organisms/DemandesPaiementList"
 import { usePaiements } from './hooks/usePaiements'
+import { useContrats } from '../contrat/hooks/useContrats'
 
 export default function PaiementsPage() {
   const [mobileNav, setMobileNav] = useState(false);
@@ -30,7 +31,37 @@ export default function PaiementsPage() {
     getProfil().then(setUser).catch(console.error);
   }, []);
 
-  const { paiements, demandes, facturesEligibles, notifications, loading, error, refetch } = usePaiements();
+  const { paiements, stats, demandes, facturesEligibles, notifications, loading, error, refetch } = usePaiements(user?.id);
+  const { contrats } = useContrats();
+
+  // Filtrage des paiements pour masquer ceux dont le contrat est résilié
+  const isContratResilie = (p: Paiement): boolean => {
+    const directStatut = (p as any).contrat_statut;
+    if (typeof directStatut === 'string') {
+      const s = directStatut.trim().toUpperCase();
+      if (s === 'RESILIE' || s === 'RÉSILIÉ') return true;
+    }
+    if (typeof p.contrat === 'object' && p.contrat !== null) {
+      const s = (p.contrat as any).statut;
+      if (typeof s === 'string') {
+        const sUpper = s.trim().toUpperCase();
+        if (sUpper === 'RESILIE' || sUpper === 'RÉSILIÉ') return true;
+      }
+    }
+    const contratId = typeof p.contrat === 'object' && p.contrat !== null ? (p.contrat as any).id : p.contrat;
+    if (contratId && contrats && contrats.length > 0) {
+      const c = contrats.find(contrat => contrat.id === contratId);
+      if (c?.statut) {
+        const sUpper = c.statut.trim().toUpperCase();
+        if (sUpper === 'RESILIE' || sUpper === 'RÉSILIÉ') return true;
+      }
+    }
+    return false;
+  };
+
+  const paiementsNonResilies = useMemo(() => {
+    return paiements.filter(p => !isContratResilie(p));
+  }, [paiements, contrats]);
 
   const handleOpenDemande = (facture?: Paiement) => {
     setSelectedFactureForModal(facture || (facturesEligibles.length > 0 ? facturesEligibles[0] : null));
@@ -174,7 +205,7 @@ export default function PaiementsPage() {
                       fontWeight: 600,
                     }}
                   >
-                    {paiements.length}
+                    {paiementsNonResilies.length}
                   </span>
                 </button>
 
@@ -213,9 +244,10 @@ export default function PaiementsPage() {
 
               {activeTab === 'factures' ? (
                 <>
-                  <PaiementStats paiements={paiements} />
+                  <PaiementStats paiements={paiements} user={user} stats={stats} />
                   <PaiementList
-                    paiements={paiements}
+                    paiements={paiementsNonResilies}
+                    contrats={contrats}
                     onUpdate={refetch}
                     onDemanderPaiement={(facture) => handleOpenDemande(facture)}
                   />

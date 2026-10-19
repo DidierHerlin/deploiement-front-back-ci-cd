@@ -216,6 +216,10 @@ class Paiement(models.Model):
         if not self.date_paiement and self.statut == self.StatutPaiement.PAYE:
             self.date_paiement = timezone.now().date()
 
+        # --- Montant payé automatique si paiement complet ---
+        if self.statut == self.StatutPaiement.PAYE and not self.est_partiel and (not self.montant_paye or self.montant_paye == 0):
+            self.montant_paye = self.montant or self.montant_attendu or 0
+
         # --- Date de versement partiel (remplie lors d'un paiement partiel) ---
         if self.est_partiel and not self.date_versement_partiel:
             self.date_versement_partiel = timezone.now().date()
@@ -321,8 +325,10 @@ class Paiement(models.Model):
             raise ValueError("Ce paiement est déjà validé.")
         self.statut = self.StatutPaiement.PAYE
         self.date_paiement = timezone.now().date()
+        if not self.est_partiel and (not self.montant_paye or self.montant_paye == 0):
+            self.montant_paye = self.montant or self.montant_attendu or 0
         if save:
-            self.save(update_fields=["statut", "date_paiement"])
+            self.save(update_fields=["statut", "date_paiement", "montant_paye"])
 
     def annuler_paiement(self, *, save=True):
         if self.statut == self.StatutPaiement.PAYE:

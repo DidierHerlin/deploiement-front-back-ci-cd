@@ -87,7 +87,10 @@ export interface Contrat {
 
 export interface Paiement {
   id: number
-  contrat: number
+  contrat: number | { id: number; statut?: string; [key: string]: any }
+  contrat_statut?: string
+  locataire_user_id?: number
+  locataire_id?: number
   num_echeance: number
   date_echeance: string
   date_paiement_prevue: string | null
@@ -716,6 +719,20 @@ export async function annulerPaiement(id: number): Promise<Paiement> {
 export async function getImpayes(): Promise<Paiement[]> {
   const res = await fetchAPI<{ count: number; results: Paiement[] }>("/paiements/impayes/")
   return res.results || (res as any)
+}
+
+export interface PaiementStatsData {
+  total: number
+  count_paye: number
+  count_attente: number
+  count_retard: number
+  total_encaisse: number
+  montant_restant: number
+}
+
+export async function getPaiementsStats(userId?: number): Promise<PaiementStatsData> {
+  const url = userId ? `/paiements/stats/?user_id=${userId}` : '/paiements/stats/'
+  return fetchAPI<PaiementStatsData>(url)
 }
 
 export async function getDemandesPaiement(): Promise<DemandePaiement[]> {

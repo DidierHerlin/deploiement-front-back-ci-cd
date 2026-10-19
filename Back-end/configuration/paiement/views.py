@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from django.db import transaction
+from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from django.http import FileResponse, Http404
 from .models import Paiement, DemandePaiement
@@ -215,6 +216,51 @@ class PaiementViewSet(viewsets.ModelViewSet):
         return Response({
             "count": queryset.count(),
             "results": serializer.data
+        })
+
+    @action(detail=False, methods=["get"])
+    def stats(self, request):
+        user = request.user
+        queryset = self.get_queryset()
+
+        if user.role == Utilisateur.Role.LOCATAIRE:
+            queryset = queryset.filter(contrat__locataire__user_id=user.id)
+        elif request.query_params.get("user_id"):
+            target_user_id = request.query_params.get("user_id")
+            queryset = queryset.filter(contrat__locataire__user_id=target_user_id)
+
+        factures_payees = queryset.filter(
+            statut=Paiement.StatutPaiement.PAYE,
+            est_partiel=False
+        )
+
+        total_encaisse = factures_payees.aggregate(
+            total=Sum("montant")
+        )["total"] or 0
+
+        factures_restantes = queryset.filter(
+            statut__in=[
+                Paiement.StatutPaiement.EN_ATTENTE,
+                Paiement.StatutPaiement.EN_RETARD,
+                Paiement.StatutPaiement.PARTIEL,
+            ]
+        )
+        total_restant = 0
+        for p in factures_restantes:
+            if p.montant_restant is not None:
+                total_restant += float(p.montant_restant)
+            elif p.montant_attendu is not None:
+                total_restant += float(p.montant_attendu - (p.montant_paye or 0))
+            else:
+                total_restant += float(p.montant - (p.montant_paye or 0))
+
+        return Response({
+            "total": queryset.count(),
+            "count_paye": factures_payees.count(),
+            "count_attente": queryset.filter(statut=Paiement.StatutPaiement.EN_ATTENTE).count(),
+            "count_retard": queryset.filter(statut=Paiement.StatutPaiement.EN_RETARD).count(),
+            "total_encaisse": float(total_encaisse),
+            "montant_restant": float(total_restant),
         })
 
 

@@ -13,6 +13,14 @@ class PaiementSerializer(serializers.ModelSerializer):
         source="contrat.locataire.user.get_full_name",
         read_only=True
     )
+    locataire_user_id = serializers.IntegerField(
+        source="contrat.locataire.user.id",
+        read_only=True
+    )
+    locataire_id = serializers.IntegerField(
+        source="contrat.locataire.id",
+        read_only=True
+    )
     bien_titre = serializers.CharField(
         source="contrat.bien.titre",
         read_only=True
@@ -88,6 +96,8 @@ class PaiementSerializer(serializers.ModelSerializer):
             "est_partiel",
             "date_creation",
             "locataire_nom",
+            "locataire_user_id",
+            "locataire_id",
             "bien_titre",
             "loyer_contrat",
             "est_en_retard",
@@ -109,6 +119,8 @@ class PaiementSerializer(serializers.ModelSerializer):
             "date_versement_partiel",
             "montant_attendu",
             "montant_restant",
+            "locataire_user_id",
+            "locataire_id",
             "est_en_retard",
             "message_mois",
             "part_proprietaire",

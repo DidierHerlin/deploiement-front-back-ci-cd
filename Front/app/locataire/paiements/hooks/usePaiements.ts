@@ -1,16 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   getPaiements,
+  getPaiementsStats,
   getNotifications,
   getDemandesPaiement,
   getFacturesEligibles,
   Paiement,
+  PaiementStatsData,
   Notification,
   DemandePaiement,
 } from '@/lib/api';
 
-export function usePaiements() {
+export function usePaiements(userId?: number) {
   const [paiements, setPaiements] = useState<Paiement[]>([]);
+  const [stats, setStats] = useState<PaiementStatsData | null>(null);
   const [demandes, setDemandes] = useState<DemandePaiement[]>([]);
   const [facturesEligibles, setFacturesEligibles] = useState<Paiement[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -21,14 +24,16 @@ export function usePaiements() {
     try {
       setLoading(true);
       setError(null);
-      const [dataPaiements, dataNotifications, dataDemandes, dataEligibles] = await Promise.all([
+      const [dataPaiements, dataStats, dataNotifications, dataDemandes, dataEligibles] = await Promise.all([
         getPaiements(),
+        getPaiementsStats(userId).catch(() => null),
         getNotifications().catch(() => []),
         getDemandesPaiement().catch(() => []),
         getFacturesEligibles().then((r) => r.results).catch(() => []),
       ]);
 
       setPaiements(dataPaiements || []);
+      setStats(dataStats);
       setNotifications(dataNotifications || []);
       setDemandes(dataDemandes || []);
       setFacturesEligibles(dataEligibles || []);
@@ -37,7 +42,7 @@ export function usePaiements() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     fetchData();
@@ -45,6 +50,7 @@ export function usePaiements() {
 
   return {
     paiements,
+    stats,
     demandes,
     facturesEligibles,
     notifications,
@@ -53,4 +59,5 @@ export function usePaiements() {
     refetch: fetchData,
   };
 }
+
 

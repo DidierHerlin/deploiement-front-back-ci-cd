@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState } from 'react';
-import { Paiement } from '@/lib/api';
+import React, { useState, useMemo } from 'react';
+import { Paiement, Contrat } from '@/lib/api';
 import { usePathname } from 'next/navigation';
 
 import { FactureModal } from '@/components/organisms/FactureModal';
@@ -12,11 +12,12 @@ import { Pagination } from "@/components/molecules/pagination";
 
 interface PaiementListProps {
   paiements: Paiement[];
+  contrats?: Contrat[];
   onUpdate?: (p: Paiement) => void;
   onDemanderPaiement?: (p: Paiement) => void;
 }
 
-export function PaiementList({ paiements: initialPaiements, onUpdate, onDemanderPaiement }: PaiementListProps) {
+export function PaiementList({ paiements: initialPaiements, contrats = [], onUpdate, onDemanderPaiement }: PaiementListProps) {
   const pathname = usePathname();
   const isAgent = pathname?.includes('/agent') || pathname?.includes('/admin');
   const isLocataire = pathname?.includes('/locataire') || !isAgent;
@@ -33,9 +34,43 @@ export function PaiementList({ paiements: initialPaiements, onUpdate, onDemander
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 5;
 
-    
-  const totalPages = Math.ceil(paiements.length / ITEMS_PER_PAGE);
-  const paginatedData = paiements.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  // Filtrer les paiements associés à un contrat résilié
+  const isContratResilie = (p: Paiement): boolean => {
+    // 1. Champ contrat_statut explicite sur le paiement
+    const directStatut = (p as any).contrat_statut;
+    if (typeof directStatut === 'string') {
+      const s = directStatut.trim().toUpperCase();
+      if (s === 'RESILIE' || s === 'RÉSILIÉ') return true;
+    }
+
+    // 2. Objet contrat imbriqué sur le paiement
+    if (typeof p.contrat === 'object' && p.contrat !== null) {
+      const s = (p.contrat as any).statut;
+      if (typeof s === 'string') {
+        const sUpper = s.trim().toUpperCase();
+        if (sUpper === 'RESILIE' || sUpper === 'RÉSILIÉ') return true;
+      }
+    }
+
+    // 3. Statut issu de la liste des contrats
+    const contratId = typeof p.contrat === 'object' && p.contrat !== null ? (p.contrat as any).id : p.contrat;
+    if (contratId && contrats && contrats.length > 0) {
+      const c = contrats.find(contrat => contrat.id === contratId);
+      if (c?.statut) {
+        const sUpper = c.statut.trim().toUpperCase();
+        if (sUpper === 'RESILIE' || sUpper === 'RÉSILIÉ') return true;
+      }
+    }
+
+    return false;
+  };
+
+  const paiementsVisibles = useMemo(() => {
+    return paiements.filter(p => !isContratResilie(p));
+  }, [paiements, contrats]);
+
+  const totalPages = Math.ceil(paiementsVisibles.length / ITEMS_PER_PAGE);
+  const paginatedData = paiementsVisibles.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   const handleDownloadQuittance = async (paiementId: number) => {
     try {
@@ -73,7 +108,7 @@ export function PaiementList({ paiements: initialPaiements, onUpdate, onDemander
         </div>
       </div>
       
-      {paiements.length === 0 ? (
+      {paiementsVisibles.length === 0 ? (
         <div style={{ padding: '2rem', textAlign: 'center', color: '#7b8494' }}>
           Aucun paiement trouvé pour vos contrats avec ce filtre.
         </div>

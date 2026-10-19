@@ -1265,4 +1265,214 @@ class DemandePaiementTests(PaiementTestBase):
             self.assertIn("moyen_paiement", response.data)
 
 
+# ==============================================================================
+# Tests Obligatoires : Montant total encaissé sur l'espace locataire
+# ==============================================================================
+
+class MontantTotalEncaisseTestCase(APITestCase):
+    """
+    Validation rigoureuse des règles de calcul du montant total encaissé :
+    - Test 1 : Deux factures payées (100 000 Ar et 150 000 Ar) -> total = 250 000 Ar.
+    - Test 2 : Facture d'un autre utilisateur (200 000 Ar) exclue du total du premier locataire.
+    - Test 3 : Facture de 80 000 Ar en attente non comptabilisée.
+    - Test 4 : Facture de 120 000 Ar en retard ou partiellement payée non comptabilisée.
+    - Test 5 : Utilisateur sans aucune facture payée -> total = 0 Ar.
+    - Test 6 : Validation de l'actualisation dynamique du montant après validation d'une facture.
+    """
+
+    def setUp(self):
+        # Propriétaire & Bien
+        self.proprio_user = _make_user("proprio_stats@test.mg", Utilisateur.Role.PROPRIETAIRE)
+        self.proprio = Proprietaire.objects.create(user=self.proprio_user, iban="MG001")
+        self.bien1 = _make_bien(self.proprio, titre="Bien Locataire 1")
+        self.bien2 = _make_bien(self.proprio, titre="Bien Locataire 2")
+        self.bien3 = _make_bien(self.proprio, titre="Bien Locataire 3")
+
+        # Locataire 1 (Utilisateur principal)
+        self.user1 = _make_user("loc1_stats@test.mg", Utilisateur.Role.LOCATAIRE)
+        self.locataire1 = Locataire.objects.create(user=self.user1)
+        self.contrat1 = Contrat.objects.create(
+            bien=self.bien1, locataire=self.locataire1,
+            type_contrat=Contrat.TypeContrat.LOCATION,
+            date_debut=date(2026, 1, 1),
+            date_fin=date(2026, 12, 31),
+            loyer=100_000, depot_garantie=100_000,
+        )
+
+        # Locataire 2 (Autre utilisateur)
+        self.user2 = _make_user("loc2_stats@test.mg", Utilisateur.Role.LOCATAIRE)
+        self.locataire2 = Locataire.objects.create(user=self.user2)
+        self.contrat2 = Contrat.objects.create(
+            bien=self.bien2, locataire=self.locataire2,
+            type_contrat=Contrat.TypeContrat.LOCATION,
+            date_debut=date(2026, 1, 1),
+            date_fin=date(2026, 12, 31),
+            loyer=200_000, depot_garantie=200_000,
+        )
+
+        # Locataire 3 (Sans facture payée)
+        self.user3 = _make_user("loc3_stats@test.mg", Utilisateur.Role.LOCATAIRE)
+        self.locataire3 = Locataire.objects.create(user=self.user3)
+        self.contrat3 = Contrat.objects.create(
+            bien=self.bien3, locataire=self.locataire3,
+            type_contrat=Contrat.TypeContrat.LOCATION,
+            date_debut=date(2026, 1, 1),
+            date_fin=date(2026, 12, 31),
+            loyer=50_000, depot_garantie=50_000,
+        )
+
+    def test_1_deux_factures_payees_donnent_250000(self):
+        """Test 1 : Un utilisateur possède deux factures payées de 100 000 Ar et 150 000 Ar. Total = 250 000 Ar."""
+        Paiement.objects.create(
+            contrat=self.contrat1,
+            date_echeance=date(2026, 1, 5),
+            montant=100_000, montant_attendu=100_000, montant_paye=100_000,
+            statut=Paiement.StatutPaiement.PAYE,
+        )
+        Paiement.objects.create(
+            contrat=self.contrat1,
+            date_echeance=date(2026, 2, 5),
+            montant=150_000, montant_attendu=150_000, montant_paye=150_000,
+            statut=Paiement.StatutPaiement.PAYE,
+        )
+
+        self.client.force_authenticate(user=self.user1)
+        res = self.client.get("/api/paiements/stats/")
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data["total_encaisse"], 250_000.0)
+
+    def test_2_facture_autre_utilisateur_non_incluse(self):
+        """Test 2 : Un autre utilisateur possède une facture payée de 200 000 Ar. Exclue du premier utilisateur."""
+        # Factures utilisateur 1 : 100 000 + 150 000 = 250 000
+        Paiement.objects.create(
+            contrat=self.contrat1,
+            date_echeance=date(2026, 1, 5),
+            montant=100_000, montant_attendu=100_000, montant_paye=100_000,
+            statut=Paiement.StatutPaiement.PAYE,
+        )
+        Paiement.objects.create(
+            contrat=self.contrat1,
+            date_echeance=date(2026, 2, 5),
+            montant=150_000, montant_attendu=150_000, montant_paye=150_000,
+            statut=Paiement.StatutPaiement.PAYE,
+        )
+
+        # Facture utilisateur 2 : 200 000 Ar
+        Paiement.objects.create(
+            contrat=self.contrat2,
+            date_echeance=date(2026, 1, 5),
+            montant=200_000, montant_attendu=200_000, montant_paye=200_000,
+            statut=Paiement.StatutPaiement.PAYE,
+        )
+
+        # Vérification pour utilisateur 1 : doit être exactement 250 000 Ar (et non 450 000 Ar)
+        self.client.force_authenticate(user=self.user1)
+        res1 = self.client.get("/api/paiements/stats/")
+        self.assertEqual(res1.status_code, status.HTTP_200_OK)
+        self.assertEqual(res1.data["total_encaisse"], 250_000.0)
+
+        # Vérification pour utilisateur 2 : doit être 200 000 Ar
+        self.client.force_authenticate(user=self.user2)
+        res2 = self.client.get("/api/paiements/stats/")
+        self.assertEqual(res2.status_code, status.HTTP_200_OK)
+        self.assertEqual(res2.data["total_encaisse"], 200_000.0)
+
+    def test_3_facture_en_attente_non_comptabilisee(self):
+        """Test 3 : Une facture de 80 000 Ar est en attente de paiement. Elle ne doit pas être comptabilisée."""
+        Paiement.objects.create(
+            contrat=self.contrat1,
+            date_echeance=date(2026, 1, 5),
+            montant=100_000, montant_attendu=100_000, montant_paye=100_000,
+            statut=Paiement.StatutPaiement.PAYE,
+        )
+        Paiement.objects.create(
+            contrat=self.contrat1,
+            date_echeance=date(2026, 2, 5),
+            montant=80_000, montant_attendu=80_000,
+            statut=Paiement.StatutPaiement.EN_ATTENTE,
+        )
+
+        self.client.force_authenticate(user=self.user1)
+        res = self.client.get("/api/paiements/stats/")
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data["total_encaisse"], 100_000.0)
+
+    def test_4_facture_en_retard_ou_partielle_non_comptabilisee(self):
+        """Test 4 : Une facture de 120 000 Ar en retard ou partiellement payée ne doit pas être comptabilisée comme payée."""
+        # Facture 1 payée complète : 100 000 Ar
+        Paiement.objects.create(
+            contrat=self.contrat1,
+            date_echeance=date(2026, 1, 5),
+            montant=100_000, montant_attendu=100_000, montant_paye=100_000,
+            statut=Paiement.StatutPaiement.PAYE,
+        )
+        # Facture 2 en retard : 120 000 Ar -> non comptabilisée
+        Paiement.objects.create(
+            contrat=self.contrat1,
+            date_echeance=date(2026, 2, 5),
+            montant=120_000, montant_attendu=120_000,
+            statut=Paiement.StatutPaiement.EN_RETARD,
+        )
+        # Facture 3 partielle : montant 120 000 Ar (payé 60 000 Ar) -> non comptabilisée
+        Paiement.objects.create(
+            contrat=self.contrat1,
+            date_echeance=date(2026, 3, 5),
+            montant=120_000, montant_attendu=120_000, montant_paye=60_000,
+            statut=Paiement.StatutPaiement.PARTIEL, est_partiel=True,
+        )
+
+        self.client.force_authenticate(user=self.user1)
+        res = self.client.get("/api/paiements/stats/")
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        # Seule la première facture (100 000 Ar) doit être dans le montant total encaissé
+        self.assertEqual(res.data["total_encaisse"], 100_000.0)
+
+    def test_5_utilisateur_sans_facture_payee_retourne_zero(self):
+        """Test 5 : Si l'utilisateur connecté n'a aucune facture payée, le montant total encaissé doit être de 0 Ar."""
+        Paiement.objects.create(
+            contrat=self.contrat3,
+            date_echeance=date(2026, 1, 5),
+            montant=50_000, montant_attendu=50_000,
+            statut=Paiement.StatutPaiement.EN_ATTENTE,
+        )
+
+        self.client.force_authenticate(user=self.user3)
+        res = self.client.get("/api/paiements/stats/")
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data["total_encaisse"], 0.0)
+
+    def test_6_serialisation_locataire_user_id(self):
+        """Vérifie que le sérialiseur expose bien locataire_user_id pour le filtrage frontend."""
+        p = Paiement.objects.create(
+            contrat=self.contrat1,
+            date_echeance=date(2026, 1, 5),
+            montant=100_000, montant_attendu=100_000,
+            statut=Paiement.StatutPaiement.PAYE,
+        )
+        self.client.force_authenticate(user=self.user1)
+        res = self.client.get(f"/api/paiements/{p.id}/")
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data["locataire_user_id"], self.user1.id)
+
+    def test_7_actualisation_apres_validation_facture(self):
+        """Vérifie que le montant total encaissé est actualisé après validation d'une facture."""
+        p = Paiement.objects.create(
+            contrat=self.contrat1,
+            date_echeance=date(2026, 1, 5),
+            montant=100_000, montant_attendu=100_000,
+            statut=Paiement.StatutPaiement.EN_ATTENTE,
+        )
+
+        self.client.force_authenticate(user=self.user1)
+        res_avant = self.client.get("/api/paiements/stats/")
+        self.assertEqual(res_avant.data["total_encaisse"], 0.0)
+
+        # Validation de la facture
+        p.valider_paiement()
+
+        res_apres = self.client.get("/api/paiements/stats/")
+        self.assertEqual(res_apres.data["total_encaisse"], 100_000.0)
+
+
+
 
