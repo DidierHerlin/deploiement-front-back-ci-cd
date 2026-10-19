@@ -13,6 +13,18 @@ export function invalidateCache() {
 }
 
 
+export interface Proprietaire {
+  id: number
+  user: {
+    id: number
+    email: string
+    nom: string
+    prenoms: string
+    telephone?: string
+    is_active?: boolean
+  }
+}
+
 export interface Bien {
   id: number
   titre: string
@@ -72,6 +84,58 @@ export interface Contrat {
   date_creation: string
 }
 
+
+export interface Paiement {
+  id: number
+  contrat: number
+  num_echeance: number
+  date_echeance: string
+  date_paiement_prevue: string | null
+  date_paiement: string | null
+  date_versement_partiel: string | null
+  montant_attendu: string | null
+  montant: string | null
+  montant_paye: string | null
+  montant_restant: string | null
+  mode_paiement: string | null
+  reference: string | null
+  statut: string
+  est_partiel: boolean
+  date_creation: string
+  locataire_nom: string
+  bien_titre: string
+  loyer_contrat: string
+  est_en_retard: boolean
+  message_mois: string
+  part_proprietaire: number | null
+  commission_agent: number | null
+  est_mois_a_venir?: boolean
+  a_echeance_anterieure_impayee?: boolean
+  est_eligible_demande?: boolean
+  demande_en_cours?: {
+    id: number
+    statut: string
+    moyen_paiement: string
+    date_demande: string
+    montant: string
+    telephone?: string | null
+    reference?: string | null
+  } | null
+}
+
+export interface Notification {
+  id: number;
+  utilisateur: number;
+  type: string;
+  type_display: string;
+  titre: string;
+  message: string;
+  lien: string | null;
+  date_creation: string;
+  lu: boolean;
+  email_envoye: boolean;
+}
+
 export interface CreerContratPayload {
   bien: number
   locataire: number
@@ -82,6 +146,86 @@ export interface CreerContratPayload {
   loyer?: string | null
   depot_garantie?: string | null
   prix?: string | null
+}
+
+export interface ReservationData {
+  id: number
+  locataire: number
+  bien: number
+  commentaire: string
+  type_reservation: "LOCATION" | "ACHAT"
+  statut: "EN_ATTENTE" | "TRAITEE" | "ANNULEE"
+  reponse_admin: string
+  contrat: number | null
+  date_creation: string
+  locataire_nom?: string
+  locataire_prenoms?: string
+  locataire_email?: string
+  locataire_telephone?: string
+  bien_titre?: string
+  bien_type?: string
+  bien_adresse?: string
+  bien_surface?: number
+  bien_loyer_mensuel?: string | null
+  bien_prix?: string | null
+  bien_mode_transaction?: string
+  bien_statut?: string
+  bien_nombre_pieces?: number | null
+}
+
+
+export interface DemandePaiement {
+  id: number
+  locataire: number
+  locataire_nom: string
+  locataire_email: string
+  facture: number
+  bien_titre: string
+  date_echeance_facture: string
+  mois_echeance_facture: string
+  statut_facture: string
+  montant: string
+  date_demande: string
+  moyen_paiement: "MVOLA" | "ORANGE_MONEY" | "AIRTEL_MONEY"
+  statut: "EN_ATTENTE" | "VALIDE" | "REFUSE" | "ANNULE"
+  statut_display?: string
+  telephone: string | null
+  reference: string | null
+  date_traitement: string | null
+  motif_refus: string | null
+}
+
+export interface CreerDemandePaiementPayload {
+  facture: number
+  montant?: number | string
+  moyen_paiement: "MVOLA" | "ORANGE_MONEY" | "AIRTEL_MONEY"
+  telephone?: string
+  reference?: string
+}
+
+export interface UserProfil {
+  id: number
+  email: string
+  nom: string
+  prenoms: string
+  role: string
+  is_active: boolean
+  date_creation: string
+  photo_url: string | null
+  photo_profil?: string | null
+  telephone?: string | null
+}
+
+// Création contrat
+
+export interface BienInfo {
+  loyer_mensuel: string | null
+  prix: string | null
+  mode_transaction: "LOCATION" | "VENTE"
+  type: string
+  surface: number
+  adresse: string
+  titre: string
 }
 
 
@@ -417,17 +561,6 @@ export async function getBienDetail(id: number): Promise<Bien> {
 }
 
 
-// Création contrat
-
-export interface BienInfo {
-  loyer_mensuel: string | null
-  prix: string | null
-  mode_transaction: "LOCATION" | "VENTE"
-  type: string
-  surface: number
-  adresse: string
-  titre: string
-}
 
 export async function getBienInfo(bienId: number): Promise<BienInfo> {
   return fetchAPI<BienInfo>(`/contrats/bien-info/?bien_id=${bienId}`)
@@ -435,19 +568,6 @@ export async function getBienInfo(bienId: number): Promise<BienInfo> {
 
 
 //  API Locataires
-
-export interface Proprietaire {
-  id: number
-  user: {
-    id: number
-    email: string
-    nom: string
-    prenoms: string
-    telephone?: string
-    is_active?: boolean
-  }
-}
-
 export async function getProprietaires(): Promise<Proprietaire[]> {
   const res = await fetchAPI<{
     success: boolean
@@ -472,7 +592,6 @@ export async function getLocataireDetail(id: number): Promise<Locataire> {
 }
 
 // API  Contrats
-
 export async function getContrats(): Promise<Contrat[]> {
   const res = await fetchAPI<{
     success: boolean
@@ -503,31 +622,8 @@ export async function updateContrat(id: number, payload: Partial<CreerContratPay
 
 // API  Paiements
 
-export interface Paiement {
-  id: number
-  contrat: number
-  num_echeance: number
-  date_echeance: string
-  date_paiement_prevue: string | null
-  date_paiement: string | null
-  date_versement_partiel: string | null
-  montant_attendu: string | null
-  montant: string | null
-  montant_paye: string | null
-  montant_restant: string | null
-  mode_paiement: string | null
-  reference: string | null
-  statut: string
-  est_partiel: boolean
-  date_creation: string
-  locataire_nom: string
-  bien_titre: string
-  loyer_contrat: string
-  est_en_retard: boolean
-  message_mois: string
-  part_proprietaire: number | null
-  commission_agent: number | null
-}
+
+
 
 export async function getPaiements(): Promise<Paiement[]> {
   const PAGE_SIZE = 500
@@ -622,6 +718,50 @@ export async function getImpayes(): Promise<Paiement[]> {
   return res.results || (res as any)
 }
 
+export async function getDemandesPaiement(): Promise<DemandePaiement[]> {
+  const res = await fetchAPI<{ count: number; results: DemandePaiement[] }>("/demandes-paiement/")
+  return res.results ?? (res as any) ?? []
+}
+
+export async function creerDemandePaiement(payload: CreerDemandePaiementPayload): Promise<DemandePaiement> {
+  return await fetchAPI<DemandePaiement>("/demandes-paiement/", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  })
+}
+
+export async function annulerDemandePaiement(id: number): Promise<DemandePaiement> {
+  return await fetchAPI<DemandePaiement>(`/demandes-paiement/${id}/annuler/`, {
+    method: "POST"
+  })
+}
+
+export async function getFacturesEligibles(): Promise<{ mois_cible: string; count: number; results: Paiement[] }> {
+  return await fetchAPI<{ mois_cible: string; count: number; results: Paiement[] }>("/demandes-paiement/factures-eligibles/")
+}
+
+export async function validerDemandePaiement(id: number): Promise<DemandePaiement> {
+  return await fetchAPI<DemandePaiement>(`/demandes-paiement/${id}/valider/`, {
+    method: "POST"
+  })
+}
+
+export async function refuserDemandePaiement(id: number, motif: string = ""): Promise<DemandePaiement> {
+  return await fetchAPI<DemandePaiement>(`/demandes-paiement/${id}/refuser/`, {
+    method: "POST",
+    body: JSON.stringify({ motif_refus: motif, motif: motif })
+  })
+}
+
+export const demandePaiementApi = {
+  list: getDemandesPaiement,
+  create: creerDemandePaiement,
+  annuler: annulerDemandePaiement,
+  valider: validerDemandePaiement,
+  rejeter: refuserDemandePaiement,
+  getFacturesEligibles: getFacturesEligibles,
+}
+
 export async function downloadQuittance(id: number, reference: string = "quittance"): Promise<void> {
   const token = localStorage.getItem("token")
   const headers: Record<string, string> = {}
@@ -659,20 +799,7 @@ export async function downloadQuittance(id: number, reference: string = "quittan
   }
 }
 
-// API Profil
 
-export interface Notification {
-  id: number;
-  utilisateur: number;
-  type: string;
-  type_display: string;
-  titre: string;
-  message: string;
-  lien: string | null;
-  date_creation: string;
-  lu: boolean;
-  email_envoye: boolean;
-}
 
 export async function getNotifications(): Promise<Notification[]> {
   const res = await fetchAPI<{ count?: number; results?: Notification[] } | Notification[]>('/notifications/');
@@ -690,18 +817,7 @@ export async function markNotificationsAsRead(notificationIds?: number[]): Promi
   });
 }
 
-export interface UserProfil {
-  id: number
-  email: string
-  nom: string
-  prenoms: string
-  role: string
-  is_active: boolean
-  date_creation: string
-  photo_url: string | null
-  photo_profil?: string | null
-  telephone?: string | null
-}
+
 
 export function resolveMediaUrl(url: string | null | undefined): string | null {
   if (!url) return null
@@ -861,7 +977,6 @@ export async function updateLocataire(id: number, payload: any): Promise<Locatai
 }
 
 
-
 export async function deleteContrat(id: number): Promise<void> {
   await fetchAPI<void>(`/contrats/${id}/`, { method: "DELETE" })
 }
@@ -878,31 +993,6 @@ export async function getEcheances(): Promise<any[]> {
   return res.results || [];
 }
 
-
-export interface ReservationData {
-  id: number
-  locataire: number
-  bien: number
-  commentaire: string
-  type_reservation: "LOCATION" | "ACHAT"
-  statut: "EN_ATTENTE" | "TRAITEE" | "ANNULEE"
-  reponse_admin: string
-  contrat: number | null
-  date_creation: string
-  locataire_nom?: string
-  locataire_prenoms?: string
-  locataire_email?: string
-  locataire_telephone?: string
-  bien_titre?: string
-  bien_type?: string
-  bien_adresse?: string
-  bien_surface?: number
-  bien_loyer_mensuel?: string | null
-  bien_prix?: string | null
-  bien_mode_transaction?: string
-  bien_statut?: string
-  bien_nombre_pieces?: number | null
-}
 
 export async function getReservations(): Promise<ReservationData[]> {
   const res = await fetchAPI<{ success: boolean; count: number; results: ReservationData[] }>("/reservations/")

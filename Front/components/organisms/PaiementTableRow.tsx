@@ -1,4 +1,4 @@
-﻿import { Eye, Edit, Download } from 'lucide-react'
+import { Eye, Edit, Download, Smartphone, CheckCircle2, XCircle } from 'lucide-react'
 import { Paiement, downloadQuittance } from '@/lib/api'
 import { PaiementStatusBadge } from "@/components/atoms/paiement_PaiementStatusBadge"
 
@@ -6,9 +6,11 @@ type PaiementTableRowProps = {
   paiement: Paiement
   onView: (p: Paiement) => void
   onEdit: (p: Paiement) => void
+  onValiderDemande?: (p: Paiement) => void
+  onRefuserDemande?: (p: Paiement) => void
 }
 
-export function PaiementTableRow({ paiement, onView, onEdit }: PaiementTableRowProps) {
+export function PaiementTableRow({ paiement, onView, onEdit, onValiderDemande, onRefuserDemande }: PaiementTableRowProps) {
   const formatDate = (d: string | null) => {
     if (!d) return '-'
     return new Date(d).toLocaleDateString('fr-FR')
@@ -19,8 +21,11 @@ export function PaiementTableRow({ paiement, onView, onEdit }: PaiementTableRowP
     return Number(m).toLocaleString('fr-FR') + ' Ar'
   }
 
+  const isMobileMoneyPending = paiement.statut === 'EN_ATTENTE' && 
+    (['MVOLA', 'ORANGE_MONEY', 'AIRTEL_MONEY'].includes(paiement.mode_paiement || '') || !!paiement.demande_en_cours)
+
   return (
-    <tr>
+    <tr style={{ backgroundColor: isMobileMoneyPending ? '#f0fdf4' : undefined }}>
       <td>
         <div style={{ fontWeight: 500 }}>#{paiement.id}</div>
         <small style={{ color: '#64748b' }}>Éch. {paiement.num_echeance || '-'}</small>
@@ -35,10 +40,60 @@ export function PaiementTableRow({ paiement, onView, onEdit }: PaiementTableRowP
         <div style={{ fontSize: '13px' }}><span style={{ color: '#64748b' }}>Éch:</span> {formatDate(paiement.date_echeance)}</div>
         {paiement.date_paiement && <div style={{ fontSize: '13px' }}><span style={{ color: '#10b981' }}>Payé:</span> {formatDate(paiement.date_paiement)}</div>}
       </td>
-      <td><PaiementStatusBadge statut={paiement.statut} /></td>
-      <td>{paiement.mode_paiement || '-'}</td>
+      <td>
+        <PaiementStatusBadge statut={paiement.statut} />
+      </td>
+      <td>
+        {isMobileMoneyPending ? (
+          <div>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                fontSize: '11px',
+                fontWeight: 700,
+                backgroundColor: '#ecfdf5',
+                color: '#047857',
+                border: '1px solid #a7f3d0'
+              }}
+            >
+              <Smartphone size={11} /> {paiement.demande_en_cours?.moyen_paiement || paiement.mode_paiement || 'Mobile Money'}
+            </span>
+            {(paiement.demande_en_cours?.reference || paiement.reference) && (
+              <small style={{ display: 'block', color: '#047857', fontFamily: 'monospace', marginTop: '2px' }}>
+                Réf: {paiement.demande_en_cours?.reference || paiement.reference}
+              </small>
+            )}
+          </div>
+        ) : (
+          paiement.mode_paiement || '-'
+        )}
+      </td>
       <td style={{ textAlign: 'right' }}>
-        <div style={{ display: 'flex', gap: '5px', justifyContent: 'flex-end' }}>
+        <div style={{ display: 'flex', gap: '5px', justifyContent: 'flex-end', alignItems: 'center' }}>
+          {isMobileMoneyPending && onValiderDemande && (
+            <button
+              className="action-icon"
+              onClick={() => onValiderDemande(paiement)}
+              title="Valider la demande Mobile Money"
+              style={{ color: '#059669', background: '#ecfdf5', border: '1px solid #a7f3d0' }}
+            >
+              <CheckCircle2 size={16} />
+            </button>
+          )}
+          {isMobileMoneyPending && onRefuserDemande && (
+            <button
+              className="action-icon"
+              onClick={() => onRefuserDemande(paiement)}
+              title="Refuser la demande Mobile Money"
+              style={{ color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca' }}
+            >
+              <XCircle size={16} />
+            </button>
+          )}
           {paiement.statut === 'PAYE' && (
             <button className="action-icon" onClick={() => downloadQuittance(paiement.id)} title="Télécharger la quittance" style={{ color: '#2563eb' }}>
               <Download size={16} />

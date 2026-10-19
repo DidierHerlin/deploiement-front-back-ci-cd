@@ -47,3 +47,57 @@ class PaiementAdmin(admin.ModelAdmin):
             url = obj.fichier_quittance.url
             return format_html('<a href="{}" target="_blank">📄 Télécharger</a>', url)
         return "-"
+
+
+from .models import DemandePaiement
+
+
+@admin.register(DemandePaiement)
+class DemandePaiementAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "locataire",
+        "facture",
+        "montant",
+        "moyen_paiement",
+        "statut",
+        "telephone",
+        "reference",
+        "date_demande",
+        "date_traitement",
+    )
+    list_filter = ("statut", "moyen_paiement", "date_demande")
+    search_fields = (
+        "locataire__user__nom",
+        "locataire__user__prenoms",
+        "locataire__user__email",
+        "reference",
+        "telephone",
+    )
+    readonly_fields = ("date_demande",)
+    raw_id_fields = ("locataire", "facture")
+    actions = ["valider_demandes", "refuser_demandes"]
+
+    @admin.action(description="Valider les demandes sélectionnées (Passer en PAYÉ et générer la quittance)")
+    def valider_demandes(self, request, queryset):
+        from django.db import transaction
+        count = 0
+        for demande in queryset.filter(statut=DemandePaiement.StatutDemande.EN_ATTENTE):
+            with transaction.atomic():
+                demande.valider()
+                facture = demande.facture
+                facture.mode_paiement = demande.moyen_paiement
+                if demande.reference:
+                    facture.reference = demande.reference
+                facture.save()
+                facture.valider_paiement()
+                count += 1
+        self.message_user(request, f"{count} demande(s) de paiement validée(s) avec succès.")
+
+    @admin.action(description="Refuser les demandes sélectionnées")
+    def refuser_demandes(self, request, queryset):
+        count = 0
+        for demande in queryset.filter(statut=DemandePaiement.StatutDemande.EN_ATTENTE):
+            demande.refuser(motif="Refusé depuis l'administration")
+            count += 1
+        self.message_user(request, f"{count} demande(s) de paiement refusée(s).")

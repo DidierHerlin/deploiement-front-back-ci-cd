@@ -265,6 +265,55 @@ class Paiement(models.Model):
         """Message informatif sur le mois concerné par ce paiement."""
         return f"Ce paiement correspond au mois de {self.mois_echeance}."
 
+    @property
+    def est_mois_a_venir(self) -> bool:
+        """Indique si cette facture correspond au mois à venir (mois suivant)."""
+        if not self.date_echeance:
+            return False
+        annee_cible, mois_cible = get_mois_a_venir()
+        return (self.date_echeance.year, self.date_echeance.month) == (annee_cible, mois_cible)
+
+    @property
+    def est_mois_passe(self) -> bool:
+        """Indique si cette facture correspond à un mois passé par rapport au mois à venir."""
+        if not self.date_echeance:
+            return False
+        annee_cible, mois_cible = get_mois_a_venir()
+        return (self.date_echeance.year, self.date_echeance.month) < (annee_cible, mois_cible)
+
+    @property
+    def a_echeance_anterieure_impayee(self) -> bool:
+        """Vérifie s'il existe une échéance antérieure non payée sur ce contrat."""
+        if not self.date_echeance or not self.contrat_id:
+            return False
+        return Paiement.objects.filter(
+            contrat_id=self.contrat_id,
+            date_echeance__lt=self.date_echeance
+        ).exclude(
+            statut__in=[self.StatutPaiement.PAYE, self.StatutPaiement.ANNULE]
+        ).exists()
+
+    @property
+    def a_demande_en_cours(self) -> bool:
+        """Vérifie si une demande de paiement est déjà en cours (EN_ATTENTE) pour cette facture."""
+        return self.demandes_paiement.filter(statut=DemandePaiement.StatutDemande.EN_ATTENTE).exists()
+
+    @property
+    def est_eligible_demande(self) -> bool:
+        """
+        Une facture est éligible à une demande de paiement si :
+        - Elle a un statut en attente (non encore payée ni annulée)
+        - Aucune facture antérieure n'est encore impayée sur ce contrat (règlement chronologique obligatoire)
+        - Elle n'a pas déjà une demande en cours de validation
+        """
+        if self.statut in (self.StatutPaiement.PAYE, self.StatutPaiement.ANNULE):
+            return False
+        if self.a_demande_en_cours:
+            return False
+        if self.a_echeance_anterieure_impayee:
+            return False
+        return True
+
     # --- Actions métier ---
 
     def valider_paiement(self, *, save=True):
@@ -281,3 +330,212 @@ class Paiement(models.Model):
         self.statut = self.StatutPaiement.ANNULE
         if save:
             self.save(update_fields=["statut"])
+
+
+def get_mois_a_venir(reference_date=None):
+    """
+    Retourne le tuple (année, mois) du mois à venir (mois calendaire suivant).
+    Exemple : si reference_date est en octobre 2026, retourne (2026, 11).
+    """
+    if reference_date is None:
+        reference_date = timezone.now().date()
+    annee = reference_date.year + (reference_date.month // 12)
+    mois = (reference_date.month % 12) + 1
+    return annee, mois
+
+
+class DemandePaiement(models.Model):
+    """
+    Demande de paiement d'une facture mensuelle soumise par le locataire.
+    Limitée exclusivement aux moyens de paiement Mobile Money.
+    Autorisée uniquement pour la facture du mois à venir.
+    """
+
+    class MoyenPaiement(models.TextChoices):
+        MVOLA = "MVOLA", "Mvola"
+        ORANGE_MONEY = "ORANGE_MONEY", "Orange Money"
+        AIRTEL_MONEY = "AIRTEL_MONEY", "Airtel Money"
+
+    class StatutDemande(models.TextChoices):
+        EN_ATTENTE = "EN_ATTENTE", "En attente"
+        VALIDE = "VALIDE", "Validée"
+        REFUSE = "REFUSE", "Refusée"
+        ANNULE = "ANNULE", "Annulée"
+
+    locataire = models.ForeignKey(
+        Locataire,
+        on_delete=models.PROTECT,
+        related_name="demandes_paiement",
+        verbose_name="Locataire demandeur",
+    )
+    facture = models.ForeignKey(
+        Paiement,
+        on_delete=models.PROTECT,
+        related_name="demandes_paiement",
+        verbose_name="Facture / Échéance concernée",
+    )
+    montant = models.DecimalField(
+        "Montant à payer",
+        max_digits=15,
+        decimal_places=2,
+        help_text="Montant exact de la facture",
+    )
+    date_demande = models.DateTimeField(
+        "Date de demande",
+        auto_now_add=True,
+    )
+    moyen_paiement = models.CharField(
+        "Moyen de paiement",
+        max_length=20,
+        choices=MoyenPaiement.choices,
+        help_text="Moyen de paiement Mobile Money (Mvola, Orange Money, Airtel Money)",
+    )
+    statut = models.CharField(
+        "Statut de la demande",
+        max_length=20,
+        choices=StatutDemande.choices,
+        default=StatutDemande.EN_ATTENTE,
+        db_index=True,
+    )
+    telephone = models.CharField(
+        "Numéro Mobile Money",
+        max_length=20,
+        blank=True,
+        null=True,
+        help_text="Numéro utilisé pour la transaction Mobile Money",
+    )
+    reference = models.CharField(
+        "Référence de transaction",
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Référence ou code de transaction Mobile Money",
+    )
+    date_traitement = models.DateTimeField(
+        "Date de traitement",
+        null=True,
+        blank=True,
+    )
+    motif_refus = models.TextField(
+        "Motif de refus",
+        blank=True,
+        null=True,
+    )
+
+    class Meta:
+        db_table = "demande_paiement"
+        ordering = ["-date_demande"]
+        verbose_name = "Demande de paiement"
+        verbose_name_plural = "Demandes de paiement"
+        indexes = [
+            models.Index(fields=["locataire", "statut"]),
+            models.Index(fields=["facture", "statut"]),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(montant__gte=0),
+                name="demande_paiement_montant_positive",
+            ),
+        ]
+
+    def __str__(self):
+        nom = self.locataire.user.get_full_name() if self.locataire and self.locataire.user else "Locataire"
+        return f"Demande #{self.pk} — {nom} ({self.get_statut_display()})"
+
+    def clean(self):
+        super().clean()
+
+        # Validation stricte du moyen de paiement : uniquement Mobile Money
+        if self.moyen_paiement and self.moyen_paiement not in self.MoyenPaiement.values:
+            raise ValidationError({
+                "moyen_paiement": "Le moyen de paiement doit être exclusivement Mobile Money (MVOLA, ORANGE_MONEY, AIRTEL_MONEY)."
+            })
+
+        if self.facture_id:
+            facture = self.facture
+
+            # 1. Vérification locataire
+            if self.locataire_id and facture.contrat.locataire_id != self.locataire_id:
+                raise ValidationError({
+                    "facture": "Cette facture n'appartient pas au locataire spécifié."
+                })
+
+            # Les vérifications suivantes concernent la création d'une nouvelle demande
+            if not self.pk:
+                # 2. Facture déjà payée
+                if facture.statut == Paiement.StatutPaiement.PAYE:
+                    raise ValidationError({
+                        "facture": "Une facture déjà payée ne peut pas faire l'objet d'une nouvelle demande."
+                    })
+
+                # 3. Règle de priorité chronologique : l'échéance antérieure la plus ancienne doit être réglée en premier
+                if facture.a_echeance_anterieure_impayee:
+                    premiere_impayee = Paiement.objects.filter(
+                        contrat_id=facture.contrat_id,
+                        date_echeance__lt=facture.date_echeance
+                    ).exclude(
+                        statut__in=[Paiement.StatutPaiement.PAYE, Paiement.StatutPaiement.ANNULE]
+                    ).order_by("date_echeance").first()
+                    nom_mois = premiere_impayee.mois_echeance if premiere_impayee else "précédente"
+                    raise ValidationError({
+                        "facture": f"Vous devez d'abord régler votre facture la plus ancienne ({nom_mois}) avant de pouvoir payer celle-ci."
+                    })
+
+                # 4. Doublon : empêche une seconde demande si une demande est déjà en cours
+                demandes_en_cours = DemandePaiement.objects.filter(
+                    facture=facture,
+                    statut=self.StatutDemande.EN_ATTENTE,
+                )
+                if demandes_en_cours.exists():
+                    raise ValidationError({
+                        "facture": "Une demande de paiement est déjà en cours pour cette facture."
+                    })
+
+            # 5. Montant correspond au montant réel de la facture
+            montant_reel = facture.montant_attendu or facture.montant
+            if self.montant is not None and montant_reel is not None and self.montant != montant_reel:
+                raise ValidationError({
+                    "montant": f"Le montant ({self.montant}) doit correspondre exactement au montant réel de la facture ({montant_reel})."
+                })
+
+    def save(self, *args, **kwargs):
+        if self.facture_id and not self.locataire_id:
+            self.locataire = self.facture.contrat.locataire
+        if self.facture_id and self.montant is None:
+            self.montant = self.facture.montant_attendu or self.facture.montant
+        if kwargs.get("update_fields") is None:
+            self.full_clean()
+        super().save(*args, **kwargs)
+
+    def valider(self, *, save=True):
+        if self.statut == self.StatutDemande.VALIDE:
+            raise ValueError("Cette demande est déjà validée.")
+        self.statut = self.StatutDemande.VALIDE
+        self.date_traitement = timezone.now()
+        if save:
+            self.save(update_fields=["statut", "date_traitement"])
+
+    def refuser(self, motif="", *, save=True):
+        if self.statut == self.StatutDemande.VALIDE:
+            raise ValueError("Une demande validée ne peut pas être refusée.")
+        self.statut = self.StatutDemande.REFUSE
+        self.motif_refus = motif
+        self.date_traitement = timezone.now()
+        if save:
+            self.save(update_fields=["statut", "motif_refus", "date_traitement"])
+            if self.facture_id and self.facture.statut != Paiement.StatutPaiement.PAYE:
+                self.facture.mode_paiement = None
+                self.facture.reference = None
+                self.facture.save()
+
+    def annuler(self, *, save=True):
+        if self.statut != self.StatutDemande.EN_ATTENTE:
+            raise ValueError("Seule une demande en attente peut être annulée.")
+        self.statut = self.StatutDemande.ANNULE
+        self.date_traitement = timezone.now()
+        if save:
+            self.save(update_fields=["statut", "date_traitement"])
+            if self.facture_id and self.facture.statut != Paiement.StatutPaiement.PAYE:
+                self.facture.mode_paiement = None
+                self.facture.reference = None
+                self.facture.save()

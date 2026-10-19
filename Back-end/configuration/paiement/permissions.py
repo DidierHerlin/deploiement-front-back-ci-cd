@@ -43,3 +43,56 @@ class PaiementPermission(permissions.BasePermission):
             return obj.contrat.bien.proprietaire.user == user
 
         return False
+
+
+class DemandePaiementPermission(permissions.BasePermission):
+    """
+    Permissions pour les demandes de paiement :
+    - ADMIN / AGENT : accès complet (CRUD, validation, refus)
+    - LOCATAIRE : peut créer une demande, consulter ses propres demandes, et annuler sa demande en attente
+    - PROPRIETAIRE : consultation des demandes liées à ses biens
+    """
+
+    def has_permission(self, request, view):
+        user = request.user
+        if not (user and user.is_authenticated):
+            return False
+
+        if user.role in (Utilisateur.Role.ADMIN, Utilisateur.Role.AGENT):
+            return True
+
+        if user.role == Utilisateur.Role.LOCATAIRE:
+            # Locataire peut lire, créer une demande, ou déclencher les actions personnalisées autorisées (annuler, factures_eligibles)
+            if request.method in permissions.SAFE_METHODS:
+                return True
+            if request.method == "POST":
+                return True
+            return False
+
+        if user.role == Utilisateur.Role.PROPRIETAIRE:
+            return request.method in permissions.SAFE_METHODS
+
+        return False
+
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+
+        if user.role in (Utilisateur.Role.ADMIN, Utilisateur.Role.AGENT):
+            return True
+
+        if user.role == Utilisateur.Role.LOCATAIRE:
+            if obj.locataire.user != user:
+                return False
+            if request.method in permissions.SAFE_METHODS:
+                return True
+            if getattr(view, "action", None) == "annuler":
+                return True
+            return False
+
+        if user.role == Utilisateur.Role.PROPRIETAIRE:
+            return (
+                request.method in permissions.SAFE_METHODS
+                and obj.facture.contrat.bien.proprietaire.user == user
+            )
+
+        return False

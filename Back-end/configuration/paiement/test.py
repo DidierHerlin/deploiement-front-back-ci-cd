@@ -17,7 +17,7 @@ from rest_framework.test import APITestCase
 from bien.models import Bien
 from contrats.models import Contrat
 from notifications.models import Notification
-from paiement.models import Paiement, quittance_upload_path
+from paiement.models import Paiement, DemandePaiement, quittance_upload_path, get_mois_a_venir
 from paiement.utils import formater_montant_ar, generate_quittance_pdf
 from utilisateur.models import Locataire, Proprietaire, Utilisateur
 
@@ -730,4 +730,539 @@ class PaiementUtilsAndSerializerBoostTests(PaiementTestBase):
             mock_pisa.return_value = type('Status', (), {'err': 1})()
             with self.assertRaises(Exception):
                 generate_quittance_pdf(self.paiement)
+
+
+# ==============================================================================
+# Tests pour la Demande de Paiement Mobile Money du Locataire
+# ==============================================================================
+
+class DemandePaiementTests(PaiementTestBase):
+    def setUp(self):
+        super().setUp()
+        today = date.today()
+        # Calcul du mois à venir
+        annee_cible, mois_cible = get_mois_a_venir(today)
+        self.date_mois_a_venir = date(annee_cible, mois_cible, 5)
+
+        # Facture autorisée (mois à venir)
+        self.facture_autorisee = Paiement.objects.create(
+            contrat=self.contrat,
+            date_echeance=self.date_mois_a_venir,
+            montant=500_000,
+            montant_attendu=500_000,
+            statut=Paiement.StatutPaiement.EN_ATTENTE,
+        )
+
+        # Facture d'un mois passé (déjà payée pour que facture_autorisee soit la plus ancienne impayée)
+        date_mois_passe = date(today.year, today.month, 1) - relativedelta(months=1)
+        self.facture_passee = Paiement.objects.create(
+            contrat=self.contrat,
+            date_echeance=date_mois_passe,
+            montant=500_000,
+            montant_attendu=500_000,
+            statut=Paiement.StatutPaiement.PAYE,
+        )
+
+        # Facture d'un mois futur autre que le mois autorisé (M+3)
+        date_futur_lointain = self.date_mois_a_venir + relativedelta(months=3)
+        self.facture_futur_lointain = Paiement.objects.create(
+            contrat=self.contrat,
+            date_echeance=date_futur_lointain,
+            montant=500_000,
+            montant_attendu=500_000,
+            statut=Paiement.StatutPaiement.EN_ATTENTE,
+        )
+
+        # Facture appartenant à un autre locataire
+        self.bien_other = _make_bien(self.prop, titre="Bien Autre Locataire")
+        self.contrat_other = _make_contrat(self.bien_other, self.other_loc)
+        self.facture_other = Paiement.objects.create(
+            contrat=self.contrat_other,
+            date_echeance=self.date_mois_a_venir,
+            montant=500_000,
+            montant_attendu=500_000,
+            statut=Paiement.StatutPaiement.EN_ATTENTE,
+        )
+
+    def test_locataire_peut_soumettre_demande_facture_la_plus_ancienne(self):
+        """Un locataire peut soumettre une demande pour sa facture impayée la plus ancienne."""
+        self.client.force_authenticate(user=self.loc_user)
+        url = "/api/demandes-paiement/"
+        payload = {
+            "facture": self.facture_autorisee.id,
+            "moyen_paiement": "MVOLA",
+            "telephone": "0341234567",
+            "reference": "MV-2026-9999",
+            "montant": 500_000,
+        }
+        response = self.client.post(url, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["statut"], "EN_ATTENTE")
+        self.assertEqual(response.data["moyen_paiement"], "MVOLA")
+        self.assertEqual(Decimal(str(response.data["montant"])), Decimal("500000.00"))
+
+        # Vérifier en base
+        demande = DemandePaiement.objects.get(id=response.data["id"])
+        self.assertEqual(demande.locataire, self.loc)
+        self.assertEqual(demande.facture, self.facture_autorisee)
+
+        # Vérifier que la facture n'est PAS marquée comme payée
+        self.facture_autorisee.refresh_from_db()
+        self.assertEqual(self.facture_autorisee.statut, Paiement.StatutPaiement.EN_ATTENTE)
+
+    def test_locataire_ne_peut_pas_demander_facture_recente_si_ancienne_impayee(self):
+        """Un locataire ne peut pas payer une facture récente si une facture antérieure est impayée."""
+        # On rend la facture passée impayée
+        self.facture_passee.statut = Paiement.StatutPaiement.EN_ATTENTE
+        self.facture_passee.save()
+
+        self.client.force_authenticate(user=self.loc_user)
+        url = "/api/demandes-paiement/"
+        # Tentative de paiement de facture_autorisee alors que facture_passee est impayée
+        payload = {
+            "facture": self.facture_autorisee.id,
+            "moyen_paiement": "ORANGE_MONEY",
+            "telephone": "0321234567",
+            "reference": "OM-12345",
+        }
+        response = self.client.post(url, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("facture", response.data)
+        self.assertIn("plus ancienne", str(response.data["facture"]))
+
+    def test_locataire_peut_payer_facture_suivante_quand_ancienne_est_payee(self):
+        """Une fois l'ancienne facture payée, la facture suivante devient payable."""
+        # facture_futur_lointain ne peut pas être payée car facture_autorisee est impayée
+        self.assertTrue(self.facture_futur_lointain.a_echeance_anterieure_impayee)
+
+        # Dès qu'on marque facture_autorisee comme PAYE
+        self.facture_autorisee.statut = Paiement.StatutPaiement.PAYE
+        self.facture_autorisee.save()
+
+        # facture_futur_lointain devient éligible
+        self.assertFalse(self.facture_futur_lointain.a_echeance_anterieure_impayee)
+        self.assertTrue(self.facture_futur_lointain.est_eligible_demande)
+
+        self.client.force_authenticate(user=self.loc_user)
+        url = "/api/demandes-paiement/"
+        payload = {
+            "facture": self.facture_futur_lointain.id,
+            "moyen_paiement": "AIRTEL_MONEY",
+            "telephone": "0331234567",
+            "reference": "AM-12345",
+        }
+        response = self.client.post(url, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["statut"], "EN_ATTENTE")
+
+    def test_locataire_ne_peut_pas_demander_facture_autre_locataire(self):
+        """Un locataire ne peut pas demander le paiement de la facture d'un autre locataire."""
+        self.client.force_authenticate(user=self.loc_user)
+        url = "/api/demandes-paiement/"
+        payload = {
+            "facture": self.facture_other.id,
+            "moyen_paiement": "MVOLA",
+            "telephone": "0341234567",
+            "reference": "MV-0000",
+        }
+        response = self.client.post(url, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("facture", response.data)
+        self.assertIn("propres factures", str(response.data["facture"]))
+
+    def test_facture_deja_payee_ne_peut_pas_faire_objet_nouvelle_demande(self):
+        """Une facture déjà payée ne peut pas faire l'objet d'une nouvelle demande."""
+        self.facture_autorisee.statut = Paiement.StatutPaiement.PAYE
+        self.facture_autorisee.montant_paye = 500_000
+        self.facture_autorisee.save()
+
+        self.client.force_authenticate(user=self.loc_user)
+        url = "/api/demandes-paiement/"
+        payload = {
+            "facture": self.facture_autorisee.id,
+            "moyen_paiement": "MVOLA",
+            "telephone": "0341234567",
+            "reference": "MV-0000",
+        }
+        response = self.client.post(url, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("facture", response.data)
+        self.assertIn("déjà payée", str(response.data["facture"]))
+
+    def test_seconde_demande_identique_refusee_si_demande_en_cours(self):
+        """Une seconde demande identique ne peut pas être créée lorsqu'une demande est déjà en cours."""
+        DemandePaiement.objects.create(
+            locataire=self.loc,
+            facture=self.facture_autorisee,
+            montant=500_000,
+            moyen_paiement="MVOLA",
+            telephone="0341234567",
+            reference="REF-PREMIERE",
+            statut=DemandePaiement.StatutDemande.EN_ATTENTE,
+        )
+
+        self.client.force_authenticate(user=self.loc_user)
+        url = "/api/demandes-paiement/"
+        payload = {
+            "facture": self.facture_autorisee.id,
+            "moyen_paiement": "ORANGE_MONEY",
+            "telephone": "0321234567",
+            "reference": "REF-DEUXIEME",
+        }
+        response = self.client.post(url, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("facture", response.data)
+        self.assertIn("déjà en cours", str(response.data["facture"]))
+
+    def test_moyen_paiement_exclusivement_mobile_money(self):
+        """Le moyen de paiement proposé et accepté pour cette fonctionnalité est exclusivement Mobile Money."""
+        self.client.force_authenticate(user=self.loc_user)
+        url = "/api/demandes-paiement/"
+
+        # Moyens interdits
+        for moyen_interdit in ["VIREMENT", "ESPECE", "CHEQUE", "AUTRE", "CARTE"]:
+            payload = {
+                "facture": self.facture_autorisee.id,
+                "moyen_paiement": moyen_interdit,
+                "telephone": "0341234567",
+            }
+            response = self.client.post(url, payload, format="json")
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertIn("moyen_paiement", response.data)
+
+        # Moyens autorisés
+        for moyen_autorise in ["MVOLA", "ORANGE_MONEY", "AIRTEL_MONEY"]:
+            # On supprime les éventuelles demandes pour éviter doublon
+            DemandePaiement.objects.filter(facture=self.facture_autorisee).delete()
+            payload = {
+                "facture": self.facture_autorisee.id,
+                "moyen_paiement": moyen_autorise,
+                "telephone": "0341234567",
+                "reference": f"REF-{moyen_autorise}",
+            }
+            response = self.client.post(url, payload, format="json")
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(response.data["moyen_paiement"], moyen_autorise)
+
+    def test_montant_envoye_correspond_au_montant_reel(self):
+        """Le montant envoyé au backend doit correspondre au montant réel de la facture."""
+        self.client.force_authenticate(user=self.loc_user)
+        url = "/api/demandes-paiement/"
+
+        # Montant erroné
+        payload_faux = {
+            "facture": self.facture_autorisee.id,
+            "moyen_paiement": "MVOLA",
+            "telephone": "0341234567",
+            "montant": 999_999,
+        }
+        response = self.client.post(url, payload_faux, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("montant", response.data)
+
+        # Montant omis (auto-rempli par la facture)
+        payload_sans_montant = {
+            "facture": self.facture_autorisee.id,
+            "moyen_paiement": "MVOLA",
+            "telephone": "0341234567",
+        }
+        response = self.client.post(url, payload_sans_montant, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Decimal(str(response.data["montant"])), Decimal("500000.00"))
+
+    def test_demande_ne_marque_pas_automatiquement_facture_payee(self):
+        """Une demande créée ne marque pas automatiquement la facture comme payée."""
+        self.client.force_authenticate(user=self.loc_user)
+        url = "/api/demandes-paiement/"
+        payload = {
+            "facture": self.facture_autorisee.id,
+            "moyen_paiement": "MVOLA",
+            "telephone": "0341234567",
+        }
+        response = self.client.post(url, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.facture_autorisee.refresh_from_db()
+        self.assertEqual(self.facture_autorisee.statut, Paiement.StatutPaiement.EN_ATTENTE)
+        self.assertIsNone(self.facture_autorisee.date_paiement)
+
+    def test_utilisateurs_non_autorises_ne_peuvent_pas_acceder(self):
+        """Les utilisateurs non autorisés ne peuvent pas accéder à cette fonctionnalité."""
+        url = "/api/demandes-paiement/"
+
+        # 1. Non authentifié
+        self.client.force_authenticate(user=None)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        response = self.client.post(url, {"facture": self.facture_autorisee.id})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # 2. Propriétaire ne peut pas créer de demande
+        self.client.force_authenticate(user=self.prop_user)
+        response = self.client.post(url, {
+            "facture": self.facture_autorisee.id,
+            "moyen_paiement": "MVOLA",
+        })
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_locataire_peut_consulter_ses_demandes_et_leur_statut(self):
+        """Un locataire peut consulter ses demandes et vérifier leur statut."""
+        demande = DemandePaiement.objects.create(
+            locataire=self.loc,
+            facture=self.facture_autorisee,
+            montant=500_000,
+            moyen_paiement="MVOLA",
+            telephone="0341234567",
+            reference="REF-CONSULT",
+            statut=DemandePaiement.StatutDemande.EN_ATTENTE,
+        )
+
+        self.client.force_authenticate(user=self.loc_user)
+        response = self.client.get("/api/demandes-paiement/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = [d["id"] for d in response.data["results"]]
+        self.assertIn(demande.id, ids)
+
+        # Détail
+        detail_res = self.client.get(f"/api/demandes-paiement/{demande.id}/")
+        self.assertEqual(detail_res.status_code, status.HTTP_200_OK)
+        self.assertEqual(detail_res.data["statut"], "EN_ATTENTE")
+        self.assertEqual(detail_res.data["moyen_paiement"], "MVOLA")
+
+        # Un autre locataire ne voit pas cette demande
+        self.client.force_authenticate(user=self.other_loc_user)
+        other_res = self.client.get("/api/demandes-paiement/")
+        other_ids = [d["id"] for d in other_res.data["results"]]
+        self.assertNotIn(demande.id, other_ids)
+
+    def test_locataire_peut_annuler_sa_demande_en_attente(self):
+        """Un locataire peut annuler sa propre demande en attente."""
+        demande = DemandePaiement.objects.create(
+            locataire=self.loc,
+            facture=self.facture_autorisee,
+            montant=500_000,
+            moyen_paiement="MVOLA",
+            statut=DemandePaiement.StatutDemande.EN_ATTENTE,
+        )
+        self.client.force_authenticate(user=self.loc_user)
+        response = self.client.post(f"/api/demandes-paiement/{demande.id}/annuler/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        demande.refresh_from_db()
+        self.assertEqual(demande.statut, DemandePaiement.StatutDemande.ANNULE)
+
+    def test_agent_peut_valider_demande(self):
+        """Un agent peut valider une demande, ce qui valide la facture correspondante."""
+        demande = DemandePaiement.objects.create(
+            locataire=self.loc,
+            facture=self.facture_autorisee,
+            montant=500_000,
+            moyen_paiement="ORANGE_MONEY",
+            telephone="0320000000",
+            reference="OM-CONFIRMED",
+            statut=DemandePaiement.StatutDemande.EN_ATTENTE,
+        )
+        self.client.force_authenticate(user=self.agent_user)
+        response = self.client.post(f"/api/demandes-paiement/{demande.id}/valider/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        demande.refresh_from_db()
+        self.assertEqual(demande.statut, DemandePaiement.StatutDemande.VALIDE)
+
+        # La facture associée est maintenant PAYEE
+        self.facture_autorisee.refresh_from_db()
+        self.assertEqual(self.facture_autorisee.statut, Paiement.StatutPaiement.PAYE)
+        self.assertEqual(self.facture_autorisee.mode_paiement, "ORANGE_MONEY")
+        self.assertEqual(self.facture_autorisee.reference, "OM-CONFIRMED")
+        self.assertIsNotNone(self.facture_autorisee.date_paiement)
+
+    def test_agent_peut_refuser_demande(self):
+        """Un agent peut refuser une demande en précisant un motif."""
+        demande = DemandePaiement.objects.create(
+            locataire=self.loc,
+            facture=self.facture_autorisee,
+            montant=500_000,
+            moyen_paiement="MVOLA",
+            telephone="0340000000",
+            statut=DemandePaiement.StatutDemande.EN_ATTENTE,
+        )
+        self.client.force_authenticate(user=self.agent_user)
+        response = self.client.post(
+            f"/api/demandes-paiement/{demande.id}/refuser/",
+            {"motif_refus": "Transaction introuvable"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        demande.refresh_from_db()
+        self.assertEqual(demande.statut, DemandePaiement.StatutDemande.REFUSE)
+        self.assertEqual(demande.motif_refus, "Transaction introuvable")
+
+        # La facture reste en attente
+        self.facture_autorisee.refresh_from_db()
+        self.assertEqual(self.facture_autorisee.statut, Paiement.StatutPaiement.EN_ATTENTE)
+
+    def test_factures_eligibles_action(self):
+        """L'action factures-eligibles liste l'échéance impayée la plus ancienne du contrat."""
+        self.client.force_authenticate(user=self.loc_user)
+        response = self.client.get("/api/demandes-paiement/factures-eligibles/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = [f["id"] for f in response.data["results"]]
+        # L'échéance la plus ancienne impayée (facture_autorisee car facture_passee est PAYE)
+        self.assertIn(self.facture_autorisee.id, ids)
+        self.assertNotIn(self.facture_futur_lointain.id, ids)
+        self.assertNotIn(self.facture_other.id, ids)
+
+        # Dès qu'elle est payée, l'échéance suivante devient éligible
+        self.facture_autorisee.statut = Paiement.StatutPaiement.PAYE
+        self.facture_autorisee.save()
+
+        response2 = self.client.get("/api/demandes-paiement/factures-eligibles/")
+        ids2 = [f["id"] for f in response2.data["results"]]
+        self.assertIn(self.facture_futur_lointain.id, ids2)
+
+    def test_proprietes_eligibilite_modele(self):
+        """Vérifie les propriétés d'éligibilité chronologique sur Paiement."""
+        self.assertTrue(self.facture_autorisee.est_eligible_demande)
+        self.assertFalse(self.facture_autorisee.a_echeance_anterieure_impayee)
+
+        # La facture future n'est pas éligible tant que la précédente est impayée
+        self.assertTrue(self.facture_futur_lointain.a_echeance_anterieure_impayee)
+        self.assertFalse(self.facture_futur_lointain.est_eligible_demande)
+
+        # Une fois la précédente payée, la suivante devient éligible
+        self.facture_autorisee.statut = Paiement.StatutPaiement.PAYE
+        self.facture_autorisee.save()
+        self.assertFalse(self.facture_futur_lointain.a_echeance_anterieure_impayee)
+        self.assertTrue(self.facture_futur_lointain.est_eligible_demande)
+
+        # Dès qu'une demande est créée, elle n'est plus éligible (demande en cours)
+        DemandePaiement.objects.create(
+            locataire=self.loc,
+            facture=self.facture_futur_lointain,
+            montant=500_000,
+            moyen_paiement="MVOLA",
+            statut=DemandePaiement.StatutDemande.EN_ATTENTE,
+        )
+        self.assertTrue(self.facture_futur_lointain.a_demande_en_cours)
+        self.assertFalse(self.facture_futur_lointain.est_eligible_demande)
+
+    def test_synchronisation_validation_directe_paiement(self):
+        """Lorsque l'agent valide le paiement via PaiementViewSet, la demande passe en VALIDE."""
+        demande = DemandePaiement.objects.create(
+            locataire=self.loc,
+            facture=self.facture_autorisee,
+            montant=500_000,
+            moyen_paiement="MVOLA",
+            statut=DemandePaiement.StatutDemande.EN_ATTENTE,
+        )
+        self.client.force_authenticate(user=self.agent_user)
+        response = self.client.post(
+            f"/api/paiements/{self.facture_autorisee.id}/valider/",
+            {"mode_paiement": "MVOLA", "reference": "MVOLA-DIRECT"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        demande.refresh_from_db()
+        self.assertEqual(demande.statut, DemandePaiement.StatutDemande.VALIDE)
+
+    def test_enregistrement_moyen_paiement_choisi_par_locataire(self):
+        """Vérifie que le moyen choisi par le locataire est fidèlement enregistré et associé à sa demande."""
+        self.client.force_authenticate(user=self.loc_user)
+        moyens_disponibles = ["MVOLA", "ORANGE_MONEY", "AIRTEL_MONEY"]
+
+        for moyen in moyens_disponibles:
+            # Nettoyage préalable pour autoriser une nouvelle demande
+            DemandePaiement.objects.filter(facture=self.facture_autorisee).delete()
+            self.facture_autorisee.statut = Paiement.StatutPaiement.EN_ATTENTE
+            self.facture_autorisee.mode_paiement = None
+            self.facture_autorisee.reference = None
+            self.facture_autorisee.save()
+
+            payload = {
+                "facture": self.facture_autorisee.id,
+                "moyen_paiement": moyen,
+                "telephone": "0341234567",
+                "reference": f"REF-TEST-{moyen}",
+            }
+            response = self.client.post("/api/demandes-paiement/", payload, format="json")
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            demande_id = response.data["id"]
+
+            # Vérification directe en base de données
+            demande = DemandePaiement.objects.get(id=demande_id)
+            self.assertEqual(demande.moyen_paiement, moyen)
+            self.assertEqual(demande.locataire, self.loc)
+            self.assertEqual(demande.facture, self.facture_autorisee)
+            self.assertEqual(demande.telephone, "0341234567")
+            self.assertEqual(demande.reference, f"REF-TEST-{moyen}")
+
+            # Vérification synchronisation sur la facture
+            self.facture_autorisee.refresh_from_db()
+            self.assertEqual(self.facture_autorisee.mode_paiement, moyen)
+
+    def test_moyen_paiement_affiche_lors_de_la_consultation_de_la_demande(self):
+        """Vérifie que le moyen de paiement est correctement exposé lors de la consultation."""
+        demande = DemandePaiement.objects.create(
+            locataire=self.loc,
+            facture=self.facture_autorisee,
+            montant=500_000,
+            moyen_paiement="ORANGE_MONEY",
+            telephone="0329988776",
+            reference="OM-CONSULT-99",
+            statut=DemandePaiement.StatutDemande.EN_ATTENTE,
+        )
+
+        self.client.force_authenticate(user=self.loc_user)
+
+        # 1. Consultation via la liste des demandes
+        list_res = self.client.get("/api/demandes-paiement/")
+        self.assertEqual(list_res.status_code, status.HTTP_200_OK)
+        demande_data = next((d for d in list_res.data["results"] if d["id"] == demande.id), None)
+        self.assertIsNotNone(demande_data)
+        self.assertEqual(demande_data["moyen_paiement"], "ORANGE_MONEY")
+
+        # 2. Consultation via le détail de la demande
+        detail_res = self.client.get(f"/api/demandes-paiement/{demande.id}/")
+        self.assertEqual(detail_res.status_code, status.HTTP_200_OK)
+        self.assertEqual(detail_res.data["moyen_paiement"], "ORANGE_MONEY")
+        self.assertEqual(detail_res.data["telephone"], "0329988776")
+        self.assertEqual(detail_res.data["reference"], "OM-CONSULT-99")
+
+        # 3. Consultation via la liste des factures
+        paiement_res = self.client.get("/api/paiements/")
+        self.assertEqual(paiement_res.status_code, status.HTTP_200_OK)
+        facture_data = next((p for p in paiement_res.data["results"] if p["id"] == self.facture_autorisee.id), None)
+        self.assertIsNotNone(facture_data)
+        self.assertIsNotNone(facture_data.get("demande_en_cours"))
+        self.assertEqual(facture_data["demande_en_cours"]["moyen_paiement"], "ORANGE_MONEY")
+
+    def test_moyen_paiement_invalide_ou_non_autorise_est_rejete_par_backend(self):
+        """Vérifie qu'un moyen de paiement invalide ou non autorisé est formellement rejeté."""
+        self.client.force_authenticate(user=self.loc_user)
+        moyens_interdits = [
+            "VIREMENT",
+            "ESPECE",
+            "CHEQUE",
+            "AUTRE",
+            "CARTE_BANCAIRE",
+            "PAYPAL",
+            "BITCOIN",
+            "RANDOM_STRING",
+            "",
+        ]
+
+        for moyen in moyens_interdits:
+            payload = {
+                "facture": self.facture_autorisee.id,
+                "moyen_paiement": moyen,
+                "telephone": "0341234567",
+            }
+            response = self.client.post("/api/demandes-paiement/", payload, format="json")
+            self.assertEqual(
+                response.status_code,
+                status.HTTP_400_BAD_REQUEST,
+                f"Le moyen '{moyen}' aurait dû être rejeté avec un code HTTP 400."
+            )
+            self.assertIn("moyen_paiement", response.data)
+
+
 

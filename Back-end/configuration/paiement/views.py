@@ -5,10 +5,15 @@ from rest_framework.response import Response
 from django.db import transaction
 from django.utils import timezone
 from django.http import FileResponse, Http404
-from .models import Paiement
-from .serializers import PaiementSerializer
-from .permissions import PaiementPermission
+from .models import Paiement, DemandePaiement
+from .serializers import (
+    PaiementSerializer,
+    DemandePaiementSerializer,
+    DemandePaiementCreateSerializer,
+)
+from .permissions import PaiementPermission, DemandePaiementPermission
 from utilisateur.models import Utilisateur
+from contrats.models import Contrat
 from .utils import generate_quittance_pdf   # <-- IMPORTANT
 
 
@@ -83,6 +88,8 @@ class PaiementViewSet(viewsets.ModelViewSet):
         with transaction.atomic():
             paiement.save()
             paiement.valider_paiement()
+            for demande in paiement.demandes_paiement.filter(statut=DemandePaiement.StatutDemande.EN_ATTENTE):
+                demande.valider()
             
         # Notification logic
         from notifications.services import NotificationService
@@ -113,8 +120,12 @@ class PaiementViewSet(viewsets.ModelViewSet):
             return Response({"error": "Un paiement validé ne peut pas être refusé."},
                             status=status.HTTP_400_BAD_REQUEST)
         
-        paiement.statut = Paiement.StatutPaiement.ANNULE
-        paiement.save(update_fields=["statut"])
+        with transaction.atomic():
+            paiement.statut = Paiement.StatutPaiement.ANNULE
+            paiement.save(update_fields=["statut"])
+            motif = request.data.get("motif_refus", request.data.get("motif", ""))
+            for demande in paiement.demandes_paiement.filter(statut=DemandePaiement.StatutDemande.EN_ATTENTE):
+                demande.refuser(motif=motif)
         
         return Response(PaiementSerializer(paiement).data)
 
@@ -126,6 +137,8 @@ class PaiementViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_400_BAD_REQUEST)
         with transaction.atomic():
             paiement.annuler_paiement()
+            for demande in paiement.demandes_paiement.filter(statut=DemandePaiement.StatutDemande.EN_ATTENTE):
+                demande.annuler()
         return Response(PaiementSerializer(paiement).data)
 
     @action(detail=True, methods=["get"])
@@ -203,3 +216,166 @@ class PaiementViewSet(viewsets.ModelViewSet):
             "count": queryset.count(),
             "results": serializer.data
         })
+
+
+class DemandePaiementPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = "page_size"
+    max_page_size = 100
+
+
+class DemandePaiementViewSet(viewsets.ModelViewSet):
+    """
+    CRUD et actions pour les demandes de paiement soumises par les locataires.
+    Accès sécurisé :
+    - Locataire : consultation et création de ses propres demandes, annulation
+    - Agent / Admin : consultation globale, validation, refus
+    - Propriétaire : consultation des demandes associées à ses biens
+    """
+    queryset = DemandePaiement.objects.select_related(
+        "locataire__user",
+        "facture__contrat__bien",
+        "facture__contrat__locataire__user"
+    )
+    permission_classes = [permissions.IsAuthenticated, DemandePaiementPermission]
+    pagination_class = DemandePaiementPagination
+    filterset_fields = ["statut", "moyen_paiement", "facture"]
+    ordering_fields = ["date_demande", "montant"]
+    ordering = ["-date_demande"]
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return DemandePaiementCreateSerializer
+        return DemandePaiementSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = super().get_queryset()
+
+        if user.role in (Utilisateur.Role.ADMIN, Utilisateur.Role.AGENT):
+            return queryset
+
+        if user.role == Utilisateur.Role.LOCATAIRE:
+            return queryset.filter(locataire__user=user)
+
+        if user.role == Utilisateur.Role.PROPRIETAIRE:
+            return queryset.filter(facture__contrat__bien__proprietaire__user=user)
+
+        return DemandePaiement.objects.none()
+
+    def perform_create(self, serializer):
+        demande = serializer.save()
+
+        # Notification logic
+        from notifications.services import NotificationService
+        from notifications.models import Notification
+
+        try:
+            if demande.locataire and demande.locataire.user:
+                NotificationService.envoyer(
+                    utilisateur=demande.locataire.user,
+                    type_notif=Notification.Type.AUTRE,
+                    titre="Demande de paiement Mobile Money enregistrée",
+                    message=(
+                        f"Votre demande de paiement de {int(float(demande.montant)):,} Ar "
+                        f"via {demande.get_moyen_paiement_display()} pour {demande.facture.contrat.bien.titre} "
+                        "a bien été enregistrée et est en attente de validation."
+                    ).replace(",", " "),
+                    lien="/locataire/paiements",
+                    contexte_email={"demande": demande}
+                )
+        except Exception:
+            pass
+
+    @action(detail=True, methods=["post"])
+    def annuler(self, request, pk=None):
+        demande = self.get_object()
+        if demande.statut != DemandePaiement.StatutDemande.EN_ATTENTE:
+            return Response(
+                {"error": "Seule une demande en attente peut être annulée."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        demande.annuler()
+        return Response(DemandePaiementSerializer(demande).data)
+
+    @action(detail=True, methods=["post"])
+    def valider(self, request, pk=None):
+        user = request.user
+        if user.role not in (Utilisateur.Role.ADMIN, Utilisateur.Role.AGENT):
+            return Response(
+                {"error": "Permission refusée."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        demande = self.get_object()
+        if demande.statut != DemandePaiement.StatutDemande.EN_ATTENTE:
+            return Response(
+                {"error": "Cette demande n'est pas en attente."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        with transaction.atomic():
+            demande.valider()
+            facture = demande.facture
+            facture.mode_paiement = demande.moyen_paiement
+            if demande.reference:
+                facture.reference = demande.reference
+            facture.save()
+            facture.valider_paiement()
+        return Response(DemandePaiementSerializer(demande).data)
+
+    @action(detail=True, methods=["post"])
+    def refuser(self, request, pk=None):
+        user = request.user
+        if user.role not in (Utilisateur.Role.ADMIN, Utilisateur.Role.AGENT):
+            return Response(
+                {"error": "Permission refusée."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        demande = self.get_object()
+        if demande.statut != DemandePaiement.StatutDemande.EN_ATTENTE:
+            return Response(
+                {"error": "Cette demande n'est pas en attente."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        motif = request.data.get("motif_refus", request.data.get("motif", ""))
+        demande.refuser(motif=motif)
+        return Response(DemandePaiementSerializer(demande).data)
+
+    @action(detail=False, methods=["get"], url_path="factures-eligibles")
+    def factures_eligibles(self, request):
+        user = request.user
+        if user.role != Utilisateur.Role.LOCATAIRE:
+            return Response(
+                {"error": "Seul un locataire peut consulter ses factures éligibles."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        from contrats.models import Contrat
+
+        contrats = Contrat.objects.filter(
+            locataire__user=user,
+            statut=Contrat.StatutContrat.ACTIF
+        )
+
+        factures_avec_demande = DemandePaiement.objects.filter(
+            locataire__user=user,
+            statut=DemandePaiement.StatutDemande.EN_ATTENTE,
+        ).values_list("facture_id", flat=True)
+
+        eligibles_ids = []
+        for contrat in contrats:
+            prochaine = Paiement.objects.filter(
+                contrat=contrat
+            ).exclude(
+                statut__in=[Paiement.StatutPaiement.PAYE, Paiement.StatutPaiement.ANNULE]
+            ).exclude(
+                id__in=factures_avec_demande
+            ).order_by("date_echeance").first()
+            if prochaine:
+                eligibles_ids.append(prochaine.id)
+
+        factures_eligibles = Paiement.objects.filter(id__in=eligibles_ids).select_related("contrat__bien").order_by("date_echeance")
+        serializer = PaiementSerializer(factures_eligibles, many=True)
+        return Response({
+            "count": factures_eligibles.count(),
+            "results": serializer.data,
+        })
+

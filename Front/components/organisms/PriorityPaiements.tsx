@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import { Paiement } from '@/lib/api'
-import { AlertCircle, Clock, CheckCircle2, User, Eye } from "lucide-react"
+import { AlertCircle, Clock, CheckCircle2, User, Eye, Smartphone, XCircle } from "lucide-react"
 import { AgentActions } from "@/components/organisms/AgentActions"
 import { FactureModal } from "@/components/organisms/FactureModal"
+import { ValidationDemandeModal } from "@/components/organisms/ValidationDemandeModal"
 import { Pagination } from "@/components/molecules/pagination"
 
 interface PriorityPaiementsProps {
@@ -14,6 +15,8 @@ interface PriorityPaiementsProps {
 
 export function PriorityPaiements({ paiements, onUpdate }: PriorityPaiementsProps) {
   const [selectedPaiement, setSelectedPaiement] = useState<Paiement | null>(null)
+  const [validationPaiement, setValidationPaiement] = useState<Paiement | null>(null)
+  const [validationAction, setValidationAction] = useState<'valider' | 'refuser'>('valider')
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 5;
@@ -93,6 +96,31 @@ export function PriorityPaiements({ paiements, onUpdate }: PriorityPaiementsProp
                         <User size={12} /> {p.locataire_nom || 'Non spécifié'}
                       </div>
                       <div style={{ fontSize: 11, color: '#a0a8b5', marginTop: 2 }}>{p.message_mois}</div>
+                      {(['MVOLA', 'ORANGE_MONEY', 'AIRTEL_MONEY'].includes(p.mode_paiement || '') || !!p.demande_en_cours) && (
+                        <div style={{ marginTop: 4 }}>
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              fontSize: '10px',
+                              fontWeight: 700,
+                              backgroundColor: '#ecfdf5',
+                              color: '#047857',
+                              border: '1px solid #a7f3d0',
+                            }}
+                          >
+                            <Smartphone size={10} /> {p.demande_en_cours?.moyen_paiement || p.mode_paiement || 'Mobile Money'}
+                          </span>
+                          {(p.demande_en_cours?.reference || p.reference) && (
+                            <span style={{ fontSize: '10px', color: '#047857', marginLeft: '6px', fontFamily: 'monospace' }}>
+                              Réf: {p.demande_en_cours?.reference || p.reference}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td>
                       <div style={{ fontWeight: 600, color: 'var(--navy)' }}>{new Date(p.date_echeance).toLocaleDateString('fr-FR')}</div>
@@ -107,8 +135,57 @@ export function PriorityPaiements({ paiements, onUpdate }: PriorityPaiementsProp
                       {Number(p.commission_agent || 0).toLocaleString('fr-FR')} Ar
                     </td>
                     <td>
-                      <div style={{ minWidth: 200 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                         <button onClick={() => setSelectedPaiement(p)} className="outline-button" style={{ padding: "6px 12px", fontSize: "12px", display: "flex", alignItems: "center", gap: "6px" }}><Eye size={14} /> Visualiser</button>
+
+                        {(['MVOLA', 'ORANGE_MONEY', 'AIRTEL_MONEY'].includes(p.mode_paiement || '') || !!p.demande_en_cours) && (
+                          <>
+                            <button
+                              onClick={() => {
+                                setValidationPaiement(p);
+                                setValidationAction('valider');
+                              }}
+                              className="primary-button"
+                              style={{
+                                padding: "6px 10px",
+                                fontSize: "12px",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "4px",
+                                backgroundColor: "#059669",
+                                color: "#ffffff",
+                                borderRadius: "6px",
+                                border: "none",
+                                fontWeight: 600,
+                                cursor: "pointer",
+                              }}
+                              title="Valider la réception de ce paiement Mobile Money"
+                            >
+                              <CheckCircle2 size={13} /> Valider
+                            </button>
+                            <button
+                              onClick={() => {
+                                setValidationPaiement(p);
+                                setValidationAction('refuser');
+                              }}
+                              className="outline-button"
+                              style={{
+                                padding: "6px 8px",
+                                fontSize: "12px",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "4px",
+                                color: "#dc2626",
+                                borderColor: "#fca5a5",
+                                borderRadius: "6px",
+                                cursor: "pointer",
+                              }}
+                              title="Refuser cette demande Mobile Money"
+                            >
+                              <XCircle size={13} /> Refuser
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -123,6 +200,19 @@ export function PriorityPaiements({ paiements, onUpdate }: PriorityPaiementsProp
             paiement={selectedPaiement}
             isAgent={true}
             onClose={() => setSelectedPaiement(null)} onStatusChange={(updated) => onUpdate(updated)}
+          />
+        )}
+        {validationPaiement && (
+          <ValidationDemandeModal
+            paiement={validationPaiement}
+            isOpen={!!validationPaiement}
+            initialAction={validationAction}
+            onClose={() => setValidationPaiement(null)}
+            onSuccess={() => {
+              const updated = { ...validationPaiement, statut: validationAction === 'valider' ? 'PAYE' : 'ANNULE' };
+              setValidationPaiement(null);
+              onUpdate(updated);
+            }}
           />
         )}
       </div>

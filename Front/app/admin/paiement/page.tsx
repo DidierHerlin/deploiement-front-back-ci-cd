@@ -8,6 +8,7 @@ import { PaiementFilters } from "@/components/organisms/PaiementFilters"
 import { PaiementTable } from "@/components/organisms/PaiementTable"
 import { PaiementForm } from "@/components/organisms/PaiementForm"
 import { PaiementDetails } from "@/components/organisms/PaiementDetails"
+import { ValidationDemandeModal } from "@/components/organisms/ValidationDemandeModal"
 
 export default function PaiementPage() {
   const [paiements, setPaiements] = useState<Paiement[]>([])
@@ -18,10 +19,13 @@ export default function PaiementPage() {
   const [query, setQuery] = useState('')
   const [statutFilter, setStatutFilter] = useState('Tous')
   const [modeFilter, setModeFilter] = useState('Tous')
+  const [onlyMobileMoneyPending, setOnlyMobileMoneyPending] = useState(false)
   
   // Modals state
   const [viewPaiement, setViewPaiement] = useState<Paiement | null>(null)
   const [editPaiement, setEditPaiement] = useState<Paiement | null>(null)
+  const [validationPaiement, setValidationPaiement] = useState<Paiement | null>(null)
+  const [validationAction, setValidationAction] = useState<'valider' | 'refuser'>('valider')
 
   useEffect(() => {
     fetchData()
@@ -41,24 +45,37 @@ export default function PaiementPage() {
     }
   }
 
+  const isMobileMoneyPending = (p: Paiement) =>
+    p.statut === 'EN_ATTENTE' &&
+    (['MVOLA', 'ORANGE_MONEY', 'AIRTEL_MONEY'].includes(p.demande_en_cours?.moyen_paiement || p.mode_paiement || '') || !!p.demande_en_cours)
+
+  const mobileMoneyPendingCount = useMemo(() => {
+    return paiements.filter(isMobileMoneyPending).length
+  }, [paiements])
+
   // Derived state
   const filteredPaiements = useMemo(() => {
     return paiements.filter(p => {
-      const searchStr = `${p.id} ${p.bien_titre} ${p.locataire_nom} ${p.reference || ''}`.toLowerCase()
+      if (onlyMobileMoneyPending && !isMobileMoneyPending(p)) {
+        return false
+      }
+      const effectiveMode = p.demande_en_cours?.moyen_paiement || p.mode_paiement
+      const effectiveRef = p.demande_en_cours?.reference || p.reference || ''
+      const searchStr = `${p.id} ${p.bien_titre} ${p.locataire_nom} ${effectiveRef}`.toLowerCase()
       const matchQuery = searchStr.includes(query.toLowerCase())
-      const matchStatut = statutFilter === 'Tous' || p.statut === statutFilter
-      const matchMode = modeFilter === 'Tous' || (p.mode_paiement === modeFilter) || (!p.mode_paiement && modeFilter === 'Tous')
+      const matchStatut = onlyMobileMoneyPending ? true : (statutFilter === 'Tous' || p.statut === statutFilter)
+      const matchMode = onlyMobileMoneyPending ? true : (modeFilter === 'Tous' || (effectiveMode === modeFilter) || (!effectiveMode && modeFilter === 'Tous'))
       
       return matchQuery && matchStatut && matchMode
     })
-  }, [paiements, query, statutFilter, modeFilter])
+  }, [paiements, query, statutFilter, modeFilter, onlyMobileMoneyPending])
 
   return (
     <>
       <div className="welcome-row" style={{ marginBottom: '20px' }}>
         <div>
           <h1>Gestion des <span>Paiements</span></h1>
-          <p className="subtitle">Supervisez l'ensemble des paiements, identifiez les impayés et générez les quittances.</p>
+          <p className="subtitle">Supervisez l'ensemble des paiements, validez les demandes Mobile Money et générez les quittances.</p>
         </div>
       </div>
 
@@ -70,6 +87,9 @@ export default function PaiementPage() {
           <PaiementFilters 
             statutFilter={statutFilter} setStatutFilter={setStatutFilter}
             modeFilter={modeFilter} setModeFilter={setModeFilter}
+            onlyMobileMoneyPending={onlyMobileMoneyPending}
+            setOnlyMobileMoneyPending={setOnlyMobileMoneyPending}
+            mobileMoneyPendingCount={mobileMoneyPendingCount}
           />
         </div>
 
@@ -79,6 +99,14 @@ export default function PaiementPage() {
           error={error}
           onView={setViewPaiement}
           onEdit={setEditPaiement}
+          onValiderDemande={(p) => {
+            setValidationPaiement(p)
+            setValidationAction('valider')
+          }}
+          onRefuserDemande={(p) => {
+            setValidationPaiement(p)
+            setValidationAction('refuser')
+          }}
         />
       </section>
 
@@ -97,6 +125,29 @@ export default function PaiementPage() {
         <PaiementDetails 
           paiement={viewPaiement}
           onClose={() => setViewPaiement(null)}
+          onValiderDemande={(p) => {
+            setViewPaiement(null)
+            setValidationPaiement(p)
+            setValidationAction('valider')
+          }}
+          onRefuserDemande={(p) => {
+            setViewPaiement(null)
+            setValidationPaiement(p)
+            setValidationAction('refuser')
+          }}
+        />
+      )}
+
+      {validationPaiement && (
+        <ValidationDemandeModal
+          paiement={validationPaiement}
+          isOpen={!!validationPaiement}
+          initialAction={validationAction}
+          onClose={() => setValidationPaiement(null)}
+          onSuccess={() => {
+            setValidationPaiement(null)
+            fetchData()
+          }}
         />
       )}
     </>

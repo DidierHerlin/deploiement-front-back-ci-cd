@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { Paiement } from '@/lib/api'
 import { PaiementTableRow } from "@/components/organisms/PaiementTableRow"
 import { Pagination } from "@/components/molecules/pagination"
@@ -9,9 +9,11 @@ type PaiementTableProps = {
   error?: string | null
   onView: (p: Paiement) => void
   onEdit: (p: Paiement) => void
+  onValiderDemande?: (p: Paiement) => void
+  onRefuserDemande?: (p: Paiement) => void
 }
 
-export function PaiementTable({ paiements, loading, error, onView, onEdit }: PaiementTableProps) {
+export function PaiementTable({ paiements, loading, error, onView, onEdit, onValiderDemande, onRefuserDemande }: PaiementTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 5;
   const totalPages = Math.ceil(paiements.length / ITEMS_PER_PAGE);
@@ -45,6 +47,8 @@ export function PaiementTable({ paiements, loading, error, onView, onEdit }: Pai
                   paiement={p}
                   onView={onView}
                   onEdit={onEdit}
+                  onValiderDemande={onValiderDemande}
+                  onRefuserDemande={onRefuserDemande}
                 />
               ))
             ) : (

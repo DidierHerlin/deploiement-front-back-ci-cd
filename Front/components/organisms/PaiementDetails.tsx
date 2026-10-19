@@ -1,15 +1,20 @@
-import { X, CreditCard, Download, AlertTriangle } from 'lucide-react'
+import { X, CreditCard, Download, AlertTriangle, Smartphone, CheckCircle2, XCircle } from 'lucide-react'
 import { Paiement, downloadQuittance } from '@/lib/api'
 import { PaiementStatusBadge } from "@/components/atoms/paiement_PaiementStatusBadge"
 
 type PaiementDetailsProps = {
   paiement: Paiement
   onClose: () => void
+  onValiderDemande?: (p: Paiement) => void
+  onRefuserDemande?: (p: Paiement) => void
 }
 
-export function PaiementDetails({ paiement, onClose }: PaiementDetailsProps) {
+export function PaiementDetails({ paiement, onClose, onValiderDemande, onRefuserDemande }: PaiementDetailsProps) {
   const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('fr-FR') : '-'
   const formatMontant = (m: string | null) => m ? Number(m).toLocaleString('fr-FR') + ' Ar' : '-'
+
+  const isMobileMoneyPending = paiement.statut === 'EN_ATTENTE' &&
+    (['MVOLA', 'ORANGE_MONEY', 'AIRTEL_MONEY'].includes(paiement.mode_paiement || '') || !!paiement.demande_en_cours)
 
   return (
     <div className="modal-backdrop" role="presentation">
@@ -20,6 +25,42 @@ export function PaiementDetails({ paiement, onClose }: PaiementDetailsProps) {
           <div className="modal-icon"><CreditCard size={20} /></div>
           <h2 style={{ marginBottom: '5px' }}>Détails du paiement #{paiement.id}</h2>
           <p style={{ marginBottom: '20px', color: '#64748b' }}>Créé le {formatDate(paiement.date_creation)}</p>
+
+          {isMobileMoneyPending && (
+            <div style={{ padding: '14px 18px', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '8px', color: '#065f46', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Smartphone size={22} style={{ color: '#059669' }} />
+                  <div>
+                    <strong style={{ fontSize: '14px', color: '#065f46' }}>Demande de paiement Mobile Money en attente de validation</strong>
+                    <div style={{ fontSize: '12px', color: '#047857', marginTop: '2px' }}>
+                      Opérateur : <strong>{paiement.demande_en_cours?.moyen_paiement || paiement.mode_paiement}</strong> • Réf : <strong style={{ fontFamily: 'monospace' }}>{paiement.demande_en_cours?.reference || paiement.reference || '-'}</strong> • Tél : <strong>{paiement.demande_en_cours?.telephone || '-'}</strong>
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {onValiderDemande && (
+                    <button
+                      onClick={() => onValiderDemande(paiement)}
+                      className="primary-button"
+                      style={{ padding: '6px 14px', fontSize: '12px', backgroundColor: '#059669', color: '#fff', borderRadius: '6px', border: 'none', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <CheckCircle2 size={14} /> Valider la demande
+                    </button>
+                  )}
+                  {onRefuserDemande && (
+                    <button
+                      onClick={() => onRefuserDemande(paiement)}
+                      className="outline-button"
+                      style={{ padding: '6px 12px', fontSize: '12px', color: '#dc2626', borderColor: '#fca5a5', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      <XCircle size={14} /> Refuser
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
           
           {paiement.est_en_retard && (
             <div style={{ padding: '10px 15px', background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: '6px', color: '#b91c1c', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
@@ -39,8 +80,8 @@ export function PaiementDetails({ paiement, onClose }: PaiementDetailsProps) {
                 <div><small style={{ color: '#64748b' }}>Statut</small><div><PaiementStatusBadge statut={paiement.statut} /></div></div>
                 <div><small style={{ color: '#64748b' }}>Échéance N°</small><div style={{ fontWeight: 500 }}>{paiement.num_echeance || '-'}</div></div>
                 <div><small style={{ color: '#64748b' }}>Période</small><div style={{ fontWeight: 500 }}>{paiement.message_mois || '-'}</div></div>
-                <div><small style={{ color: '#64748b' }}>Mode de paiement</small><div style={{ fontWeight: 500 }}>{paiement.mode_paiement || '-'}</div></div>
-                <div><small style={{ color: '#64748b' }}>Référence</small><div style={{ fontWeight: 500 }}>{paiement.reference || '-'}</div></div>
+                <div><small style={{ color: '#64748b' }}>Mode de paiement</small><div style={{ fontWeight: 500 }}>{(paiement.demande_en_cours ? paiement.demande_en_cours.moyen_paiement : paiement.mode_paiement) || '-'}</div></div>
+                <div><small style={{ color: '#64748b' }}>Référence</small><div style={{ fontWeight: 500 }}>{(paiement.demande_en_cours ? paiement.demande_en_cours.reference : paiement.reference) || '-'}</div></div>
               </div>
             </div>
 

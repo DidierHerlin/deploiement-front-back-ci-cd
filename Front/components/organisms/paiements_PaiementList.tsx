@@ -1,24 +1,29 @@
-﻿'use client'
+'use client'
 
 import React, { useState } from 'react';
 import { Paiement } from '@/lib/api';
 import { usePathname } from 'next/navigation';
 
 import { FactureModal } from '@/components/organisms/FactureModal';
-import { ArrowDownToLine, FileText, Eye } from 'lucide-react';
+import { ValidationDemandeModal } from '@/components/organisms/ValidationDemandeModal';
+import { ArrowDownToLine, FileText, Eye, Smartphone, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { PaiementStatusBadge } from "@/components/atoms/paiement_PaiementStatusBadge";
 import { Pagination } from "@/components/molecules/pagination";
 
 interface PaiementListProps {
   paiements: Paiement[];
   onUpdate?: (p: Paiement) => void;
+  onDemanderPaiement?: (p: Paiement) => void;
 }
 
-export function PaiementList({ paiements: initialPaiements, onUpdate }: PaiementListProps) {
+export function PaiementList({ paiements: initialPaiements, onUpdate, onDemanderPaiement }: PaiementListProps) {
   const pathname = usePathname();
   const isAgent = pathname?.includes('/agent') || pathname?.includes('/admin');
+  const isLocataire = pathname?.includes('/locataire') || !isAgent;
   const [paiements, setPaiements] = useState<Paiement[]>(initialPaiements);
   const [selectedPaiement, setSelectedPaiement] = useState<Paiement | null>(null);
+  const [validationPaiement, setValidationPaiement] = useState<Paiement | null>(null);
+  const [validationAction, setValidationAction] = useState<'valider' | 'refuser'>('valider');
   React.useEffect(() => setPaiements(initialPaiements), [initialPaiements]);
   
   const handleUpdate = (updated: Paiement) => {
@@ -84,7 +89,7 @@ export function PaiementList({ paiements: initialPaiements, onUpdate }: Paiement
                   <th>MONTANT VERSÉ</th>
                   <th>STATUT</th>
                   <th>QUITTANCE</th>
-                  {isAgent && <th>ACTION</th>}
+                  {(isAgent || isLocataire) && <th>ACTION</th>}
                 </tr>
               </thead>
               <tbody>
@@ -118,10 +123,33 @@ export function PaiementList({ paiements: initialPaiements, onUpdate }: Paiement
                       </td>
                       <td>
                         <PaiementStatusBadge 
-                          status={paiement.statut} 
-                          estPartiel={paiement.est_partiel} 
-                          estEnRetard={paiement.est_en_retard} 
+                          statut={paiement.statut} 
                         />
+                        {paiement.statut === 'EN_ATTENTE' && (['MVOLA', 'ORANGE_MONEY', 'AIRTEL_MONEY'].includes(paiement.mode_paiement || '') || !!paiement.demande_en_cours) && (
+                          <div style={{ marginTop: '4px' }}>
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                fontSize: '10px',
+                                fontWeight: 700,
+                                backgroundColor: '#ecfdf5',
+                                color: '#047857',
+                                border: '1px solid #a7f3d0',
+                              }}
+                            >
+                              <Smartphone size={10} /> {paiement.demande_en_cours?.moyen_paiement || paiement.mode_paiement || 'Mobile Money'}
+                            </span>
+                            {(paiement.demande_en_cours?.reference || paiement.reference) && (
+                              <div style={{ fontSize: '10px', color: '#047857', marginTop: '2px', fontFamily: 'monospace' }}>
+                                Réf: {paiement.demande_en_cours?.reference || paiement.reference}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </td>
                       <td>
                         {isValide ? (
@@ -134,10 +162,125 @@ export function PaiementList({ paiements: initialPaiements, onUpdate }: Paiement
                           </span>
                         )}
                       </td>
-                      {isAgent && (
+                      {(isAgent || isLocataire) && (
                         <td>
-                          <div style={{ minWidth: 200 }}>
-                            <button onClick={() => setSelectedPaiement(paiement)} className="outline-button" style={{ padding: "6px 12px", fontSize: "12px", display: "flex", alignItems: "center", gap: "6px" }}><Eye size={14} /> Visualiser</button>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <button 
+                              onClick={() => setSelectedPaiement(paiement)} 
+                              className="outline-button" 
+                              style={{ padding: "6px 12px", fontSize: "12px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                              title="Consulter les détails de la facture"
+                            >
+                              <Eye size={14} /> Visualiser
+                            </button>
+
+                            {isAgent && paiement.statut === 'EN_ATTENTE' && (['MVOLA', 'ORANGE_MONEY', 'AIRTEL_MONEY'].includes(paiement.mode_paiement || '') || !!paiement.demande_en_cours) && (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    setValidationPaiement(paiement);
+                                    setValidationAction('valider');
+                                  }}
+                                  className="primary-button"
+                                  style={{
+                                    padding: "6px 12px",
+                                    fontSize: "12px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "6px",
+                                    backgroundColor: "#059669",
+                                    color: "#ffffff",
+                                    borderRadius: "6px",
+                                    border: "none",
+                                    fontWeight: 600,
+                                    cursor: "pointer",
+                                  }}
+                                  title="Valider la réception de ce paiement Mobile Money"
+                                >
+                                  <CheckCircle2 size={14} /> Valider la demande
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setValidationPaiement(paiement);
+                                    setValidationAction('refuser');
+                                  }}
+                                  className="outline-button"
+                                  style={{
+                                    padding: "6px 10px",
+                                    fontSize: "12px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    color: "#dc2626",
+                                    borderColor: "#fca5a5",
+                                    borderRadius: "6px",
+                                    cursor: "pointer",
+                                  }}
+                                  title="Refuser cette demande Mobile Money"
+                                >
+                                  <XCircle size={14} /> Refuser
+                                </button>
+                              </>
+                            )}
+
+                            {isLocataire && paiement.est_eligible_demande && onDemanderPaiement && (
+                              <button
+                                onClick={() => onDemanderPaiement(paiement)}
+                                className="primary-button"
+                                style={{
+                                  padding: "6px 12px",
+                                  fontSize: "12px",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "6px",
+                                  backgroundColor: "#4f46e5",
+                                  color: "#ffffff",
+                                  borderRadius: "6px",
+                                  boxShadow: "none",
+                                }}
+                                title="Demander le règlement de cette facture par Mobile Money"
+                              >
+                                <Smartphone size={14} /> Payer (Mobile Money)
+                              </button>
+                            )}
+
+                            {isLocataire && paiement.demande_en_cours && (
+                              <span
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                  padding: "4px 8px",
+                                  borderRadius: "6px",
+                                  backgroundColor: "#fef3c7",
+                                  color: "#b45309",
+                                  fontSize: "11px",
+                                  fontWeight: 600,
+                                }}
+                                title="Une demande de paiement Mobile Money est déjà enregistrée pour cette facture"
+                              >
+                                <Clock size={12} /> Demande en cours
+                              </span>
+                            )}
+
+                            {isLocataire && paiement.statut === 'EN_ATTENTE' && !paiement.demande_en_cours && paiement.a_echeance_anterieure_impayee && (
+                              <span
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                  padding: "4px 8px",
+                                  borderRadius: "6px",
+                                  backgroundColor: "#f1f5f9",
+                                  color: "#64748b",
+                                  fontSize: "11px",
+                                  fontWeight: 500,
+                                }}
+                                title="Vous devez d'abord régler la facture précédente la plus ancienne pour débloquer celle-ci"
+                              >
+                                <Clock size={12} /> Échéance précédente requise
+                              </span>
+                            )}
                           </div>
                         </td>
                       )}
@@ -156,6 +299,18 @@ export function PaiementList({ paiements: initialPaiements, onUpdate }: Paiement
       )}
     </section>
       {selectedPaiement && <FactureModal paiement={selectedPaiement} isAgent={isAgent} onClose={() => setSelectedPaiement(null)} onStatusChange={handleUpdate} />}
+      {validationPaiement && (
+        <ValidationDemandeModal
+          paiement={validationPaiement}
+          isOpen={!!validationPaiement}
+          initialAction={validationAction}
+          onClose={() => setValidationPaiement(null)}
+          onSuccess={() => {
+            setValidationPaiement(null);
+            if (onUpdate) onUpdate(validationPaiement);
+          }}
+        />
+      )}
     </>
   );
 }
