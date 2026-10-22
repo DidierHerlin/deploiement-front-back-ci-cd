@@ -1,4 +1,4 @@
-﻿apiVersion: v1
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: grafana-dashboard-provider
@@ -37,7 +37,7 @@ data:
           "collapsed": false,
           "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
           "id": 100,
-          "title": "Indicateurs ClÃ©s du Cluster K3s",
+          "title": "Indicateurs Clés du Cluster K3s",
           "type": "row"
         },
         {
@@ -99,7 +99,7 @@ data:
             "showThresholdLabels": false,
             "showThresholdMarkers": true
           },
-          "title": "MÃ©moire RAM UtilisÃ©e",
+          "title": "Mémoire RAM Utilisée",
           "type": "gauge",
           "targets": [
             {
@@ -130,7 +130,7 @@ data:
             "orientation": "auto",
             "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
           },
-          "title": "Nombre de Pods DÃ©ployÃ©s",
+          "title": "Nombre de Pods Déployés",
           "type": "stat",
           "targets": [
             {
@@ -219,7 +219,7 @@ data:
           },
           "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
           "id": 6,
-          "title": "MÃ©moire RAM par Pod (Working Set)",
+          "title": "Mémoire RAM par Pod (Working Set)",
           "type": "timeseries",
           "targets": [
             {
@@ -261,7 +261,7 @@ data:
             "y": 0
           },
           "id": 200,
-          "title": "Trafic & ActivitÃ© Applicative (Backend DRF & Frontend Next.js)",
+          "title": "Trafic & Activité Applicative (Backend DRF & Frontend Next.js)",
           "type": "row"
         },
         {
@@ -312,7 +312,7 @@ data:
               "values": false
             }
           },
-          "title": "Total RequÃªtes MÃ©tier & CRUD Backend (sur la pÃ©riode)",
+          "title": "Total Requêtes Métier & CRUD Backend (sur la période)",
           "type": "stat",
           "targets": [
             {
@@ -375,7 +375,7 @@ data:
               "values": false
             }
           },
-          "title": "Erreurs DÃ©tectÃ©es (5xx / Exceptions)",
+          "title": "Erreurs Détectées (5xx / Exceptions)",
           "type": "stat",
           "targets": [
             {
@@ -434,7 +434,7 @@ data:
               "values": false
             }
           },
-          "title": "Volume Total de Lignes de Logs IngestÃ©es",
+          "title": "Volume Total de Lignes de Logs Ingestées",
           "type": "stat",
           "targets": [
             {
@@ -475,7 +475,7 @@ data:
             "y": 5
           },
           "id": 14,
-          "title": "DÃ©bit des RequÃªtes MÃ©tier & CRUD en Temps RÃ©el",
+          "title": "Débit des Requêtes Métier & CRUD en Temps Réel",
           "type": "timeseries",
           "targets": [
             {
@@ -484,7 +484,7 @@ data:
                 "uid": "Loki"
               },
               "expr": "sum(rate({namespace=\"immobilier\", container=\"backend\"} |= \"HTTP\" != \"/api/health/\"[1m]))",
-              "legendFormat": "RequÃªtes / sec",
+              "legendFormat": "Requêtes / sec",
               "queryType": "range",
               "refId": "A"
             }
@@ -499,7 +499,7 @@ data:
             "y": 12
           },
           "id": 201,
-          "title": "Flux CentralisÃ© des Logs Applicatifs (Loki Live Stream)",
+          "title": "Flux Centralisé des Logs Applicatifs (Loki Live Stream)",
           "type": "row"
         },
         {
@@ -581,7 +581,7 @@ data:
               "values": false
             }
           },
-          "title": "Sondes de SantÃ© K3s (Heartbeats /api/health/ sur 10 min)",
+          "title": "Sondes de Santé K3s (Heartbeats /api/health/ sur 10 min)",
           "type": "stat",
           "targets": [
             {
@@ -638,7 +638,7 @@ data:
           "collapsed": false,
           "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
           "id": 300,
-          "title": "DisponibilitÃ© & SantÃ© GÃ©nÃ©rale AWS RDS PostgreSQL",
+          "title": "Disponibilité & Santé Générale AWS RDS PostgreSQL",
           "type": "row"
         },
         {
@@ -667,7 +667,7 @@ data:
             "orientation": "auto",
             "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
           },
-          "title": "Ã‰tat Connexion PostgreSQL (pg_up)",
+          "title": "État Connexion PostgreSQL (pg_up)",
           "type": "stat",
           "targets": [
             {
@@ -703,7 +703,7 @@ data:
             "orientation": "auto",
             "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
           },
-          "title": "DisponibilitÃ© Exporter RDS",
+          "title": "Disponibilité Exporter RDS",
           "type": "stat",
           "targets": [
             {
@@ -770,7 +770,7 @@ data:
             "showThresholdLabels": false,
             "showThresholdMarkers": true
           },
-          "title": "Pool Connexions UtilisÃ© (%)",
+          "title": "Pool Connexions Utilisé (%)",
           "type": "gauge",
           "targets": [
             {
@@ -783,7 +783,7 @@ data:
           "collapsed": false,
           "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
           "id": 301,
-          "title": "ActivitÃ© Transactions, DÃ©bit & Sessions",
+          "title": "Activité Transactions, Débit & Sessions",
           "type": "row"
         },
         {
@@ -797,7 +797,7 @@ data:
           },
           "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
           "id": 5,
-          "title": "Connexions par Base de DonnÃ©es",
+          "title": "Connexions par Base de Données",
           "type": "timeseries",
           "targets": [
             {
@@ -818,7 +818,7 @@ data:
           },
           "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
           "id": 6,
-          "title": "DÃ©bit Transactions (Commits & Rollbacks)",
+          "title": "Débit Transactions (Commits & Rollbacks)",
           "type": "timeseries",
           "targets": [
             {
@@ -837,7 +837,7 @@ data:
           "collapsed": false,
           "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
           "id": 302,
-          "title": "Performance I/O, Cache MÃ©moire & Stockage",
+          "title": "Performance I/O, Cache Mémoire & Stockage",
           "type": "row"
         },
         {
@@ -864,7 +864,7 @@ data:
             "showThresholdLabels": false,
             "showThresholdMarkers": true
           },
-          "title": "Cache Hit Ratio (EfficacitÃ© MÃ©moire)",
+          "title": "Cache Hit Ratio (Efficacité Mémoire)",
           "type": "gauge",
           "targets": [
             {
@@ -884,7 +884,7 @@ data:
           },
           "gridPos": { "h": 6, "w": 10, "x": 6, "y": 15 },
           "id": 8,
-          "title": "ActivitÃ© I/O Blocs (Buffer Cache vs Disque)",
+          "title": "Activité I/O Blocs (Buffer Cache vs Disque)",
           "type": "timeseries",
           "targets": [
             {
@@ -963,7 +963,7 @@ data:
             "orientation": "auto",
             "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
           },
-          "title": "Deadlocks DÃ©tectÃ©s (5 min)",
+          "title": "Deadlocks Détectés (5 min)",
           "type": "stat",
           "targets": [
             {
@@ -997,7 +997,7 @@ data:
             "orientation": "auto",
             "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
           },
-          "title": "Conflits de RequÃªtes (5 min)",
+          "title": "Conflits de Requêtes (5 min)",
           "type": "stat",
           "targets": [
             {
@@ -1033,7 +1033,7 @@ data:
             "orientation": "auto",
             "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
           },
-          "title": "DerniÃ¨re Erreur Collecte Exporter",
+          "title": "Dernière Erreur Collecte Exporter",
           "type": "stat",
           "targets": [
             {

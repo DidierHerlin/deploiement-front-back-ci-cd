@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # FICHIER CONCATÉNÉ DE SECOURS (ALL-IN-ONE)
 # NOTE : La source officielle de référence se trouve dans les fichiers modulaires :
 #   00-namespace.yaml
@@ -124,8 +124,8 @@ data:
               severity: critical
               component: database
             annotations:
-              summary: "Base de donnees AWS RDS PostgreSQL inaccessible"
-              description: "L'instance PostgreSQL ne repond plus ou l'exporter ne peut plus s'y connecter depuis plus de 1 minute."
+              summary: "Base de données AWS RDS PostgreSQL inaccessible"
+              description: "L'instance PostgreSQL ne répond plus ou le collecteur ne peut plus s'y connecter depuis plus d'une minute."
 
           - alert: PostgresqlExporterDown
             expr: up{job="rds-postgres-exporter"} == 0
@@ -134,8 +134,8 @@ data:
               severity: critical
               component: database
             annotations:
-              summary: "Exporter PostgreSQL indisponible"
-              description: "Le pod rds-postgres-exporter ne peut pas etre scrape par Prometheus."
+              summary: "Collecteur PostgreSQL indisponible"
+              description: "Le pod rds-postgres-exporter ne peut pas être collecté par Prometheus."
 
           - alert: PostgresqlHighConnectionUsage
             expr: (sum(pg_stat_database_numbackends) / sum(pg_settings_max_connections)) * 100 > 80
@@ -144,8 +144,8 @@ data:
               severity: warning
               component: database
             annotations:
-              summary: "Utilisation elevee des connexions PostgreSQL (> 80%)"
-              description: "Le pool de connexions atteint {{ $value | printf \"%.1f\" }}% de la limite maximale (max_connections)."
+              summary: "Utilisation élevée des connexions PostgreSQL (> 80%)"
+              description: "Le pool de connexions atteint {{ $value | printf \"%.1f\" }}% de la limite maximale autorisée (max_connections)."
 
           - alert: PostgresqlConnectionLimitExhaustion
             expr: (sum(pg_stat_database_numbackends) / sum(pg_settings_max_connections)) * 100 > 95
@@ -155,7 +155,7 @@ data:
               component: database
             annotations:
               summary: "Saturation imminente des connexions PostgreSQL (> 95%)"
-              description: "Le nombre de connexions actives ({{ $value | printf \"%.1f\" }}%) risque de provoquer des rejets de requetes applicatives."
+              description: "Le nombre de connexions actives ({{ $value | printf \"%.1f\" }}%) risque de provoquer des rejets de requêtes applicatives."
 
           - alert: PostgresqlRollbackRateHigh
             expr: sum(rate(pg_stat_database_xact_rollback[5m])) > 2
@@ -164,7 +164,7 @@ data:
               severity: warning
               component: database
             annotations:
-              summary: "Taux eleve d'annulations de transactions (Rollbacks > 2/s)"
+              summary: "Taux élevé d'annulations de transactions (Rollbacks > 2/s)"
               description: "Le taux d'annulations est de {{ $value | printf \"%.2f\" }} rollbacks/s sur 5 minutes."
 
           - alert: PostgresqlDeadlocksDetected
@@ -174,8 +174,8 @@ data:
               severity: warning
               component: database
             annotations:
-              summary: "Interblocage (Deadlock) detecte sur PostgreSQL"
-              description: "Un ou plusieurs verrous concurrents ont provoque un deadlock sur PostgreSQL."
+              summary: "Interblocage (Deadlock) détecté sur PostgreSQL"
+              description: "Un ou plusieurs verrous concurrents ont provoqué un blocage mutuel sur PostgreSQL."
 
           - alert: PostgresqlLowCacheHitRatio
             expr: ((sum(rate(pg_stat_database_blks_hit[5m])) / (sum(rate(pg_stat_database_blks_hit[5m])) + sum(rate(pg_stat_database_blks_read[5m])))) * 100) < 85
@@ -184,8 +184,8 @@ data:
               severity: warning
               component: database
             annotations:
-              summary: "Cache Hit Ratio PostgreSQL bas (< 85%)"
-              description: "Le ratio d'acces aux blocs en memoire buffer cache est descendu a {{ $value | printf \"%.1f\" }}%."
+              summary: "Taux de succès du cache PostgreSQL faible (< 85%)"
+              description: "Le ratio d'accès aux blocs en mémoire tampon est descendu à {{ $value | printf \"%.1f\" }}%."
 
       - name: infrastructure-alerts
         rules:
@@ -196,8 +196,8 @@ data:
               severity: warning
               component: infrastructure
             annotations:
-              summary: "Saturation CPU sur l'instance K3s (> 85%)"
-              description: "L'utilisation CPU moyenne depasse 85% depuis plus de 5 minutes."
+              summary: "Saturation du processeur sur l'instance K3s (> 85%)"
+              description: "L'utilisation moyenne du processeur dépasse 85% depuis plus de 5 minutes."
 
           - alert: NodeMemorySaturation
             expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
@@ -206,8 +206,8 @@ data:
               severity: critical
               component: infrastructure
             annotations:
-              summary: "Saturation Memoire RAM critique sur le Node (> 90%)"
-              description: "La memoire disponible est inferieure a 10% depuis 5 minutes."
+              summary: "Saturation critique de la mémoire RAM sur le serveur (> 90%)"
+              description: "La mémoire vive disponible est inférieure à 10% depuis plus de 5 minutes."
 
           - alert: NodeDiskSpaceFillingUp
             expr: (node_filesystem_free_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 15
@@ -217,7 +217,7 @@ data:
               component: infrastructure
             annotations:
               summary: "Espace disque restant faible (< 15%)"
-              description: "Le systeme de fichiers racine dispose de moins de 15% d'espace libre."
+              description: "Le système de fichiers racine dispose de moins de 15% d'espace libre."
 
           - alert: PodCrashLoopingOrRestarts
             expr: increase(kubelet_restarted_pods_total[15m]) > 2
@@ -226,8 +226,8 @@ data:
               severity: warning
               component: kubernetes
             annotations:
-              summary: "Redemarrages frequents de pods detectes"
-              description: "Plusieurs pods ont redemarre au cours des 15 dernieres minutes."
+              summary: "Redémarrages fréquents de conteneurs détectés"
+              description: "Plusieurs conteneurs ont redémarré de manière anormale au cours des 15 dernières minutes."
 
           - alert: BackendPodUnavailable
             expr: count(container_last_seen{container="backend", namespace="immobilier"}) == 0
@@ -236,8 +236,8 @@ data:
               severity: critical
               component: application
             annotations:
-              summary: "Tous les conteneurs Backend DRF sont indisponibles"
-              description: "Aucun conteneur backend actif n'est detecte dans le namespace immobilier depuis 2 minutes."
+              summary: "Tous les conteneurs du backend Django sont indisponibles"
+              description: "Aucun conteneur backend actif n'est détecté dans le namespace immobilier depuis 2 minutes."
 
           - alert: FrontendPodUnavailable
             expr: count(container_last_seen{container="frontend", namespace="immobilier"}) == 0
@@ -246,8 +246,8 @@ data:
               severity: critical
               component: application
             annotations:
-              summary: "Le conteneur Frontend Next.js est indisponible"
-              description: "Aucun conteneur frontend actif n'est detecte dans le namespace immobilier depuis 2 minutes."
+              summary: "Le conteneur du frontend Next.js est indisponible"
+              description: "Aucun conteneur frontend actif n'est détecté dans le namespace immobilier depuis 2 minutes."
 
           - alert: PrometheusTargetMissing
             expr: up == 0
@@ -257,7 +257,7 @@ data:
               component: monitoring
             annotations:
               summary: "Cible de supervision injoignable (up == 0)"
-              description: "La cible {{ $labels.job }} ({{ $labels.instance }}) ne repond plus aux scrapes Prometheus."
+              description: "La cible {{ $labels.job }} ({{ $labels.instance }}) ne répond plus aux requêtes de Prometheus."
 
 ---
 # --- Source: k8s\monitoring\02-prometheus.yaml ---
@@ -799,7 +799,7 @@ data:
           "collapsed": false,
           "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
           "id": 100,
-          "title": "Indicateurs ClÃ©s du Cluster K3s",
+          "title": "Indicateurs Clés du Cluster K3s",
           "type": "row"
         },
         {
@@ -861,7 +861,7 @@ data:
             "showThresholdLabels": false,
             "showThresholdMarkers": true
           },
-          "title": "MÃ©moire RAM UtilisÃ©e",
+          "title": "Mémoire RAM Utilisée",
           "type": "gauge",
           "targets": [
             {
@@ -892,7 +892,7 @@ data:
             "orientation": "auto",
             "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
           },
-          "title": "Nombre de Pods DÃ©ployÃ©s",
+          "title": "Nombre de Pods Déployés",
           "type": "stat",
           "targets": [
             {
@@ -981,7 +981,7 @@ data:
           },
           "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
           "id": 6,
-          "title": "MÃ©moire RAM par Pod (Working Set)",
+          "title": "Mémoire RAM par Pod (Working Set)",
           "type": "timeseries",
           "targets": [
             {
@@ -1023,7 +1023,7 @@ data:
             "y": 0
           },
           "id": 200,
-          "title": "Trafic & ActivitÃ© Applicative (Backend DRF & Frontend Next.js)",
+          "title": "Trafic & Activité Applicative (Backend DRF & Frontend Next.js)",
           "type": "row"
         },
         {
@@ -1074,7 +1074,7 @@ data:
               "values": false
             }
           },
-          "title": "Total RequÃªtes MÃ©tier & CRUD Backend (sur la pÃ©riode)",
+          "title": "Total Requêtes Métier & CRUD Backend (sur la période)",
           "type": "stat",
           "targets": [
             {
@@ -1137,7 +1137,7 @@ data:
               "values": false
             }
           },
-          "title": "Erreurs DÃ©tectÃ©es (5xx / Exceptions)",
+          "title": "Erreurs Détectées (5xx / Exceptions)",
           "type": "stat",
           "targets": [
             {
@@ -1196,7 +1196,7 @@ data:
               "values": false
             }
           },
-          "title": "Volume Total de Lignes de Logs IngestÃ©es",
+          "title": "Volume Total de Lignes de Logs Ingestées",
           "type": "stat",
           "targets": [
             {
@@ -1237,7 +1237,7 @@ data:
             "y": 5
           },
           "id": 14,
-          "title": "DÃ©bit des RequÃªtes MÃ©tier & CRUD en Temps RÃ©el",
+          "title": "Débit des Requêtes Métier & CRUD en Temps Réel",
           "type": "timeseries",
           "targets": [
             {
@@ -1246,7 +1246,7 @@ data:
                 "uid": "Loki"
               },
               "expr": "sum(rate({namespace=\"immobilier\", container=\"backend\"} |= \"HTTP\" != \"/api/health/\"[1m]))",
-              "legendFormat": "RequÃªtes / sec",
+              "legendFormat": "Requêtes / sec",
               "queryType": "range",
               "refId": "A"
             }
@@ -1261,7 +1261,7 @@ data:
             "y": 12
           },
           "id": 201,
-          "title": "Flux CentralisÃ© des Logs Applicatifs (Loki Live Stream)",
+          "title": "Flux Centralisé des Logs Applicatifs (Loki Live Stream)",
           "type": "row"
         },
         {
@@ -1343,7 +1343,7 @@ data:
               "values": false
             }
           },
-          "title": "Sondes de SantÃ© K3s (Heartbeats /api/health/ sur 10 min)",
+          "title": "Sondes de Santé K3s (Heartbeats /api/health/ sur 10 min)",
           "type": "stat",
           "targets": [
             {
@@ -1400,7 +1400,7 @@ data:
           "collapsed": false,
           "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
           "id": 300,
-          "title": "DisponibilitÃ© & SantÃ© GÃ©nÃ©rale AWS RDS PostgreSQL",
+          "title": "Disponibilité & Santé Générale AWS RDS PostgreSQL",
           "type": "row"
         },
         {
@@ -1429,7 +1429,7 @@ data:
             "orientation": "auto",
             "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
           },
-          "title": "Ã‰tat Connexion PostgreSQL (pg_up)",
+          "title": "État Connexion PostgreSQL (pg_up)",
           "type": "stat",
           "targets": [
             {
@@ -1465,7 +1465,7 @@ data:
             "orientation": "auto",
             "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
           },
-          "title": "DisponibilitÃ© Exporter RDS",
+          "title": "Disponibilité Exporter RDS",
           "type": "stat",
           "targets": [
             {
@@ -1532,7 +1532,7 @@ data:
             "showThresholdLabels": false,
             "showThresholdMarkers": true
           },
-          "title": "Pool Connexions UtilisÃ© (%)",
+          "title": "Pool Connexions Utilisé (%)",
           "type": "gauge",
           "targets": [
             {
@@ -1545,7 +1545,7 @@ data:
           "collapsed": false,
           "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
           "id": 301,
-          "title": "ActivitÃ© Transactions, DÃ©bit & Sessions",
+          "title": "Activité Transactions, Débit & Sessions",
           "type": "row"
         },
         {
@@ -1559,7 +1559,7 @@ data:
           },
           "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
           "id": 5,
-          "title": "Connexions par Base de DonnÃ©es",
+          "title": "Connexions par Base de Données",
           "type": "timeseries",
           "targets": [
             {
@@ -1580,7 +1580,7 @@ data:
           },
           "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
           "id": 6,
-          "title": "DÃ©bit Transactions (Commits & Rollbacks)",
+          "title": "Débit Transactions (Commits & Rollbacks)",
           "type": "timeseries",
           "targets": [
             {
@@ -1599,7 +1599,7 @@ data:
           "collapsed": false,
           "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
           "id": 302,
-          "title": "Performance I/O, Cache MÃ©moire & Stockage",
+          "title": "Performance I/O, Cache Mémoire & Stockage",
           "type": "row"
         },
         {
@@ -1626,7 +1626,7 @@ data:
             "showThresholdLabels": false,
             "showThresholdMarkers": true
           },
-          "title": "Cache Hit Ratio (EfficacitÃ© MÃ©moire)",
+          "title": "Cache Hit Ratio (Efficacité Mémoire)",
           "type": "gauge",
           "targets": [
             {
@@ -1646,7 +1646,7 @@ data:
           },
           "gridPos": { "h": 6, "w": 10, "x": 6, "y": 15 },
           "id": 8,
-          "title": "ActivitÃ© I/O Blocs (Buffer Cache vs Disque)",
+          "title": "Activité I/O Blocs (Buffer Cache vs Disque)",
           "type": "timeseries",
           "targets": [
             {
@@ -1725,7 +1725,7 @@ data:
             "orientation": "auto",
             "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
           },
-          "title": "Deadlocks DÃ©tectÃ©s (5 min)",
+          "title": "Deadlocks Détectés (5 min)",
           "type": "stat",
           "targets": [
             {
@@ -1759,7 +1759,7 @@ data:
             "orientation": "auto",
             "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
           },
-          "title": "Conflits de RequÃªtes (5 min)",
+          "title": "Conflits de Requêtes (5 min)",
           "type": "stat",
           "targets": [
             {
@@ -1795,7 +1795,7 @@ data:
             "orientation": "auto",
             "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
           },
-          "title": "DerniÃ¨re Erreur Collecte Exporter",
+          "title": "Dernière Erreur Collecte Exporter",
           "type": "stat",
           "targets": [
             {
