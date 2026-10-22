@@ -11,7 +11,7 @@ data:
       log_level: info
 
     positions:
-      filename: /run/promtail-positions.yaml
+      filename: /var/lib/promtail/positions.yaml
 
     clients:
       - url: http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push
@@ -24,21 +24,26 @@ data:
             labels:
               job: k3s-containers
               __path__: /var/log/containers/*.log
-        relabel_configs:
-          - source_labels: [__path__]
-            regex: '.*/containers/(.+)_(.+)_(.+)-[a-f0-9]+\.log'
-            target_label: pod
-            replacement: $1
-          - source_labels: [__path__]
-            regex: '.*/containers/(.+)_(.+)_(.+)-[a-f0-9]+\.log'
-            target_label: namespace
-            replacement: $2
-          - source_labels: [__path__]
-            regex: '.*/containers/(.+)_(.+)_(.+)-[a-f0-9]+\.log'
-            target_label: container
-            replacement: $3
         pipeline_stages:
           - cri: {}
+          - regex:
+              source: filename
+              expression: '^/var/log/containers/(?P<pod>[^_]+)_(?P<namespace>[^_]+)_(?P<container>.+)-(?P<container_id>[a-f0-9]+)\.log$'
+          - labels:
+              namespace:
+              pod:
+              container:
+          - regex:
+              source: pod
+              expression: '^(?P<app>[a-zA-Z0-9-]+?)(?:-[0-9a-f]{8,10}-[0-9a-z]{5}|-[0-9a-z]{5}|-[0-9]+)?$'
+          - labels:
+              app:
+          - replace:
+              expression: '(?i)(password|secret|token|authorization)(\s*[:=]\s*|\s+Bearer\s+)[^\s",]+'
+              replace: '$1$2[REDACTED]'
+          - labeldrop:
+              - filename
+              - container_id
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -75,8 +80,8 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/promtail
-            - name: run
-              mountPath: /run
+            - name: positions
+              mountPath: /var/lib/promtail
             - name: pods
               mountPath: /var/log/pods
               readOnly: true
@@ -87,8 +92,10 @@ spec:
         - name: config
           configMap:
             name: promtail-config
-        - name: run
-          emptyDir: {}
+        - name: positions
+          hostPath:
+            path: /var/lib/promtail
+            type: DirectoryOrCreate
         - name: pods
           hostPath:
             path: /var/log/pods

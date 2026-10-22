@@ -78,3 +78,13 @@ desktop.ini
 *.tmp
 *.bak
 *.orig
+
+# ========================
+# Sécurité & Clés Secrètes
+# ========================
+*.pem
+*.key
+*kubeconfig*
+k8s/monitoring/*secret*.yaml
+!k8s/monitoring/*secret.example.yaml
+

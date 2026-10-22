@@ -10,6 +10,10 @@ data:
       evaluation_interval: 15s
       scrape_timeout: 10s
 
+    rule_files:
+      - /etc/prometheus/rules/*.yaml
+      - /etc/prometheus/rules/*.yml
+
     scrape_configs:
       - job_name: 'prometheus'
         static_configs:
@@ -63,6 +67,14 @@ data:
             target_label: __address__
             replacement: ${1}:9100
 
+      - job_name: 'rds-postgres-exporter'
+        static_configs:
+          - targets: ['rds-postgres-exporter.monitoring.svc.cluster.local:9187']
+            labels:
+              app: rds-postgres-exporter
+              database: aws-rds-postgresql
+              env: production
+
       - job_name: 'k3s-pods'
         kubernetes_sd_configs:
           - role: pod
@@ -83,10 +95,10 @@ data:
             regex: __meta_kubernetes_pod_label_(.+)
           - source_labels: [__meta_kubernetes_namespace]
             action: replace
-            target_label: kubernetes_namespace
+            target_label: namespace
           - source_labels: [__meta_kubernetes_pod_name]
             action: replace
-            target_label: kubernetes_pod_name
+            target_label: pod
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -127,12 +139,17 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/prometheus
+            - name: rules
+              mountPath: /etc/prometheus/rules
             - name: storage
               mountPath: /prometheus
       volumes:
         - name: config
           configMap:
             name: prometheus-config
+        - name: rules
+          configMap:
+            name: prometheus-rules
         - name: storage
           emptyDir: {}
 ---
