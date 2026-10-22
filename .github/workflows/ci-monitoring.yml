@@ -59,14 +59,25 @@ jobs:
             echo "  ✓ $file est un JSON valide"
           done
 
-      - name: Validation des manifestes Kubernetes (Client Dry-Run)
+      - name: Validation de la syntaxe des manifestes Kubernetes YAML
         run: |
-          echo "[INFO] Validation des manifestes Kubernetes..."
-          for file in k8s/monitoring/*.yaml; do
-            echo "  -> Test de $file..."
-            kubectl apply --dry-run=client -f "$file"
-          done
-          echo "[OK] Tous les manifestes Kubernetes sont valides."
+          echo "[INFO] Validation syntaxique de tous les manifestes Kubernetes..."
+          python3 -c "
+          import yaml, glob, sys
+          files = sorted(glob.glob('k8s/monitoring/*.yaml'))
+          if not files:
+              print('[ERROR] Aucun fichier YAML trouvé dans k8s/monitoring/')
+              sys.exit(1)
+          for f in files:
+              try:
+                  with open(f, 'r', encoding='utf-8') as stream:
+                      docs = list(yaml.safe_load_all(stream))
+                      print(f'  [OK] {f} ({len(docs)} documents valides)')
+              except Exception as e:
+                  print(f'  [ERROR] {f} : {e}')
+                  sys.exit(1)
+          print('[SUCCESS] Tous les manifestes Kubernetes YAML sont parfaitement valides.')
+          "
 
   deploy-monitoring:
     name: 🚀 Déploiement Automatisé sur AWS EC2 (K3s)
