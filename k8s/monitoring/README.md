@@ -199,21 +199,49 @@ Les dashboards sont automatiquement chargés depuis `/var/lib/grafana/dashboards
 
 ---
 
-## 8. Procédure de Retour Arrière (Rollback)
+## 8. Automatisation CI/CD (GitHub Actions)
 
-En cas d'anomalie lors d'une mise à jour :
-1. **Identifier la version précédente :**
-   ```bash
-   git log --oneline -n 5
-   ```
-2. **Recharger la configuration précédente :**
-   ```bash
-   git checkout <COMMIT_ID> -- k8s/monitoring/
-   ./deploy-monitoring.sh
-   ```
-3. **Redémarrage de secours des pods :**
-   ```bash
-   kubectl rollout restart deployment/prometheus -n monitoring
-   kubectl rollout restart deployment/grafana -n monitoring
-   kubectl rollout restart daemonset/promtail -n monitoring
-   ```
+Un workflow dédié `.github/workflows/ci-monitoring.yml` automatise entièrement le cycle de vie de la supervision :
+
+```mermaid
+flowchart LR
+    Push["Git Push / PR\n(k8s/monitoring/**)"] --> Validate["Job 1: Validation\n- ShellCheck / Bash -n\n- JQ syntax JSON Dashboards\n- Kubectl Client Dry-Run"]
+    Validate --> Deploy["Job 2: Déploiement Auto\n(uniquement sur main)\n- Résolution IP EC2\n- Transfert SCP vers /k8s/monitoring\n- Exécution deploy-monitoring.sh\n- Contrôle de santé post-déploiement"]
+```
+
+### Déclencheurs :
+- **Automatique à chaque `git push origin main`** touchant `k8s/monitoring/**` ou `.github/workflows/ci-monitoring.yml`.
+- **Sur Pull Request :** Exécute uniquement les tests de validation (bloquant en cas d'erreur de syntaxe YAML ou JSON).
+- **Manuel (`workflow_dispatch`) :** Déclenchable en 1 clic depuis l'onglet **Actions** de GitHub.
+
+---
+
+## 9. Procédure de Retour Arrière (Rollback)
+
+### Option A : Rollback automatisé via GitHub Actions (Recommandé)
+1. Allez sur GitHub dans l'onglet **Actions**.
+2. Cliquez sur le workflow **CI/CD - Supervision & Monitoring**.
+3. Cliquez sur **Run workflow**.
+4. Sélectionnez :
+   - **Action à exécuter :** `rollback`
+   - **Référence Git :** `HEAD~1` (ou le SHA du commit stable précédent).
+5. Le workflow extrait automatiquement la version demandée, valide les manifestes, les transfère sur l'EC2 et applique `deploy-monitoring.sh`.
+
+### Option B : Rollback par Git Revert (Traçable)
+```bash
+# Annuler le dernier commit et déclencher le déploiement CI/CD
+git revert HEAD --no-edit
+git push origin main
+```
+
+### Option C : Rollback manuel d'urgence sur l'EC2
+```bash
+# Se connecter sur l'EC2
+ssh -i gestion-immobilier.pem ubuntu@13.53.227.16
+
+# Restaurer depuis la sauvegarde serveur
+cp -r /home/ubuntu/k8s/monitoring_backup_20261022_082956/* /home/ubuntu/k8s/monitoring/
+cd /home/ubuntu/k8s/monitoring
+./deploy-monitoring.sh
+```
+

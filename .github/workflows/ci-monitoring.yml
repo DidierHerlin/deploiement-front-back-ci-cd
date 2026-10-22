@@ -1,0 +1,137 @@
+name: CI/CD - Supervision & Monitoring (K3s, Prometheus, Loki, RDS)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'k8s/monitoring/**'
+      - '.github/workflows/ci-monitoring.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'k8s/monitoring/**'
+      - '.github/workflows/ci-monitoring.yml'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action à exécuter (deploy ou rollback)'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - rollback
+      rollback_ref:
+        description: 'Référence Git pour le rollback (si action=rollback, ex: HEAD~1 ou SHA)'
+        required: false
+        default: 'HEAD~1'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-monitoring:
+    name: 🔍 Validation des Manifestes & Dashboards
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Appliquer la référence de rollback si demandée
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'rollback'
+        run: |
+          echo "[INFO] Rollback demandé vers : ${{ github.event.inputs.rollback_ref }}"
+          git checkout ${{ github.event.inputs.rollback_ref }} -- k8s/monitoring/
+
+      - name: Vérification de la syntaxe des scripts Shell
+        run: |
+          echo "[INFO] Validation de deploy-monitoring.sh..."
+          bash -n k8s/monitoring/deploy-monitoring.sh
+          echo "[OK] Script shell valide."
+
+      - name: Validation des fichiers JSON des Dashboards Grafana
+        run: |
+          echo "[INFO] Validation JSON des dashboards Grafana..."
+          for file in k8s/monitoring/dashboards/*.json; do
+            jq empty "$file"
+            echo "  ✓ $file est un JSON valide"
+          done
+
+      - name: Validation des manifestes Kubernetes (Client Dry-Run)
+        run: |
+          echo "[INFO] Validation des manifestes Kubernetes..."
+          for file in k8s/monitoring/*.yaml; do
+            echo "  -> Test de $file..."
+            kubectl apply --dry-run=client -f "$file"
+          done
+          echo "[OK] Tous les manifestes Kubernetes sont valides."
+
+  deploy-monitoring:
+    name: 🚀 Déploiement Automatisé sur AWS EC2 (K3s)
+    needs: validate-monitoring
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    concurrency:
+      group: aws-monitoring-deployment
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Appliquer la référence de rollback si demandée
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'rollback'
+        run: |
+          echo "[INFO] Préparation des fichiers pour le rollback vers : ${{ github.event.inputs.rollback_ref }}"
+          git checkout ${{ github.event.inputs.rollback_ref }} -- k8s/monitoring/
+
+      - name: Résoudre l'adresse IP cible de l'EC2
+        id: resolve_ip
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
+          AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
+          STATIC_IP: ${{ secrets.AWS_EC2_IP }}
+        run: bash .github/scripts/resolve_ip.sh
+
+      - name: Transférer les fichiers de supervision sur l'EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ steps.resolve_ip.outputs.ec2_ip }}
+          username: ubuntu
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          source: "k8s/monitoring/*"
+          target: "/home/ubuntu/k8s/monitoring"
+          strip_components: 2
+          overwrite: true
+
+      - name: Déployer et vérifier la Stack de Supervision
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ steps.resolve_ip.outputs.ec2_ip }}
+          username: ubuntu
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          timeout: "300s"
+          script: |
+            set -e
+            echo "=========================================================="
+            echo " 🚀 Exécution automatique du déploiement Monitoring..."
+            echo "=========================================================="
+            cd /home/ubuntu/k8s/monitoring
+            chmod +x deploy-monitoring.sh
+            ./deploy-monitoring.sh
+
+            echo ""
+            echo "=========================================================="
+            echo " 🩺 Contrôle d'état post-déploiement..."
+            echo "=========================================================="
+            kubectl get pods -n monitoring -o wide
+            kubectl get svc -n monitoring
+
+            echo ""
+            echo " -> Vérification de la cible RDS Exporter dans Prometheus :"
+            kubectl exec -n monitoring deploy/prometheus -- wget -qO- 'http://localhost:9090/api/v1/query?query=pg_up' | jq -r '.data.result[] | "pg_up: " + .value[1] + " (job: " + .metric.job + ")"'
