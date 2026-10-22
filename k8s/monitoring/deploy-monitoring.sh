@@ -3,10 +3,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "=========================================================="
-echo " 🚀 Déploiement de la Stack Monitoring K3s & AWS RDS     "
-echo "    Prometheus + Loki + Promtail + Grafana + RDS Exporter"
-echo "=========================================================="
+echo "Déploiement de la stack de supervision (Prometheus, Loki, Grafana, RDS)..."
 
 # 1. Vérification de kubectl / k3s
 if command -v k3s &>/dev/null; then
@@ -14,21 +11,18 @@ if command -v k3s &>/dev/null; then
 elif command -v kubectl &>/dev/null; then
     KUBECTL="kubectl"
 else
-    echo "❌ Erreur : Ni k3s ni kubectl n'ont été trouvés !"
+    echo "Erreur : Ni k3s ni kubectl n'ont été trouvés."
     exit 1
 fi
 
-echo "[1/9] Application du Namespace 'monitoring'..."
+echo "[1/8] Application du namespace et des rôles RBAC..."
 sudo $KUBECTL apply -f "$SCRIPT_DIR/00-namespace.yaml"
-
-echo "[2/9] Application des rôles RBAC..."
 sudo $KUBECTL apply -f "$SCRIPT_DIR/01-rbac.yaml"
 
-echo "[3/9] Vérification du Secret AWS RDS PostgreSQL..."
+echo "[2/8] Vérification du secret AWS RDS PostgreSQL..."
 if ! sudo $KUBECTL get secret rds-postgres-exporter-secret -n monitoring &>/dev/null; then
-    echo "⚠️ Le Secret 'rds-postgres-exporter-secret' n'existe pas encore dans le namespace 'monitoring'."
     if sudo $KUBECTL get secret backend-secrets -n immobilier &>/dev/null; then
-        echo "ℹ️ Génération automatique du secret RDS depuis 'backend-secrets' (immobilier)..."
+        echo "Création automatique du secret rds-postgres-exporter-secret depuis backend-secrets..."
         DB_HOST=$(sudo $KUBECTL get secret backend-secrets -n immobilier -o jsonpath="{.data.DB_HOST}" | base64 -d)
         DB_PORT=$(sudo $KUBECTL get secret backend-secrets -n immobilier -o jsonpath="{.data.DB_PORT}" | base64 -d 2>/dev/null || echo "5432")
         DB_NAME=$(sudo $KUBECTL get secret backend-secrets -n immobilier -o jsonpath="{.data.DB_NAME}" | base64 -d)
@@ -45,52 +39,36 @@ if ! sudo $KUBECTL get secret rds-postgres-exporter-secret -n monitoring &>/dev/
           --from-literal=DB_NAME="${DB_NAME}" \
           --dry-run=client -o yaml | sudo $KUBECTL apply -f -
     else
-        echo "❌ Impossible de générer le secret. Veuillez appliquer '08-rds-postgres-secret.example.yaml' avec les bons identifiants."
+        echo "Erreur : Secret introuvable. Veuillez configurer rds-postgres-exporter-secret."
         exit 1
     fi
 fi
 
-echo "[4/9] Application des règles d'alerte Prometheus..."
+echo "[3/8] Application des alertes et de Prometheus..."
 sudo $KUBECTL apply -f "$SCRIPT_DIR/09-prometheus-rules.yaml"
-
-echo "[5/9] Déploiement de Prometheus..."
 sudo $KUBECTL apply -f "$SCRIPT_DIR/02-prometheus.yaml"
 
-echo "[6/9] Déploiement de Loki & Promtail..."
+echo "[4/8] Application de Loki et Promtail..."
 sudo $KUBECTL apply -f "$SCRIPT_DIR/03-loki.yaml"
 sudo $KUBECTL apply -f "$SCRIPT_DIR/04-promtail.yaml"
 
-echo "[7/9] Déploiement de postgres-exporter pour AWS RDS..."
+echo "[5/8] Application du collecteur PostgreSQL RDS..."
 sudo $KUBECTL apply -f "$SCRIPT_DIR/08-rds-postgres-exporter.yaml"
 
-echo "[8/9] Configuration des Sources & Dashboards Grafana..."
+echo "[6/8] Configuration des sources et dashboards Grafana..."
 sudo $KUBECTL apply -f "$SCRIPT_DIR/05-grafana-datasources.yaml"
 sudo $KUBECTL apply -f "$SCRIPT_DIR/06-grafana-dashboards.yaml"
 sudo $KUBECTL apply -f "$SCRIPT_DIR/07-grafana.yaml"
 
-echo "[9/9] Attente du démarrage complet des composants (timeout 180s)..."
-sudo $KUBECTL rollout status deployment/prometheus -n monitoring --timeout=180s
-sudo $KUBECTL rollout status deployment/loki -n monitoring --timeout=180s
-sudo $KUBECTL rollout status daemonset/promtail -n monitoring --timeout=180s
-sudo $KUBECTL rollout status deployment/rds-postgres-exporter -n monitoring --timeout=180s
-sudo $KUBECTL rollout status deployment/grafana -n monitoring --timeout=180s
+echo "[7/8] Attente du démarrage complet des charges de travail..."
+sudo $KUBECTL rollout status deployment/prometheus -n monitoring --timeout=120s
+sudo $KUBECTL rollout status deployment/loki -n monitoring --timeout=120s
+sudo $KUBECTL rollout status daemonset/promtail -n monitoring --timeout=120s
+sudo $KUBECTL rollout status deployment/rds-postgres-exporter -n monitoring --timeout=120s
+sudo $KUBECTL rollout status deployment/grafana -n monitoring --timeout=120s
 
-# Recharger Prometheus pour prendre en compte les règles sans redémarrage
+echo "[8/8] Rechargement à chaud de la configuration Prometheus..."
 sudo $KUBECTL exec -n monitoring deploy/prometheus -- wget -qO- --post-data='' http://localhost:9090/-/reload 2>/dev/null || true
 
-PUBLIC_IP=$(curl -s ifconfig.me || curl -s icanhazip.com || echo "<IP-PUBLIQUE-VPS>")
-
-echo ""
-echo "=========================================================="
-echo " ✅ STACK DE MONITORING DÉPLOYÉE ET OPÉRATIONNELLE !      "
-echo "=========================================================="
-echo " 📊 Accès Grafana :"
-echo "    URL : http://${PUBLIC_IP}:3001"
-echo "    User : admin"
-echo "    Pass : admin"
-echo ""
-echo " 📁 Dashboards provisionnés dans 'Projet DevOps M2' :"
-echo "    1. Cluster K3s & Infrastructure - Vue Soutenance"
-echo "    2. Application & Logs en Direct - Vue Soutenance"
-echo "    3. AWS RDS PostgreSQL Monitoring"
-echo "=========================================================="
+PUBLIC_IP=$(curl -s ifconfig.me || curl -s icanhazip.com || echo "localhost")
+echo "Déploiement terminé. Grafana accessible sur http://${PUBLIC_IP}:3001 (identifiant: admin / admin)"

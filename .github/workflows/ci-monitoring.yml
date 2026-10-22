@@ -31,7 +31,7 @@ permissions:
 
 jobs:
   validate-monitoring:
-    name: 🔍 Validation des Manifestes & Dashboards
+    name: Validation des manifestes et dashboards
     runs-on: ubuntu-latest
     steps:
       - name: Checkout du code
@@ -42,45 +42,39 @@ jobs:
       - name: Appliquer la référence de rollback si demandée
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'rollback'
         run: |
-          echo "[INFO] Rollback demandé vers : ${{ github.event.inputs.rollback_ref }}"
+          echo "Rollback vers : ${{ github.event.inputs.rollback_ref }}"
           git checkout ${{ github.event.inputs.rollback_ref }} -- k8s/monitoring/
 
-      - name: Vérification de la syntaxe des scripts Shell
+      - name: Validation de deploy-monitoring.sh
         run: |
-          echo "[INFO] Validation de deploy-monitoring.sh..."
           bash -n k8s/monitoring/deploy-monitoring.sh
-          echo "[OK] Script shell valide."
 
-      - name: Validation des fichiers JSON des Dashboards Grafana
+      - name: Validation des dashboards Grafana JSON
         run: |
-          echo "[INFO] Validation JSON des dashboards Grafana..."
           for file in k8s/monitoring/dashboards/*.json; do
             jq empty "$file"
-            echo "  ✓ $file est un JSON valide"
           done
 
-      - name: Validation de la syntaxe des manifestes Kubernetes YAML
+      - name: Validation syntaxique des manifestes Kubernetes YAML
         run: |
-          echo "[INFO] Validation syntaxique de tous les manifestes Kubernetes..."
           python3 -c "
           import yaml, glob, sys
           files = sorted(glob.glob('k8s/monitoring/*.yaml'))
           if not files:
-              print('[ERROR] Aucun fichier YAML trouvé dans k8s/monitoring/')
+              print('Erreur : Aucun fichier YAML trouvé dans k8s/monitoring/')
               sys.exit(1)
           for f in files:
               try:
                   with open(f, 'r', encoding='utf-8') as stream:
                       docs = list(yaml.safe_load_all(stream))
-                      print(f'  [OK] {f} ({len(docs)} documents valides)')
+                      print(f'OK: {f} ({len(docs)} documents)')
               except Exception as e:
-                  print(f'  [ERROR] {f} : {e}')
+                  print(f'Erreur: {f} : {e}')
                   sys.exit(1)
-          print('[SUCCESS] Tous les manifestes Kubernetes YAML sont parfaitement valides.')
           "
 
   deploy-monitoring:
-    name: 🚀 Déploiement Automatisé sur AWS EC2 (K3s)
+    name: Déploiement sur AWS EC2
     needs: validate-monitoring
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     concurrency:
@@ -96,7 +90,6 @@ jobs:
       - name: Appliquer la référence de rollback si demandée
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'rollback'
         run: |
-          echo "[INFO] Préparation des fichiers pour le rollback vers : ${{ github.event.inputs.rollback_ref }}"
           git checkout ${{ github.event.inputs.rollback_ref }} -- k8s/monitoring/
 
       - name: Résoudre l'adresse IP cible de l'EC2
@@ -120,7 +113,7 @@ jobs:
           strip_components: 2
           overwrite: true
 
-      - name: Déployer et vérifier la Stack de Supervision
+      - name: Déployer et vérifier la supervision
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ steps.resolve_ip.outputs.ec2_ip }}
@@ -129,20 +122,15 @@ jobs:
           timeout: "300s"
           script: |
             set -e
-            echo "=========================================================="
-            echo " 🚀 Exécution automatique du déploiement Monitoring..."
-            echo "=========================================================="
             cd /home/ubuntu/k8s/monitoring
             chmod +x deploy-monitoring.sh
             ./deploy-monitoring.sh
 
-            echo ""
-            echo "=========================================================="
-            echo " 🩺 Contrôle d'état post-déploiement..."
-            echo "=========================================================="
-            kubectl get pods -n monitoring -o wide
+            echo "--- État des pods ---"
+            kubectl get pods -n monitoring
+
+            echo "--- État des services ---"
             kubectl get svc -n monitoring
 
-            echo ""
-            echo " -> Vérification de la cible RDS Exporter dans Prometheus :"
-            kubectl exec -n monitoring deploy/prometheus -- wget -qO- 'http://localhost:9090/api/v1/query?query=pg_up' | jq -r '.data.result[] | "pg_up: " + .value[1] + " (job: " + .metric.job + ")"'
+            echo "--- Connectivité RDS PostgreSQL (pg_up) ---"
+            kubectl exec -n monitoring deploy/prometheus -- wget -qO- 'http://localhost:9090/api/v1/query?query=pg_up' | jq -r '.data.result[] | .metric.job + " : pg_up = " + .value[1]'
