@@ -509,7 +509,7 @@ data:
           },
           "gridPos": {
             "h": 12,
-            "w": 24,
+            "w": 12,
             "x": 0,
             "y": 13
           },
@@ -532,6 +532,41 @@ data:
                 "uid": "Loki"
               },
               "expr": "{namespace=\"immobilier\"} != \"/api/health/\"",
+              "queryType": "range",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "gridPos": {
+            "h": 12,
+            "w": 12,
+            "x": 12,
+            "y": 13
+          },
+          "id": 17,
+          "options": {
+            "dedupStrategy": "none",
+            "enableLogDetails": true,
+            "prettifyLogMessage": true,
+            "showCommonLabels": false,
+            "showLabels": true,
+            "sortOrder": "Descending",
+            "wrapLogMessage": true
+          },
+          "title": "🚨 Console Dédiée - Erreurs & Exceptions Détectées (5xx / Fail)",
+          "type": "logs",
+          "targets": [
+            {
+              "datasource": {
+                "type": "loki",
+                "uid": "Loki"
+              },
+              "expr": "{namespace=\"immobilier\"} != \"/api/health/\" |~ \"(?i)(error|exception|fail|500|traceback)\"",
               "queryType": "range",
               "refId": "A"
             }
