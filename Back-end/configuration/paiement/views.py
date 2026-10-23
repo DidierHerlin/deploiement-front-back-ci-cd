@@ -21,7 +21,7 @@ from .utils import generate_quittance_pdf   # <-- IMPORTANT
 class PaiementPagination(PageNumberPagination):
     page_size = 20
     page_size_query_param = "page_size"
-    max_page_size = 100
+    max_page_size = 1000
 
 
 class PaiementViewSet(viewsets.ModelViewSet):
@@ -267,7 +267,7 @@ class PaiementViewSet(viewsets.ModelViewSet):
 class DemandePaiementPagination(PageNumberPagination):
     page_size = 20
     page_size_query_param = "page_size"
-    max_page_size = 100
+    max_page_size = 1000
 
 
 class DemandePaiementViewSet(viewsets.ModelViewSet):

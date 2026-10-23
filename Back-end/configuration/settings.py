@@ -204,17 +204,23 @@ SIMPLE_JWT = {
 # Configuration CORS
 
 CORS_ALLOW_ALL_ORIGINS = config("CORS_ALLOW_ALL_ORIGINS", default=False, cast=bool)
-CORS_ALLOWED_ORIGINS = config(
+_raw_cors_origins = config(
     "CORS_ALLOWED_ORIGINS",
     default="http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000",
     cast=Csv(),
 )
+CORS_ALLOWED_ORIGINS = [origin.rstrip("/") for origin in _raw_cors_origins if origin]
+
 FRONTEND_URL = config("FRONTEND_URL", default="http://localhost:3000,http://localhost:3001")
-CSRF_TRUSTED_ORIGINS = config(
+
+_raw_csrf_origins = config(
     "CSRF_TRUSTED_ORIGINS",
     default="http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000",
     cast=Csv(),
 )
+CSRF_TRUSTED_ORIGINS = [origin.rstrip("/") for origin in _raw_csrf_origins if origin]
+
+CORS_PREFLIGHT_MAX_AGE = config("CORS_PREFLIGHT_MAX_AGE", default=86400, cast=int)
 
 
 LANGUAGE_CODE = "fr-fr"
