@@ -1,4 +1,5 @@
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Sum, Count, Q
@@ -12,6 +13,10 @@ from utilisateur.models import Utilisateur, Proprietaire, Locataire
 class ReportingStatsView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        responses={200: dict},
+        description="Statistiques globales (biens, contrats, paiements, utilisateurs)",
+    )
     def get(self, request):
         user = request.user
         

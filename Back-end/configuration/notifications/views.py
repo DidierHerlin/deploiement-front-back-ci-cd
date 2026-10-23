@@ -91,6 +91,7 @@ class NotificationDetailView(APIView):
 
 
 class MarquerLuView(APIView):
+    serializer_class = MarquerLuSerializer
     """
     POST /api/notifications/marquer-lu/
     Body : { "notification_ids": [1, 2, 3] } — vide = tout marquer comme lu.
@@ -115,6 +116,7 @@ class MarquerLuView(APIView):
 
 
 class NotificationCreateView(APIView):
+    serializer_class = NotificationCreateSerializer
     """
     POST /api/notifications/creer/
     Réservé aux administrateurs. Déclenche automatiquement l'envoi d'email

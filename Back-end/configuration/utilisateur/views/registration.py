@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 # ===================================================================
 
 class LocataireRegisterView(ApiResponseMixin, APIView):
+    serializer_class = LocataireSerializer
     """
     Inscription des locataires.
     RG : un locataire est activé automatiquement (ROLES_AUTO_ACTIFS du manager).
@@ -61,6 +62,7 @@ class LocataireRegisterView(ApiResponseMixin, APIView):
 
 
 class ProprietaireRegisterView(ApiResponseMixin, APIView):
+    serializer_class = ProprietaireSerializer
     """
     Inscription des propriétaires.
     RG : un compte PROPRIETAIRE est créé inactif et doit être validé par un
@@ -101,6 +103,7 @@ class ProprietaireRegisterView(ApiResponseMixin, APIView):
 
 
 class AgentRegisterView(ApiResponseMixin, APIView):
+    serializer_class = AgentRegisterSerializer
     """
     Inscription des agents immobiliers.
     RG : un compte AGENT est créé inactif et doit être validé par un

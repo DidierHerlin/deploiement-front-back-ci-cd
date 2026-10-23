@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema
 
 from ..models import Proprietaire, Utilisateur
 from ..permissions import EstGestionnaire
@@ -20,6 +21,7 @@ logger = logging.getLogger(__name__)
 # ===================================================================
 
 class ProprietaireDetailView(ApiResponseMixin, APIView):
+    serializer_class = ProprietaireSerializer
     """Détails et modification de la fiche propriétaire"""
     permission_classes = [IsAuthenticated]
 
@@ -140,6 +142,7 @@ class ProprietaireDetailView(ApiResponseMixin, APIView):
 
 
 class ProprietaireListView(ApiResponseMixin, APIView):
+    serializer_class = ProprietaireSerializer
     """Liste de tous les propriétaires (agent/admin uniquement)"""
     permission_classes = [IsAuthenticated, EstGestionnaire]
 
@@ -161,6 +164,7 @@ class ActiverCompteView(ApiResponseMixin, APIView):
     """
     permission_classes = [IsAuthenticated, EstGestionnaire]
 
+    @extend_schema(request=None, responses={200: dict})
     def post(self, request, pk=None):
         utilisateur = get_object_or_404(Utilisateur, pk=pk)
 

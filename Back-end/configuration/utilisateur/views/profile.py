@@ -5,6 +5,7 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema
 
 from ..serializers import (
     UpdateProfilePhotoSerializer,
@@ -21,6 +22,7 @@ logger = logging.getLogger(__name__)
 # ===================================================================
 
 class GetProfileView(ApiResponseMixin, APIView):
+    serializer_class = UtilisateurSerializer
     """Récupérer ou modifier le profil de l'utilisateur connecté"""
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
@@ -65,6 +67,7 @@ class GetProfileView(ApiResponseMixin, APIView):
 
 
 class UpdateUserProfileView(ApiResponseMixin, APIView):
+    serializer_class = UtilisateurUpdateSerializer
     """Mise à jour complète du profil utilisateur"""
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser,JSONParser]
@@ -96,6 +99,7 @@ class UpdateUserProfileView(ApiResponseMixin, APIView):
 
 
 class UpdateProfilePhotoView(ApiResponseMixin, APIView):
+    serializer_class = UpdateProfilePhotoSerializer
     """Mise à jour de la photo de profil uniquement"""
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
@@ -134,6 +138,7 @@ class DeleteProfilePhotoView(ApiResponseMixin, APIView):
     """Suppression de la photo de profil"""
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(responses={200: dict})
     def delete(self, request):
         user = request.user
 
