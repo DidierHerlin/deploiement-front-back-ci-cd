@@ -88,3 +88,5 @@ desktop.ini
 k8s/monitoring/*secret*.yaml
 !k8s/monitoring/*secret.example.yaml
 
+
+backend-audit.zip

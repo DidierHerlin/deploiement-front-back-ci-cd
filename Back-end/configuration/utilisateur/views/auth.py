@@ -9,6 +9,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from ..serializers import UtilisateurTokenObtainPairSerializer
+from ..throttling import AuthAnonRateThrottle
 from .mixins import ApiResponseMixin
 
 logger = logging.getLogger(__name__)
@@ -31,6 +32,7 @@ class LoginView(TokenObtainPairView):
     """
     permission_classes = [AllowAny]
     authentication_classes = []
+    throttle_classes = [AuthAnonRateThrottle]
     serializer_class = UtilisateurTokenObtainPairSerializer
 
     def post(self, request, *args, **kwargs):

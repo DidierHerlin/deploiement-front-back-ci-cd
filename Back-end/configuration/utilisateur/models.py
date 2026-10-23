@@ -20,7 +20,7 @@ class UtilisateurManager(BaseUserManager):
     """
     Manager personnalisé permettant l'authentification par email
     """
-    ROLES_AUTO_ACTIFS = ["LOCATAIRE", "PROPRIETAIRE", "AGENT"]
+    ROLES_AUTO_ACTIFS = ["LOCATAIRE", "ADMIN"]
 
     def create_user(self, email, password=None, **extra_fields):
         if not email:

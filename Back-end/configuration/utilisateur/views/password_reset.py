@@ -10,6 +10,7 @@ from ..serializers import (
     PasswordResetRequestSerializer,
 )
 from .mixins import ApiResponseMixin
+from ..throttling import PasswordResetRateThrottle
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,7 @@ class RequestPasswordResetView(ApiResponseMixin, APIView):
     """Étape 1 : Demande de réinitialisation - Envoie un code par email"""
     permission_classes = [AllowAny]
     authentication_classes = []
+    throttle_classes = [PasswordResetRateThrottle]
 
     def post(self, request):
         serializer = PasswordResetRequestSerializer(data=request.data)
@@ -47,6 +49,7 @@ class VerifyResetCodeView(ApiResponseMixin, APIView):
     """Étape 2 : Vérification du code"""
     permission_classes = [AllowAny]
     authentication_classes = []
+    throttle_classes = [PasswordResetRateThrottle]
 
     def post(self, request):
         serializer = PasswordResetCodeVerificationSerializer(data=request.data)
@@ -64,6 +67,7 @@ class ResetPasswordView(ApiResponseMixin, APIView):
     """Étape 3 : Réinitialisation finale du mot de passe"""
     permission_classes = [AllowAny]
     authentication_classes = []
+    throttle_classes = [PasswordResetRateThrottle]
 
     def post(self, request):
         serializer = PasswordResetConfirmSerializer(data=request.data)

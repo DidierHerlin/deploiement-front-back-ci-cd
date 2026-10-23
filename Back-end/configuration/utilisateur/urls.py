@@ -3,6 +3,8 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from .views import (
     ActiverCompteView,
+    AdminDashboardView,
+    AgentDashboardView,
     AgentRegisterView,
     ChangePasswordView,
     DeleteProfilePhotoView,
@@ -12,21 +14,26 @@ from .views import (
     LocataireRegisterView,
     LoginView,
     LogoutView,
+    ProprietaireDashboardView,
+    ProprietaireDashboardOptimizedView,
     ProprietaireDetailView,
     ProprietaireListView,
     ProprietaireRegisterView,
+    ReportingStatsView,
     RequestPasswordResetView,
     ResetPasswordView,
     UpdateProfilePhotoView,
     UpdateUserProfileView,
-    VerifyResetCodeView,
-    UtilisateurListView,
     UtilisateurDetailView,
+    UtilisateurListView,
+    VerifyResetCodeView,
 )
 
 urlpatterns = [
+    # Gestion administrative des comptes utilisateurs
     path("tous-utilisateurs/", UtilisateurListView.as_view(), name="tous-utilisateurs"),
     path("tous-utilisateurs/<int:pk>/", UtilisateurDetailView.as_view(), name="detail-utilisateur"),
+
     # Authentification
     path("auth/login/", LoginView.as_view(), name="login"),
     path("auth/logout/", LogoutView.as_view(), name="logout"),
@@ -61,4 +68,15 @@ urlpatterns = [
     path("mot-de-passe/demande/", RequestPasswordResetView.as_view(), name="mdp-demande"),
     path("mot-de-passe/verifier-code/", VerifyResetCodeView.as_view(), name="mdp-verifier-code"),
     path("mot-de-passe/reinitialiser/", ResetPasswordView.as_view(), name="mdp-reinitialiser"),
+
+    # Tableaux de bord et reporting
+    path("reporting/stats/", ReportingStatsView.as_view(), name="reporting-stats"),
+    path("admin/dashboard/", AdminDashboardView.as_view(), name="admin-dashboard"),
+    path("agent/dashboard/", AgentDashboardView.as_view(), name="agent-dashboard"),
+    path("dashboard/proprietaire/", ProprietaireDashboardView.as_view(), name="proprietaire-dashboard"),
+    path(
+        "dashboard/proprietaire-optimized/",
+        ProprietaireDashboardOptimizedView.as_view(),
+        name="proprietaire-dashboard-optimized",
+    ),
 ]

@@ -5,6 +5,7 @@ import io
 import json
 
 from dateutil.relativedelta import relativedelta
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection, reset_queries
@@ -20,10 +21,13 @@ from contrats.models import Contrat
 from paiement.models import Paiement
 from reservation.models import Reservation
 from notifications.models import Notification
-from admin_dashboard_views import AdminDashboardView
-from agent_dashboard_views import AgentDashboardView
-from reporting_views import ReportingStatsView
-from proprietaire_dashboard_views import ProprietaireDashboardView, ProprietaireDashboardOptimizedView
+from utilisateur.views import (
+    AdminDashboardView,
+    AgentDashboardView,
+    ProprietaireDashboardView,
+    ProprietaireDashboardOptimizedView,
+    ReportingStatsView,
+)
 
 
 # 1. Tests des Modèles Utilisateur, Locataire et Propriétaire
@@ -937,5 +941,240 @@ class UtilisateurViewsAndMixinsBoostTests(APITestCase):
         self.client.force_authenticate(user=prop_user)
         resp = self.client.get("/api/proprietaires/999/")
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class TousUtilisateursSecurityTests(APITestCase):
+    def setUp(self):
+        self.admin = Utilisateur.objects.create_user(
+            email="admin_sec@test.com", password="password123", role=Utilisateur.Role.ADMIN
+        )
+        self.agent = Utilisateur.objects.create_user(
+            email="agent_sec@test.com", password="password123", role=Utilisateur.Role.AGENT
+        )
+        self.proprietaire = Utilisateur.objects.create_user(
+            email="proprio_sec@test.com", password="password123", role=Utilisateur.Role.PROPRIETAIRE
+        )
+        self.locataire = Utilisateur.objects.create_user(
+            email="loc_sec@test.com", password="password123", role=Utilisateur.Role.LOCATAIRE
+        )
+        self.target_user = Utilisateur.objects.create_user(
+            email="target@test.com", password="password123", role=Utilisateur.Role.LOCATAIRE
+        )
+
+    def test_anonymous_access_rejected(self):
+        resp = self.client.get("/api/tous-utilisateurs/")
+        self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
+        resp_detail = self.client.get(f"/api/tous-utilisateurs/{self.target_user.id}/")
+        self.assertEqual(resp_detail.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_locataire_access_forbidden(self):
+        self.client.force_authenticate(user=self.locataire)
+        resp = self.client.get("/api/tous-utilisateurs/")
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+        resp_del = self.client.delete(f"/api/tous-utilisateurs/{self.target_user.id}/")
+        self.assertEqual(resp_del.status_code, status.HTTP_403_FORBIDDEN)
+        resp_patch = self.client.patch(
+            f"/api/tous-utilisateurs/{self.locataire.id}/", {"role": "ADMIN"}
+        )
+        self.assertEqual(resp_patch.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_proprietaire_access_forbidden(self):
+        self.client.force_authenticate(user=self.proprietaire)
+        resp = self.client.get("/api/tous-utilisateurs/")
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_agent_access_forbidden(self):
+        self.client.force_authenticate(user=self.agent)
+        resp = self.client.get("/api/tous-utilisateurs/")
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_admin_can_list_and_retrieve_users(self):
+        self.client.force_authenticate(user=self.admin)
+        resp = self.client.get("/api/tous-utilisateurs/")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        resp_detail = self.client.get(f"/api/tous-utilisateurs/{self.target_user.id}/")
+        self.assertEqual(resp_detail.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp_detail.data["email"], "target@test.com")
+
+    def test_admin_can_update_user(self):
+        self.client.force_authenticate(user=self.admin)
+        resp = self.client.patch(
+            f"/api/tous-utilisateurs/{self.target_user.id}/",
+            {"nom": "NouveauNom"},
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.target_user.refresh_from_db()
+        self.assertEqual(self.target_user.nom, "NouveauNom")
+
+    def test_admin_can_delete_other_user(self):
+        self.client.force_authenticate(user=self.admin)
+        resp = self.client.delete(f"/api/tous-utilisateurs/{self.target_user.id}/")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Utilisateur.objects.filter(id=self.target_user.id).exists())
+
+    def test_admin_cannot_delete_self(self):
+        self.client.force_authenticate(user=self.admin)
+        resp = self.client.delete(f"/api/tous-utilisateurs/{self.admin.id}/")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue(Utilisateur.objects.filter(id=self.admin.id).exists())
+
+
+class UtilisateurThrottlingSecurityTests(APITestCase):
+    """Tests de validation de la limitation de debit (Throttling) contre les attaques par force brute."""
+
+    def setUp(self):
+        super().setUp()
+        cache.clear()
+
+    def tearDown(self):
+        cache.clear()
+        super().tearDown()
+
+    def test_throttle_classes_are_configured_on_sensitive_views(self):
+        from utilisateur.views.auth import LoginView
+        from utilisateur.views.password_reset import (
+            RequestPasswordResetView,
+            VerifyResetCodeView,
+            ResetPasswordView,
+        )
+        from utilisateur.throttling import AuthAnonRateThrottle, PasswordResetRateThrottle
+
+        self.assertIn(AuthAnonRateThrottle, LoginView.throttle_classes)
+        self.assertIn(PasswordResetRateThrottle, RequestPasswordResetView.throttle_classes)
+        self.assertIn(PasswordResetRateThrottle, VerifyResetCodeView.throttle_classes)
+        self.assertIn(PasswordResetRateThrottle, ResetPasswordView.throttle_classes)
+
+    def test_login_throttling_exceeded(self):
+        for _ in range(20):
+            response = self.client.post(
+                "/api/auth/login/",
+                {"email": "throttle_probe@test.com", "password": "wrongpassword"},
+            )
+            self.assertNotEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+        blocked_response = self.client.post(
+            "/api/auth/login/",
+            {"email": "throttle_probe@test.com", "password": "wrongpassword"},
+        )
+        self.assertEqual(blocked_response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+    def test_password_reset_throttling_exceeded(self):
+        url = reverse("mdp-demande")
+        for _ in range(10):
+            response = self.client.post(
+                url,
+                {"email": "nonexistent_probe@test.com"},
+            )
+            self.assertNotEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+        blocked_response = self.client.post(
+            url,
+            {"email": "nonexistent_probe@test.com"},
+        )
+        self.assertEqual(blocked_response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+
+class RolesAutoActifsBusinessRuleTests(APITestCase):
+    """Validation de la regle metier d'activation automatique selon le role."""
+
+    def setUp(self):
+        super().setUp()
+        cache.clear()
+        self.admin = Utilisateur.objects.create_superuser(
+            email="admin_roles@test.com", password="SecurePassword123!"
+        )
+
+    def tearDown(self):
+        cache.clear()
+        super().tearDown()
+
+    def test_roles_auto_actifs_configuration(self):
+        self.assertEqual(
+            Utilisateur.objects.ROLES_AUTO_ACTIFS,
+            ["LOCATAIRE", "ADMIN"],
+        )
+
+    def test_locataire_auto_active_on_creation(self):
+        user = Utilisateur.objects.create_user(
+            email="loc_auto@test.com",
+            password="Password123!",
+            role=Utilisateur.Role.LOCATAIRE,
+        )
+        self.assertTrue(user.is_active)
+
+    def test_proprietaire_inactive_on_creation(self):
+        user = Utilisateur.objects.create_user(
+            email="prop_inactive@test.com",
+            password="Password123!",
+            role=Utilisateur.Role.PROPRIETAIRE,
+        )
+        self.assertFalse(user.is_active)
+
+    def test_agent_inactive_on_creation(self):
+        user = Utilisateur.objects.create_user(
+            email="agent_inactive@test.com",
+            password="Password123!",
+            role=Utilisateur.Role.AGENT,
+        )
+        self.assertFalse(user.is_active)
+
+    def test_admin_active_on_creation(self):
+        user = Utilisateur.objects.create_user(
+            email="admin_user_role@test.com",
+            password="Password123!",
+            role=Utilisateur.Role.ADMIN,
+        )
+        self.assertTrue(user.is_active)
+
+    def test_explicit_is_active_override_respected(self):
+        user = Utilisateur.objects.create_user(
+            email="prop_forced_active@test.com",
+            password="Password123!",
+            role=Utilisateur.Role.PROPRIETAIRE,
+            is_active=True,
+        )
+        self.assertTrue(user.is_active)
+
+    def test_proprietaire_registration_inactive_and_activation_flow(self):
+        url_register = reverse("proprietaire-register")
+        data = {
+            "email": "flow_proprio@test.com",
+            "password": "SecurePassword123!",
+            "nom": "Dupont",
+            "prenoms": "Marc",
+            "iban": "FR7630006000011234567890189",
+            "telephone": "0601020304",
+        }
+        res_reg = self.client.post(url_register, data, format="json")
+        self.assertEqual(res_reg.status_code, status.HTTP_201_CREATED)
+
+        user = Utilisateur.objects.get(email="flow_proprio@test.com")
+        self.assertFalse(user.is_active)
+
+        url_login = reverse("login")
+        res_login_fail = self.client.post(
+            url_login,
+            {"email": "flow_proprio@test.com", "password": "SecurePassword123!"},
+        )
+        self.assertEqual(res_login_fail.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        self.client.force_authenticate(user=self.admin)
+        url_activate = reverse("activer-compte", kwargs={"pk": user.pk})
+        res_activate = self.client.post(url_activate)
+        self.assertEqual(res_activate.status_code, status.HTTP_200_OK)
+
+        user.refresh_from_db()
+        self.assertTrue(user.is_active)
+
+        self.client.logout()
+        res_login_ok = self.client.post(
+            url_login,
+            {"email": "flow_proprio@test.com", "password": "SecurePassword123!"},
+        )
+        self.assertEqual(res_login_ok.status_code, status.HTTP_200_OK)
+        self.assertIn("access", res_login_ok.data)
+
+
+
 
 

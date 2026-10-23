@@ -1,39 +1,43 @@
-from django.contrib import admin
-from django.urls import path, include, re_path
-from django.views.static import serve
 from django.conf import settings
-from django.conf.urls.static import static
+from django.contrib import admin
 from django.http import JsonResponse
-from reporting_views import ReportingStatsView
-from admin_dashboard_views import AdminDashboardView
-from agent_dashboard_views import AgentDashboardView
-from proprietaire_dashboard_views import ProprietaireDashboardView, ProprietaireDashboardOptimizedView
+from django.urls import include, path, re_path
+from django.views.decorators.http import require_GET
+from django.views.static import serve
 from drf_spectacular.views import (
     SpectacularAPIView,
-    SpectacularSwaggerView,
     SpectacularRedocView,
+    SpectacularSwaggerView,
 )
-from django.views.decorators.http import require_GET
+
+
 @require_GET
 def health_check(request):
+    """Sonde de sante pour l'infrastructure (Docker, Kubernetes, load balancers)."""
     return JsonResponse({"status": "ok"})
+
+
 urlpatterns = [
+    # Verifications de sante
     path("health/", health_check, name="health"),
     path("api/health/", health_check, name="api-health"),
     path("api/health", health_check),
+
+    # Administration Django
     path("admin/", admin.site.urls),
+
+    # Routes des applications metier
     path("api/", include("utilisateur.urls")),
     path("api/", include("notifications.urls")),
     path("api/", include("bien.urls")),
     path("api/", include("contrats.urls")),
-    path('api/', include('paiement.urls')),
-    path('api/', include('reservation.urls')),
-    path('api/reporting/stats/', ReportingStatsView.as_view(), name='reporting-stats'),
-    path('api/admin/dashboard/', AdminDashboardView.as_view(), name='admin-dashboard'),
-    path('api/agent/dashboard/', AgentDashboardView.as_view(), name='agent-dashboard'),
-    path('api/dashboard/proprietaire/', ProprietaireDashboardView.as_view(), name='proprietaire-dashboard'),
-    path('api/dashboard/proprietaire-optimized/', ProprietaireDashboardOptimizedView.as_view(), name='proprietaire-dashboard-optimized'),
+    path("api/", include("paiement.urls")),
+    path("api/", include("reservation.urls")),
+    path("api/", include("TypeBien.urls")),
+    path("api/", include("Transaction.urls")),
+    path("api/", include("Status.urls")),
 
+    # Documentation API OpenAPI / Swagger
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
     path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
