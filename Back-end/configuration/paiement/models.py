@@ -54,7 +54,7 @@ class Paiement(models.Model):
         help_text="Date à laquelle le paiement est attendu"
     )
 
-    # --- Champs de l'échéancier automatique ---
+    # Echeancier automatique
     montant_attendu = models.DecimalField(
         "Montant attendu",
         max_digits=15,
@@ -134,7 +134,7 @@ class Paiement(models.Model):
         help_text="Position de cette échéance dans l'échéancier (1 = première)"
     )
 
-    # --- NOUVEAU CHAMP : Fichier quittance ---
+    # Quittance de paiement (PDF)
     fichier_quittance = models.FileField(
         "Fichier quittance",
         upload_to=quittance_upload_path,
@@ -185,7 +185,7 @@ class Paiement(models.Model):
     def clean(self):
         super().clean()
 
-        # --- Référence obligatoire pour Mobile Money (uniquement si mode_paiement renseigné) ---
+        # Reference obligatoire pour les paiements Mobile Money
         if self.mode_paiement:
             mobile_money_modes = (self.ModePaiement.MVOLA, self.ModePaiement.ORANGE_MONEY, self.ModePaiement.AIRTEL_MONEY)
             if self.mode_paiement in mobile_money_modes and not self.reference:
@@ -193,7 +193,7 @@ class Paiement(models.Model):
                     "reference": "La référence de transaction est obligatoire pour les paiements par Mobile Money."
                 })
 
-        # --- Vérifier qu'il n'y a pas déjà un paiement validé pour la même échéance
+        # Verification d'unicite du paiement valide pour l'echeance
         if not self.pk and not self.est_partiel:
             existing = Paiement.objects.filter(
                 contrat=self.contrat,
@@ -206,28 +206,28 @@ class Paiement(models.Model):
                 })
 
     def save(self, *args, **kwargs):
-        # --- Synchronisation des dates ---
+        # Synchronisation des dates d'echeance
         if self.date_paiement_prevue:
             self.date_echeance = self.date_paiement_prevue
         elif self.date_echeance:
             self.date_paiement_prevue = self.date_echeance
 
-        # --- Date de paiement automatique (remplie lors du passage à PAYE) ---
+        # Date effective lors du passage au statut PAYE
         if not self.date_paiement and self.statut == self.StatutPaiement.PAYE:
             self.date_paiement = timezone.now().date()
 
-        # --- Montant payé automatique si paiement complet ---
+        # Montant paye pour un paiement integral
         if self.statut == self.StatutPaiement.PAYE and not self.est_partiel and (not self.montant_paye or self.montant_paye == 0):
             self.montant_paye = self.montant or self.montant_attendu or 0
 
-        # --- Date de versement partiel (remplie lors d'un paiement partiel) ---
+        # Date du premier versement partiel
         if self.est_partiel and not self.date_versement_partiel:
             self.date_versement_partiel = timezone.now().date()
 
         self.full_clean()
         super().save(*args, **kwargs)
 
-    # --- Propriétés métier ---
+    # Proprietes metier
 
     @property
     def locataire(self) -> Locataire:
@@ -318,7 +318,7 @@ class Paiement(models.Model):
             return False
         return True
 
-    # --- Actions métier ---
+    # Actions metier
 
     def valider_paiement(self, *, save=True):
         if self.statut == self.StatutPaiement.PAYE:

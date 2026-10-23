@@ -7,9 +7,7 @@ from ..models import Utilisateur
 from .mixins import PhotoUrlMixin
 
 
-# ===================================================================
-# 1. UTILISATEUR SERIALIZER (avec photo_url, comme l'ancien UserSerializer)
-# ===================================================================
+# Serialiseur utilisateur
 class UtilisateurSerializer(PhotoUrlMixin, serializers.ModelSerializer):
     """Profil complet : consultation et modification (y compris la photo)."""
 
@@ -69,9 +67,7 @@ class UtilisateurCreateSerializer(serializers.ModelSerializer):
         return user
 
 
-# ===================================================================
-# MISE À JOUR DE LA PHOTO DE PROFIL SEULE
-# ===================================================================
+# Mise a jour de la photo de profil
 class UpdateProfilePhotoSerializer(serializers.Serializer):
     """Mise à jour de la photo de profil uniquement."""
 
@@ -94,9 +90,7 @@ class UpdateProfilePhotoSerializer(serializers.Serializer):
         return user
 
 
-# ===================================================================
-# MISE À JOUR DU PROFIL UTILISATEUR (avec changement de mot de passe sécurisé)
-# ===================================================================
+# Mise a jour du profil utilisateur
 class UtilisateurUpdateSerializer(serializers.ModelSerializer):
     """
     Mise à jour du profil utilisateur : nom, prénoms, email, téléphone,

@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 from datetime import timedelta
 from decouple import config, Csv
 import os
@@ -66,13 +66,9 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_EXPOSE_HEADERS = ["Content-Disposition"]
 
 
-# ─── Configuration Base de données ───────────────────────────────────────────
-# Priorité :
-#   1. USE_SQLITE=true          → SQLite local (dev rapide, no postgres needed)
-#   2. DATABASE_URL=postgresql://... → PostgreSQL via URL (Railway, RDS...)
-#   3. DB_HOST défini           → PostgreSQL via variables séparées
-#   4. Aucune config            → SQLite local (fallback)
-# ─────────────────────────────────────────────────────────────────────────────
+
+# Configuration de la base de donnees
+# Priorite : USE_SQLITE -> DATABASE_URL -> DB_HOST -> fallback SQLite
 
 USE_SQLITE = config("USE_SQLITE", default=False, cast=bool)
 DATABASE_URL = config("DATABASE_URL", default="")
@@ -192,7 +188,7 @@ SIMPLE_JWT = {
     "USER_ID_CLAIM": "user_id",
 }
 
-# â”€â”€â”€ CORS 
+# Configuration CORS
 
 CORS_ALLOW_ALL_ORIGINS = config("CORS_ALLOW_ALL_ORIGINS", default=False, cast=bool)
 CORS_ALLOWED_ORIGINS = config(

@@ -32,7 +32,7 @@ class PaiementSerializer(serializers.ModelSerializer):
         decimal_places=2
     )
 
-    # --- Champs calculés (lecture seule) ---
+    # Champs calcules en lecture seule
 
     # Message informatif sur le mois concerné par cette échéance
     message_mois = serializers.CharField(read_only=True)
@@ -169,7 +169,7 @@ class PaiementSerializer(serializers.ModelSerializer):
             "est_partiel", getattr(self.instance, "est_partiel", False)
         )
 
-        # --- 1. Pré-remplissage du montant depuis l'échéancier ---
+        # 1. Pre-remplissage du montant depuis l'echeancier
         # Si le paiement existe déjà en base (échéancier auto), on reprend montant_attendu
         if contrat and montant is None:
             instance = self.instance
@@ -181,11 +181,11 @@ class PaiementSerializer(serializers.ModelSerializer):
                 montant = contrat.prix
             attrs["montant"] = montant
 
-        # --- 2. Pré-remplissage de la date d'échéance ---
+        # 2. Pre-remplissage de la date d'echeance
         if contrat and date_echeance is None:
             attrs["date_echeance"] = timezone.now().date()
 
-        # --- 3. Vérification montant / montant_attendu ---
+        # 3. Verification de coherence du montant attendu
         # Pour un paiement non partiel, le montant doit correspondre au montant_attendu
         if contrat and montant is not None and not est_partiel:
             # Récupérer montant_attendu si disponible (paiement issu de l'échéancier)
@@ -208,7 +208,7 @@ class PaiementSerializer(serializers.ModelSerializer):
                     }
                 )
 
-        # --- 4. Référence obligatoire pour Mobile Money ---
+        # 4. Reference obligatoire pour Mobile Money
         mode = attrs.get("mode_paiement", getattr(self.instance, "mode_paiement", None))
         reference = attrs.get("reference", getattr(self.instance, "reference", None))
         mobile_money_modes = (
@@ -226,7 +226,7 @@ class PaiementSerializer(serializers.ModelSerializer):
                 }
             )
 
-        # --- 5. Empêcher un second paiement complet pour la même échéance ---
+        # 5. Prevention d'un double paiement complet pour la meme echeance
         if not self.instance and contrat and not est_partiel:
             date_echeance_val = attrs.get("date_echeance")
             if date_echeance_val:
@@ -263,9 +263,7 @@ class PaiementSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-# ------------------------------------------------------------------
-# Sérialiseurs pour les Demandes de Paiement Locataire (Mobile Money)
-# ------------------------------------------------------------------
+# Demandes de paiement locataire (Mobile Money)
 
 class DemandePaiementSerializer(serializers.ModelSerializer):
     """

@@ -21,9 +21,7 @@ from paiement.models import Paiement
 from utilisateur.models import Locataire, Proprietaire, Utilisateur
 
 
-# ==============================================================================
 # Helpers
-# ==============================================================================
 
 def create_user(email, password="TestPass123!", role="LOCATAIRE"):
     return Utilisateur.objects.create_user(email=email, password=password, role=role)
@@ -39,9 +37,7 @@ def create_notification(utilisateur, type_notif="AUTRE", titre="Test", message="
     )
 
 
-# ==============================================================================
 # 1. Tests des Services de Notification & Commandes Management
-# ==============================================================================
 
 class NotificationServiceTests(TestCase):
     def setUp(self):
@@ -159,9 +155,7 @@ class NotificationServiceTests(TestCase):
         self.assertFalse(notif.email_envoye)
 
 
-# ==============================================================================
 # 2. Tests du Modèle Notification
-# ==============================================================================
 
 class NotificationModelTest(APITestCase):
     def setUp(self):
@@ -201,9 +195,7 @@ class NotificationModelTest(APITestCase):
         self.assertEqual(notif.get_type_display(), "Paiement validé")
 
 
-# ==============================================================================
 # 3. Tests des Vues API Notifications
-# ==============================================================================
 
 class NotificationListViewTest(APITestCase):
     def setUp(self):

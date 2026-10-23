@@ -18,9 +18,7 @@ class ProprietaireDashboardView(APIView):
         if user.role != Utilisateur.Role.PROPRIETAIRE:
             return Response({"detail": "Non autoris."}, status=403)
 
-        # ---------------------------------------------------------
-        # OLD SLOW WAY (Mimicking frontend loops and multiple queries)
-        # ---------------------------------------------------------
+        # Calcul non optimise (pour benchmark comparatif avec la vue optimisee)
         
         # 1. Fetch ALL biens and loop (N+1 simulated or memory heavy)
         tous_biens = list(Bien.objects.filter(proprietaire__user=user))

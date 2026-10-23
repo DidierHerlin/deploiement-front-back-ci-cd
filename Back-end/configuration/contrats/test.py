@@ -19,9 +19,7 @@ from paiement.models import Paiement
 from utilisateur.models import Locataire, Proprietaire, Utilisateur
 
 
-# ==============================================================================
 # Helpers
-# ==============================================================================
 
 def make_user(email, role=Utilisateur.Role.AGENT, **kw):
     return Utilisateur.objects.create_user(
@@ -62,9 +60,7 @@ def make_contrat(bien, loc, type_c=Contrat.TypeContrat.LOCATION, **kw):
         )
 
 
-# ==============================================================================
 # 1. Tests des Règles Métier de Synchronisation Bien <-> Contrat
-# ==============================================================================
 
 class ContratReglesMetierTestCase(APITestCase):
     URL_CONTRATS = "/api/contrats/"
@@ -289,9 +285,7 @@ class ContratReglesMetierTestCase(APITestCase):
         self.assertIsNone(bien.prix)
 
 
-# ==============================================================================
 # 2. Tests des Modèles Contrat
-# ==============================================================================
 
 class ContratModelTests(TestCase):
     def setUp(self):
@@ -462,9 +456,7 @@ class ContratAchatModelTest(TestCase):
             contrat.finaliser_vente()
 
 
-# ==============================================================================
 # 3. Tests Batch Échéances
-# ==============================================================================
 
 class EcheancesBatchTests(TestCase):
     def setUp(self):
@@ -534,9 +526,7 @@ class EcheancesBatchTests(TestCase):
         self.assertEqual(len(contrat_vente.get_echeances_a_venir()), 0)
 
 
-# ==============================================================================
 # 4. Tests des Vues API Contrat
-# ==============================================================================
 
 class ContratListRetrieveTests(APITestCase):
     def setUp(self):

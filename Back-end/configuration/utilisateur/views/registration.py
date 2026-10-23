@@ -17,9 +17,7 @@ from .mixins import ApiResponseMixin
 logger = logging.getLogger(__name__)
 
 
-# ===================================================================
-# INSCRIPTION
-# ===================================================================
+# Inscription
 
 class LocataireRegisterView(ApiResponseMixin, APIView):
     serializer_class = LocataireSerializer

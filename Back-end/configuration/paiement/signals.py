@@ -29,9 +29,7 @@ logger = logging.getLogger(__name__)
 TAUX_FRAIS_AGENCE = Decimal("0.10")
 
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Signaux existants — post_save sur Paiement
-# ──────────────────────────────────────────────────────────────────────────────
+# Generation automatique de la quittance apres paiement
 
 
 @receiver(post_save, sender=Paiement)
@@ -111,9 +109,7 @@ def mettre_a_jour_statut_retard(sender, instance: Paiement, **kwargs):
             logger.info(f"Paiement #{instance.pk} repassé en EN_ATTENTE (retard résolu)")
 
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Utilitaire — gestion des dates sans dépendance externe
-# ──────────────────────────────────────────────────────────────────────────────
+# Utilitaire de calcul de date sans dependance externe
 
 
 def _ajouter_un_mois(date_courante: date) -> date:
@@ -134,9 +130,7 @@ def _ajouter_un_mois(date_courante: date) -> date:
     return date_courante.replace(year=annee, month=mois, day=jour)
 
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Signal — post_save sur Contrat : génération/annulation de l'échéancier
-# ──────────────────────────────────────────────────────────────────────────────
+# Signal post_save sur Contrat pour la gestion de l'echeancier
 
 
 def _paiement_base(contrat: Contrat, **kwargs) -> Paiement:

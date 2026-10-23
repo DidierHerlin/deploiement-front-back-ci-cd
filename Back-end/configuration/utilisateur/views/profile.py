@@ -17,9 +17,7 @@ from .mixins import ApiResponseMixin
 logger = logging.getLogger(__name__)
 
 
-# ===================================================================
-# GESTION PROFIL UTILISATEUR (générique, tous rôles)
-# ===================================================================
+# Gestion du profil utilisateur
 
 class GetProfileView(ApiResponseMixin, APIView):
     serializer_class = UtilisateurSerializer

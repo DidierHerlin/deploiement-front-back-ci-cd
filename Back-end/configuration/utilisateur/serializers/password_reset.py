@@ -10,10 +10,7 @@ from ..models import Utilisateur
 from ..services import send_password_reset_email
 
 
-# ===================================================================
-# RÉINITIALISATION DE MOT DE PASSE PAR CODE (email + code à 6 chiffres)
-#    Utilise les champs reset_token / reset_token_expiration du modèle.
-# ===================================================================
+# Reinitialisation de mot de passe par code
 DUREE_VALIDITE_CODE = timedelta(minutes=15)
 
 

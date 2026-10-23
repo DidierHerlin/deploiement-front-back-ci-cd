@@ -21,7 +21,7 @@ def log_creation_admin(sender, instance, created, **kwargs):
         print(f"\n[OK] ADMINISTRATEUR CREE -> {instance.email} | Acces admin active !\n")
 
 
-# ====================== SIGNAL : SUPPRESSION DE L'ANCIENNE PHOTO ======================
+# Suppression de l'ancienne photo de profil
 @receiver(pre_save, sender=Utilisateur)
 def delete_old_profile_photo(sender, instance, **kwargs):
     if not instance.pk:

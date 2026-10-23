@@ -5,9 +5,7 @@ from ..models import Proprietaire, Utilisateur
 from .utilisateur import UtilisateurSerializer, UtilisateurSimpleSerializer
 
 
-# ===================================================================
-# PROPRIETAIRE SERIALIZER (imbriqué, sur le modèle de l'ancien EtudiantSerializer)
-# ===================================================================
+# Serialiseur proprietaire
 class ProprietaireSerializer(serializers.ModelSerializer):
     user = UtilisateurSerializer(read_only=True)
 

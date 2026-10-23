@@ -12,9 +12,7 @@ from utilisateur.models import Proprietaire, Utilisateur
 import profile_biens
 
 
-# ==============================================================================
 # 1. Tests des Règles Métier (API)
-# ==============================================================================
 
 class BienReglesMetierTestCase(APITestCase):
 
@@ -163,9 +161,7 @@ class BienReglesMetierTestCase(APITestCase):
         self.assertEqual(bien.proprietaire, self.proprietaire)
 
 
-# ==============================================================================
 # 2. Tests des Modèles Bien
-# ==============================================================================
 
 class BienModelTests(TestCase):
     def setUp(self):
@@ -272,9 +268,7 @@ class BienModelTests(TestCase):
         self.assertFalse(bien.est_loue)
 
 
-# ==============================================================================
 # 3. Tests des Vues API Bien
-# ==============================================================================
 
 class BienViewsTests(APITestCase):
     def setUp(self):
@@ -385,9 +379,7 @@ class BienViewsTests(APITestCase):
         self.assertTrue(response.data['success'])
 
 
-# ==============================================================================
 # 4. Tests Commande migrate_photos
-# ==============================================================================
 
 class MigratePhotosCommandTest(TestCase):
     def setUp(self):
@@ -444,9 +436,7 @@ class MigratePhotosCommandTest(TestCase):
         mock_save.assert_called_once_with(["data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=", "http://example.com/normal.jpg"])
 
 
-# ==============================================================================
 # 5. Tests Profilage Biens
-# ==============================================================================
 
 class ProfileBiensTest(TestCase):
     @patch('profile_biens.print')
@@ -455,9 +445,7 @@ class ProfileBiensTest(TestCase):
         self.assertTrue(mock_print.called)
 
 
-# ==============================================================================
 # 6. Tests Utils Photos Base64
-# ==============================================================================
 
 class SaveBase64PhotosUtilsTest(TestCase):
     def test_save_base64_png(self):

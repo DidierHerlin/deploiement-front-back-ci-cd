@@ -26,9 +26,7 @@ from reporting_views import ReportingStatsView
 from proprietaire_dashboard_views import ProprietaireDashboardView, ProprietaireDashboardOptimizedView
 
 
-# ==============================================================================
 # 1. Tests des Modèles Utilisateur, Locataire et Propriétaire
-# ==============================================================================
 
 class UtilisateurModelTests(TestCase):
 
@@ -177,9 +175,7 @@ class AllModelsCoverageTest(TestCase):
         self.assertEqual(self.u_admin.get_full_name(), "John")
 
 
-# ==============================================================================
 # 2. Tests d'Inscription et d'Authentification
-# ==============================================================================
 
 class RegistrationViewsTests(APITestCase):
 
@@ -289,9 +285,7 @@ class AuthRegistrationCoverageTests(APITestCase):
         ])
 
 
-# ==============================================================================
 # 3. Tests de Réinitialisation de Mot de Passe
-# ==============================================================================
 
 class PasswordResetTests(APITestCase):
 
@@ -359,9 +353,7 @@ class PasswordResetCoverageTests(APITestCase):
         self.assertIn(resp_reset.status_code, [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST])
 
 
-# ==============================================================================
 # 4. Tests des Vues Profil
-# ==============================================================================
 
 class ProfileViewsTests(APITestCase):
 
@@ -426,9 +418,7 @@ class ProfileViewsCoverageTests(APITestCase):
         self.assertIn(resp2.status_code, [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST])
 
 
-# ==============================================================================
 # 5. Tests des Vues Locataires
-# ==============================================================================
 
 class LocataireViewsTests(APITestCase):
 
@@ -506,9 +496,7 @@ class LocataireViewsTests(APITestCase):
             self.locataire.refresh_from_db()
 
 
-# ==============================================================================
 # 6. Tests des Vues Propriétaires
-# ==============================================================================
 
 class ProprietaireViewsTests(APITestCase):
 
@@ -597,9 +585,7 @@ class ProprietaireViewsTests(APITestCase):
         self.assertTrue(self.proprietaire_user.is_active)
 
 
-# ==============================================================================
 # 7. Tests des Dashboards et Statistiques de Reporting
-# ==============================================================================
 
 class DashboardTests(APITestCase):
 

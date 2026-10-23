@@ -16,9 +16,7 @@ from .mixins import ApiResponseMixin
 logger = logging.getLogger(__name__)
 
 
-# ===================================================================
-# GESTION PROFIL PROPRIÉTAIRE
-# ===================================================================
+# Gestion du profil proprietaire
 
 class ProprietaireDetailView(ApiResponseMixin, APIView):
     serializer_class = ProprietaireSerializer

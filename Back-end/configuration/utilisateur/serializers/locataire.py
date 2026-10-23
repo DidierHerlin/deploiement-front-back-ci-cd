@@ -5,9 +5,7 @@ from ..models import Locataire, Utilisateur
 from .utilisateur import UtilisateurSerializer, UtilisateurSimpleSerializer
 
 
-# ===================================================================
-# LOCATAIRE SERIALIZER (imbriqué, sur le modèle de l'ancien ScolariteSerializer)
-# ===================================================================
+# Serialiseur locataire
 class LocataireSerializer(serializers.ModelSerializer):
     user = UtilisateurSerializer(read_only=True)
 

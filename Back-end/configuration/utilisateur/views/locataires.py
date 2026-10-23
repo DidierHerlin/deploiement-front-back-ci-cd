@@ -15,9 +15,7 @@ from .mixins import ApiResponseMixin
 logger = logging.getLogger(__name__)
 
 
-# ===================================================================
-# GESTION PROFIL LOCATAIRE
-# ===================================================================
+# Gestion du profil locataire
 
 class LocataireDetailView(ApiResponseMixin, APIView):
     """Détails et modification de la fiche locataire"""

@@ -14,9 +14,7 @@ from .mixins import ApiResponseMixin
 logger = logging.getLogger(__name__)
 
 
-# ===================================================================
-# AUTHENTIFICATION JWT
-# ===================================================================
+# Authentification JWT
 
 class LoginView(TokenObtainPairView):
     """

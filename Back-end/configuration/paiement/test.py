@@ -22,9 +22,7 @@ from paiement.utils import formater_montant_ar, generate_quittance_pdf
 from utilisateur.models import Locataire, Proprietaire, Utilisateur
 
 
-# ==============================================================================
 # Helpers
-# ==============================================================================
 
 def _make_user(email, role):
     return Utilisateur.objects.create_user(email=email, password="testpass123!", role=role)
@@ -62,9 +60,7 @@ def _make_paiement(contrat, delta_months=100, statut=Paiement.StatutPaiement.EN_
     )
 
 
-# ==============================================================================
 # 1. Tests API de Création et Validation des Paiements
-# ==============================================================================
 
 class PaiementAPITestCase(APITestCase):
     def setUp(self):
@@ -165,9 +161,7 @@ class PaiementAPITestCase(APITestCase):
         self.assertEqual(paiement.statut, Paiement.StatutPaiement.PAYE)
 
 
-# ==============================================================================
 # 2. Tests de la Génération d'Échéancier
-# ==============================================================================
 
 class EcheancierGenerationTestCase(TestCase):
     def setUp(self):
@@ -361,9 +355,7 @@ class EcheancierGenerationTestCase(TestCase):
         self.assertEqual(nb_annulees, 12)
 
 
-# ==============================================================================
 # 3. Tests des Utilitaires Paiement (Quittance PDF, etc.)
-# ==============================================================================
 
 class PaiementUtilsTest(TestCase):
     def setUp(self):
@@ -424,9 +416,7 @@ class PaiementUtilsTest(TestCase):
         self.assertTrue(self.paiement_2.fichier_quittance.name.endswith(".pdf"))
 
 
-# ==============================================================================
 # 4. Tests des Modèles Paiement
-# ==============================================================================
 
 class PaiementModelUnitTests(TestCase):
     def setUp(self):
@@ -531,9 +521,7 @@ class PaiementModelUnitTests(TestCase):
         self.assertEqual(p.message_mois, "Ce paiement correspond au mois de février 2026.")
 
 
-# ==============================================================================
 # 5. Tests des Vues API Paiement
-# ==============================================================================
 
 class PaiementTestBase(APITestCase):
     def setUp(self):
@@ -732,9 +720,7 @@ class PaiementUtilsAndSerializerBoostTests(PaiementTestBase):
                 generate_quittance_pdf(self.paiement)
 
 
-# ==============================================================================
 # Tests pour la Demande de Paiement Mobile Money du Locataire
-# ==============================================================================
 
 class DemandePaiementTests(PaiementTestBase):
     def setUp(self):
@@ -1265,9 +1251,7 @@ class DemandePaiementTests(PaiementTestBase):
             self.assertIn("moyen_paiement", response.data)
 
 
-# ==============================================================================
 # Tests Obligatoires : Montant total encaissé sur l'espace locataire
-# ==============================================================================
 
 class MontantTotalEncaisseTestCase(APITestCase):
     """

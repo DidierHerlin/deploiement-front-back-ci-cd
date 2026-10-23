@@ -153,9 +153,7 @@ class ContratListSerializer(serializers.ModelSerializer):
             ).select_related('proprietaire__user').defer('photos')
 
 
-# ------------------------------------------------------------------
-# Sérialiseur pour les échéances de paiement à venir
-# ------------------------------------------------------------------
+# Serialiseur pour les echeances de paiement a venir
 class EcheanceSerializer(serializers.Serializer):
     date_echeance = serializers.DateField()
     montant_attendu = serializers.DecimalField(max_digits=10, decimal_places=2)

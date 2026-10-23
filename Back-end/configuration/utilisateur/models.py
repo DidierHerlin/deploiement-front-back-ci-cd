@@ -108,7 +108,7 @@ class Utilisateur(AbstractBaseUser, PermissionsMixin):
         return bool(self.photo_profil)
 
 
-# ====================== PROFIL PROPRIÉTAIRE ======================
+# Profil proprietaire
 class Proprietaire(models.Model):
  
     user = models.OneToOneField(
@@ -128,7 +128,7 @@ class Proprietaire(models.Model):
         """Raccourci pour accéder à la photo via le profil propriétaire."""
         return self.user.get_photo_url()
 
-# ====================== PROFIL LOCATAIRE ======================
+# Profil locataire
 class Locataire(models.Model):
     user = models.OneToOneField(
         Utilisateur, on_delete=models.CASCADE, related_name="profil_locataire"

@@ -14,9 +14,7 @@ from .mixins import ApiResponseMixin
 logger = logging.getLogger(__name__)
 
 
-# ===================================================================
-# RÉINITIALISATION MOT DE PASSE (3 étapes, par code — cf. serializers)
-# ===================================================================
+# Reinitialisation du mot de passe
 
 class RequestPasswordResetView(ApiResponseMixin, APIView):
     """Étape 1 : Demande de réinitialisation - Envoie un code par email"""
