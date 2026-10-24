@@ -1,9 +1,16 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
+import { Inter } from 'next/font/google'
 import AuthGuard from "@/components/organisms/auth-guard"
 import { Toaster } from "@/components/molecules/sonner"
 import './globals.css'
 import './admin/admin.css'
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+})
 
 export const metadata: Metadata = {
   title: 'ImmoConnect',
@@ -29,8 +36,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="fr" className="bg-background">
-      <body className="antialiased" suppressHydrationWarning>
+    <html lang="fr" className={`${inter.variable} ${inter.className} bg-background`}>
+      <body className={`${inter.className} antialiased`} suppressHydrationWarning>
         <AuthGuard>
           {children}
         </AuthGuard>

@@ -15,7 +15,7 @@ export function VerifyCodeForm({ email, code, setCode, onSubmit, onResend, isLoa
   return (
     <>
       <div className="mb-8 text-center">
-        <p className="mb-3 font-mono text-xs font-medium uppercase tracking-[0.18em] text-primary">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
           Étape 2 / 3
         </p>
         <h1 className="bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-3xl font-semibold tracking-tight text-transparent">
