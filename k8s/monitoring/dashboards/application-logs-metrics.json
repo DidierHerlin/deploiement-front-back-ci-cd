@@ -315,7 +315,7 @@
         "sortOrder": "Descending",
         "wrapLogMessage": true
       },
-      "title": "🚨 Console Dédiée - Erreurs & Exceptions Détectées (5xx / Fail)",
+      "title": "Console Dédiée - Erreurs & Exceptions Détectées (5xx / Fail)",
       "type": "logs",
       "targets": [
         {

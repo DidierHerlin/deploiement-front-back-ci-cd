@@ -201,7 +201,6 @@ SIMPLE_JWT = {
     "USER_ID_CLAIM": "user_id",
 }
 
-# Configuration CORS
 
 CORS_ALLOW_ALL_ORIGINS = config("CORS_ALLOW_ALL_ORIGINS", default=False, cast=bool)
 _raw_cors_origins = config(
@@ -245,7 +244,6 @@ try:
     (MEDIA_ROOT / "biens").mkdir(parents=True, exist_ok=True)
 except Exception:
     pass
-
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
