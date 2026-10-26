@@ -151,7 +151,8 @@
       "login_success": "Connexion réussie",
       "error_network": "Impossible de joindre le serveur. Vérifie qu'il est démarré et accessible.",
       "error_unexpected": "Réponse inattendue du serveur.",
-      "error_failed": "Impossible de vous connecter."
+      "error_failed": "Impossible de vous connecter.",
+      "back_to_home": "Retour à l'accueil"
     },
     "signup": {
       "title": "Créer un compte",
@@ -176,7 +177,8 @@
       "error_password_match": "Les mots de passe ne correspondent pas.",
       "error_password_length": "Le mot de passe doit contenir au moins 8 caractères.",
       "error_iban_required": "L'IBAN est requis pour un compte propriétaire.",
-      "signup_success": "Votre compte a été créé avec succès !"
+      "signup_success": "Votre compte a été créé avec succès !",
+      "back_to_home": "Retour à l'accueil"
     },
     "forgot_password": {
       "title_step1": "Mot de passe oublié ?",
@@ -203,7 +205,8 @@
       "instruction_step1": "Étape 1 sur 3 · Identification",
       "instruction_step2": "Étape 2 sur 3 · Validation par email",
       "instruction_step3": "Étape 3 sur 3 · Sécurisation"
-    }
+    },
+    "back_to_home": "Retour à l'accueil"
   },
   "dashboard": {
     "nav": {

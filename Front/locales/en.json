@@ -151,7 +151,8 @@
       "login_success": "Login successful",
       "error_network": "Unable to reach the server. Please check that it is running and accessible.",
       "error_unexpected": "Unexpected server response.",
-      "error_failed": "Unable to sign you in."
+      "error_failed": "Unable to sign you in.",
+      "back_to_home": "Back to Home"
     },
     "signup": {
       "title": "Create an account",
@@ -176,7 +177,8 @@
       "error_password_match": "Passwords do not match.",
       "error_password_length": "Password must contain at least 8 characters.",
       "error_iban_required": "IBAN is required for landlord accounts.",
-      "signup_success": "Your account has been created successfully!"
+      "signup_success": "Your account has been created successfully!",
+      "back_to_home": "Back to Home"
     },
     "forgot_password": {
       "title_step1": "Forgot your password?",
@@ -203,7 +205,8 @@
       "instruction_step1": "Step 1 of 3 · Identity",
       "instruction_step2": "Step 2 of 3 · Email validation",
       "instruction_step3": "Step 3 of 3 · Security"
-    }
+    },
+    "back_to_home": "Back to Home"
   },
   "dashboard": {
     "nav": {

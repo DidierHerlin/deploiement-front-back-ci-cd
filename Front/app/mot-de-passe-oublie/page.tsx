@@ -54,7 +54,7 @@ export default function ForgotPasswordPage() {
     setIsLoading(true)
 
     try {
-      const response = await fetch(`${getApiUrl()}/mot-de-passe/verifier-code/`, {
+      const response = await fetch(`${getApiUrl()}/mot-de-passe/verifier/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, code }),
@@ -62,7 +62,7 @@ export default function ForgotPasswordPage() {
       const data = await response.json()
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error ?? data.non_field_errors?.[0] ?? "Code invalide ou expiré.")
+        throw new Error(data.error ?? "Code invalide ou expiré.")
       }
 
       setEtape("nouveau-mdp")
@@ -73,17 +73,18 @@ export default function ForgotPasswordPage() {
     }
   }
 
-  // ─── Étape 3 : Réinitialiser le mot de passe ──────────────────
+  // ─── Étape 3 : Réinitialiser le mot de passe ───────────────────
   async function handleReinitialiser(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError("")
 
     if (newPassword !== confirmPassword) {
-      setError(t("auth.signup.error_password_match", "Les mots de passe ne correspondent pas."))
+      setError("Les mots de passe ne correspondent pas.")
       return
     }
+
     if (newPassword.length < 8) {
-      setError(t("auth.signup.error_password_length", "Le mot de passe doit contenir au moins 8 caractères."))
+      setError("Le mot de passe doit contenir au moins 8 caractères.")
       return
     }
 
@@ -111,11 +112,6 @@ export default function ForgotPasswordPage() {
 
   return (
     <main className="flex min-h-screen text-foreground relative">
-      {/* Sélecteur de langue flottant */}
-      <div className="absolute top-6 right-6 z-30">
-        <LanguageSwitcher />
-      </div>
-
       {/* Côté gauche : Panneau Image */}
       <section className="relative hidden w-full flex-col justify-between p-12 text-white lg:flex lg:w-1/2 overflow-hidden">
         {/* Image et Overlay */}
@@ -129,12 +125,12 @@ export default function ForgotPasswordPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/40" />
         </div>
 
-        <a href="/" className="relative z-10 flex items-center gap-3 w-fit" aria-label="Accueil">
+        <Link href="/" className="relative z-10 flex items-center gap-3 w-fit transition-transform hover:scale-105" aria-label={t("auth.back_to_home", "Retour à l'accueil")}>
           <div className="flex size-11 items-center justify-center rounded-2xl bg-white/20 text-white shadow-sm backdrop-blur-md">
             <LockKeyhole className="size-5" aria-hidden="true" />
           </div>
           <span className="font-sans text-xl font-semibold tracking-tight">ImmoConnect</span>
-        </a>
+        </Link>
         
         <div className="relative z-10 max-w-md">
           <span className="mb-4 inline-block rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs font-semibold tracking-wider text-white backdrop-blur-md">
@@ -173,7 +169,21 @@ export default function ForgotPasswordPage() {
       </section>
 
       {/* Côté droit : Formulaire */}
-      <section className="relative flex w-full flex-col items-center justify-center bg-slate-50/50 p-8 sm:p-12 lg:w-1/2">
+      <section className="relative flex w-full flex-col items-center justify-center bg-slate-50/50 p-8 sm:p-12 lg:w-1/2 min-h-screen">
+        {/* Barre d'action supérieure : Bouton de retour à l'accueil et sélecteur de langue */}
+        <div className="absolute top-6 left-6 right-6 z-20 flex items-center justify-between">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200/80 bg-white/90 px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-700 shadow-sm backdrop-blur-md transition-all hover:bg-white hover:text-primary hover:border-primary/40 hover:shadow-md active:scale-95 cursor-pointer"
+            aria-label={t("auth.back_to_home", "Retour à l'accueil")}
+          >
+            <ArrowLeft className="size-4" aria-hidden="true" />
+            <span>{t("auth.back_to_home", "Retour à l'accueil")}</span>
+          </Link>
+
+          <LanguageSwitcher />
+        </div>
+
         {/* Douces lumières en arrière-plan */}
         <div className="pointer-events-none absolute left-0 top-0 h-full w-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-60" aria-hidden="true" />
         <div className="pointer-events-none absolute bottom-0 right-0 h-full w-full bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent opacity-60" aria-hidden="true" />
@@ -244,9 +254,14 @@ export default function ForgotPasswordPage() {
             />
           )}
 
-          <Link href="/login" className="mx-auto mt-8 flex w-fit items-center gap-2 text-sm font-semibold text-muted-foreground transition hover:text-foreground lg:hidden">
-            <ArrowLeft className="size-4" aria-hidden="true" /> {t("auth.forgot_password.btn_back_login", "Retour à la connexion")}
-          </Link>
+          <div className="mt-8 flex flex-col items-center gap-3">
+            <Link href="/login" className="flex items-center gap-2 text-sm font-semibold text-muted-foreground transition hover:text-foreground">
+              <ArrowLeft className="size-4" aria-hidden="true" /> {t("auth.forgot_password.btn_back_login", "Retour à la connexion")}
+            </Link>
+            <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground/80 transition hover:text-primary">
+              <ArrowLeft className="size-3" aria-hidden="true" /> {t("auth.back_to_home", "Retour à l'accueil")}
+            </Link>
+          </div>
         </div>
       </section>
     </main>

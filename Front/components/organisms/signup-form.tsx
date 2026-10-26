@@ -3,7 +3,7 @@
 import { useState, type FormEvent, type ReactNode } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowRight, LockKeyhole, Mail, Phone, UserRound, Wallet } from "lucide-react"
+import { ArrowLeft, ArrowRight, LockKeyhole, Mail, Phone, UserRound, Wallet } from "lucide-react"
 import { PasswordInput } from "@/components/atoms/password-input"
 import { toast } from "sonner"
 import { getApiUrl } from "@/lib/config"
@@ -62,31 +62,32 @@ export function SignupForm() {
 
     setIsLoading(true)
 
-    const endpoint =
-      role === "LOCATAIRE"
-        ? "/locataires/register/"
-        : role === "PROPRIETAIRE"
-          ? "/proprietaires/register/"
-          : "/agents/register/"
-    const payload =
-      role === "PROPRIETAIRE"
-        ? { email, nom, prenoms, telephone, password, iban }
-        : { email, nom, prenoms, telephone, password }
-
     try {
-      const response = await fetch(`${getApiUrl()}${endpoint}`, {
+      const payload: Record<string, string> = {
+        email,
+        nom,
+        prenoms,
+        telephone,
+        password,
+        role,
+      }
+      if (role === "PROPRIETAIRE") {
+        payload.iban = iban
+      }
+
+      const response = await fetch(`${getApiUrl()}/auth/signup/`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       })
+
       const data = await response.json()
 
       if (!response.ok || !data.success) {
-        if (data.details && typeof data.details === "object") {
+        if (data.details) {
           setFieldErrors(data.details)
         }
-        const errorMsg = data.error ?? t("auth.signup.error_failed", "Impossible de créer votre compte.")
+        const errorMsg = data.error ?? t("auth.signup.error_failed", "Impossible de créer le compte.")
         toast.error(errorMsg)
         throw new Error(errorMsg)
       }
@@ -107,11 +108,6 @@ export function SignupForm() {
 
   return (
     <main className="flex min-h-screen text-foreground relative">
-      {/* Sélecteur de langue flottant */}
-      <div className="absolute top-6 right-6 z-30">
-        <LanguageSwitcher />
-      </div>
-
       {/* Côté gauche : Panneau Image */}
       <section className="relative hidden w-full flex-col justify-between p-12 text-white lg:flex lg:w-1/2 overflow-hidden">
         {/* Image et Overlay */}
@@ -125,12 +121,12 @@ export function SignupForm() {
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/40" />
         </div>
 
-        <a href="/" className="relative z-10 flex items-center gap-3 w-fit" aria-label="Accueil">
+        <Link href="/" className="relative z-10 flex items-center gap-3 w-fit transition-transform hover:scale-105" aria-label={t("auth.signup.back_to_home", "Retour à l'accueil")}>
           <div className="flex size-11 items-center justify-center rounded-2xl bg-white/20 text-white shadow-sm backdrop-blur-md">
             <LockKeyhole className="size-5" aria-hidden="true" />
           </div>
           <span className="font-sans text-xl font-semibold tracking-tight">ImmoConnect</span>
-        </a>
+        </Link>
 
         <div className="relative z-10 max-w-md">
           <span className="mb-4 inline-block rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs font-semibold tracking-wider text-white backdrop-blur-md">
@@ -167,7 +163,21 @@ export function SignupForm() {
       </section>
 
       {/* Côté droit : Formulaire */}
-      <section className="relative flex w-full flex-col items-center justify-center bg-slate-50/50 p-8 sm:p-12 lg:w-1/2">
+      <section className="relative flex w-full flex-col items-center justify-center bg-slate-50/50 p-8 sm:p-12 lg:w-1/2 min-h-screen">
+        {/* Barre d'action supérieure : Bouton de retour à l'accueil et sélecteur de langue */}
+        <div className="absolute top-6 left-6 right-6 z-20 flex items-center justify-between">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200/80 bg-white/90 px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-700 shadow-sm backdrop-blur-md transition-all hover:bg-white hover:text-primary hover:border-primary/40 hover:shadow-md active:scale-95 cursor-pointer"
+            aria-label={t("auth.signup.back_to_home", "Retour à l'accueil")}
+          >
+            <ArrowLeft className="size-4" aria-hidden="true" />
+            <span>{t("auth.signup.back_to_home", "Retour à l'accueil")}</span>
+          </Link>
+
+          <LanguageSwitcher />
+        </div>
+
         {/* Douces lumières en arrière-plan */}
         <div className="pointer-events-none absolute left-0 top-0 h-full w-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-60" aria-hidden="true" />
         <div className="pointer-events-none absolute bottom-0 right-0 h-full w-full bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent opacity-60" aria-hidden="true" />
@@ -178,33 +188,83 @@ export function SignupForm() {
             <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-[1.25rem] bg-gradient-to-br from-primary/10 to-primary/5 text-primary shadow-inner">
               <LockKeyhole className="size-7" aria-hidden="true" />
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-foreground">{t("auth.signup.title", "Créer un compte")}</h1>
-            <p className="mt-3 text-sm text-muted-foreground">{t("auth.signup.subtitle", "Rejoignez la communauté ImmoConnect.")}</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-foreground">{t("auth.signup.create_account", "Créer un compte")}</h1>
+            <p className="mt-3 text-sm text-muted-foreground">{t("auth.signup.create_subtitle", "Rejoignez ImmoConnect en quelques secondes.")}</p>
           </div>
 
-          <RoleToggle role={role} onChange={setRole} />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <RoleToggle role={role} onChange={setRole} />
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid gap-5 sm:grid-cols-2">
-              <Field id="prenoms" label={t("auth.signup.first_name", "Prénom(s)")} placeholder="Camille" icon={<UserRound />} value={prenoms} onChange={setPrenoms} error={messagesDuChamp(fieldErrors, "prenoms")} />
-              <Field id="nom" label={t("auth.signup.last_name", "Nom")} placeholder="Martin" icon={<UserRound />} value={nom} onChange={setNom} error={messagesDuChamp(fieldErrors, "nom")} />
+            <div className="grid grid-cols-2 gap-3">
+              <Field
+                id="nom"
+                label={t("auth.signup.last_name", "Nom")}
+                placeholder={t("auth.signup.last_name_placeholder", "Dupont")}
+                icon={<UserRound aria-hidden="true" />}
+                value={nom}
+                onChange={setNom}
+                error={messagesDuChamp(fieldErrors, "nom")}
+              />
+              <Field
+                id="prenoms"
+                label={t("auth.signup.first_name", "Prénom(s)")}
+                placeholder={t("auth.signup.first_name_placeholder", "Marie")}
+                icon={<UserRound aria-hidden="true" />}
+                value={prenoms}
+                onChange={setPrenoms}
+                error={messagesDuChamp(fieldErrors, "prenoms")}
+              />
             </div>
 
-            <Field id="signup-email" label={t("auth.login.email_label", "Email")} type="email" placeholder="vous@exemple.com" icon={<Mail />} value={email} onChange={setEmail} error={messagesDuChamp(fieldErrors, "email")} />
+            <Field
+              id="email"
+              type="email"
+              label={t("auth.signup.email", "Email")}
+              placeholder={t("auth.signup.email_placeholder", "vous@exemple.com")}
+              icon={<Mail aria-hidden="true" />}
+              value={email}
+              onChange={setEmail}
+              error={messagesDuChamp(fieldErrors, "email")}
+            />
 
-            <Field id="telephone" label={t("auth.signup.phone", "Téléphone")} type="tel" placeholder="034 00 000 00" icon={<Phone />} value={telephone} onChange={setTelephone} required={false} error={messagesDuChamp(fieldErrors, "telephone")} />
+            <Field
+              id="telephone"
+              type="tel"
+              label={t("auth.signup.phone", "Téléphone")}
+              placeholder={t("auth.signup.phone_placeholder", "034 00 000 00")}
+              icon={<Phone aria-hidden="true" />}
+              value={telephone}
+              onChange={setTelephone}
+              error={messagesDuChamp(fieldErrors, "telephone")}
+            />
 
             {role === "PROPRIETAIRE" && (
-              <Field id="iban" label={t("auth.signup.iban", "IBAN")} placeholder="MG00..." icon={<Wallet />} value={iban} onChange={setIban} error={messagesDuChamp(fieldErrors, "iban")} />
+              <Field
+                id="iban"
+                label={t("auth.signup.iban", "IBAN / Relevé bancaire")}
+                placeholder={t("auth.signup.iban_placeholder", "MG46 ...")}
+                icon={<Wallet aria-hidden="true" />}
+                value={iban}
+                onChange={setIban}
+                error={messagesDuChamp(fieldErrors, "iban")}
+              />
             )}
 
-            <PasswordField id="signup-password" label={t("auth.signup.password", "Mot de passe")} value={password} onChange={setPassword} error={messagesDuChamp(fieldErrors, "password")} />
-            <PasswordField id="confirm-password" label={t("auth.signup.confirm_password", "Confirmer le mot de passe")} value={confirmPassword} onChange={setConfirmPassword} />
-
-            <label className="flex items-start gap-3 text-sm font-medium leading-5 text-muted-foreground mt-2 cursor-pointer">
-              <input required type="checkbox" className="mt-0.5 size-4 rounded border-input accent-primary" />
-              <span>J'accepte les <a href="#conditions" className="font-bold text-primary transition-all hover:text-primary/80 hover:underline">{t("cgu.title", "conditions d'utilisation")}</a>.</span>
-            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <PasswordField
+                id="password"
+                label={t("auth.signup.password", "Mot de passe")}
+                value={password}
+                onChange={setPassword}
+                error={messagesDuChamp(fieldErrors, "password")}
+              />
+              <PasswordField
+                id="confirmPassword"
+                label={t("auth.signup.confirm_password", "Confirmation")}
+                value={confirmPassword}
+                onChange={setConfirmPassword}
+              />
+            </div>
 
             {error && <p role="alert" className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p>}
             {successMessage && <p role="status" className="rounded-xl bg-accent px-4 py-3 text-sm text-accent-foreground">{successMessage}</p>}
@@ -221,6 +281,16 @@ export function SignupForm() {
               {t("auth.signup.sign_in", "Se connecter")}
             </Link>
           </p>
+
+          <div className="mt-6 pt-6 border-t border-slate-100 text-center">
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center gap-2 text-xs font-semibold text-muted-foreground transition-colors hover:text-primary cursor-pointer"
+            >
+              <ArrowLeft className="size-3.5" aria-hidden="true" />
+              <span>{t("auth.signup.back_to_home", "Retour à l'accueil")}</span>
+            </Link>
+          </div>
 
         </div>
       </section>
