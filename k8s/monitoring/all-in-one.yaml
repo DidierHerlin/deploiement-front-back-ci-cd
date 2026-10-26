@@ -999,7 +999,7 @@ data:
       "time": { "from": "now-30m", "to": "now" },
       "timepicker": { "refresh_intervals": ["5s", "10s", "30s", "1m"] },
       "timezone": "browser",
-      "title": "1. Cluster K3s & Infrastructure - Vue Soutenance",
+      "title": "1. Cluster K3s & Infrastructure ",
       "uid": "cluster-k3s-overview"
     }
   application-logs-metrics.json: |
@@ -1416,7 +1416,7 @@ data:
         ]
       },
       "timezone": "browser",
-      "title": "2. Application & Logs en Direct - Vue Soutenance",
+      "title": "2. Application & Logs en Direct",
       "uid": "application-logs-live"
     }
   aws-rds-postgresql.json: |

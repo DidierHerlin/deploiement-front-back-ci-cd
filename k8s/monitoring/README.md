@@ -63,8 +63,8 @@ k8s/monitoring/
 ├── deploy-monitoring.sh              # Script automatisé de déploiement et de vérification
 ├── README.md                         # Documentation complète de supervision et maintenance
 └── dashboards/                       # Fichiers sources JSON exportés (édition et import Grafana)
-    ├── cluster-overview.json         # 1. Cluster K3s & Infrastructure - Vue Soutenance
-    ├── application-logs-metrics.json # 2. Application & Logs en Direct - Vue Soutenance
+    ├── cluster-overview.json         # 1. Cluster K3s & Infrastructure - 
+    ├── application-logs-metrics.json # 2. Application & Logs en Direct -
     └── aws-rds-postgresql.json       # 3. AWS RDS PostgreSQL Monitoring
 ```
 

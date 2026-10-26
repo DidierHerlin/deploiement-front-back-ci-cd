@@ -1,22 +1,21 @@
-name: CI - Gestion Immobilier Back-end
+name: CI/CD
+
 on:
   push:
     branches: [main]
-    paths:
-      - 'Back-end/**'
-      - '.github/workflows/ci-backend.yml'
   pull_request:
     branches: [main]
-    paths:
-      - 'Back-end/**'
-      - '.github/workflows/ci-backend.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # 1. BACKEND : Tests Django & Couverture
+  # ═══════════════════════════════════════════════════════════════════════════
   backend-tests:
+    name: Backend - Tests & Couverture
     runs-on: ubuntu-latest
 
     services:
@@ -84,7 +83,11 @@ jobs:
           name: coverage-report
           path: Back-end/configuration/coverage.xml
 
-  code-quality:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # 2. BACKEND : Analyse SonarQube
+  # ═══════════════════════════════════════════════════════════════════════════
+  backend-quality:
+    name: Backend - SonarQube
     needs: backend-tests
     runs-on: ubuntu-latest
 
@@ -121,8 +124,12 @@ jobs:
             -Dsonar.coverage.exclusions=**/migrations/**,**/test_*.py,**/tests.py,**/test.py,**/tests_*.py,test_reporting.py,test_runner.py,performance_test.py,check_user.py,profile_biens.py,wait_for_db.py,scratch/**,manage.py,**/settings.py,settings.py,wsgi.py,asgi.py,**/admin.py,**/apps.py,**/urls.py,**/__init__.py,**/signals.py,**/models.py,**/validators.py,**/permissions.py
             -Dsonar.sourceEncoding=UTF-8
 
-  docker-publish:
-    needs: [backend-tests, code-quality]
+  # ═══════════════════════════════════════════════════════════════════════════
+  # 3. BACKEND : Publication Docker
+  # ═══════════════════════════════════════════════════════════════════════════
+  backend-docker:
+    name: Backend - Build & Push Docker
+    needs: [backend-tests, backend-quality]
     runs-on: ubuntu-latest
 
     steps:
@@ -139,12 +146,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/immobilier-drf
-
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
@@ -157,13 +158,47 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploiement-AWS:
-    needs: docker-publish
-    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
-    concurrency:
-      group: aws-ec2-deployment
-      cancel-in-progress: false
+  # ═══════════════════════════════════════════════════════════════════════════
+  # 4. FRONTEND : Build Next.js
+  # ═══════════════════════════════════════════════════════════════════════════
+  frontend-build:
+    name: Frontend - Build Next.js
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./Front
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Activer pnpm via corepack
+        run: corepack enable pnpm
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: './Front/pnpm-lock.yaml'
+
+      - name: Installer les dépendances
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Next.js
+        run: pnpm run build
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # 5. FRONTEND : Publication Docker
+  # ═══════════════════════════════════════════════════════════════════════════
+  frontend-docker:
+    name: Frontend - Build & Push Docker
+    needs: frontend-build
+    runs-on: ubuntu-latest
+    outputs:
+      ec2_ip: ${{ steps.resolve_ip.outputs.ec2_ip }}
+
     steps:
       - name: Checkout du code
         uses: actions/checkout@v4
@@ -178,6 +213,57 @@ jobs:
           STATIC_IP: ${{ secrets.AWS_EC2_IP }}
         run: bash .github/scripts/resolve_ip.sh
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./Front
+          file: ./Front/Dockerfile
+          push: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:${{ github.sha }}
+          build-args: |
+            NEXT_PUBLIC_API_URL=http://${{ steps.resolve_ip.outputs.ec2_ip }}:8000/api
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # 6. DÉPLOIEMENT GLOBAL SUR AWS EC2 (K3s)
+  # ═══════════════════════════════════════════════════════════════════════════
+  deploiement-AWS:
+    name: Déploiement AWS (K3s) - Backend & Frontend
+    needs: [backend-docker, frontend-docker]
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    concurrency:
+      group: aws-ec2-deployment
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Résoudre l'adresse IP cible de l'EC2
+        id: resolve_ip
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
+          AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
+          STATIC_IP: ${{ secrets.AWS_EC2_IP }}
+          PREV_IP: ${{ needs.frontend-docker.outputs.ec2_ip }}
+        run: bash .github/scripts/resolve_ip.sh
+
       - name: Transférer les manifestes k8s sur le serveur EC2
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -189,7 +275,7 @@ jobs:
           strip_components: 1
           overwrite: true
 
-      - name: Connexion et déploiement sur AWS
+      - name: Déploiement du Backend sur AWS (RDS & K3s)
         uses: appleboy/ssh-action@v1.0.3
         env:
           DB_HOST: ${{ secrets.AWS_RDS_ENDPOINT }}
@@ -211,3 +297,16 @@ jobs:
           key: ${{ secrets.AWS_EC2_SSH_KEY }}
           envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME, AWS_EC2_IP, ENABLE_HPA, GIT_SHA, DOCKER_IMAGE, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
           script: bash /home/ubuntu/k8s/deploy-backend.sh
+
+      - name: Déploiement du Frontend sur AWS (K3s)
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          AWS_EC2_IP: ${{ steps.resolve_ip.outputs.ec2_ip }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:${{ github.sha }}
+        with:
+          host: ${{ steps.resolve_ip.outputs.ec2_ip }}
+          username: ubuntu
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          envs: AWS_EC2_IP, DOCKERHUB_USERNAME, DOCKER_IMAGE
+          script: bash /home/ubuntu/k8s/deploy-frontend.sh

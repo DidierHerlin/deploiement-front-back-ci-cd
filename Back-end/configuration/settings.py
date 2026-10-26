@@ -70,23 +70,13 @@ CORS_EXPOSE_HEADERS = ["Content-Disposition"]
 
 
 
-# Configuration de la base de donnees
-# Priorite : USE_SQLITE -> DATABASE_URL -> DB_HOST -> fallback SQLite
+# Configuration de la base de donnees (PostgreSQL sur AWS RDS ou PostgreSQL local pgAdmin 4)
+# Priorite : DATABASE_URL -> variables DB_* (PostgreSQL obligatoire, SQLite retire)
 
-USE_SQLITE = config("USE_SQLITE", default=False, cast=bool)
 DATABASE_URL = config("DATABASE_URL", default="")
 
-if USE_SQLITE:
-    # Mode SQLite explicite — utile pour dev local sans Docker
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
-    }
-
-elif DATABASE_URL:
-    # Mode PostgreSQL via URL complète (Railway, RDS, Docker Compose...)
+if DATABASE_URL:
+    # Mode PostgreSQL via URL complete (Railway, RDS...)
     import dj_database_url
     DATABASES = {
         "default": dj_database_url.parse(
@@ -96,16 +86,21 @@ elif DATABASE_URL:
         )
     }
 
-elif config("DB_HOST", default=""):
-    # Mode PostgreSQL via variables séparées (k8s, EC2, docker-compose)
+else:
+    # Mode PostgreSQL par defaut (k8s EC2 RDS, dev local pgAdmin 4 ou docker-compose)
     db_host = config("DB_HOST", default="localhost").strip()
-    # Si on tourne hors Docker et que l'hôte est host.docker.internal → localhost
-    if db_host == "host.docker.internal" and not os.path.exists("/.dockerenv"):
+    # Si on s'execute dans un conteneur Docker et que l'hote indique est localhost ou 127.0.0.1,
+    # la base PostgreSQL locale de l'hote (pgAdmin 4) est accessible via host.docker.internal.
+    # Inversement, hors Docker, host.docker.internal redevient localhost.
+    if os.path.exists("/.dockerenv") and db_host in ("localhost", "127.0.0.1"):
+        db_host = "host.docker.internal"
+    elif not os.path.exists("/.dockerenv") and db_host == "host.docker.internal":
         db_host = "localhost"
+
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": config("DB_NAME", default="gesion_immobilier_back_end"),
+            "NAME": config("DB_NAME", default="gestion-immobilier"),
             "USER": config("DB_USER", default="postgres"),
             "PASSWORD": config("DB_PASSWORD", default=""),
             "HOST": db_host,
@@ -115,17 +110,8 @@ elif config("DB_HOST", default=""):
         }
     }
 
-else:
-    # Fallback SQLite — aucune variable DB définie (dev local simple)
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
-    }
-
 import sys
-if any(cmd in sys.argv for cmd in ("migrate", "runserver", "test", "shell")):
+if any(cmd in sys.argv for cmd in ("migrate", "runserver", "test", "shell", "createsuperuser")):
     db_engine = DATABASES["default"].get("ENGINE", "")
     db_name   = DATABASES["default"].get("NAME", "")
     db_host   = DATABASES["default"].get("HOST", "local")

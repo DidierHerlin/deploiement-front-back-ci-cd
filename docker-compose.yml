@@ -1,133 +1,145 @@
 services:
 
-  db:
-    image: postgres:16-alpine
-    container_name: immobilier-db
-    restart: unless-stopped
-    profiles: ["postgres", "prod"]
-    environment:
-      POSTGRES_DB: gesion_immobilier_back_end
-      POSTGRES_USER: postgres
-      POSTGRES_HOST_AUTH_METHOD: trust
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d gesion_immobilier_back_end"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-    networks:
-      - immobilier-net
-
-  backend-sqlite:
-    build:
-      context: ./Back-end/configuration
-      dockerfile: Dockerfile
-    container_name: immobilier-backend-sqlite
-    restart: unless-stopped
-    profiles: ["sqlite"]
-    environment:
-      USE_SQLITE: "true"
-      SECRET_KEY: ${SECRET_KEY:-django-insecure-cle-par-defaut-pour-le-dev}
-      DEBUG: ${DEBUG:-True}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
-      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
-      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./Back-end/configuration:/app          
-      - media_data:/app/media
-      - sqlite_data:/app                       
-    command: >-
-      sh -c "python manage.py migrate &&
-             python manage.py runserver 0.0.0.0:8000"
-    networks:
-      - immobilier-net
-
-  backend-postgres:
+  # ── Backend : Django REST Framework ──────────────────────────────────────────
+  backend:
     build:
       context: ./Back-end/configuration
       dockerfile: Dockerfile
     container_name: immobilier-backend
     restart: unless-stopped
-    profiles: ["postgres"]
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    extra_hosts:
+      # Permet au conteneur de joindre la base PostgreSQL locale tournant sur la machine hôte (pgAdmin 4)
+      - "host.docker.internal:host-gateway"
     environment:
-      USE_SQLITE: "false"
-      DB_NAME: gesion_immobilier_back_end
-      DB_USER: postgres
+      # Base de données PostgreSQL externe (AWS RDS ou PostgreSQL hôte pgAdmin 4)
+      DB_NAME: ${DB_NAME:-gestion-immobilier}
+      DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-}
-      DB_HOST: db
-      DB_PORT: "5432"
+      DB_HOST: ${DB_HOST:-host.docker.internal}
+      DB_PORT: ${DB_PORT:-5432}
+      DATABASE_URL: ${DATABASE_URL:-}
+      CONN_MAX_AGE: ${CONN_MAX_AGE:-600}
+
+      # Django Core
       SECRET_KEY: ${SECRET_KEY:-django-insecure-cle-par-defaut-pour-le-dev}
       DEBUG: ${DEBUG:-True}
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
+
+      # CORS & Frontend
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      CORS_PREFLIGHT_MAX_AGE: ${CORS_PREFLIGHT_MAX_AGE:-86400}
+
+      # Email (SMTP)
+      EMAIL_BACKEND: ${EMAIL_BACKEND:-django.core.mail.backends.smtp.EmailBackend}
+      EMAIL_HOST: ${EMAIL_HOST:-smtp.gmail.com}
+      EMAIL_PORT: ${EMAIL_PORT:-587}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS:-True}
       EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
       EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
-    ports:
-      - "8000:8000"
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-}
+
+      # Stockage médias
+      MEDIA_ROOT: /app/media
     volumes:
-      - ./Back-end/configuration:/app         
+      - ./Back-end/configuration:/app
       - media_data:/app/media
-    depends_on:
-      db:
-        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/').read()\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     command: >-
-      sh -c "python manage.py migrate &&
-             python manage.py runserver 0.0.0.0:8000"
+      sh -c "python wait_for_db.py &&
+             python manage.py migrate &&
+             if [ \"$$DEBUG\" = \"False\" ] || [ \"$$DEBUG\" = \"false\" ]; then
+               gunicorn --bind 0.0.0.0:8000 --workers 3 wsgi:application;
+             else
+               python manage.py runserver 0.0.0.0:8000;
+             fi"
     networks:
       - immobilier-net
 
-  backend-prod:
-    image: didierherlin/immobilier-drf:latest
-    container_name: immobilier-backend-prod
-    restart: unless-stopped
-    profiles: ["prod"]
-    environment:
-      USE_SQLITE: "false"
-      DB_NAME: gesion_immobilier_back_end
-      DB_USER: postgres
-      DB_PASSWORD: ${DB_PASSWORD:-}
-      DB_HOST: db
-      DB_PORT: "5432"
-      SECRET_KEY: ${SECRET_KEY}
-      DEBUG: "False"
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
-      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
-      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
-    ports:
-      - "8000:8000"
-    volumes:
-      - media_data:/app/media
-    depends_on:
-      db:
-        condition: service_healthy
-    command: >-
-      sh -c "python manage.py migrate &&
-             gunicorn --bind 0.0.0.0:8000 --workers 3 wsgi:application"
-    networks:
-      - immobilier-net
-
+  # ── Frontend : Next.js ──────────────────────────────────────────────────────
   frontend:
     build:
       context: ./Front
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api}
     container_name: immobilier-frontend
     restart: unless-stopped
-    profiles: ["sqlite", "postgres", "prod"]
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api}
+      INTERNAL_API_URL: ${INTERNAL_API_URL:-http://backend:8000/api}
       PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/ > /dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
+    networks:
+      - immobilier-net
+
+  # ── Service optionnel : Analyse SonarQube (activé via --profile tools) ──────
+  sonarqube:
+    image: sonarqube:lts-community
+    container_name: immobilier-sonarqube
+    restart: unless-stopped
+    profiles: ["tools"]
     ports:
-      - "3000:3000"
+      - "9000:9000"
+    environment:
+      - SONAR_FORCEAUTHENTICATION=false
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    networks:
+      - immobilier-net
+
+  # ── Service optionnel : PostgreSQL local conteneurisé (activé via --profile with-db) ──
+  # Non démarré par défaut : PostgreSQL s'exécute sur l'hôte (pgAdmin 4) ou AWS RDS
+  db:
+    image: postgres:16-alpine
+    container_name: immobilier-db
+    restart: unless-stopped
+    profiles: ["with-db"]
+    environment:
+      POSTGRES_DB: ${DB_NAME:-gestion-immobilier}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-}
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
     networks:
       - immobilier-net
 
 volumes:
-  postgres_data:
   media_data:
-  sqlite_data:
+  postgres_data:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
 
 networks:
   immobilier-net:
