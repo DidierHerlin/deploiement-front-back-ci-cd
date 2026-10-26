@@ -9,7 +9,7 @@ data:
     providers:
       - name: 'soutenance'
         orgId: 1
-        folder: 'Projet DevOps M2'
+        folder: 'Gestion-Immobilier'
         type: file
         disableDeletion: false
         updateIntervalSeconds: 10

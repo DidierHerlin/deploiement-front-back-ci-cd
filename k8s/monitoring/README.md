@@ -169,7 +169,7 @@ kubectl exec -n monitoring deploy/prometheus -- wget -qO- http://localhost:9090/
 
 ## 6. Tableaux de Bord Grafana
 
-Les dashboards sont automatiquement chargés depuis `/var/lib/grafana/dashboards` dans le dossier **« Projet DevOps M2 »** :
+Les dashboards sont automatiquement chargés depuis `/var/lib/grafana/dashboards` dans le dossier **«Gestion-Immobilier »** :
 
 | Dashboard | Description | Métriques / Requêtes clés |
 | :--- | :--- | :--- |
