@@ -22,6 +22,7 @@ bien_detail = BienViewSet.as_view({
 
 urlpatterns = [
     path("biens/disponible/", bien_disponible, name="bien-disponible"),
+    path("biens/disponibles/", bien_disponible, name="bien-disponibles"),
     path("biens/", bien_list, name="bien-list"),
     path("biens/<int:pk>/", bien_detail, name="bien-detail"),
 ]

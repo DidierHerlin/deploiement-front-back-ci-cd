@@ -379,6 +379,67 @@ class BienViewsTests(APITestCase):
         self.assertEqual(response.data['count'], 1)
         self.assertTrue(response.data['success'])
 
+    def test_anonymous_access_list_public(self):
+        self.client.force_authenticate(user=None)
+        response = self.client.get('/api/biens/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        for b in response.data['results']:
+            self.assertEqual(b['statut'], Bien.StatutBien.DISPONIBLE)
+
+    def test_anonymous_access_disponibles_public(self):
+        self.client.force_authenticate(user=None)
+        response = self.client.get('/api/biens/disponible/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_anonymous_access_retrieve_disponible_public(self):
+        self.client.force_authenticate(user=None)
+        response = self.client.get(f'/api/biens/{self.bien.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['data']['id'], self.bien.id)
+
+    def test_anonymous_cannot_retrieve_non_disponible(self):
+        bien_loue = Bien.objects.create(
+            proprietaire=self.bien.proprietaire,
+            titre="Bien Loué",
+            type=Bien.TypeBien.APPARTEMENT,
+            mode_transaction=Bien.ModeTransaction.LOCATION,
+            adresse="Rue Loue",
+            surface=40,
+            nombre_pieces=2,
+            loyer_mensuel=600,
+            statut=Bien.StatutBien.LOUE
+        )
+        self.client.force_authenticate(user=None)
+        response = self.client.get(f'/api/biens/{bien_loue.id}/')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_anonymous_cannot_bypass_statut_filter(self):
+        Bien.objects.create(
+            proprietaire=self.bien.proprietaire,
+            titre="Bien Vendu Secret",
+            type=Bien.TypeBien.APPARTEMENT,
+            mode_transaction=Bien.ModeTransaction.VENTE,
+            adresse="Rue Vente",
+            surface=80,
+            nombre_pieces=3,
+            prix=150000,
+            statut=Bien.StatutBien.VENDU
+        )
+        self.client.force_authenticate(user=None)
+        response = self.client.get('/api/biens/?statut=VENDU')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        for b in response.data['results']:
+            self.assertEqual(b['statut'], Bien.StatutBien.DISPONIBLE)
+
+    def test_anonymous_write_actions_forbidden(self):
+        self.client.force_authenticate(user=None)
+        create_resp = self.client.post('/api/biens/', {"titre": "Hack"})
+        self.assertEqual(create_resp.status_code, status.HTTP_401_UNAUTHORIZED)
+        update_resp = self.client.patch(f'/api/biens/{self.bien.id}/', {"titre": "Hack"})
+        self.assertEqual(update_resp.status_code, status.HTTP_401_UNAUTHORIZED)
+        delete_resp = self.client.delete(f'/api/biens/{self.bien.id}/')
+        self.assertEqual(delete_resp.status_code, status.HTTP_401_UNAUTHORIZED)
+
 
 # 4. Tests Commande migrate_photos
 

@@ -5,7 +5,7 @@ import logging
 from django.db import transaction
 from django.db.models import Q, QuerySet
 from rest_framework import status, viewsets
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -21,17 +21,28 @@ class BienViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, PeutGererBien]
     serializer_class = BienSerializer
     queryset = Bien.objects.select_related("proprietaire__user")
+
+    def get_permissions(self):
+        user = getattr(self.request, "user", None)
+        if self.action in ("disponibles", "list", "retrieve") and (not user or not user.is_authenticated):
+            return [AllowAny()]
+        return super().get_permissions()
+
     def get_serializer_class(self) -> type[BienSerializer | BienListSerializer]:
         return BienListSerializer if self.action in ("list", "disponibles") else BienSerializer
+
     def get_serializer_context(self) -> dict:
         context = super().get_serializer_context()
         context["request"] = self.request
         return context
 
-
     def get_queryset(self) -> QuerySet[Bien]:
-        user = self.request.user
+        user = getattr(self.request, "user", None)
         queryset = super().get_queryset()
+
+        if not user or not user.is_authenticated:
+            queryset = queryset.filter(statut=Bien.StatutBien.DISPONIBLE)
+            return self._appliquer_filtres_recherche(queryset)
 
         if user.role in (Utilisateur.Role.ADMIN, Utilisateur.Role.AGENT):
             return self._appliquer_filtres_recherche(queryset)
@@ -56,15 +67,26 @@ class BienViewSet(viewsets.ModelViewSet):
 
     def _appliquer_filtres_recherche(self, queryset: QuerySet[Bien]) -> QuerySet[Bien]:
         params = self.request.query_params
+        user = getattr(self.request, "user", None)
+
+        search = params.get("search")
+        if search:
+            queryset = queryset.filter(Q(titre__icontains=search) | Q(adresse__icontains=search))
+
         statut = params.get("statut")
-        if statut:
+        if statut and user and user.is_authenticated:
             queryset = queryset.filter(statut=statut)
+
         type_bien = params.get("type")
         if type_bien:
             queryset = queryset.filter(type=type_bien)
         mode_transaction = params.get("mode_transaction")
         if mode_transaction:
             queryset = queryset.filter(mode_transaction=mode_transaction)
+
+        if not user or not user.is_authenticated:
+            queryset = queryset.filter(statut=Bien.StatutBien.DISPONIBLE)
+
         return queryset
 
 
