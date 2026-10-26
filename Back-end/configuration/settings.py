@@ -140,11 +140,12 @@ PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.PBKDF2PasswordHasher",
 ]
 
-# Optimisation vitesse des tests unitaires (MD5 au lieu de BCrypt)
+# Optimisation vitesse des tests unitaires (MD5 au lieu de BCrypt + synchronous_commit off)
 if "test" in sys.argv:
     PASSWORD_HASHERS = [
         "django.contrib.auth.hashers.MD5PasswordHasher",
     ]
+    DATABASES["default"].setdefault("OPTIONS", {})["options"] = "-c synchronous_commit=off" 
 
 PASSWORD_RESET_TIMEOUT = 60 * 60 * 24 * 3  # 3 jours
 
