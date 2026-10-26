@@ -6,16 +6,79 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      component:
+        description: "Composant à tester et déployer"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - backend
+          - frontend
 
 permissions:
   contents: read
 
 jobs:
   # ═══════════════════════════════════════════════════════════════════════════
-  # 1. BACKEND : Tests Django & Couverture
+  # 0. DÉTECTION DES MODIFICATIONS (Change Detection / Path Filtering)
+  # ═══════════════════════════════════════════════════════════════════════════
+  detect-changes:
+    name: Détection des modifications
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.resolve.outputs.backend }}
+      frontend: ${{ steps.resolve.outputs.frontend }}
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Filtrage par chemins modifiés
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'Back-end/**'
+              - 'k8s/backend.yaml'
+              - 'k8s/deploy-backend.sh'
+              - 'k8s/k3s-secret.yaml'
+              - 'k8s/namespace.yaml'
+              - 'k8s/hpa.yaml'
+              - '.github/workflows/ci-cd.yml'
+            frontend:
+              - 'Front/**'
+              - 'k8s/frontend.yaml'
+              - 'k8s/deploy-frontend.sh'
+              - '.github/workflows/ci-cd.yml'
+
+      - name: Résolution finale des cibles (Support Push & Workflow Dispatch)
+        id: resolve
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ "${{ inputs.component }}" = "backend" ]; then
+              echo "backend=true" >> "$GITHUB_OUTPUT"
+              echo "frontend=false" >> "$GITHUB_OUTPUT"
+            elif [ "${{ inputs.component }}" = "frontend" ]; then
+              echo "backend=false" >> "$GITHUB_OUTPUT"
+              echo "frontend=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "backend=true" >> "$GITHUB_OUTPUT"
+              echo "frontend=true" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "backend=${{ steps.filter.outputs.backend }}" >> "$GITHUB_OUTPUT"
+            echo "frontend=${{ steps.filter.outputs.frontend }}" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # 1. BRANCHE BACKEND (Indépendante du Frontend)
   # ═══════════════════════════════════════════════════════════════════════════
   backend-tests:
     name: Backend - Tests & Couverture
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
 
     services:
@@ -83,12 +146,10 @@ jobs:
           name: coverage-report
           path: Back-end/configuration/coverage.xml
 
-  # ═══════════════════════════════════════════════════════════════════════════
-  # 2. BACKEND : Analyse SonarQube
-  # ═══════════════════════════════════════════════════════════════════════════
   backend-quality:
     name: Backend - SonarQube
-    needs: backend-tests
+    needs: [detect-changes, backend-tests]
+    if: needs.detect-changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -124,12 +185,10 @@ jobs:
             -Dsonar.coverage.exclusions=**/migrations/**,**/test_*.py,**/tests.py,**/test.py,**/tests_*.py,test_reporting.py,test_runner.py,performance_test.py,check_user.py,profile_biens.py,wait_for_db.py,scratch/**,manage.py,**/settings.py,settings.py,wsgi.py,asgi.py,**/admin.py,**/apps.py,**/urls.py,**/__init__.py,**/signals.py,**/models.py,**/validators.py,**/permissions.py
             -Dsonar.sourceEncoding=UTF-8
 
-  # ═══════════════════════════════════════════════════════════════════════════
-  # 3. BACKEND : Publication Docker
-  # ═══════════════════════════════════════════════════════════════════════════
   backend-docker:
     name: Backend - Build & Push Docker
-    needs: [backend-tests, backend-quality]
+    needs: [detect-changes, backend-tests, backend-quality]
+    if: needs.detect-changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -158,11 +217,70 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  deploy-backend:
+    name: Backend - Déploiement AWS (RDS & K3s)
+    needs: [detect-changes, backend-docker]
+    if: needs.detect-changes.outputs.backend == 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    concurrency:
+      group: aws-ec2-deployment
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Résoudre l'adresse IP cible de l'EC2
+        id: resolve_ip
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
+          AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
+          STATIC_IP: ${{ secrets.AWS_EC2_IP }}
+        run: bash .github/scripts/resolve_ip.sh
+
+      - name: Transférer les manifestes k8s sur le serveur EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ steps.resolve_ip.outputs.ec2_ip }}
+          username: ubuntu
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          source: "k8s/*"
+          target: "/home/ubuntu/k8s"
+          strip_components: 1
+          overwrite: true
+
+      - name: Connexion et déploiement du Backend sur AWS
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          DB_HOST: ${{ secrets.AWS_RDS_ENDPOINT }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          DB_NAME: "postgres"
+          DB_USER: "postgres"
+          DB_PORT: "5432"
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          AWS_EC2_IP: ${{ steps.resolve_ip.outputs.ec2_ip }}
+          ENABLE_HPA: ${{ secrets.ENABLE_HPA }}
+          GIT_SHA: ${{ github.sha }}
+          DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/immobilier-drf:${{ github.sha }}
+          EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
+          EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
+        with:
+          host: ${{ steps.resolve_ip.outputs.ec2_ip }}
+          username: ubuntu
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME, AWS_EC2_IP, ENABLE_HPA, GIT_SHA, DOCKER_IMAGE, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
+          script: bash /home/ubuntu/k8s/deploy-backend.sh
+
   # ═══════════════════════════════════════════════════════════════════════════
-  # 4. FRONTEND : Build Next.js
+  # 2. BRANCHE FRONTEND (100% Indépendante, sans attente du Backend)
   # ═══════════════════════════════════════════════════════════════════════════
   frontend-build:
     name: Frontend - Build Next.js
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
 
     defaults:
@@ -189,12 +307,10 @@ jobs:
       - name: Build Next.js
         run: pnpm run build
 
-  # ═══════════════════════════════════════════════════════════════════════════
-  # 5. FRONTEND : Publication Docker
-  # ═══════════════════════════════════════════════════════════════════════════
   frontend-docker:
     name: Frontend - Build & Push Docker
-    needs: frontend-build
+    needs: [detect-changes, frontend-build]
+    if: needs.detect-changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     outputs:
       ec2_ip: ${{ steps.resolve_ip.outputs.ec2_ip }}
@@ -237,13 +353,10 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # ═══════════════════════════════════════════════════════════════════════════
-  # 6. DÉPLOIEMENT GLOBAL SUR AWS EC2 (K3s)
-  # ═══════════════════════════════════════════════════════════════════════════
-  deploiement-AWS:
-    name: Déploiement AWS (K3s) - Backend & Frontend
-    needs: [backend-docker, frontend-docker]
-    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+  deploy-frontend:
+    name: Frontend - Déploiement AWS (K3s)
+    needs: [detect-changes, frontend-docker]
+    if: needs.detect-changes.outputs.frontend == 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     concurrency:
       group: aws-ec2-deployment
       cancel-in-progress: false
@@ -275,30 +388,7 @@ jobs:
           strip_components: 1
           overwrite: true
 
-      - name: Déploiement du Backend sur AWS (RDS & K3s)
-        uses: appleboy/ssh-action@v1.0.3
-        env:
-          DB_HOST: ${{ secrets.AWS_RDS_ENDPOINT }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          DB_NAME: "postgres"
-          DB_USER: "postgres"
-          DB_PORT: "5432"
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          AWS_EC2_IP: ${{ steps.resolve_ip.outputs.ec2_ip }}
-          ENABLE_HPA: ${{ secrets.ENABLE_HPA }}
-          GIT_SHA: ${{ github.sha }}
-          DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/immobilier-drf:${{ github.sha }}
-          EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
-          EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
-        with:
-          host: ${{ steps.resolve_ip.outputs.ec2_ip }}
-          username: ubuntu
-          key: ${{ secrets.AWS_EC2_SSH_KEY }}
-          envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME, AWS_EC2_IP, ENABLE_HPA, GIT_SHA, DOCKER_IMAGE, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
-          script: bash /home/ubuntu/k8s/deploy-backend.sh
-
-      - name: Déploiement du Frontend sur AWS (K3s)
+      - name: Connexion et déploiement du Frontend sur AWS
         uses: appleboy/ssh-action@v1.0.3
         env:
           AWS_EC2_IP: ${{ steps.resolve_ip.outputs.ec2_ip }}
