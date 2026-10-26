@@ -44,8 +44,12 @@ class StatusSerializerTests(TestCase):
 class StatusAPITests(APITestCase):
     url = "/api/status/"
 
+    @classmethod
+    def setUpTestData(cls):
+        cls.item = Status.objects.create(typeStatus="Disponible")
+
     def setUp(self):
-        self.item = Status.objects.create(typeStatus="Disponible")
+        self.item.refresh_from_db()
 
     def test_list(self):
         response = self.client.get(self.url)

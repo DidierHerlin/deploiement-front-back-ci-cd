@@ -68,33 +68,40 @@ class ContratReglesMetierTestCase(APITestCase):
     DEPOT_GARANTIE_DEFAUT = 1_000_000
     PRIX_DEFAUT = 200_000_000
 
-    def setUp(self):
-        self.proprio_user = Utilisateur.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.proprio_user = Utilisateur.objects.create_user(
             email="proprio@test.com", password="pass", role=Utilisateur.Role.PROPRIETAIRE,
             nom="Dupont", prenoms="Jean",
         )
-        self.proprietaire = Proprietaire.objects.create(user=self.proprio_user, iban="FR123")
+        cls.proprietaire = Proprietaire.objects.create(user=cls.proprio_user, iban="FR123")
 
-        self.locataire_user = Utilisateur.objects.create_user(
+        cls.locataire_user = Utilisateur.objects.create_user(
             email="locataire@test.com", password="pass", role=Utilisateur.Role.LOCATAIRE,
             nom="Martin", prenoms="Paul",
         )
-        self.locataire = Locataire.objects.create(user=self.locataire_user)
+        cls.locataire = Locataire.objects.create(user=cls.locataire_user)
 
-        self.agent_user = Utilisateur.objects.create_user(
+        cls.agent_user = Utilisateur.objects.create_user(
             email="agent@test.com", password="pass", role=Utilisateur.Role.AGENT,
             nom="Agent", prenoms="Test",
         )
 
-        self.bien_location = self._creer_bien(
-            titre="Appart location", type="APPARTEMENT", mode_transaction="LOCATION",
-            surface=50, nombre_pieces=3, loyer_mensuel=self.LOYER_DEFAUT, prix=None,
+        cls.bien_location = Bien.objects.create(
+            proprietaire=cls.proprietaire, titre="Appart location", type="APPARTEMENT",
+            mode_transaction="LOCATION", surface=50, nombre_pieces=3,
+            loyer_mensuel=cls.LOYER_DEFAUT, prix=None, adresse="Tana", statut=Bien.StatutBien.DISPONIBLE,
         )
-        self.bien_vente = self._creer_bien(
-            titre="Maison vente", type="MAISON", mode_transaction="VENTE",
-            surface=100, nombre_pieces=4, loyer_mensuel=None, prix=self.PRIX_DEFAUT,
+        cls.bien_vente = Bien.objects.create(
+            proprietaire=cls.proprietaire, titre="Maison vente", type="MAISON",
+            mode_transaction="VENTE", surface=100, nombre_pieces=4,
+            loyer_mensuel=None, prix=cls.PRIX_DEFAUT, adresse="Tana", statut=Bien.StatutBien.DISPONIBLE,
         )
+
+    def setUp(self):
         self.client.force_authenticate(user=self.agent_user)
+        self.bien_location.refresh_from_db()
+        self.bien_vente.refresh_from_db()
 
     def _creer_bien(self, **overrides) -> Bien:
         valeurs = {
@@ -288,19 +295,20 @@ class ContratReglesMetierTestCase(APITestCase):
 # 2. Tests des Modèles Contrat
 
 class ContratModelTests(TestCase):
-    def setUp(self):
-        self.u1 = Utilisateur.objects.create_user(email="p@t.com", password="pwd", role=Utilisateur.Role.PROPRIETAIRE)
-        self.prop = Proprietaire.objects.create(user=self.u1, iban="MG123")
-        self.u2 = Utilisateur.objects.create_user(email="l@t.com", password="pwd", role=Utilisateur.Role.LOCATAIRE)
-        self.loc = Locataire.objects.create(user=self.u2)
+    @classmethod
+    def setUpTestData(cls):
+        cls.u1 = Utilisateur.objects.create_user(email="p@t.com", password="pwd", role=Utilisateur.Role.PROPRIETAIRE)
+        cls.prop = Proprietaire.objects.create(user=cls.u1, iban="MG123")
+        cls.u2 = Utilisateur.objects.create_user(email="l@t.com", password="pwd", role=Utilisateur.Role.LOCATAIRE)
+        cls.loc = Locataire.objects.create(user=cls.u2)
 
-        self.bien_loc = Bien.objects.create(
-            proprietaire=self.prop, titre="A", type=Bien.TypeBien.APPARTEMENT,
+        cls.bien_loc = Bien.objects.create(
+            proprietaire=cls.prop, titre="A", type=Bien.TypeBien.APPARTEMENT,
             mode_transaction=Bien.ModeTransaction.LOCATION, adresse="Test", surface=50,
             nombre_pieces=2, loyer_mensuel=1000, statut=Bien.StatutBien.DISPONIBLE
         )
-        self.bien_vente = Bien.objects.create(
-            proprietaire=self.prop, titre="B", type=Bien.TypeBien.MAISON,
+        cls.bien_vente = Bien.objects.create(
+            proprietaire=cls.prop, titre="B", type=Bien.TypeBien.MAISON,
             mode_transaction=Bien.ModeTransaction.VENTE, adresse="Test", surface=100,
             nombre_pieces=4, prix=200000, statut=Bien.StatutBien.DISPONIBLE
         )
@@ -389,13 +397,14 @@ class ContratModelTests(TestCase):
 
 
 class ContratAchatModelTest(TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         user_prop = Utilisateur.objects.create(email="prop_achat@test.com", role="PROPRIETAIRE")
-        self.prop = Proprietaire.objects.create(user=user_prop)
+        cls.prop = Proprietaire.objects.create(user=user_prop)
         user_loc = Utilisateur.objects.create(email="loc_achat@test.com", role="LOCATAIRE")
-        self.loc = Locataire.objects.create(user=user_loc)
-        self.bien = Bien.objects.create(
-            proprietaire=self.prop, titre="Bien Vente", type="MAISON",
+        cls.loc = Locataire.objects.create(user=user_loc)
+        cls.bien = Bien.objects.create(
+            proprietaire=cls.prop, titre="Bien Vente", type="MAISON",
             mode_transaction="VENTE", adresse="1 rue vente", surface=100,
             nombre_pieces=4, prix=100000.0, statut="DISPONIBLE"
         )
@@ -459,23 +468,27 @@ class ContratAchatModelTest(TestCase):
 # 3. Tests Batch Échéances
 
 class EcheancesBatchTests(TestCase):
-    def setUp(self):
-        self.proprio_user = Utilisateur.objects.create_user(email='p_b@test.com', password='pwd', role=Utilisateur.Role.PROPRIETAIRE)
-        self.proprio = Proprietaire.objects.create(user=self.proprio_user, iban="MG123")
-        self.loc_user = Utilisateur.objects.create_user(email='l_b@test.com', password='pwd', role=Utilisateur.Role.LOCATAIRE)
-        self.locataire = Locataire.objects.create(user=self.loc_user)
+    @classmethod
+    def setUpTestData(cls):
+        cls.proprio_user = Utilisateur.objects.create_user(email='p_b@test.com', password='pwd', role=Utilisateur.Role.PROPRIETAIRE)
+        cls.proprio = Proprietaire.objects.create(user=cls.proprio_user, iban="MG123")
+        cls.loc_user = Utilisateur.objects.create_user(email='l_b@test.com', password='pwd', role=Utilisateur.Role.LOCATAIRE)
+        cls.locataire = Locataire.objects.create(user=cls.loc_user)
 
-        self.bien = Bien.objects.create(
-            proprietaire=self.proprio, titre="Bien test", type="APPARTEMENT",
+        cls.bien = Bien.objects.create(
+            proprietaire=cls.proprio, titre="Bien test", type="APPARTEMENT",
             mode_transaction="LOCATION", adresse="Paris", surface=50,
             nombre_pieces=2, loyer_mensuel=1000, statut="DISPONIBLE"
         )
-        self.date_debut = timezone.now().date() - relativedelta(months=1)
-        self.contrat = Contrat.objects.create(
-            bien=self.bien, locataire=self.locataire, type_contrat="LOCATION",
-            date_debut=self.date_debut, date_fin=self.date_debut + relativedelta(months=2),
+        cls.date_debut = timezone.now().date() - relativedelta(months=1)
+        cls.contrat = Contrat.objects.create(
+            bien=cls.bien, locataire=cls.locataire, type_contrat="LOCATION",
+            date_debut=cls.date_debut, date_fin=cls.date_debut + relativedelta(months=2),
             loyer=1000, depot_garantie=1000, statut="ACTIF"
         )
+
+    def setUp(self):
+        self.contrat.refresh_from_db()
 
     def test_get_echeances_a_venir_with_batch(self):
         echeance_1 = self.date_debut + relativedelta(months=1)
@@ -517,8 +530,13 @@ class EcheancesBatchTests(TestCase):
         self.contrat.save()
         self.assertEqual(len(self.contrat.get_echeances_a_venir()), 0)
         
+        bien2 = Bien.objects.create(
+            proprietaire=self.proprio, titre="Bien test 2", type="APPARTEMENT",
+            mode_transaction="LOCATION", adresse="Paris", surface=50,
+            nombre_pieces=2, loyer_mensuel=1000, statut="DISPONIBLE"
+        )
         contrat_vente = Contrat.objects.create(
-            bien=self.bien, locataire=self.locataire, type_contrat="LOCATION",
+            bien=bien2, locataire=self.locataire, type_contrat="LOCATION",
             date_debut=self.date_debut, date_fin=self.date_debut + relativedelta(months=2),
             loyer=1000, depot_garantie=1000, statut="ACTIF"
         )
@@ -529,16 +547,17 @@ class EcheancesBatchTests(TestCase):
 # 4. Tests des Vues API Contrat
 
 class ContratListRetrieveTests(APITestCase):
-    def setUp(self):
-        self.agent = make_user("agent_lr@c.com")
-        self.admin = make_user("admin_lr@c.com", Utilisateur.Role.ADMIN)
-        self.prop_user = make_user("prop_lr@c.com", Utilisateur.Role.PROPRIETAIRE)
-        self.prop = Proprietaire.objects.create(user=self.prop_user, iban="MG123")
-        self.loc_user = make_user("loc_lr@c.com", Utilisateur.Role.LOCATAIRE)
-        self.loc = Locataire.objects.create(user=self.loc_user)
+    @classmethod
+    def setUpTestData(cls):
+        cls.agent = make_user("agent_lr@c.com")
+        cls.admin = make_user("admin_lr@c.com", Utilisateur.Role.ADMIN)
+        cls.prop_user = make_user("prop_lr@c.com", Utilisateur.Role.PROPRIETAIRE)
+        cls.prop = Proprietaire.objects.create(user=cls.prop_user, iban="MG123")
+        cls.loc_user = make_user("loc_lr@c.com", Utilisateur.Role.LOCATAIRE)
+        cls.loc = Locataire.objects.create(user=cls.loc_user)
 
-        self.bien = make_bien(self.prop)
-        self.contrat = make_contrat(self.bien, self.loc)
+        cls.bien = make_bien(cls.prop)
+        cls.contrat = make_contrat(cls.bien, cls.loc)
         Paiement.objects.all().delete()
 
     def test_list_as_agent_returns_all(self):
@@ -577,13 +596,14 @@ class ContratListRetrieveTests(APITestCase):
 
 
 class ContratCreateTests(APITestCase):
-    def setUp(self):
-        self.agent = make_user("agent_cr@c.com")
-        self.prop_user = make_user("prop_cr@c.com", Utilisateur.Role.PROPRIETAIRE)
-        self.prop = Proprietaire.objects.create(user=self.prop_user, iban="MG123")
-        self.loc_user = make_user("loc_cr@c.com", Utilisateur.Role.LOCATAIRE)
-        self.loc = Locataire.objects.create(user=self.loc_user)
-        self.bien = make_bien(self.prop, titre="Bien2")
+    @classmethod
+    def setUpTestData(cls):
+        cls.agent = make_user("agent_cr@c.com")
+        cls.prop_user = make_user("prop_cr@c.com", Utilisateur.Role.PROPRIETAIRE)
+        cls.prop = Proprietaire.objects.create(user=cls.prop_user, iban="MG123")
+        cls.loc_user = make_user("loc_cr@c.com", Utilisateur.Role.LOCATAIRE)
+        cls.loc = Locataire.objects.create(user=cls.loc_user)
+        cls.bien = make_bien(cls.prop, titre="Bien2")
 
     def tearDown(self):
         Paiement.objects.all().delete()
@@ -621,17 +641,21 @@ class ContratCreateTests(APITestCase):
 
 
 class ContratTransitionTests(APITestCase):
-    def setUp(self):
-        self.agent = make_user("agent_tr@c.com")
-        self.admin = make_user("admin_tr@c.com", Utilisateur.Role.ADMIN)
-        self.prop_user = make_user("prop_tr@c.com", Utilisateur.Role.PROPRIETAIRE)
-        self.prop = Proprietaire.objects.create(user=self.prop_user, iban="MG123")
-        self.loc_user = make_user("loc_tr@c.com", Utilisateur.Role.LOCATAIRE)
-        self.loc = Locataire.objects.create(user=self.loc_user)
-        self.bien_loc = make_bien(self.prop, titre="Bien Loc")
-        self.contrat_loc = make_contrat(self.bien_loc, self.loc)
+    @classmethod
+    def setUpTestData(cls):
+        cls.agent = make_user("agent_tr@c.com")
+        cls.admin = make_user("admin_tr@c.com", Utilisateur.Role.ADMIN)
+        cls.prop_user = make_user("prop_tr@c.com", Utilisateur.Role.PROPRIETAIRE)
+        cls.prop = Proprietaire.objects.create(user=cls.prop_user, iban="MG123")
+        cls.loc_user = make_user("loc_tr@c.com", Utilisateur.Role.LOCATAIRE)
+        cls.loc = Locataire.objects.create(user=cls.loc_user)
+        cls.bien_loc = make_bien(cls.prop, titre="Bien Loc")
+        cls.contrat_loc = make_contrat(cls.bien_loc, cls.loc)
         Paiement.objects.all().delete()
-        self.bien_vente = make_bien(self.prop, titre="Bien Vente", mode=Bien.ModeTransaction.VENTE)
+        cls.bien_vente = make_bien(cls.prop, titre="Bien Vente", mode=Bien.ModeTransaction.VENTE)
+
+    def setUp(self):
+        self.contrat_loc.refresh_from_db()
 
     def test_resilier_contrat_location(self):
         self.client.force_authenticate(user=self.agent)
@@ -676,11 +700,15 @@ class ContratTransitionTests(APITestCase):
 
 
 class ContratBienInfoTests(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.agent = make_user("agent_bi@c.com")
+        cls.prop_user = make_user("prop_bi@c.com", Utilisateur.Role.PROPRIETAIRE)
+        cls.prop = Proprietaire.objects.create(user=cls.prop_user, iban="MG123")
+        cls.bien = make_bien(cls.prop, titre="Bien Info")
+
     def setUp(self):
-        self.agent = make_user("agent_bi@c.com")
-        self.prop_user = make_user("prop_bi@c.com", Utilisateur.Role.PROPRIETAIRE)
-        self.prop = Proprietaire.objects.create(user=self.prop_user, iban="MG123")
-        self.bien = make_bien(self.prop, titre="Bien Info")
+        self.bien.refresh_from_db()
 
     def test_bien_info_with_valid_id(self):
         self.client.force_authenticate(user=self.agent)
@@ -708,14 +736,15 @@ class ContratBienInfoTests(APITestCase):
 
 
 class ContratEcheancesTests(APITestCase):
-    def setUp(self):
-        self.agent = make_user("agent_ech@c.com")
-        self.prop_user = make_user("prop_ech@c.com", Utilisateur.Role.PROPRIETAIRE)
-        self.prop = Proprietaire.objects.create(user=self.prop_user, iban="MG123")
-        self.loc_user = make_user("loc_ech@c.com", Utilisateur.Role.LOCATAIRE)
-        self.loc = Locataire.objects.create(user=self.loc_user)
-        self.bien = make_bien(self.prop, titre="Bien Echeances")
-        self.contrat = make_contrat(self.bien, self.loc)
+    @classmethod
+    def setUpTestData(cls):
+        cls.agent = make_user("agent_ech@c.com")
+        cls.prop_user = make_user("prop_ech@c.com", Utilisateur.Role.PROPRIETAIRE)
+        cls.prop = Proprietaire.objects.create(user=cls.prop_user, iban="MG123")
+        cls.loc_user = make_user("loc_ech@c.com", Utilisateur.Role.LOCATAIRE)
+        cls.loc = Locataire.objects.create(user=cls.loc_user)
+        cls.bien = make_bien(cls.prop, titre="Bien Echeances")
+        cls.contrat = make_contrat(cls.bien, cls.loc)
         Paiement.objects.all().delete()
 
     def test_echeances_as_agent(self):
@@ -737,19 +766,25 @@ class ContratEcheancesTests(APITestCase):
 
     def test_telecharger(self):
         self.client.force_authenticate(user=self.agent)
-        response = self.client.get(f'/api/contrats/{self.contrat.id}/telecharger/')
-        self.assertIn(response.status_code, [status.HTTP_200_OK, status.HTTP_500_INTERNAL_SERVER_ERROR])
+        from unittest.mock import patch
+        with patch('contrats.views.generate_contrat_pdf', return_value=b'%PDF-1.4 mock pdf'):
+            response = self.client.get(f'/api/contrats/{self.contrat.id}/telecharger/')
+            self.assertIn(response.status_code, [status.HTTP_200_OK, status.HTTP_500_INTERNAL_SERVER_ERROR])
 
 
 class ContratUtilsAndSerializerBoostTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.agent = make_user("agent_boost@c.com")
+        cls.prop_user = make_user("prop_boost@c.com", Utilisateur.Role.PROPRIETAIRE)
+        cls.prop = Proprietaire.objects.create(user=cls.prop_user, iban="MG123")
+        cls.loc_user = make_user("loc_boost@c.com", Utilisateur.Role.LOCATAIRE)
+        cls.loc = Locataire.objects.create(user=cls.loc_user)
+        cls.bien = make_bien(cls.prop, titre="Bien Boost Location")
+        cls.contrat = make_contrat(cls.bien, cls.loc)
+
     def setUp(self):
-        self.agent = make_user("agent_boost@c.com")
-        self.prop_user = make_user("prop_boost@c.com", Utilisateur.Role.PROPRIETAIRE)
-        self.prop = Proprietaire.objects.create(user=self.prop_user, iban="MG123")
-        self.loc_user = make_user("loc_boost@c.com", Utilisateur.Role.LOCATAIRE)
-        self.loc = Locataire.objects.create(user=self.loc_user)
-        self.bien = make_bien(self.prop, titre="Bien Boost Location")
-        self.contrat = make_contrat(self.bien, self.loc)
+        self.contrat.refresh_from_db()
 
     def test_formater_montant_ar(self):
         from contrats.utils import formater_montant_ar

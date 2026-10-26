@@ -60,30 +60,39 @@ def _make_paiement(contrat, delta_months=100, statut=Paiement.StatutPaiement.EN_
     )
 
 
+from unittest.mock import patch
+
+def _fast_pisa(src, dest, *args, **kwargs):
+    if hasattr(dest, "write"):
+        dest.write(b"%PDF-1.4 mock pdf\n%%EOF")
+    return type("Status", (), {"err": 0})()
+
+
 # 1. Tests API de Création et Validation des Paiements
 
 class PaiementAPITestCase(APITestCase):
-    def setUp(self):
-        self.admin = Utilisateur.objects.create_superuser(
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = Utilisateur.objects.create_superuser(
             email="admin_api@test.com", password="pass", nom="Admin", prenoms="Test"
         )
-        self.agent = Utilisateur.objects.create_user(
+        cls.agent = Utilisateur.objects.create_user(
             email="agent_api@test.com", password="pass", role=Utilisateur.Role.AGENT,
             nom="Agent", prenoms="Test"
         )
-        self.locataire_user = Utilisateur.objects.create_user(
+        cls.locataire_user = Utilisateur.objects.create_user(
             email="loc_api@test.com", password="pass", role=Utilisateur.Role.LOCATAIRE,
             nom="Dupont", prenoms="Jean"
         )
-        self.locataire = Locataire.objects.create(user=self.locataire_user)
-        self.proprietaire_user = Utilisateur.objects.create_user(
+        cls.locataire = Locataire.objects.create(user=cls.locataire_user)
+        cls.proprietaire_user = Utilisateur.objects.create_user(
             email="proprio_api@test.com", password="pass", role=Utilisateur.Role.PROPRIETAIRE,
             nom="Rakoto", prenoms="Jean"
         )
-        self.proprietaire = Proprietaire.objects.create(user=self.proprietaire_user, iban="FR123")
+        cls.proprietaire = Proprietaire.objects.create(user=cls.proprietaire_user, iban="FR123")
 
-        self.bien = Bien.objects.create(
-            proprietaire=self.proprietaire,
+        cls.bien = Bien.objects.create(
+            proprietaire=cls.proprietaire,
             titre="Appartement F3",
             type="APPARTEMENT",
             mode_transaction="LOCATION",
@@ -93,9 +102,9 @@ class PaiementAPITestCase(APITestCase):
             loyer_mensuel=500000,
             statut=Bien.StatutBien.DISPONIBLE
         )
-        self.contrat = Contrat.objects.create(
-            bien=self.bien,
-            locataire=self.locataire,
+        cls.contrat = Contrat.objects.create(
+            bien=cls.bien,
+            locataire=cls.locataire,
             type_contrat=Contrat.TypeContrat.LOCATION,
             date_debut=timezone.now().date() - timezone.timedelta(days=30),
             date_fin=timezone.now().date() + timezone.timedelta(days=335),
@@ -103,8 +112,14 @@ class PaiementAPITestCase(APITestCase):
             depot_garantie=1000000,
             statut=Contrat.StatutContrat.ACTIF
         )
+        Paiement.objects.filter(contrat=cls.contrat).delete()
+
+    def setUp(self):
+        patcher = patch("paiement.utils.pisa.pisaDocument", side_effect=_fast_pisa)
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self.client.force_authenticate(user=self.agent)
-        Paiement.objects.all().delete()
+        Paiement.objects.filter(contrat=self.contrat).delete()
 
     def test_creer_paiement_complet(self):
         url = reverse("paiement-list")
@@ -164,19 +179,21 @@ class PaiementAPITestCase(APITestCase):
 # 2. Tests de la Génération d'Échéancier
 
 class EcheancierGenerationTestCase(TestCase):
-    def setUp(self):
-        self.proprio_user = Utilisateur.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.proprio_user = Utilisateur.objects.create_user(
             email="proprio_ech@test.com", password="TestPass123!", role=Utilisateur.Role.PROPRIETAIRE,
             nom="Dupont", prenoms="Jean",
         )
-        self.proprietaire = Proprietaire.objects.create(user=self.proprio_user, iban="FR123")
+        cls.proprietaire = Proprietaire.objects.create(user=cls.proprio_user, iban="FR123")
 
-        self.loc_user = Utilisateur.objects.create_user(
+        cls.loc_user = Utilisateur.objects.create_user(
             email="loc_ech@test.com", password="TestPass123!", role=Utilisateur.Role.LOCATAIRE,
             nom="Martin", prenoms="Paul",
         )
-        self.locataire = Locataire.objects.create(user=self.loc_user)
+        cls.locataire = Locataire.objects.create(user=cls.loc_user)
 
+    def setUp(self):
         self.bien_location = Bien.objects.create(
             proprietaire=self.proprietaire,
             titre="Appart Test",
@@ -419,24 +436,31 @@ class PaiementUtilsTest(TestCase):
 # 4. Tests des Modèles Paiement
 
 class PaiementModelUnitTests(TestCase):
-    def setUp(self):
-        self.u1 = Utilisateur.objects.create_user(email="p_mu@t.com", password="pwd", role=Utilisateur.Role.PROPRIETAIRE)
-        self.prop = Proprietaire.objects.create(user=self.u1, iban="MG123")
-        self.u2 = Utilisateur.objects.create_user(email="l_mu@t.com", password="pwd", nom="Doe", prenoms="John", role=Utilisateur.Role.LOCATAIRE)
-        self.loc = Locataire.objects.create(user=self.u2)
+    @classmethod
+    def setUpTestData(cls):
+        cls.u1 = Utilisateur.objects.create_user(email="p_mu@t.com", password="pwd", role=Utilisateur.Role.PROPRIETAIRE)
+        cls.prop = Proprietaire.objects.create(user=cls.u1, iban="MG123")
+        cls.u2 = Utilisateur.objects.create_user(email="l_mu@t.com", password="pwd", nom="Doe", prenoms="John", role=Utilisateur.Role.LOCATAIRE)
+        cls.loc = Locataire.objects.create(user=cls.u2)
 
-        self.bien_loc = Bien.objects.create(
-            proprietaire=self.prop, titre="A", type=Bien.TypeBien.APPARTEMENT,
+        cls.bien_loc = Bien.objects.create(
+            proprietaire=cls.prop, titre="A", type=Bien.TypeBien.APPARTEMENT,
             mode_transaction=Bien.ModeTransaction.LOCATION, adresse="Test", surface=50,
             nombre_pieces=2, loyer_mensuel=1000, statut=Bien.StatutBien.DISPONIBLE
         )
         future_date = timezone.now().date() + relativedelta(months=1)
         future_end = timezone.now().date() + relativedelta(months=12)
-        self.contrat = Contrat.objects.create(
-            bien=self.bien_loc, locataire=self.loc, type_contrat=Contrat.TypeContrat.LOCATION,
+        cls.contrat = Contrat.objects.create(
+            bien=cls.bien_loc, locataire=cls.loc, type_contrat=Contrat.TypeContrat.LOCATION,
             date_debut=future_date, date_fin=future_end, loyer=1000, depot_garantie=1000
         )
-        Paiement.objects.all().delete()
+        Paiement.objects.filter(contrat=cls.contrat).delete()
+
+    def setUp(self):
+        patcher = patch("paiement.utils.pisa.pisaDocument", side_effect=_fast_pisa)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        Paiement.objects.filter(contrat=self.contrat).delete()
 
     def test_creation_paiement_valide(self):
         future_date = timezone.now().date() + relativedelta(months=2)
@@ -524,23 +548,41 @@ class PaiementModelUnitTests(TestCase):
 # 5. Tests des Vues API Paiement
 
 class PaiementTestBase(APITestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls._pisa_patcher = patch("paiement.utils.pisa.pisaDocument", side_effect=_fast_pisa)
+        cls._pisa_patcher.start()
+        super().setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._pisa_patcher.stop()
+        super().tearDownClass()
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.agent_user = _make_user("agent@ptest.mg", Utilisateur.Role.AGENT)
+        cls.admin_user = _make_user("admin@ptest.mg", Utilisateur.Role.ADMIN)
+
+        cls.prop_user = _make_user("proprio@ptest.mg", Utilisateur.Role.PROPRIETAIRE)
+        cls.prop = Proprietaire.objects.create(user=cls.prop_user, iban="MG12345")
+
+        cls.loc_user = _make_user("locataire@ptest.mg", Utilisateur.Role.LOCATAIRE)
+        cls.loc = Locataire.objects.create(user=cls.loc_user)
+
+        cls.other_loc_user = _make_user("other.loc@ptest.mg", Utilisateur.Role.LOCATAIRE)
+        cls.other_loc = Locataire.objects.create(user=cls.other_loc_user)
+
+        cls.bien = _make_bien(cls.prop, titre="Appartement Principal")
+        cls.contrat = _make_contrat(cls.bien, cls.loc)
+        Paiement.objects.filter(contrat=cls.contrat).delete()
+
     def setUp(self):
-        self.agent_user = _make_user("agent@ptest.mg", Utilisateur.Role.AGENT)
-        self.admin_user = _make_user("admin@ptest.mg", Utilisateur.Role.ADMIN)
+        patcher = patch("paiement.utils.pisa.pisaDocument", side_effect=_fast_pisa)
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
-        self.prop_user = _make_user("proprio@ptest.mg", Utilisateur.Role.PROPRIETAIRE)
-        self.prop = Proprietaire.objects.create(user=self.prop_user, iban="MG12345")
-
-        self.loc_user = _make_user("locataire@ptest.mg", Utilisateur.Role.LOCATAIRE)
-        self.loc = Locataire.objects.create(user=self.loc_user)
-
-        self.other_loc_user = _make_user("other.loc@ptest.mg", Utilisateur.Role.LOCATAIRE)
-        self.other_loc = Locataire.objects.create(user=self.other_loc_user)
-
-        self.bien = _make_bien(self.prop, titre="Appartement Principal")
-        self.contrat = _make_contrat(self.bien, self.loc)
-
-        Paiement.objects.all().delete()
+        Paiement.objects.filter(contrat=self.contrat).delete()
         self.paiement = _make_paiement(self.contrat, delta_months=1 + 100)
 
 
@@ -1264,19 +1306,31 @@ class MontantTotalEncaisseTestCase(APITestCase):
     - Test 6 : Validation de l'actualisation dynamique du montant après validation d'une facture.
     """
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
+        cls._pisa_patcher = patch("paiement.utils.pisa.pisaDocument", side_effect=_fast_pisa)
+        cls._pisa_patcher.start()
+        super().setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._pisa_patcher.stop()
+        super().tearDownClass()
+
+    @classmethod
+    def setUpTestData(cls):
         # Propriétaire & Bien
-        self.proprio_user = _make_user("proprio_stats@test.mg", Utilisateur.Role.PROPRIETAIRE)
-        self.proprio = Proprietaire.objects.create(user=self.proprio_user, iban="MG001")
-        self.bien1 = _make_bien(self.proprio, titre="Bien Locataire 1")
-        self.bien2 = _make_bien(self.proprio, titre="Bien Locataire 2")
-        self.bien3 = _make_bien(self.proprio, titre="Bien Locataire 3")
+        cls.proprio_user = _make_user("proprio_stats@test.mg", Utilisateur.Role.PROPRIETAIRE)
+        cls.proprio = Proprietaire.objects.create(user=cls.proprio_user, iban="MG001")
+        cls.bien1 = _make_bien(cls.proprio, titre="Bien Locataire 1")
+        cls.bien2 = _make_bien(cls.proprio, titre="Bien Locataire 2")
+        cls.bien3 = _make_bien(cls.proprio, titre="Bien Locataire 3")
 
         # Locataire 1 (Utilisateur principal)
-        self.user1 = _make_user("loc1_stats@test.mg", Utilisateur.Role.LOCATAIRE)
-        self.locataire1 = Locataire.objects.create(user=self.user1)
-        self.contrat1 = Contrat.objects.create(
-            bien=self.bien1, locataire=self.locataire1,
+        cls.user1 = _make_user("loc1_stats@test.mg", Utilisateur.Role.LOCATAIRE)
+        cls.locataire1 = Locataire.objects.create(user=cls.user1)
+        cls.contrat1 = Contrat.objects.create(
+            bien=cls.bien1, locataire=cls.locataire1,
             type_contrat=Contrat.TypeContrat.LOCATION,
             date_debut=date(2026, 1, 1),
             date_fin=date(2026, 12, 31),
@@ -1284,10 +1338,10 @@ class MontantTotalEncaisseTestCase(APITestCase):
         )
 
         # Locataire 2 (Autre utilisateur)
-        self.user2 = _make_user("loc2_stats@test.mg", Utilisateur.Role.LOCATAIRE)
-        self.locataire2 = Locataire.objects.create(user=self.user2)
-        self.contrat2 = Contrat.objects.create(
-            bien=self.bien2, locataire=self.locataire2,
+        cls.user2 = _make_user("loc2_stats@test.mg", Utilisateur.Role.LOCATAIRE)
+        cls.locataire2 = Locataire.objects.create(user=cls.user2)
+        cls.contrat2 = Contrat.objects.create(
+            bien=cls.bien2, locataire=cls.locataire2,
             type_contrat=Contrat.TypeContrat.LOCATION,
             date_debut=date(2026, 1, 1),
             date_fin=date(2026, 12, 31),
@@ -1295,15 +1349,22 @@ class MontantTotalEncaisseTestCase(APITestCase):
         )
 
         # Locataire 3 (Sans facture payée)
-        self.user3 = _make_user("loc3_stats@test.mg", Utilisateur.Role.LOCATAIRE)
-        self.locataire3 = Locataire.objects.create(user=self.user3)
-        self.contrat3 = Contrat.objects.create(
-            bien=self.bien3, locataire=self.locataire3,
+        cls.user3 = _make_user("loc3_stats@test.mg", Utilisateur.Role.LOCATAIRE)
+        cls.locataire3 = Locataire.objects.create(user=cls.user3)
+        cls.contrat3 = Contrat.objects.create(
+            bien=cls.bien3, locataire=cls.locataire3,
             type_contrat=Contrat.TypeContrat.LOCATION,
             date_debut=date(2026, 1, 1),
             date_fin=date(2026, 12, 31),
             loyer=50_000, depot_garantie=50_000,
         )
+        Paiement.objects.filter(contrat__in=[cls.contrat1, cls.contrat2, cls.contrat3]).delete()
+
+    def setUp(self):
+        patcher = patch("paiement.utils.pisa.pisaDocument", side_effect=_fast_pisa)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        Paiement.objects.filter(contrat__in=[self.contrat1, self.contrat2, self.contrat3]).delete()
 
     def test_1_deux_factures_payees_donnent_250000(self):
         """Test 1 : Un utilisateur possède deux factures payées de 100 000 Ar et 150 000 Ar. Total = 250 000 Ar."""

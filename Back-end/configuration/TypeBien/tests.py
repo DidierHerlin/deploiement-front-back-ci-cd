@@ -44,8 +44,12 @@ class TypeBienSerializerTests(TestCase):
 class TypeBienAPITests(APITestCase):
     url = "/api/types-biens/"
 
+    @classmethod
+    def setUpTestData(cls):
+        cls.item = TypeBien.objects.create(designation="Appartement")
+
     def setUp(self):
-        self.item = TypeBien.objects.create(designation="Appartement")
+        self.item.refresh_from_db()
 
     def test_list(self):
         response = self.client.get(self.url)

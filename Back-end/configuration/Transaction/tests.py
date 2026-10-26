@@ -44,8 +44,12 @@ class TransactionSerializerTests(TestCase):
 class TransactionAPITests(APITestCase):
     url = "/api/transactions/"
 
+    @classmethod
+    def setUpTestData(cls):
+        cls.item = Transaction.objects.create(nomTransaction="Location")
+
     def setUp(self):
-        self.item = Transaction.objects.create(nomTransaction="Location")
+        self.item.refresh_from_db()
 
     def test_list(self):
         response = self.client.get(self.url)

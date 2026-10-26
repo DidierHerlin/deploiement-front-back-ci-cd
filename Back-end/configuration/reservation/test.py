@@ -33,16 +33,17 @@ def make_bien(proprietaire, titre="Appart", mode=Bien.ModeTransaction.LOCATION, 
 class ReservationListTests(APITestCase):
     """Tests pour la liste et le retrieve des réservations."""
 
-    def setUp(self):
-        self.admin = make_user("admin@r.com", Utilisateur.Role.ADMIN)
-        self.agent = make_user("agent@r.com", Utilisateur.Role.AGENT)
-        self.loc_user = make_user("loc@r.com", Utilisateur.Role.LOCATAIRE)
-        self.loc = Locataire.objects.create(user=self.loc_user)
-        self.prop_user = make_user("prop@r.com", Utilisateur.Role.PROPRIETAIRE)
-        self.prop = Proprietaire.objects.create(user=self.prop_user, iban="MG123")
-        self.bien = make_bien(self.prop)
-        self.reservation = Reservation.objects.create(
-            bien=self.bien, locataire=self.loc,
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = make_user("admin@r.com", Utilisateur.Role.ADMIN)
+        cls.agent = make_user("agent@r.com", Utilisateur.Role.AGENT)
+        cls.loc_user = make_user("loc@r.com", Utilisateur.Role.LOCATAIRE)
+        cls.loc = Locataire.objects.create(user=cls.loc_user)
+        cls.prop_user = make_user("prop@r.com", Utilisateur.Role.PROPRIETAIRE)
+        cls.prop = Proprietaire.objects.create(user=cls.prop_user, iban="MG123")
+        cls.bien = make_bien(cls.prop)
+        cls.reservation = Reservation.objects.create(
+            bien=cls.bien, locataire=cls.loc,
             type_reservation=Reservation.TypeReservation.LOCATION,
             statut=Reservation.StatutReservation.EN_ATTENTE
         )
@@ -101,15 +102,16 @@ class ReservationListTests(APITestCase):
 class ReservationCreateTests(APITestCase):
     """Tests pour la création de réservations."""
 
-    def setUp(self):
-        self.admin = make_user("admin2@r.com", Utilisateur.Role.ADMIN)
-        self.admin.is_active = True
-        self.admin.save(update_fields=['is_active'])
-        self.loc_user = make_user("loc2@r.com", Utilisateur.Role.LOCATAIRE)
-        self.loc = Locataire.objects.create(user=self.loc_user)
-        self.prop_user = make_user("prop2@r.com", Utilisateur.Role.PROPRIETAIRE)
-        self.prop = Proprietaire.objects.create(user=self.prop_user, iban="MG123")
-        self.bien = make_bien(self.prop, titre="Bien Dispo")
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = make_user("admin2@r.com", Utilisateur.Role.ADMIN)
+        cls.admin.is_active = True
+        cls.admin.save(update_fields=['is_active'])
+        cls.loc_user = make_user("loc2@r.com", Utilisateur.Role.LOCATAIRE)
+        cls.loc = Locataire.objects.create(user=cls.loc_user)
+        cls.prop_user = make_user("prop2@r.com", Utilisateur.Role.PROPRIETAIRE)
+        cls.prop = Proprietaire.objects.create(user=cls.prop_user, iban="MG123")
+        cls.bien = make_bien(cls.prop, titre="Bien Dispo")
 
     def test_create_reservation_as_locataire(self):
         self.client.force_authenticate(user=self.loc_user)
@@ -138,14 +140,17 @@ class ReservationCreateTests(APITestCase):
 class ReservationRepondreTests(APITestCase):
     """Tests pour l'action repondre."""
 
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = make_user("admin3@r.com", Utilisateur.Role.ADMIN)
+        cls.agent = make_user("agent3@r.com", Utilisateur.Role.AGENT)
+        cls.loc_user = make_user("loc3@r.com", Utilisateur.Role.LOCATAIRE)
+        cls.loc = Locataire.objects.create(user=cls.loc_user)
+        cls.prop_user = make_user("prop3@r.com", Utilisateur.Role.PROPRIETAIRE)
+        cls.prop = Proprietaire.objects.create(user=cls.prop_user, iban="MG123")
+        cls.bien = make_bien(cls.prop, titre="Bien3")
+
     def setUp(self):
-        self.admin = make_user("admin3@r.com", Utilisateur.Role.ADMIN)
-        self.agent = make_user("agent3@r.com", Utilisateur.Role.AGENT)
-        self.loc_user = make_user("loc3@r.com", Utilisateur.Role.LOCATAIRE)
-        self.loc = Locataire.objects.create(user=self.loc_user)
-        self.prop_user = make_user("prop3@r.com", Utilisateur.Role.PROPRIETAIRE)
-        self.prop = Proprietaire.objects.create(user=self.prop_user, iban="MG123")
-        self.bien = make_bien(self.prop, titre="Bien3")
         self.reservation = Reservation.objects.create(
             bien=self.bien, locataire=self.loc,
             type_reservation=Reservation.TypeReservation.LOCATION,
@@ -202,14 +207,15 @@ class ReservationRepondreTests(APITestCase):
 class ReservationModelTests(APITestCase):
     """Tests pour les méthodes du modèle Reservation."""
 
-    def setUp(self):
-        self.loc_user = make_user("loc_m@r.com", Utilisateur.Role.LOCATAIRE)
-        self.loc = Locataire.objects.create(user=self.loc_user)
-        self.prop_user = make_user("prop_m@r.com", Utilisateur.Role.PROPRIETAIRE)
-        self.prop = Proprietaire.objects.create(user=self.prop_user, iban="MG123")
-        self.bien = make_bien(self.prop, titre="BienModel")
-        self.reservation = Reservation.objects.create(
-            bien=self.bien, locataire=self.loc,
+    @classmethod
+    def setUpTestData(cls):
+        cls.loc_user = make_user("loc_m@r.com", Utilisateur.Role.LOCATAIRE)
+        cls.loc = Locataire.objects.create(user=cls.loc_user)
+        cls.prop_user = make_user("prop_m@r.com", Utilisateur.Role.PROPRIETAIRE)
+        cls.prop = Proprietaire.objects.create(user=cls.prop_user, iban="MG123")
+        cls.bien = make_bien(cls.prop, titre="BienModel")
+        cls.reservation = Reservation.objects.create(
+            bien=cls.bien, locataire=cls.loc,
             type_reservation=Reservation.TypeReservation.LOCATION
         )
 

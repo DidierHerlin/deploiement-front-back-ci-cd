@@ -40,13 +40,34 @@ def create_notification(utilisateur, type_notif="AUTRE", titre="Test", message="
 # 1. Tests des Services de Notification & Commandes Management
 
 class NotificationServiceTests(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls._pisa_patcher = patch(
+            "paiement.utils.pisa.pisaDocument",
+            side_effect=lambda src, dest, *a, **kw: (
+                dest.write(b"%PDF-1.4 mock\n%%EOF") if hasattr(dest, "write") else None,
+                type("Status", (), {"err": 0})()
+            )[1]
+        )
+        cls._pisa_patcher.start()
+        super().setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._pisa_patcher.stop()
+        super().tearDownClass()
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.locataire_user = Utilisateur.objects.create_user(email="loc@test.com", password="pwd", nom="L", role=Utilisateur.Role.LOCATAIRE)
+        cls.locataire_user2 = Utilisateur.objects.create_user(email="loc2@test.com", password="pwd", nom="L2", role=Utilisateur.Role.LOCATAIRE)
+        cls.prop_user = Utilisateur.objects.create_user(email="prop@test.com", password="pwd", nom="P", role=Utilisateur.Role.PROPRIETAIRE)
+        cls.loc = Locataire.objects.create(user=cls.locataire_user)
+        cls.prop = Proprietaire.objects.create(user=cls.prop_user, iban="MG123")
+        cls.bien = Bien.objects.create(proprietaire=cls.prop, titre="Appartement", adresse="Test", loyer_mensuel=500, type="APPARTEMENT", mode_transaction="LOCATION", surface=50, nombre_pieces=2)
+
     def setUp(self):
-        self.locataire_user = Utilisateur.objects.create_user(email="loc@test.com", password="pwd", nom="L", role=Utilisateur.Role.LOCATAIRE)
-        self.locataire_user2 = Utilisateur.objects.create_user(email="loc2@test.com", password="pwd", nom="L2", role=Utilisateur.Role.LOCATAIRE)
-        self.prop_user = Utilisateur.objects.create_user(email="prop@test.com", password="pwd", nom="P", role=Utilisateur.Role.PROPRIETAIRE)
-        self.loc = Locataire.objects.create(user=self.locataire_user)
-        self.prop = Proprietaire.objects.create(user=self.prop_user, iban="MG123")
-        self.bien = Bien.objects.create(proprietaire=self.prop, titre="Appartement", adresse="Test", loyer_mensuel=500, type="APPARTEMENT", mode_transaction="LOCATION", surface=50, nombre_pieces=2)
+        mail.outbox.clear()
 
     def test_contrat_creation_notification(self):
         contrat = Contrat.objects.create(bien=self.bien, locataire=self.loc, type_contrat="LOCATION", loyer=500, depot_garantie=500, date_debut=timezone.now().date(), date_fin=timezone.now().date() + datetime.timedelta(days=365))
@@ -158,8 +179,9 @@ class NotificationServiceTests(TestCase):
 # 2. Tests du Modèle Notification
 
 class NotificationModelTest(APITestCase):
-    def setUp(self):
-        self.user = create_user("model_notif@test.com")
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = create_user("model_notif@test.com")
 
     def test_str_representation(self):
         notif = create_notification(self.user, type_notif="CONTRAT_CREE", titre="Contrat signé")
@@ -198,13 +220,16 @@ class NotificationModelTest(APITestCase):
 # 3. Tests des Vues API Notifications
 
 class NotificationListViewTest(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = create_user("list@test.com")
+        cls.n1 = create_notification(cls.user, type_notif="AUTRE", titre="N1", lu=False)
+        cls.n2 = create_notification(cls.user, type_notif="CONTRAT_CREE", titre="N2", lu=False)
+        cls.n3 = create_notification(cls.user, type_notif="PAIEMENT_VALIDE", titre="N3", lu=True)
+
     def setUp(self):
-        self.user = create_user("list@test.com")
         self.client.force_authenticate(user=self.user)
         self.url = reverse("notification-list")
-        self.n1 = create_notification(self.user, type_notif="AUTRE", titre="N1", lu=False)
-        self.n2 = create_notification(self.user, type_notif="CONTRAT_CREE", titre="N2", lu=False)
-        self.n3 = create_notification(self.user, type_notif="PAIEMENT_VALIDE", titre="N3", lu=True)
 
     def test_unauthenticated_returns_401(self):
         self.client.force_authenticate(user=None)
@@ -251,8 +276,11 @@ class NotificationListViewTest(APITestCase):
 
 
 class NotificationCountViewTest(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = create_user("count@test.com")
+
     def setUp(self):
-        self.user = create_user("count@test.com")
         self.client.force_authenticate(user=self.user)
         self.url = reverse("notification-count")
 
@@ -285,8 +313,11 @@ class NotificationCountViewTest(APITestCase):
 
 
 class NotificationDetailViewTest(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = create_user("detail@test.com")
+
     def setUp(self):
-        self.user = create_user("detail@test.com")
         self.client.force_authenticate(user=self.user)
         self.notif = create_notification(self.user, titre="Détail test", lu=False)
         self.url = reverse("notification-detail", kwargs={"pk": self.notif.pk})
@@ -346,8 +377,11 @@ class NotificationDetailViewTest(APITestCase):
 
 
 class MarquerLuViewTest(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = create_user("marquer@test.com")
+
     def setUp(self):
-        self.user = create_user("marquer@test.com")
         self.client.force_authenticate(user=self.user)
         self.url = reverse("notification-marquer-lu")
         self.n1 = create_notification(self.user, titre="M1", lu=False)
@@ -393,13 +427,15 @@ class MarquerLuViewTest(APITestCase):
 
 
 class NotificationCreateViewTest(APITestCase):
-    def setUp(self):
-        self.admin = create_user("admin_create@test.com", role="ADMIN")
-        self.agent = create_user("agent_create@test.com", role="AGENT")
-        self.proprietaire = create_user("proprio_create@test.com", role="PROPRIETAIRE")
-        self.locataire = create_user("locataire_create@test.com", role="LOCATAIRE")
-        self.url = reverse("notification-create")
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = create_user("admin_create@test.com", role="ADMIN")
+        cls.agent = create_user("agent_create@test.com", role="AGENT")
+        cls.proprietaire = create_user("proprio_create@test.com", role="PROPRIETAIRE")
+        cls.locataire = create_user("locataire_create@test.com", role="LOCATAIRE")
 
+    def setUp(self):
+        self.url = reverse("notification-create")
         self.valid_payload = {
             "utilisateur": self.locataire.pk,
             "type": "AUTRE",

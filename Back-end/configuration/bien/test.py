@@ -271,27 +271,28 @@ class BienModelTests(TestCase):
 # 3. Tests des Vues API Bien
 
 class BienViewsTests(APITestCase):
-    def setUp(self):
-        self.admin = Utilisateur.objects.create_superuser(
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = Utilisateur.objects.create_superuser(
             email='admin@test.com',
             password='testpassword123',
             nom='Admin'
         )
-        self.proprio_user = Utilisateur.objects.create_user(
+        cls.proprio_user = Utilisateur.objects.create_user(
             email='proprio_v@test.com',
             password='testpassword123',
             nom='Proprio',
             role=Utilisateur.Role.PROPRIETAIRE
         )
-        self.locataire_user = Utilisateur.objects.create_user(
+        cls.locataire_user = Utilisateur.objects.create_user(
             email='locataire_v@test.com',
             password='testpassword123',
             nom='Locataire',
             role=Utilisateur.Role.LOCATAIRE
         )
-        self.proprio = Proprietaire.objects.create(user=self.proprio_user, iban="MG123")
-        self.bien = Bien.objects.create(
-            proprietaire=self.proprio,
+        cls.proprio = Proprietaire.objects.create(user=cls.proprio_user, iban="MG123")
+        cls.bien = Bien.objects.create(
+            proprietaire=cls.proprio,
             titre="Appart test",
             type=Bien.TypeBien.APPARTEMENT,
             mode_transaction=Bien.ModeTransaction.LOCATION,

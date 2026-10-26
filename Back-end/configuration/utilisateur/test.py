@@ -14,6 +14,12 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase, force_authenticate
+from unittest.mock import patch
+
+def _fast_pisa(src, dest, *args, **kwargs):
+    if hasattr(dest, "write"):
+        dest.write(b"%PDF-1.4 mock pdf\n%%EOF")
+    return type("Status", (), {"err": 0})()
 
 from utilisateur.models import Utilisateur, Locataire, Proprietaire
 from bien.models import Bien
@@ -99,57 +105,58 @@ class UtilisateurModelTests(TestCase):
 class AllModelsCoverageTest(TestCase):
     """Couverture générique des méthodes str, clean et properties des modèles liés."""
 
-    def setUp(self):
-        self.u_admin = Utilisateur.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.u_admin = Utilisateur.objects.create_user(
             email="m.admin@m.com", password="pwd", role=Utilisateur.Role.ADMIN
         )
-        self.u_prop = Utilisateur.objects.create_user(
+        cls.u_prop = Utilisateur.objects.create_user(
             email="m.prop@m.com", password="pwd", role=Utilisateur.Role.PROPRIETAIRE
         )
-        self.prop = Proprietaire.objects.create(user=self.u_prop, iban="MG123")
+        cls.prop = Proprietaire.objects.create(user=cls.u_prop, iban="MG123")
 
-        self.u_loc = Utilisateur.objects.create_user(
+        cls.u_loc = Utilisateur.objects.create_user(
             email="m.loc@m.com", password="pwd", role=Utilisateur.Role.LOCATAIRE
         )
-        self.loc = Locataire.objects.create(user=self.u_loc)
+        cls.loc = Locataire.objects.create(user=cls.u_loc)
 
-        self.bien = Bien.objects.create(
-            proprietaire=self.prop, titre="Super Bien", type=Bien.TypeBien.APPARTEMENT,
+        cls.bien = Bien.objects.create(
+            proprietaire=cls.prop, titre="Super Bien", type=Bien.TypeBien.APPARTEMENT,
             mode_transaction=Bien.ModeTransaction.LOCATION, adresse="Test", surface=100, nombre_pieces=3,
             loyer_mensuel=500000, statut=Bien.StatutBien.DISPONIBLE
         )
-        self.bien_vente = Bien.objects.create(
-            proprietaire=self.prop, titre="Super Bien Vente", type=Bien.TypeBien.APPARTEMENT,
+        cls.bien_vente = Bien.objects.create(
+            proprietaire=cls.prop, titre="Super Bien Vente", type=Bien.TypeBien.APPARTEMENT,
             mode_transaction=Bien.ModeTransaction.VENTE, adresse="Test", surface=100, nombre_pieces=3,
             prix=10000000, statut=Bien.StatutBien.DISPONIBLE
         )
 
-        self.contrat = Contrat.objects.create(
-            bien=self.bien, locataire=self.loc, type_contrat=Contrat.TypeContrat.LOCATION,
+        cls.contrat = Contrat.objects.create(
+            bien=cls.bien, locataire=cls.loc, type_contrat=Contrat.TypeContrat.LOCATION,
             date_debut=date.today(), date_fin=date.today() + relativedelta(months=12),
             loyer=500000, depot_garantie=500000
         )
-        self.contrat_achat = Contrat.objects.create(
-            bien=self.bien_vente, locataire=self.loc, type_contrat=Contrat.TypeContrat.ACHAT,
+        cls.contrat_achat = Contrat.objects.create(
+            bien=cls.bien_vente, locataire=cls.loc, type_contrat=Contrat.TypeContrat.ACHAT,
             prix=10000000, type_paiement_achat=Contrat.TypePaiementAchat.TOTALITE
         )
 
-        self.paiement = Paiement.objects.create(
-            contrat=self.contrat, date_echeance=date.today() + relativedelta(months=15),
+        cls.paiement = Paiement.objects.create(
+            contrat=cls.contrat, date_echeance=date.today() + relativedelta(months=15),
             montant=500000, montant_attendu=500000
         )
 
-        self.bien_resa = Bien.objects.create(
-            proprietaire=self.prop, titre="Bien Resa", type=Bien.TypeBien.APPARTEMENT,
+        cls.bien_resa = Bien.objects.create(
+            proprietaire=cls.prop, titre="Bien Resa", type=Bien.TypeBien.APPARTEMENT,
             mode_transaction=Bien.ModeTransaction.LOCATION, adresse="Test", surface=100, nombre_pieces=3,
             loyer_mensuel=500000, statut=Bien.StatutBien.DISPONIBLE
         )
-        self.reservation = Reservation.objects.create(
-            bien=self.bien_resa, locataire=self.loc, type_reservation=Reservation.TypeReservation.LOCATION
+        cls.reservation = Reservation.objects.create(
+            bien=cls.bien_resa, locataire=cls.loc, type_reservation=Reservation.TypeReservation.LOCATION
         )
 
-        self.notif = Notification.objects.create(
-            utilisateur=self.u_loc, type=Notification.Type.AUTRE, message="Hello"
+        cls.notif = Notification.objects.create(
+            utilisateur=cls.u_loc, type=Notification.Type.AUTRE, message="Hello"
         )
 
     def test_str_methods(self):
@@ -361,10 +368,14 @@ class PasswordResetCoverageTests(APITestCase):
 
 class ProfileViewsTests(APITestCase):
 
-    def setUp(self):
-        self.user = Utilisateur.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = Utilisateur.objects.create_user(
             email="profile@t.com", password="pwd", role=Utilisateur.Role.AGENT
         )
+
+    def setUp(self):
+        self.user.refresh_from_db()
 
     def test_get_profile(self):
         self.client.force_authenticate(user=self.user)
@@ -426,25 +437,33 @@ class ProfileViewsCoverageTests(APITestCase):
 
 class LocataireViewsTests(APITestCase):
 
-    def setUp(self):
-        self.admin = Utilisateur.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = Utilisateur.objects.create_user(
             email="admin_loc@test.com", password="password123", role=Utilisateur.Role.ADMIN, nom="Admin", prenoms="Test"
         )
-        self.agent = Utilisateur.objects.create_user(
+        cls.agent = Utilisateur.objects.create_user(
             email="agent_loc@test.com", password="password123", role=Utilisateur.Role.AGENT, nom="Agent", prenoms="Test"
         )
-        self.locataire_user = Utilisateur.objects.create_user(
+        cls.locataire_user = Utilisateur.objects.create_user(
             email="locataire1@test.com", password="password123", role=Utilisateur.Role.LOCATAIRE, nom="Loc", prenoms="Ataire"
         )
-        self.locataire = Locataire.objects.create(
-            user=self.locataire_user, contact="0607080910"
+        cls.locataire = Locataire.objects.create(
+            user=cls.locataire_user, contact="0607080910"
         )
-        self.locataire_user2 = Utilisateur.objects.create_user(
+        cls.locataire_user2 = Utilisateur.objects.create_user(
             email="locataire2@test.com", password="password123", role=Utilisateur.Role.LOCATAIRE, nom="Loc2", prenoms="Ataire2"
         )
-        self.locataire2 = Locataire.objects.create(
-            user=self.locataire_user2, contact="0607080911"
+        cls.locataire2 = Locataire.objects.create(
+            user=cls.locataire_user2, contact="0607080911"
         )
+
+    def setUp(self):
+        self.locataire_user.refresh_from_db()
+        try:
+            self.locataire.refresh_from_db()
+        except Locataire.DoesNotExist:
+            self.locataire = Locataire.objects.create(user=self.locataire_user, contact="0607080910")
 
     def test_list_locataires_as_agent(self):
         self.client.force_authenticate(user=self.agent)
@@ -504,25 +523,33 @@ class LocataireViewsTests(APITestCase):
 
 class ProprietaireViewsTests(APITestCase):
 
-    def setUp(self):
-        self.admin = Utilisateur.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = Utilisateur.objects.create_user(
             email="admin_prop@test.com", password="password123", role=Utilisateur.Role.ADMIN, nom="Admin", prenoms="Test"
         )
-        self.agent = Utilisateur.objects.create_user(
+        cls.agent = Utilisateur.objects.create_user(
             email="agent_prop@test.com", password="password123", role=Utilisateur.Role.AGENT, nom="Agent", prenoms="Test"
         )
-        self.proprietaire_user = Utilisateur.objects.create_user(
+        cls.proprietaire_user = Utilisateur.objects.create_user(
             email="proprio1@test.com", password="password123", role=Utilisateur.Role.PROPRIETAIRE, nom="Prop", prenoms="Ietaire"
         )
-        self.proprietaire = Proprietaire.objects.create(
-            user=self.proprietaire_user, iban="FR1234567890", contact="0102030405"
+        cls.proprietaire = Proprietaire.objects.create(
+            user=cls.proprietaire_user, iban="FR1234567890", contact="0102030405"
         )
-        self.proprietaire_user2 = Utilisateur.objects.create_user(
+        cls.proprietaire_user2 = Utilisateur.objects.create_user(
             email="proprio2@test.com", password="password123", role=Utilisateur.Role.PROPRIETAIRE, nom="Prop2", prenoms="Ietaire2"
         )
-        self.proprietaire2 = Proprietaire.objects.create(
-            user=self.proprietaire_user2, iban="FR0987654321", contact="0504030201"
+        cls.proprietaire2 = Proprietaire.objects.create(
+            user=cls.proprietaire_user2, iban="FR0987654321", contact="0504030201"
         )
+
+    def setUp(self):
+        self.proprietaire_user.refresh_from_db()
+        try:
+            self.proprietaire.refresh_from_db()
+        except Proprietaire.DoesNotExist:
+            self.proprietaire = Proprietaire.objects.create(user=self.proprietaire_user, iban="FR1234567890", contact="0102030405")
 
     def test_list_proprietaires_as_agent(self):
         self.client.force_authenticate(user=self.agent)
@@ -592,27 +619,43 @@ class ProprietaireViewsTests(APITestCase):
 # 7. Tests des Dashboards et Statistiques de Reporting
 
 class DashboardTests(APITestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls._pisa_patcher = patch("paiement.utils.pisa.pisaDocument", side_effect=_fast_pisa)
+        cls._pisa_patcher.start()
+        super().setUpClass()
 
-    def setUp(self):
-        self.admin = Utilisateur.objects.create_user(email="admin_dash@d.com", password="pwd", role=Utilisateur.Role.ADMIN)
-        self.agent = Utilisateur.objects.create_user(email="agent_dash@d.com", password="pwd", role=Utilisateur.Role.AGENT)
-        self.prop_user = Utilisateur.objects.create_user(email="prop_dash@d.com", password="pwd", role=Utilisateur.Role.PROPRIETAIRE)
-        self.prop = Proprietaire.objects.create(user=self.prop_user, iban="MG123")
-        self.loc_user = Utilisateur.objects.create_user(email="loc_dash@d.com", password="pwd", role=Utilisateur.Role.LOCATAIRE)
-        self.loc = Locataire.objects.create(user=self.loc_user)
+    @classmethod
+    def tearDownClass(cls):
+        cls._pisa_patcher.stop()
+        super().tearDownClass()
 
-        self.bien = Bien.objects.create(
-            proprietaire=self.prop, titre="Bien Dash", type=Bien.TypeBien.APPARTEMENT,
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = Utilisateur.objects.create_user(email="admin_dash@d.com", password="pwd", role=Utilisateur.Role.ADMIN)
+        cls.agent = Utilisateur.objects.create_user(email="agent_dash@d.com", password="pwd", role=Utilisateur.Role.AGENT)
+        cls.prop_user = Utilisateur.objects.create_user(email="prop_dash@d.com", password="pwd", role=Utilisateur.Role.PROPRIETAIRE)
+        cls.prop = Proprietaire.objects.create(user=cls.prop_user, iban="MG123")
+        cls.loc_user = Utilisateur.objects.create_user(email="loc_dash@d.com", password="pwd", role=Utilisateur.Role.LOCATAIRE)
+        cls.loc = Locataire.objects.create(user=cls.loc_user)
+
+        cls.bien = Bien.objects.create(
+            proprietaire=cls.prop, titre="Bien Dash", type=Bien.TypeBien.APPARTEMENT,
             mode_transaction=Bien.ModeTransaction.LOCATION, adresse="Test", surface=50, nombre_pieces=2,
             loyer_mensuel=1000, statut=Bien.StatutBien.DISPONIBLE
         )
-        self.contrat = Contrat.objects.create(
-            bien=self.bien, locataire=self.loc, type_contrat=Contrat.TypeContrat.LOCATION,
+        cls.contrat = Contrat.objects.create(
+            bien=cls.bien, locataire=cls.loc, type_contrat=Contrat.TypeContrat.LOCATION,
             date_debut=date.today(), date_fin=date.today() + relativedelta(months=12),
             loyer=1000, depot_garantie=1000
         )
 
-        Paiement.objects.all().delete()
+    def setUp(self):
+        patcher = patch("paiement.utils.pisa.pisaDocument", side_effect=_fast_pisa)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+        Paiement.objects.filter(contrat=self.contrat).delete()
         self.paiement = Paiement.objects.create(
             contrat=self.contrat, date_echeance=date.today() + relativedelta(months=1),
             montant=1000, montant_attendu=1000, statut=Paiement.StatutPaiement.PAYE,
@@ -670,38 +713,53 @@ class DashboardTests(APITestCase):
 
 
 class ReportingStatsTests(APITestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls._pisa_patcher = patch("paiement.utils.pisa.pisaDocument", side_effect=_fast_pisa)
+        cls._pisa_patcher.start()
+        super().setUpClass()
 
-    def setUp(self):
-        self.admin = Utilisateur.objects.create_user(email='admin_rep@test.com', password='password123', role=Utilisateur.Role.ADMIN)
-        self.agent = Utilisateur.objects.create_user(email='agent_rep@test.com', password='password123', role=Utilisateur.Role.AGENT)
-        self.proprio_user = Utilisateur.objects.create_user(email='proprio_rep@test.com', password='password123', role=Utilisateur.Role.PROPRIETAIRE)
-        self.proprio = Proprietaire.objects.create(user=self.proprio_user, iban="MG123")
-        self.loc_user = Utilisateur.objects.create_user(email='loc_rep@test.com', password='password123', role=Utilisateur.Role.LOCATAIRE)
-        self.locataire = Locataire.objects.create(user=self.loc_user)
+    @classmethod
+    def tearDownClass(cls):
+        cls._pisa_patcher.stop()
+        super().tearDownClass()
 
-        self.bien = Bien.objects.create(
-            proprietaire=self.proprio, titre="Bien test", type="APPARTEMENT",
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = Utilisateur.objects.create_user(email='admin_rep@test.com', password='password123', role=Utilisateur.Role.ADMIN)
+        cls.agent = Utilisateur.objects.create_user(email='agent_rep@test.com', password='password123', role=Utilisateur.Role.AGENT)
+        cls.proprio_user = Utilisateur.objects.create_user(email='proprio_rep@test.com', password='password123', role=Utilisateur.Role.PROPRIETAIRE)
+        cls.proprio = Proprietaire.objects.create(user=cls.proprio_user, iban="MG123")
+        cls.loc_user = Utilisateur.objects.create_user(email='loc_rep@test.com', password='password123', role=Utilisateur.Role.LOCATAIRE)
+        cls.locataire = Locataire.objects.create(user=cls.loc_user)
+
+        cls.bien = Bien.objects.create(
+            proprietaire=cls.proprio, titre="Bien test", type="APPARTEMENT",
             mode_transaction="LOCATION", adresse="Paris", surface=50, nombre_pieces=2,
             loyer_mensuel=1000, statut="DISPONIBLE"
         )
-        self.bien_dispo = Bien.objects.create(
-            proprietaire=self.proprio, titre="Bien dispo", type="APPARTEMENT",
+        cls.bien_dispo = Bien.objects.create(
+            proprietaire=cls.proprio, titre="Bien dispo", type="APPARTEMENT",
             mode_transaction="LOCATION", adresse="Paris", surface=50, nombre_pieces=2,
             loyer_mensuel=1000, statut="DISPONIBLE"
         )
 
-        self.contrat = Contrat.objects.create(
-            bien=self.bien, locataire=self.locataire, type_contrat="LOCATION",
+        cls.contrat = Contrat.objects.create(
+            bien=cls.bien, locataire=cls.locataire, type_contrat="LOCATION",
             date_debut=timezone.now().date(), date_fin=timezone.now().date() + relativedelta(years=1),
             loyer=1000, depot_garantie=1000, statut="ACTIF"
         )
 
-        self.paiement = Paiement.objects.filter(contrat=self.contrat).first()
-        if self.paiement:
-            self.paiement.statut = "PAYE"
-            self.paiement.montant_paye = 1000
-            self.paiement.save(update_fields=["statut", "montant_paye"])
+        cls.paiement = Paiement.objects.filter(contrat=cls.contrat).first()
+        if cls.paiement:
+            cls.paiement.statut = "PAYE"
+            cls.paiement.montant_paye = 1000
+            cls.paiement.save(update_fields=["statut", "montant_paye"])
 
+    def setUp(self):
+        patcher = patch("paiement.utils.pisa.pisaDocument", side_effect=_fast_pisa)
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self.url = reverse('reporting-stats')
 
     def test_stats_admin(self):
@@ -738,24 +796,35 @@ class ReportingStatsTests(APITestCase):
 
 class ProprietaireDashboardViewsComparisonTest(TestCase):
     """Vérifie la cohérence entre ProprietaireDashboardView et ProprietaireDashboardOptimizedView."""
+    @classmethod
+    def setUpClass(cls):
+        cls._pisa_patcher = patch("paiement.utils.pisa.pisaDocument", side_effect=_fast_pisa)
+        cls._pisa_patcher.start()
+        super().setUpClass()
 
-    def setUp(self):
-        self.user = Utilisateur.objects.create_user(
+    @classmethod
+    def tearDownClass(cls):
+        cls._pisa_patcher.stop()
+        super().tearDownClass()
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = Utilisateur.objects.create_user(
             email="proprio_perf@test.com", password="test", role=Utilisateur.Role.PROPRIETAIRE
         )
-        self.proprietaire = Proprietaire.objects.create(user=self.user)
-        self.loc_user = Utilisateur.objects.create_user(
+        cls.proprietaire = Proprietaire.objects.create(user=cls.user)
+        cls.loc_user = Utilisateur.objects.create_user(
             email="loc_perf@test.com", password="test", role=Utilisateur.Role.LOCATAIRE
         )
-        self.locataire = Locataire.objects.create(user=self.loc_user)
+        cls.locataire = Locataire.objects.create(user=cls.loc_user)
 
         b = Bien.objects.create(
-            proprietaire=self.proprietaire, titre="Bien 1", type=Bien.TypeBien.APPARTEMENT,
+            proprietaire=cls.proprietaire, titre="Bien 1", type=Bien.TypeBien.APPARTEMENT,
             adresse="123 Rue de la Paix", surface=50, nombre_pieces=2, loyer_mensuel=1000,
             statut=Bien.StatutBien.DISPONIBLE
         )
         c = Contrat.objects.create(
-            bien=b, locataire=self.locataire, type_contrat=Contrat.TypeContrat.LOCATION,
+            bien=b, locataire=cls.locataire, type_contrat=Contrat.TypeContrat.LOCATION,
             statut=Contrat.StatutContrat.ACTIF, date_debut=timezone.now().date() - timedelta(days=200),
             date_fin=timezone.now().date() + timedelta(days=200), loyer=1000, depot_garantie=1000
         )
@@ -763,8 +832,12 @@ class ProprietaireDashboardViewsComparisonTest(TestCase):
             contrat=c, date_echeance=timezone.now().date(), montant=1000, montant_attendu=1000,
             montant_paye=1000, statut=Paiement.StatutPaiement.PAYE
         )
-        Notification.objects.create(utilisateur=self.user, titre="T", message="M", lu=False)
+        Notification.objects.create(utilisateur=cls.user, titre="T", message="M", lu=False)
 
+    def setUp(self):
+        patcher = patch("paiement.utils.pisa.pisaDocument", side_effect=_fast_pisa)
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self.factory = RequestFactory()
 
     def _call_view(self, view_class):
@@ -944,19 +1017,22 @@ class UtilisateurViewsAndMixinsBoostTests(APITestCase):
 
 
 class TousUtilisateursSecurityTests(APITestCase):
-    def setUp(self):
-        self.admin = Utilisateur.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = Utilisateur.objects.create_user(
             email="admin_sec@test.com", password="password123", role=Utilisateur.Role.ADMIN
         )
-        self.agent = Utilisateur.objects.create_user(
+        cls.agent = Utilisateur.objects.create_user(
             email="agent_sec@test.com", password="password123", role=Utilisateur.Role.AGENT
         )
-        self.proprietaire = Utilisateur.objects.create_user(
+        cls.proprietaire = Utilisateur.objects.create_user(
             email="proprio_sec@test.com", password="password123", role=Utilisateur.Role.PROPRIETAIRE
         )
-        self.locataire = Utilisateur.objects.create_user(
+        cls.locataire = Utilisateur.objects.create_user(
             email="loc_sec@test.com", password="password123", role=Utilisateur.Role.LOCATAIRE
         )
+
+    def setUp(self):
         self.target_user = Utilisateur.objects.create_user(
             email="target@test.com", password="password123", role=Utilisateur.Role.LOCATAIRE
         )
