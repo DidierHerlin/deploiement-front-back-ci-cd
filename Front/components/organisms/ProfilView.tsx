@@ -3,8 +3,10 @@
 import React, { useEffect, useState } from "react";
 import { getProfil, UserProfil } from "@/lib/api";
 import ProfilForm from "@/components/organisms/ProfilForm";
+import { useTranslation } from "@/lib/i18n";
 
 export default function ProfilView() {
+  const { t } = useTranslation();
   const [profil, setProfil] = useState<UserProfil | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -15,14 +17,14 @@ export default function ProfilView() {
         const data = await getProfil();
         setProfil(data);
       } catch (err: any) {
-        setError(err.message || "Erreur lors du chargement du profil");
+        setError(err.message || t("profile.error_loading", "Erreur lors du chargement du profil"));
       } finally {
         setLoading(false);
       }
     };
 
     fetchProfil();
-  }, []);
+  }, [t]);
 
   if (loading) {
     return (
@@ -36,7 +38,7 @@ export default function ProfilView() {
     return (
       <div className="flex h-64 items-center justify-center">
         <div className="text-red-500 text-center">
-          <p className="text-xl font-bold">Erreur</p>
+          <p className="text-xl font-bold">{t("profile.error_title", "Erreur")}</p>
           <p>{error}</p>
         </div>
       </div>
@@ -47,7 +49,7 @@ export default function ProfilView() {
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden max-w-4xl w-full">
       <div className="p-6 sm:p-8">
         <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white border-b pb-4 dark:border-gray-700">
-          Informations Personnelles
+          {t("profile.personal_info", "Informations Personnelles")}
         </h2>
         {profil && (
           <ProfilForm 

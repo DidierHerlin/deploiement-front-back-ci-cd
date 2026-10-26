@@ -9,6 +9,7 @@ import { ValidationDemandeModal } from '@/components/organisms/ValidationDemande
 import { ArrowDownToLine, FileText, Eye, Smartphone, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { PaiementStatusBadge } from "@/components/atoms/paiement_PaiementStatusBadge";
 import { Pagination } from "@/components/molecules/pagination";
+import { useTranslation } from '@/lib/i18n';
 
 interface PaiementListProps {
   paiements: Paiement[];
@@ -18,6 +19,7 @@ interface PaiementListProps {
 }
 
 export function PaiementList({ paiements: initialPaiements, contrats = [], onUpdate, onDemanderPaiement }: PaiementListProps) {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const isAgent = pathname?.includes('/agent') || pathname?.includes('/admin');
   const isLocataire = pathname?.includes('/locataire') || !isAgent;
@@ -91,7 +93,7 @@ export function PaiementList({ paiements: initialPaiements, contrats = [], onUpd
       const isIDM = error.message && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError') || error.name === 'TypeError');
       if (!isIDM) {
         console.error("Erreur lors du téléchargement de la quittance", error);
-        alert("Impossible de télécharger la quittance.");
+        alert(t("locataire_pages.quittances.download_error", "Impossible de télécharger la quittance."));
       } else {
         console.log("Téléchargement intercepté par un gestionnaire externe (ex: IDM).");
       }
@@ -103,14 +105,14 @@ export function PaiementList({ paiements: initialPaiements, contrats = [], onUpd
       <section className="panel">
       <div className="panel-header">
         <div>
-          <h2>Historique des paiements</h2>
-          <p>Suivez l'état de vos loyers et téléchargez vos quittances </p>
+          <h2>{t("proprietaire_pages.paiements.list_title", "Historique des paiements")}</h2>
+          <p>{t("proprietaire_pages.paiements.list_sub", "Suivez l'état de vos loyers et téléchargez vos quittances ")}</p>
         </div>
       </div>
       
       {paiementsVisibles.length === 0 ? (
         <div style={{ padding: '2rem', textAlign: 'center', color: '#7b8494' }}>
-          Aucun paiement trouvé pour vos contrats avec ce filtre.
+          {t("proprietaire_pages.paiements.empty_filtered", "Aucun paiement trouvé pour vos contrats avec ce filtre.")}
         </div>
       ) : (
         <>
@@ -118,13 +120,13 @@ export function PaiementList({ paiements: initialPaiements, contrats = [], onUpd
             <table>
               <thead>
                 <tr>
-                  <th>DATE D'ÉCHÉANCE</th>
-                  <th>BIEN CONCERNÉ</th>
-                  <th>MONTANT ATTENDU</th>
-                  <th>MONTANT VERSÉ</th>
-                  <th>STATUT</th>
-                  <th>QUITTANCE</th>
-                  {(isAgent || isLocataire) && <th>ACTION</th>}
+                  <th>{t("admin.paiements.col_due_date", "DATE D'ÉCHÉANCE")}</th>
+                  <th>{t("admin.paiements.col_property", "BIEN CONCERNÉ")}</th>
+                  <th>{t("admin.paiements.col_amount", "MONTANT ATTENDU")}</th>
+                  <th>{t("admin.paiements.col_paid_amount", "MONTANT VERSÉ")}</th>
+                  <th>{t("admin.paiements.col_status", "STATUT")}</th>
+                  <th>{t("dashboard.nav.receipts", "QUITTANCE")}</th>
+                  {(isAgent || isLocataire) && <th>{t("admin.paiements.col_actions", "ACTION")}</th>}
                 </tr>
               </thead>
               <tbody>
@@ -146,7 +148,7 @@ export function PaiementList({ paiements: initialPaiements, contrats = [], onUpd
                         </strong>
                         <br/>
                         <small style={{ color: '#9aa3b0' }}>
-                          Prévu le {paiement.date_echeance ? new Date(paiement.date_echeance).toLocaleDateString('fr-FR') : '-'}
+                          {t("dashboard.common.due_on", "Prévu le")} {paiement.date_echeance ? new Date(paiement.date_echeance).toLocaleDateString('fr-FR') : '-'}
                         </small>
                       </td>
                       <td>{paiement.bien_titre || '-'}</td>
@@ -189,11 +191,11 @@ export function PaiementList({ paiements: initialPaiements, contrats = [], onUpd
                       <td>
                         {isValide ? (
                           <button className="download-button outline-button" onClick={() => handleDownloadQuittance(paiement.id)}>
-                            <ArrowDownToLine size={14} /> Voir la quittance
+                            <ArrowDownToLine size={14} /> {t("locataire_pages.quittances.download_btn", "Voir la quittance")}
                           </button>
                         ) : (
                           <span style={{ fontSize: '10px', color: '#a0a8b5', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <FileText size={12} /> Quittance non disponible
+                            <FileText size={12} /> {t("locataire_pages.quittances.unavailable", "Quittance non disponible")}
                           </span>
                         )}
                       </td>
@@ -204,9 +206,9 @@ export function PaiementList({ paiements: initialPaiements, contrats = [], onUpd
                               onClick={() => setSelectedPaiement(paiement)} 
                               className="outline-button" 
                               style={{ padding: "6px 12px", fontSize: "12px", display: "inline-flex", alignItems: "center", gap: "6px" }}
-                              title="Consulter les détails de la facture"
+                              title={t("forms.view_invoice", "Consulter les détails de la facture")}
                             >
-                              <Eye size={14} /> Visualiser
+                              <Eye size={14} /> {t("forms.view", "Visualiser")}
                             </button>
 
                             {isAgent && paiement.statut === 'EN_ATTENTE' && (['MVOLA', 'ORANGE_MONEY', 'AIRTEL_MONEY'].includes(paiement.mode_paiement || '') || !!paiement.demande_en_cours) && (
@@ -230,9 +232,9 @@ export function PaiementList({ paiements: initialPaiements, contrats = [], onUpd
                                     fontWeight: 600,
                                     cursor: "pointer",
                                   }}
-                                  title="Valider la réception de ce paiement Mobile Money"
+                                  title={t("admin.paiements.validate_hint", "Valider la réception de ce paiement Mobile Money")}
                                 >
-                                  <CheckCircle2 size={14} /> Valider la demande
+                                  <CheckCircle2 size={14} /> {t("admin.paiements.mobile_money_confirm_btn", "Valider la demande")}
                                 </button>
                                 <button
                                   onClick={() => {
@@ -251,9 +253,9 @@ export function PaiementList({ paiements: initialPaiements, contrats = [], onUpd
                                     borderRadius: "6px",
                                     cursor: "pointer",
                                   }}
-                                  title="Refuser cette demande Mobile Money"
+                                  title={t("admin.paiements.reject_hint", "Refuser cette demande Mobile Money")}
                                 >
-                                  <XCircle size={14} /> Refuser
+                                  <XCircle size={14} /> {t("admin.paiements.mobile_money_reject_btn", "Refuser")}
                                 </button>
                               </>
                             )}
@@ -273,9 +275,9 @@ export function PaiementList({ paiements: initialPaiements, contrats = [], onUpd
                                   borderRadius: "6px",
                                   boxShadow: "none",
                                 }}
-                                title="Demander le règlement de cette facture par Mobile Money"
+                                title={t("locataire_pages.paiements.pay_hint", "Demander le règlement de cette facture par Mobile Money")}
                               >
-                                <Smartphone size={14} /> Payer (Mobile Money)
+                                <Smartphone size={14} /> {t("locataire_pages.paiements.pay_button", "Payer (Mobile Money)")}
                               </button>
                             )}
 
@@ -292,9 +294,9 @@ export function PaiementList({ paiements: initialPaiements, contrats = [], onUpd
                                   fontSize: "11px",
                                   fontWeight: 600,
                                 }}
-                                title="Une demande de paiement Mobile Money est déjà enregistrée pour cette facture"
+                                title={t("locataire_pages.paiements.pending_hint", "Une demande de paiement Mobile Money est déjà enregistrée pour cette facture")}
                               >
-                                <Clock size={12} /> Demande en cours
+                                <Clock size={12} /> {t("locataire_pages.paiements.request_pending", "Demande en cours")}
                               </span>
                             )}
 
@@ -311,9 +313,9 @@ export function PaiementList({ paiements: initialPaiements, contrats = [], onUpd
                                   fontSize: "11px",
                                   fontWeight: 500,
                                 }}
-                                title="Vous devez d'abord régler la facture précédente la plus ancienne pour débloquer celle-ci"
+                                title={t("locataire_pages.paiements.prior_due_hint", "Vous devez d'abord régler la facture précédente la plus ancienne pour débloquer celle-ci")}
                               >
-                                <Clock size={12} /> Échéance précédente requise
+                                <Clock size={12} /> {t("locataire_pages.paiements.prior_due_required", "Échéance précédente requise")}
                               </span>
                             )}
                           </div>
@@ -349,10 +351,3 @@ export function PaiementList({ paiements: initialPaiements, contrats = [], onUpd
     </>
   );
 }
-
-
-
-
-
-
-

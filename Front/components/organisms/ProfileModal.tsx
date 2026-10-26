@@ -1,11 +1,10 @@
 'use client'
 
-
 import React, { useState, useRef } from 'react';
 import { X, UserRound, LockKeyhole, Edit2, Loader2, Save, Upload } from 'lucide-react';
 import { updateProfil, getUserPhotoSrc, resolveMediaUrl } from '@/lib/api';
-
 import { getUserFullName } from "@/components/organisms/userUtils";
+import { useTranslation } from '@/lib/i18n';
 
 interface ProfileModalProps {
   user: any;
@@ -14,6 +13,7 @@ interface ProfileModalProps {
 }
 
 export function ProfileModal({ user, onClose, onProfileUpdated }: ProfileModalProps) {
+  const { t } = useTranslation();
   const fullName = getUserFullName(user);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -62,7 +62,7 @@ export function ProfileModal({ user, onClose, onProfileUpdated }: ProfileModalPr
       }
       setIsEditing(false);
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de la mise à jour du profil');
+      setError(err.message || t("profile.update_error", 'Erreur lors de la mise à jour du profil'));
     } finally {
       setLoading(false);
     }
@@ -71,7 +71,7 @@ export function ProfileModal({ user, onClose, onProfileUpdated }: ProfileModalPr
   return (
     <div className="modal-backdrop" role="presentation">
       <section className="modal profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-title">
-        <button className="modal-close" onClick={onClose} aria-label="Fermer">
+        <button className="modal-close cursor-pointer" onClick={onClose} aria-label={t("modal.close", "Fermer")}>
           <X size={18} />
         </button>
         
@@ -83,8 +83,8 @@ export function ProfileModal({ user, onClose, onProfileUpdated }: ProfileModalPr
           )}
         </div>
         
-        <h2 id="profile-title">Mon profil</h2>
-        <p>Informations personnelles de votre compte locataire.</p>
+        <h2 id="profile-title">{t("dashboard.locataire.my_profile", "Mon profil")}</h2>
+        <p>{t("dashboard.locataire.welcome_desc", "Informations personnelles de votre compte.")}</p>
 
         {error && (
           <div style={{ backgroundColor: '#fee2e2', color: '#b91c1c', padding: '10px', borderRadius: '4px', marginBottom: '1rem', fontSize: '14px' }}>
@@ -95,58 +95,58 @@ export function ProfileModal({ user, onClose, onProfileUpdated }: ProfileModalPr
         {!isEditing ? (
           <>
             <div className="profile-fields">
-              <div><span>Nom complet</span><strong>{fullName}</strong></div>
-              <div><span>Adresse email</span><strong>{user?.email}</strong></div>
-              <div><span>Téléphone</span><strong>{user?.telephone || 'Non renseigné'}</strong></div>
-              <div><span>Rôle actif</span><strong>Locataire</strong></div>
-              <div><span>Statut du compte</span><strong className="status paid"><i />Actif</strong></div>
+              <div><span>{t("profile.last_name", "Nom")} & {t("profile.first_name", "Prénom")}</span><strong>{fullName}</strong></div>
+              <div><span>{t("profile.email", "Adresse email")}</span><strong>{user?.email}</strong></div>
+              <div><span>{t("profile.phone", "Téléphone")}</span><strong>{user?.telephone || '-'}</strong></div>
+              <div><span>{t("profile.role", "Rôle")}</span><strong>{t(`dashboard.roles.${user?.role || 'LOCATAIRE'}`, user?.role || 'Locataire')}</strong></div>
+              <div><span>{t("dashboard.common.actions", "Statut du compte")}</span><strong className="status paid"><i />{t("dashboard.common.status_actif", "Actif")}</strong></div>
             </div>
             
             <div className="password-note">
               <LockKeyhole size={15} />
-              <span>Vos documents et données contractuelles sont accessibles uniquement depuis votre espace sécurisé.</span>
+              <span>{t("dashboard.locataire.security_sub", "Vos documents et données sont sécurisés et strictement personnels.")}</span>
             </div>
             
             <div className="modal-actions" style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <button className="outline-button" onClick={() => setIsEditing(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Edit2 size={16} /> Modifier mon profil
+              <button className="outline-button cursor-pointer" onClick={() => setIsEditing(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Edit2 size={16} /> {t("dashboard.common.edit", "Modifier")}
               </button>
-              <button className="primary-button" onClick={onClose}>Fermer</button>
+              <button className="primary-button cursor-pointer" onClick={onClose}>{t("modal.close", "Fermer")}</button>
             </div>
           </>
         ) : (
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Photo de profil</label>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>{t("profile.modify_photo", "Photo de profil")}</label>
               <input type="file" accept="image/*" ref={fileInputRef} onChange={handlePhotoChange} style={{ display: 'none' }} />
-              <button type="button" className="outline-button" onClick={() => fileInputRef.current?.click()} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }}>
-                <Upload size={14} /> Choisir une image
+              <button type="button" className="outline-button cursor-pointer" onClick={() => fileInputRef.current?.click()} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: 'fit-content' }}>
+                <Upload size={14} /> {t("profile.modify_photo", "Choisir une image")}
               </button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Prénoms</label>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>{t("profile.first_name", "Prénoms")}</label>
               <input type="text" name="prenoms" value={formData.prenoms} onChange={handleChange} required style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }} />
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Nom</label>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>{t("profile.last_name", "Nom")}</label>
               <input type="text" name="nom" value={formData.nom} onChange={handleChange} required style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }} />
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Téléphone</label>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>{t("profile.phone", "Téléphone")}</label>
               <input type="tel" name="telephone" value={formData.telephone} onChange={handleChange} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }} />
             </div>
             
             <div className="modal-actions" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
-              <button type="button" className="outline-button" onClick={() => { setIsEditing(false); setPhotoPreview(getUserPhotoSrc(user)); setPhotoFile(null); }} disabled={loading}>
-                Annuler
+              <button type="button" className="outline-button cursor-pointer" onClick={() => { setIsEditing(false); setPhotoPreview(getUserPhotoSrc(user)); setPhotoFile(null); }} disabled={loading}>
+                {t("dashboard.common.cancel", "Annuler")}
               </button>
-              <button type="submit" className="primary-button" disabled={loading} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button type="submit" className="primary-button cursor-pointer" disabled={loading} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 {loading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} 
-                Enregistrer
+                {t("dashboard.common.save", "Enregistrer")}
               </button>
             </div>
           </form>

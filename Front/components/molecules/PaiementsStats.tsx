@@ -1,9 +1,11 @@
 import React from 'react';
-import { Wallet, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { AdminDashboardData } from '../../app/admin/dashboard/hooks/useAdminDashboard';
 import Link from 'next/link';
+import { useTranslation } from '@/lib/i18n';
 
 export function PaiementsStats({ data }: { data: AdminDashboardData }) {
+  const { t } = useTranslation();
   const { paiements } = data;
   
   // Formatage "300 000 Ar"
@@ -13,42 +15,42 @@ export function PaiementsStats({ data }: { data: AdminDashboardData }) {
     <section className="panel" style={{ display: 'flex', flexDirection: 'column' }}>
       <div className="panel-header" style={{ marginBottom: '16px' }}>
         <div>
-          <h2>Finances & Paiements</h2>
-          <p>Revenus collectés et impayés</p>
+          <h2>{t("dashboard.admin.finances_title", "Finances & Paiements")}</h2>
+          <p>{t("dashboard.admin.finances_sub", "Revenus collectés et impayés")}</p>
         </div>
         <div style={{ padding: '8px 12px', background: '#eaf8f3', color: 'var(--green)', borderRadius: '8px', fontWeight: 'bold' }}>
-          {formatMontant(paiements.totalRevenus)} perçus
+          {formatMontant(paiements.totalRevenus)} {t("dashboard.admin.collected", "perçus")}
         </div>
       </div>
       
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginTop: 'auto' }}>
         <div style={{ padding: '12px', border: '1px solid #eef0f4', borderRadius: '8px', textAlign: 'center' }}>
           <strong style={{ display: 'block', fontSize: '18px', color: 'var(--green)' }}>{paiements.valides}</strong>
-          <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Validés</span>
+          <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{t("dashboard.common.status_valide", "Validés")}</span>
         </div>
         <div style={{ padding: '12px', border: '1px solid #eef0f4', borderRadius: '8px', textAlign: 'center' }}>
           <strong style={{ display: 'block', fontSize: '18px', color: 'var(--orange)' }}>{paiements.enAttente}</strong>
-          <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>En attente</span>
+          <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{t("dashboard.common.status_en_attente", "En attente")}</span>
         </div>
         <div style={{ padding: '12px', border: '1px solid #eef0f4', borderRadius: '8px', textAlign: 'center', background: paiements.enRetard > 0 ? '#fff0f1' : 'transparent', borderColor: paiements.enRetard > 0 ? '#ffcdd2' : '#eef0f4' }}>
           <strong style={{ display: 'block', fontSize: '18px', color: paiements.enRetard > 0 ? 'var(--red)' : 'var(--navy)' }}>{paiements.enRetard}</strong>
-          <span style={{ fontSize: '11px', color: paiements.enRetard > 0 ? 'var(--red)' : 'var(--text-secondary)' }}>En retard</span>
+          <span style={{ fontSize: '11px', color: paiements.enRetard > 0 ? 'var(--red)' : 'var(--text-secondary)' }}>{t("dashboard.common.status_en_retard", "En retard")}</span>
         </div>
       </div>
 
       <div style={{ marginTop: '16px', display: 'flex', gap: '10px' }}>
         <div style={{ flex: 1, padding: '10px', background: '#f8fafc', borderRadius: '8px' }}>
-          <span style={{ fontSize: '10px', color: '#64748b', display: 'block', marginBottom: '2px' }}>Paiements partiels</span>
+          <span style={{ fontSize: '10px', color: '#64748b', display: 'block', marginBottom: '2px' }}>{t("dashboard.admin.partial_payments", "Paiements partiels")}</span>
           <strong style={{ fontSize: '13px', color: 'var(--navy)' }}>{paiements.partiels}</strong>
         </div>
         <div style={{ flex: 1, padding: '10px', background: '#f8fafc', borderRadius: '8px' }}>
-          <span style={{ fontSize: '10px', color: '#64748b', display: 'block', marginBottom: '2px' }}>Montant en attente</span>
+          <span style={{ fontSize: '10px', color: '#64748b', display: 'block', marginBottom: '2px' }}>{t("dashboard.admin.pending_amount", "Montant en attente")}</span>
           <strong style={{ fontSize: '13px', color: 'var(--orange)' }}>{formatMontant(paiements.totalAttendu)}</strong>
         </div>
       </div>
       
       <Link href="/admin/paiement" className="link-button" style={{ marginTop: '16px', justifyContent: 'center' }}>
-        Suivi des encaissements <ArrowRight size={14} />
+        {t("dashboard.admin.manage_payments", "Gérer les paiements")} <ArrowRight size={14} />
       </Link>
     </section>
   );

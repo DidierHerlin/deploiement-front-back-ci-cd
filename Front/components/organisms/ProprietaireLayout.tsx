@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Home, Building2, FileText, WalletCards, Settings, CircleDollarSign, MoreHorizontal, X, ChevronDown, Menu, ChevronRight } from 'lucide-react'
 import { deconnecter } from '@/lib/auth'
 import { getProfil, UserProfil } from '@/lib/api'
+import { useTranslation, LanguageSwitcher } from '@/lib/i18n'
 import '@/proprietaire/styles/dashboard.css'
 
 const navItems = [
@@ -15,6 +16,7 @@ const navItems = [
 ]
 
 export function ProprietaireLayout({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation()
   const [mobileNav, setMobileNav] = useState(false)
   const pathname = usePathname()
   const [profil, setProfil] = useState<UserProfil | null>(null)
@@ -28,6 +30,23 @@ export function ProprietaireLayout({ children }: { children: React.ReactNode }) 
   const fullName = profil ? `${profil.prenoms} ${profil.nom}`.trim() : 'Propriétaire'
   const initials = profil ? `${profil.prenoms?.[0] || ''}${profil.nom?.[0] || ''}`.toUpperCase() || 'P' : 'DH'
 
+  const getNavLabel = (path: string, defaultLabel: string) => {
+    switch (path) {
+      case '/proprietaire/dashboard':
+        return t("dashboard.nav.overview", defaultLabel)
+      case '/proprietaire/biens':
+        return t("dashboard.nav.my_properties", defaultLabel)
+      case '/proprietaire/contrats':
+        return t("dashboard.nav.my_contracts", defaultLabel)
+      case '/proprietaire/paiements':
+        return t("dashboard.nav.my_payments", defaultLabel)
+      case '/proprietaire/profil':
+        return t("dashboard.nav.profile", defaultLabel)
+      default:
+        return defaultLabel
+    }
+  }
+
   return (
     <div className="prop-app-shell">
       <aside className={`prop-sidebar ${mobileNav ? 'open' : ''}`}>
@@ -37,30 +56,38 @@ export function ProprietaireLayout({ children }: { children: React.ReactNode }) 
         </div>
         <div className="workspace">
           <div className="workspace-avatar owner-avatar">{initials}</div>
-          <div><strong>{fullName}</strong><small>Propriétaire</small></div>
+          <div><strong>{fullName}</strong><small>{t("dashboard.roles.PROPRIETAIRE", "Propriétaire")}</small></div>
           <ChevronDown size={15} />
         </div>
         <nav className="main-nav" aria-label="Navigation propriétaire">
           {navItems.map(({ label, icon: Icon, path }) => {
             const isActive = pathname === path
             return (
-              <Link key={label} href={path} className={isActive ? 'active flex items-center gap-3 text-sm' : 'flex items-center gap-3 text-[#687386] hover:text-[#17202b] hover:bg-[#f4f6fa] p-2 rounded-lg transition-colors text-sm'} onClick={() => setMobileNav(false)}>
-                <Icon size={18} /><span>{label}</span>
-                {label === 'Mes paiements' && <b className="ml-auto bg-red-100 text-red-600 px-2 py-0.5 rounded-full text-xs">3</b>}
+              <Link key={path} href={path} className={isActive ? 'active flex items-center gap-3 text-sm' : 'flex items-center gap-3 text-[#687386] hover:text-[#17202b] hover:bg-[#f4f6fa] p-2 rounded-lg transition-colors text-sm'} onClick={() => setMobileNav(false)}>
+                <Icon size={18} /><span>{getNavLabel(path, label)}</span>
+                {path === '/proprietaire/paiements' && <b className="ml-auto bg-red-100 text-red-600 px-2 py-0.5 rounded-full text-xs">3</b>}
               </Link>
             )
           })}
         </nav>
         <div className="sidebar-bottom">
           <Link href="/proprietaire/profil" className="w-full mb-4 flex items-center gap-3 text-[#687386] hover:text-[#17202b] hover:bg-[#f4f6fa] p-2 rounded-lg transition-colors text-sm">
-            <Settings size={18} /> Profil
+            <Settings size={18} /> {t("dashboard.nav.profile", "Profil")}
           </Link>
           <button onClick={deconnecter} className="w-full mb-4 flex items-center gap-3 !text-red-600 hover:!text-red-700 hover:!bg-red-50 p-2 rounded-lg transition-colors text-sm text-left font-medium">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
-            Se déconnecter
+            {t("dashboard.nav.logout", "Se déconnecter")}
           </button>
-          <div className="owner-help"><CircleDollarSign size={18} /><strong>Votre espace propriétaire</strong><p>Retrouvez toutes les informations de votre patrimoine.</p></div>
-          <div className="account"><div className="user-avatar">{initials}</div><div><strong>{fullName}</strong><small>Propriétaire</small></div><MoreHorizontal size={18} /></div>
+          <div className="owner-help">
+            <CircleDollarSign size={18} />
+            <strong>{t("dashboard.proprietaire.banner_title", "Votre espace propriétaire")}</strong>
+            <p>{t("dashboard.proprietaire.banner_desc", "Retrouvez toutes les informations de votre patrimoine.")}</p>
+          </div>
+          <div className="account">
+            <div className="user-avatar">{initials}</div>
+            <div><strong>{fullName}</strong><small>{t("dashboard.roles.PROPRIETAIRE", "Propriétaire")}</small></div>
+            <MoreHorizontal size={18} />
+          </div>
         </div>
       </aside>
 
@@ -68,10 +95,11 @@ export function ProprietaireLayout({ children }: { children: React.ReactNode }) 
         <header className="prop-topbar">
           <button className="menu-button" onClick={() => setMobileNav(true)}><Menu size={21} /></button>
           <div className="breadcrumbs">
-            <span>Mon espace</span><ChevronRight size={15} />
-            <strong>{pathname.includes('profil') ? 'Profil' : 'Vue d’ensemble'}</strong>
+            <span>{t("dashboard.topbar.owner_space", "Mon espace")}</span><ChevronRight size={15} />
+            <strong>{pathname.includes('profil') ? t("dashboard.nav.profile", "Profil") : t("dashboard.nav.overview", "Vue d’ensemble")}</strong>
           </div>
           <div className="top-actions">
+            <LanguageSwitcher />
             <div className="top-user"><div className="user-avatar">{initials}</div><ChevronDown size={15} /></div>
           </div>
         </header>

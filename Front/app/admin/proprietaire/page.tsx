@@ -6,6 +6,7 @@ import {
   getProprietaires, createProprietaire, updateProprietaire, 
   getBiens, updateBien, Proprietaire, Bien
 } from '@/lib/api'
+import { useTranslation } from '@/lib/i18n'
 
 import { ProprietaireTable } from "@/components/organisms/ProprietaireTable"
 import { ProprietaireSearch } from "@/components/organisms/ProprietaireSearch"
@@ -18,6 +19,7 @@ import { AssignBienModal } from "@/components/organisms/AssignBienModal"
 import { updateUser } from '@/lib/api'
 
 export default function ProprietairePage() {
+  const { t } = useTranslation()
   const [proprietaires, setProprietaires] = useState<Proprietaire[]>([])
   const [biens, setBiens] = useState<Bien[]>([])
   const [loading, setLoading] = useState(true)
@@ -132,11 +134,11 @@ export default function ProprietairePage() {
     <>
       <div className="welcome-row" style={{ marginBottom: '20px' }}>
         <div>
-          <h1>Gestion des <span>Propriétaires</span></h1>
-          <p className="subtitle">Administrez les comptes propriétaires, attribuez des rôles exclusifs et gérez leurs biens.</p>
+          <h1>{t("admin.proprietaires.title_start", "Gestion des")} <span>{t("admin.proprietaires.title_highlight", "Propriétaires")}</span></h1>
+          <p className="subtitle">{t("admin.proprietaires.subtitle", "Administrez les comptes propriétaires, attribuez des rôles exclusifs et gérez leurs biens.")}</p>
         </div>
         <button className="primary-button" onClick={openCreateModal}>
-          <Plus size={16} /> Ajouter un propriétaire
+          <Plus size={16} /> {t("admin.proprietaires.add_owner", "Ajouter un propriétaire")}
         </button>
       </div>
 

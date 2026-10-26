@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Paiement, Contrat } from '@/lib/api'
 import { PaiementTableRow } from "@/components/organisms/PaiementTableRow"
 import { Pagination } from "@/components/molecules/pagination"
+import { useTranslation } from '@/lib/i18n'
 
 type PaiementTableProps = {
   paiements: Paiement[]
@@ -28,6 +29,7 @@ export function PaiementTable({
   onValiderDemande, 
   onRefuserDemande 
 }: PaiementTableProps) {
+  const { t } = useTranslation()
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 5;
 
@@ -66,19 +68,19 @@ export function PaiementTable({
         <table>
           <thead>
             <tr>
-              <th>Réf / Échéance</th>
-              <th>Bien immobilier</th>
-              <th>Locataire / Acheteur</th>
-              <th>Montant</th>
-              <th>Dates (Prévu / Payé)</th>
-              <th>Statut</th>
-              <th>Mode</th>
-              <th style={{ textAlign: 'right' }}>Actions</th>
+              <th>{t("admin.paiements.col_ref_due", "Réf / Échéance")}</th>
+              <th>{t("admin.contrats.col_property", "Bien immobilier")}</th>
+              <th>{t("admin.contrats.col_tenant", "Locataire / Acheteur")}</th>
+              <th>{t("admin.paiements.col_amount", "Montant")}</th>
+              <th>{t("admin.paiements.col_dates_expected_paid", "Dates (Prévu / Payé)")}</th>
+              <th>{t("admin.paiements.col_status", "Statut")}</th>
+              <th>{t("admin.paiements.col_mode", "Mode")}</th>
+              <th style={{ textAlign: 'right' }}>{t("admin.paiements.col_actions", "Actions")}</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={8} style={{ textAlign: 'center', padding: '20px' }}>Chargement...</td></tr>
+              <tr><td colSpan={8} style={{ textAlign: 'center', padding: '20px' }}>{t("forms.loading", "Chargement...")}</td></tr>
             ) : error ? (
               <tr><td colSpan={8} style={{ textAlign: 'center', padding: '30px', color: '#dc2626' }}>{error}</td></tr>
             ) : paginatedData.length > 0 ? (
@@ -94,7 +96,7 @@ export function PaiementTable({
                 />
               ))
             ) : (
-              <tr><td colSpan={8} style={{ textAlign: 'center', padding: '30px', color: '#8993a3' }}>{emptyMessage || "Aucun paiement trouvé."}</td></tr>
+              <tr><td colSpan={8} style={{ textAlign: 'center', padding: '30px', color: '#8993a3' }}>{emptyMessage || t("admin.paiements.empty", "Aucun paiement trouvé.")}</td></tr>
             )}
           </tbody>
         </table>

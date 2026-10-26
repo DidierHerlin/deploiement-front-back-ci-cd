@@ -1,6 +1,9 @@
+'use client'
+
 import React from 'react';
-import { FileText, Download, CalendarDays, Loader2, Search } from 'lucide-react';
+import { FileText, Download, Loader2, Search } from 'lucide-react';
 import { Paiement, Contrat } from '@/lib/api';
+import { useTranslation } from '@/lib/i18n';
 
 interface QuittanceListProps {
   paiements: Paiement[];
@@ -9,6 +12,7 @@ interface QuittanceListProps {
 }
 
 export function QuittanceList({ paiements, contrats, loading }: QuittanceListProps) {
+  const { t, lang } = useTranslation();
   const [searchTerm, setSearchTerm] = React.useState('');
 
   const handleDownloadQuittance = async (paiementId: number) => {
@@ -30,7 +34,7 @@ export function QuittanceList({ paiements, contrats, loading }: QuittanceListPro
       const isIDM = error.message && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError') || error.name === 'TypeError');
       if (!isIDM) {
         console.error("Erreur lors du téléchargement", error);
-        alert("Impossible de télécharger la quittance.");
+        alert(t('common.error_occurred', "Impossible de télécharger la quittance."));
       } else {
         console.log("Téléchargement intercepté par un gestionnaire externe (ex: IDM).");
       }
@@ -47,7 +51,7 @@ export function QuittanceList({ paiements, contrats, loading }: QuittanceListPro
 
   if (searchTerm) {
     quittancesDisponibles = quittancesDisponibles.filter(p => {
-      const periode = new Date(p.date_echeance).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+      const periode = new Date(p.date_echeance).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR', { month: 'long', year: 'numeric' });
       return periode.toLowerCase().includes(searchTerm.toLowerCase());
     });
   }
@@ -67,14 +71,18 @@ export function QuittanceList({ paiements, contrats, loading }: QuittanceListPro
     <div className="panel" style={{ padding: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
-          <h2 style={{ fontSize: '18px', marginBottom: '4px' }}>Mes Quittances de Loyer</h2>
-          <p style={{ color: 'var(--text-secondary)' }}>Téléchargez les reçus officiels de vos paiements validés.</p>
+          <h2 style={{ fontSize: '18px', marginBottom: '4px' }}>
+            {t('locataire_pages.quittances.title', 'Mes Quittances de Loyer')}
+          </h2>
+          <p style={{ color: 'var(--text-secondary)' }}>
+            {t('locataire_pages.quittances.subtitle', 'Téléchargez les reçus officiels de vos paiements validés.')}
+          </p>
         </div>
         <div style={{ position: 'relative', width: '250px' }}>
           <Search size={15} style={{ position: 'absolute', left: '10px', top: '10px', color: 'var(--text-secondary)' }} />
           <input 
             type="text" 
-            placeholder="Rechercher une période..." 
+            placeholder={t('locataire_pages.quittances.search_placeholder', 'Rechercher une période...')} 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{ width: '100%', padding: '8px 12px 8px 32px', border: '1px solid #ddd', borderRadius: '6px' }}
@@ -85,14 +93,14 @@ export function QuittanceList({ paiements, contrats, loading }: QuittanceListPro
       {quittancesDisponibles.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-secondary)', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px dashed #ccc' }}>
           <FileText size={48} style={{ opacity: 0.2, margin: '0 auto 1rem' }} />
-          <h3>Aucune quittance disponible</h3>
-          <p>Les quittances s'affichent ici une fois vos paiements de loyer validés.</p>
+          <h3>{t('locataire_pages.quittances.empty_title', 'Aucune quittance disponible')}</h3>
+          <p>{t('locataire_pages.quittances.empty_desc', "Les quittances s'affichent ici une fois vos paiements de loyer validés.")}</p>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
           {quittancesDisponibles.map(paiement => {
-            const periode = new Date(paiement.date_echeance).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase());
-            const datePaiement = paiement.date_paiement ? new Date(paiement.date_paiement).toLocaleDateString('fr-FR') : '-';
+            const periode = new Date(paiement.date_echeance).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR', { month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase());
+            const datePaiement = paiement.date_paiement ? new Date(paiement.date_paiement).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR') : '-';
             const contratTitre = getContratTitre(paiement.contrat);
             
             // Calcul du montant (Règle : contrat.loyer)
@@ -105,7 +113,7 @@ export function QuittanceList({ paiements, contrats, loading }: QuittanceListPro
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)' }}>
                     <FileText size={20} />
-                    <span style={{ fontWeight: 600 }}>Quittance {periode}</span>
+                    <span style={{ fontWeight: 600 }}>{t('locataire_pages.quittances.receipt_prefix', 'Quittance')} {periode}</span>
                   </div>
                   <span style={{ fontSize: '11px', backgroundColor: '#f0fdf4', color: '#166534', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
                     N° {paiement.id.toString().padStart(4, '0')}
@@ -114,15 +122,15 @@ export function QuittanceList({ paiements, contrats, loading }: QuittanceListPro
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '1.5rem', flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Bien concerné:</span>
+                    <span>{t('locataire_pages.quittances.concerned_property', 'Bien concerné')} :</span>
                     <strong style={{ color: 'var(--text)' }}>{contratTitre}</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Montant réglé:</span>
+                    <span>{t('locataire_pages.quittances.paid_amount', 'Montant réglé')} :</span>
                     <strong style={{ color: 'var(--text)' }}>{montantFormat}</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Date de règlement:</span>
+                    <span>{t('locataire_pages.quittances.payment_date', 'Date de règlement')} :</span>
                     <strong style={{ color: 'var(--text)' }}>{datePaiement}</strong>
                   </div>
                 </div>
@@ -134,7 +142,7 @@ export function QuittanceList({ paiements, contrats, loading }: QuittanceListPro
                   onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
                 >
                   <Download size={16} />
-                  Télécharger le PDF
+                  {t('locataire_pages.quittances.download_pdf', 'Télécharger le PDF')}
                 </button>
               </div>
             );

@@ -3,6 +3,7 @@
 import '@/app/admin/admin.css'
 import { useState, useEffect } from 'react'
 import { getProfil, Contrat } from '@/lib/api'
+import { useTranslation } from '@/lib/i18n'
 
 import { LocataireSidebar } from "@/components/organisms/LocataireSidebar"
 import { LocataireTopbar } from "@/components/organisms/LocataireTopbar"
@@ -14,6 +15,7 @@ import { ContratDetails } from "@/components/organisms/ContratDetails"
 import { useContrats } from './hooks/useContrats'
 
 export default function ContratPage() {
+  const { t } = useTranslation();
   const [mobileNav, setMobileNav] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [selectedContrat, setSelectedContrat] = useState<Contrat | null>(null);
@@ -38,7 +40,7 @@ export default function ContratPage() {
         <LocataireTopbar 
           setMobileNav={setMobileNav}
           setShowProfile={setShowProfile}
-          activeLabel="Mes contrats"
+          activeLabel={t('dashboard.nav.my_contracts', 'Mes contrats')}
           user={user}
         />
         
@@ -47,7 +49,7 @@ export default function ContratPage() {
 
           {loading ? (
             <div style={{ padding: '3rem', textAlign: 'center' }}>
-              <p>Chargement de vos contrats...</p>
+              <p>{t('forms.loading', 'Chargement de vos contrats...')}</p>
             </div>
           ) : error ? (
             <div style={{ padding: '3rem', textAlign: 'center', color: 'red' }}>

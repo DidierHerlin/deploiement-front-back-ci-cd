@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { MapPin, Maximize, DoorOpen, Tag, CalendarPlus, ChevronLeft, ChevronRight } from 'lucide-react'
 import { BienListItem, resolveMediaUrl } from '@/lib/api'
+import { useTranslation } from '@/lib/i18n'
 
 interface BienCardProps {
   bien: BienListItem
@@ -10,15 +11,16 @@ interface BienCardProps {
 }
 
 export default function BienCard({ bien, onReserver }: BienCardProps) {
+  const { t } = useTranslation()
   const isLocation = bien.mode_transaction === 'LOCATION'
   const [photoIndex, setPhotoIndex] = useState(0)
 
   const typeLabel = (() => {
     switch (bien.type) {
-      case 'APPARTEMENT': return 'Appartement'
-      case 'MAISON': return 'Maison'
-      case 'LOCAL_COMMERCIAL': return 'Local commercial'
-      case 'TERRAIN': return 'Terrain'
+      case 'APPARTEMENT': return t('types.appartement', 'Appartement')
+      case 'MAISON': return t('types.maison', 'Maison')
+      case 'LOCAL_COMMERCIAL': return t('types.commercial', 'Local commercial')
+      case 'TERRAIN': return t('types.terrain', 'Terrain')
       default: return bien.type
     }
   })()
@@ -89,48 +91,48 @@ export default function BienCard({ bien, onReserver }: BienCardProps) {
         )}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '0 16px 16px' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
-          <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>{bien.titre}</h3>
-          <p style={{ fontSize: 12, color: 'var(--muted-foreground)', display: 'flex', alignItems: 'center', gap: 4 }}>
-            <MapPin size={13} /> {bien.adresse}
-          </p>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>{bien.titre}</h3>
+            <p style={{ fontSize: 12, color: 'var(--muted-foreground)', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <MapPin size={13} /> {bien.adresse}
+            </p>
+          </div>
+          <span style={{
+            padding: '2px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600,
+            background: isLocation ? '#dbeafe' : '#fef3c7',
+            color: isLocation ? '#1e40af' : '#92400e',
+          }}>
+            {isLocation ? t('types.location', 'Location') : t('types.sale', 'Vente')}
+          </span>
         </div>
-        <span style={{
-          padding: '2px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600,
-          background: isLocation ? '#dbeafe' : '#fef3c7',
-          color: isLocation ? '#1e40af' : '#92400e',
-        }}>
-          {isLocation ? 'Location' : 'Vente'}
-        </span>
-      </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, fontSize: 12, color: 'var(--muted-foreground)' }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Tag size={13} /> {typeLabel}</span>
-        {bien.surface && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Maximize size={13} /> {bien.surface} m²</span>}
-        {bien.nombre_pieces && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><DoorOpen size={13} /> {bien.nombre_pieces} pièce(s)</span>}
-      </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, fontSize: 12, color: 'var(--muted-foreground)' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Tag size={13} /> {typeLabel}</span>
+          {bien.surface && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Maximize size={13} /> {bien.surface} m²</span>}
+          {bien.nombre_pieces && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><DoorOpen size={13} /> {t('locataire_pages.biens.rooms_count', '{count} pièce(s)', { count: bien.nombre_pieces })}</span>}
+        </div>
 
-      <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--primary)' }}>
-        {isLocation
-          ? `${Number(bien.loyer_mensuel || 0).toLocaleString()} Ar / mois`
-          : `${Number(bien.prix || 0).toLocaleString()} Ar`
-        }
-      </div>
+        <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--primary)' }}>
+          {isLocation
+            ? `${Number(bien.loyer_mensuel || 0).toLocaleString()} Ar / ${t('card.per_month', 'mois')}`
+            : `${Number(bien.prix || 0).toLocaleString()} Ar`
+          }
+        </div>
 
-      <button
-        onClick={() => onReserver(bien)}
-        style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          padding: '10px 16px', borderRadius: 8, border: 'none',
-          background: 'var(--primary)', color: 'var(--primary-foreground)',
-          cursor: 'pointer', fontWeight: 600, fontSize: 13, marginTop: 'auto',
-        }}
-      >
-        <CalendarPlus size={16} />
-        Réserver
-      </button>
+        <button
+          onClick={() => onReserver(bien)}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            padding: '10px 16px', borderRadius: 8, border: 'none',
+            background: 'var(--primary)', color: 'var(--primary-foreground)',
+            cursor: 'pointer', fontWeight: 600, fontSize: 13, marginTop: 'auto',
+          }}
+        >
+          <CalendarPlus size={16} />
+          {t('locataire_pages.biens.reserve_btn', 'Réserver')}
+        </button>
       </div>
     </div>
   )

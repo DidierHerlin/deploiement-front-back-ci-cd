@@ -8,11 +8,9 @@ import {
   XCircle,
   Ban,
   AlertCircle,
-  RefreshCw,
-  Building2,
-  Calendar,
 } from 'lucide-react'
 import { DemandePaiement, annulerDemandePaiement } from '@/lib/api'
+import { useTranslation } from '@/lib/i18n'
 
 interface DemandesPaiementListProps {
   demandes: DemandePaiement[]
@@ -23,11 +21,12 @@ export function DemandesPaiementList({
   demandes,
   onDemandeCancelled,
 }: DemandesPaiementListProps) {
+  const { t, lang } = useTranslation()
   const [cancellingId, setCancellingId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const handleAnnuler = async (demandeId: number) => {
-    if (!confirm('Êtes-vous sûr de vouloir annuler cette demande de paiement ?')) {
+    if (!confirm(t('locataire_pages.paiements.cancel_confirm', 'Êtes-vous sûr de vouloir annuler cette demande de paiement ?'))) {
       return
     }
 
@@ -39,7 +38,7 @@ export function DemandesPaiementList({
         onDemandeCancelled(res)
       }
     } catch (err: any) {
-      setError(err.message || "Erreur lors de l'annulation de la demande.")
+      setError(err.message || t('common.error_occurred', "Erreur lors de l'annulation de la demande."))
     } finally {
       setCancellingId(null)
     }
@@ -62,7 +61,7 @@ export function DemandesPaiementList({
               fontWeight: 600,
             }}
           >
-            <Clock size={13} /> En attente de validation
+            <Clock size={13} /> {t('locataire_pages.paiements.status_pending', 'En attente de validation')}
           </span>
         )
       case 'VALIDE':
@@ -80,7 +79,7 @@ export function DemandesPaiementList({
               fontWeight: 600,
             }}
           >
-            <CheckCircle size={13} /> Validée
+            <CheckCircle size={13} /> {t('locataire_pages.paiements.status_validated', 'Validée')}
           </span>
         )
       case 'REFUSE':
@@ -99,7 +98,7 @@ export function DemandesPaiementList({
               fontWeight: 600,
             }}
           >
-            <XCircle size={13} /> Refusée {motif ? `(${motif})` : ''}
+            <XCircle size={13} /> {t('locataire_pages.paiements.status_rejected', 'Refusée')} {motif ? `(${motif})` : ''}
           </span>
         )
       case 'ANNULE':
@@ -117,7 +116,7 @@ export function DemandesPaiementList({
               fontWeight: 600,
             }}
           >
-            <Ban size={13} /> Annulée
+            <Ban size={13} /> {t('locataire_pages.paiements.status_cancelled', 'Annulée')}
           </span>
         )
       default:
@@ -159,7 +158,7 @@ export function DemandesPaiementList({
               gap: '5px',
               fontSize: '0.82rem',
               fontWeight: 600,
-              color: '#c2410c',
+              color: '#ea580c',
             }}
           >
             <span
@@ -182,7 +181,7 @@ export function DemandesPaiementList({
               gap: '5px',
               fontSize: '0.82rem',
               fontWeight: 600,
-              color: '#b91c1c',
+              color: '#dc2626',
             }}
           >
             <span
@@ -205,8 +204,8 @@ export function DemandesPaiementList({
     <section className="panel" style={{ marginTop: '1.5rem' }}>
       <div className="panel-header">
         <div>
-          <h2>Mes demandes de paiement Mobile Money</h2>
-          <p>Consultez l'historique et l'état d'avancement de vos demandes de règlement</p>
+          <h2>{t('locataire_pages.paiements.pending_requests_title', 'Mes demandes de paiement Mobile Money')}</h2>
+          <p>{t('locataire_pages.paiements.header_subtitle', "Consultez l'historique et l'état d'avancement de vos demandes de règlement")}</p>
         </div>
       </div>
 
@@ -232,9 +231,11 @@ export function DemandesPaiementList({
       {demandes.length === 0 ? (
         <div style={{ padding: '2.5rem', textAlign: 'center', color: '#64748b' }}>
           <Smartphone size={32} style={{ color: '#cbd5e1', marginBottom: '8px' }} />
-          <p style={{ margin: 0, fontWeight: 500 }}>Aucune demande de paiement enregistrée.</p>
+          <p style={{ margin: 0, fontWeight: 500 }}>
+            {t('locataire_pages.paiements.empty_requests', 'Aucune demande de paiement enregistrée.')}
+          </p>
           <small style={{ color: '#94a3b8' }}>
-            Lorsque vous demandez le paiement de votre facture du mois à venir, elle apparaîtra ici.
+            {t('locataire_pages.paiements.empty_requests_hint', 'Lorsque vous demandez le paiement de votre facture du mois à venir, elle apparaîtra ici.')}
           </small>
         </div>
       ) : (
@@ -242,13 +243,13 @@ export function DemandesPaiementList({
           <table>
             <thead>
               <tr>
-                <th>DATE DE DEMANDE</th>
-                <th>BIEN & FACTURE</th>
-                <th>OPÉRATEUR</th>
-                <th>TÉLÉPHONE / RÉFÉRENCE</th>
-                <th>MONTANT</th>
-                <th>STATUT</th>
-                <th>ACTION</th>
+                <th>{t('admin.reporting.col_echeance', 'DATE DE DEMANDE')}</th>
+                <th>{t('admin.paiements.col_property', 'BIEN & FACTURE')}</th>
+                <th>{t('admin.paiements.col_mode', 'OPÉRATEUR')}</th>
+                <th>{t('admin.paiements.num_mobile_money', 'TÉLÉPHONE / RÉFÉRENCE')}</th>
+                <th>{t('admin.paiements.col_amount', 'MONTANT')}</th>
+                <th>{t('admin.paiements.col_status', 'STATUT')}</th>
+                <th>{t('admin.paiements.col_actions', 'ACTION')}</th>
               </tr>
             </thead>
             <tbody>
@@ -256,7 +257,7 @@ export function DemandesPaiementList({
                 <tr key={d.id}>
                   <td>
                     <strong>
-                      {new Date(d.date_demande).toLocaleDateString('fr-FR', {
+                      {new Date(d.date_demande).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR', {
                         day: '2-digit',
                         month: 'short',
                         year: 'numeric',
@@ -264,7 +265,7 @@ export function DemandesPaiementList({
                     </strong>
                     <br />
                     <small style={{ color: '#94a3b8' }}>
-                      {new Date(d.date_demande).toLocaleTimeString('fr-FR', {
+                      {new Date(d.date_demande).toLocaleTimeString(lang === 'en' ? 'en-US' : 'fr-FR', {
                         hour: '2-digit',
                         minute: '2-digit',
                       })}
@@ -306,7 +307,7 @@ export function DemandesPaiementList({
                           cursor: cancellingId === d.id ? 'not-allowed' : 'pointer',
                         }}
                       >
-                        {cancellingId === d.id ? 'Annulation...' : 'Annuler'}
+                        {cancellingId === d.id ? t('forms.loading', 'Annulation...') : t('common.cancel', 'Annuler')}
                       </button>
                     ) : (
                       <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>-</span>

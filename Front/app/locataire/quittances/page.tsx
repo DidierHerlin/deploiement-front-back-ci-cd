@@ -3,6 +3,7 @@
 import '@/app/admin/admin.css'
 import { useState, useEffect } from 'react'
 import { getProfil } from '@/lib/api'
+import { useTranslation } from '@/lib/i18n'
 import { usePaiements } from '../paiements/hooks/usePaiements'
 import { useContrats } from '../contrat/hooks/useContrats'
 
@@ -13,10 +14,11 @@ import { ProfileModal } from "@/components/organisms/ProfileModal"
 import { QuittanceList } from "@/components/organisms/QuittanceList"
 
 export default function LocataireQuittancesPage() {
+  const { t } = useTranslation();
   const [user, setUser] = useState<any>(null);
   const [mobileNav, setMobileNav] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const active = "Mes quittances";
+  const active = t('dashboard.nav.my_receipts', 'Mes quittances');
 
   const { paiements, loading: loadingPaiements } = usePaiements();
   const { contrats, loading: loadingContrats } = useContrats();

@@ -11,39 +11,13 @@ import {
   CheckCircle2, Clock3,
 } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
-
-// ... (navItems, properties, payments, notifications omitted for brevity but I need to keep them)
-
-const navItems = [
-  { label: 'Vue d’ensemble', icon: LayoutDashboard },
-  { label: 'Mes biens', icon: Building2 },
-  { label: 'Mes contrats', icon: FileText },
-  { label: 'Mes paiements', icon: WalletCards },
-]
-
-const properties = [
-  { name: 'Résidence Les Jardins', address: '12 rue des Lilas, Paris 15e', type: 'Appartement · Lot 12', rent: '1 250 Ar', status: 'Loué', tenant: 'Sophie Martin', color: 'blue' },
-  { name: 'Villa des Oliviers', address: '8 avenue Victor Hugo, Nice', type: 'Maison · 5 pièces', rent: '2 100 Ar', status: 'Loué', tenant: 'Thomas Bernard', color: 'green' },
-  { name: 'Le Patio Central', address: '24 boulevard Haussmann, Paris 9e', type: 'Studio · Lot 04', rent: '890 Ar', status: 'Disponible', tenant: 'À relouer', color: 'orange' },
-]
-
-const payments = [
-  { tenant: 'Sophie Martin', property: 'Résidence Les Jardins', amount: '1 250 Ar', date: 'Aujourd’hui', status: 'Payé', initials: 'SM' },
-  { tenant: 'Thomas Bernard', property: 'Villa des Oliviers', amount: '2 100 Ar', date: 'Hier', status: 'Payé', initials: 'TB' },
-  { tenant: 'Sophie Martin', property: 'Résidence Les Jardins', amount: '1 250 Ar', date: '05 juin 2024', status: 'Payé', initials: 'SM' },
-]
-
-const notifications = [
-  { icon: CircleAlert, tone: 'red', title: 'Révision de loyer à valider', text: 'Le contrat du Patio Central arrive à échéance le 22 juillet.', time: 'Il y a 2 h' },
-  { icon: FileText, tone: 'blue', title: 'Nouveau compte-rendu disponible', text: 'Le gestionnaire a ajouté un document pour Villa des Oliviers.', time: 'Hier' },
-  { icon: CheckCircle2, tone: 'green', title: 'Loyer encaissé', text: 'Le paiement de Sophie Martin a bien été enregistré.', time: 'Hier' },
-]
-
 import { StatCard } from "@/components/molecules/locataire_StatCard"
 import '../styles/dashboard.css'
 import { getProprietaireDashboardStats } from '@/lib/api'
+import { useTranslation } from '@/lib/i18n'
 
 export function ProprietaireDashboard() {
+  const { t, lang } = useTranslation()
   const [active, setActive] = useState('Vue d’ensemble')
   const [mobileNav, setMobileNav] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
@@ -75,7 +49,7 @@ export function ProprietaireDashboard() {
   }, [])
 
   if (loading || !dashboardData) {
-    return <div style={{ padding: '20px', color: '#6b7280' }}>Chargement du tableau de bord...</div>
+    return <div style={{ padding: '20px', color: '#6b7280' }}>{t("dashboard.common.loading", "Chargement du tableau de bord...")}</div>
   }
 
   const { biens, revenus, prochaine_echeance, recent_echeances, recent_paiements, recent_notifications } = dashboardData
@@ -84,7 +58,7 @@ export function ProprietaireDashboard() {
     const dateObj = new Date(d.year, d.month - 1, 1)
     return {
       ...d,
-      name: dateObj.toLocaleString('fr-FR', { month: 'short' }).replace('.', '')
+      name: dateObj.toLocaleString(lang === 'en' ? 'en-US' : 'fr-FR', { month: 'short' }).replace('.', '')
     }
   })
 
@@ -116,7 +90,7 @@ export function ProprietaireDashboard() {
   if (prochaine_echeance && prochaine_echeance.date) {
     const dateObj = new Date(prochaine_echeance.date)
     const day = dateObj.getDate().toString().padStart(2, '0')
-    const month = dateObj.toLocaleString('fr-FR', { month: 'short' })
+    const month = dateObj.toLocaleString(lang === 'en' ? 'en-US' : 'fr-FR', { month: 'short' })
     prochaineEcheanceStr = `${day} ${month}.`
     loyersAttendusStr = `${prochaine_echeance.nombre} loyer${prochaine_echeance.nombre > 1 ? 's' : ''} attendu${prochaine_echeance.nombre > 1 ? 's' : ''}`
     toneEcheance = 'red'
@@ -130,14 +104,35 @@ export function ProprietaireDashboard() {
 
   return (
     <>
-      <div className="welcome-row"><div><p className="eyebrow">MARDI 02 JUILLET 2024</p><h1>Bonjour{userName ? ` ${userName}` : ''}, <span>voici votre patrimoine.</span></h1><p className="subtitle">Suivez vos biens, vos revenus et les événements importants en un coup d’œil.</p>
+      <div className="welcome-row">
+        <div>
+          <p className="eyebrow">{new Date().toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase()}</p>
+          <h1>{t("dashboard.proprietaire.welcome_title", "Bonjour")}{userName ? ` ${userName}` : ''}, <span>{t("dashboard.proprietaire.welcome_highlight", "voici votre patrimoine.")}</span></h1>
+          <p className="subtitle">{t("dashboard.proprietaire.welcome_sub", "Suivez vos biens, vos revenus et les événements importants en un coup d’œil.")}</p>
+        </div>
       </div>
+      <div className="owner-banner">
+        <div className="banner-icon"><Home size={19} /></div>
+        <div>
+          <strong>{t("dashboard.proprietaire.banner_title", "Bienvenue dans votre espace propriétaire")}</strong>
+          <p>{t("dashboard.proprietaire.banner_desc", "Votre agence gère vos biens en toute transparence. Les informations affichées concernent uniquement votre patrimoine.")}</p>
+        </div>
+        <ChevronRight size={18} />
       </div>
-      <div className="owner-banner"><div className="banner-icon"><Home size={19} /></div><div><strong>Bienvenue dans votre espace propriétaire</strong><p>Votre agence Horizon gère {totalBiens} bien{totalBiens > 1 ? 's' : ''} pour vous. Les informations affichées concernent uniquement votre patrimoine.</p></div><ChevronRight size={18} /></div>
-      <section className="stats-grid"><StatCard icon={Building2} label="Mes biens" value={totalBiens.toString()} detail={biensDetailStr} tone="blue" /><StatCard icon={CircleDollarSign} label="Revenus mensuels" value={`${revenuCeMois.toLocaleString('fr-FR')} Ariary`} detail={evolutionText} tone="green" /><StatCard icon={WalletCards} label="Taux d’occupation" value={`${tauxOccupation}%`} detail={tauxDetailStr} tone="orange" /><StatCard icon={CalendarDays} label="Prochaine échéance" value={prochaineEcheanceStr} detail={loyersAttendusStr} tone={toneEcheance} /></section>
+      <section className="stats-grid">
+        <StatCard icon={Building2} label={t("dashboard.proprietaire.my_properties", "Mes biens")} value={totalBiens.toString()} detail={biensDetailStr} tone="blue" />
+        <StatCard icon={CircleDollarSign} label={t("dashboard.proprietaire.monthly_revenues", "Revenus mensuels")} value={`${revenuCeMois.toLocaleString(lang === 'en' ? 'en-US' : 'fr-FR')} Ariary`} detail={evolutionText} tone="green" />
+        <StatCard icon={WalletCards} label={t("dashboard.proprietaire.occupancy_rate", "Taux d’occupation")} value={`${tauxOccupation}%`} detail={tauxDetailStr} tone="orange" />
+        <StatCard icon={CalendarDays} label={t("dashboard.proprietaire.next_due", "Prochaine échéance")} value={prochaineEcheanceStr} detail={loyersAttendusStr} tone={toneEcheance} />
+      </section>
       <div className="content-grid">
         <section className="panel revenue-panel">
-          <div className="panel-header"><div><h2>Mes revenus locatifs</h2><p>Évolution des encaissements sur les 6 derniers mois</p></div></div>
+          <div className="panel-header">
+            <div>
+              <h2>{t("dashboard.proprietaire.revenue_chart_title", "Mes revenus locatifs")}</h2>
+              <p>{t("dashboard.proprietaire.revenue_chart_sub", "Évolution des encaissements sur les 6 derniers mois")}</p>
+            </div>
+          </div>
           <div style={{ height: '214px', width: '100%', marginTop: '16px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
@@ -148,25 +143,31 @@ export function ProprietaireDashboard() {
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} tickFormatter={(val) => new Intl.NumberFormat('fr-FR').format(val)} width={80} />
-                <Tooltip formatter={(value: any) => [`${Number(value).toLocaleString('fr-FR')} Ariary`, 'Revenus réels']} labelStyle={{ color: '#374151' }} itemStyle={{ color: '#1e3a8a', fontWeight: 600 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} tickFormatter={(val) => new Intl.NumberFormat(lang === 'en' ? 'en-US' : 'fr-FR').format(val)} width={80} />
+                <Tooltip formatter={(value: any) => [`${Number(value).toLocaleString(lang === 'en' ? 'en-US' : 'fr-FR')} Ariary`, 'Revenus réels']} labelStyle={{ color: '#374151' }} itemStyle={{ color: '#1e3a8a', fontWeight: 600 }} />
                 <Area type="monotone" dataKey="total" stroke="#1e3a8a" strokeWidth={3} fillOpacity={1} fill="url(#colorTotal)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </section>
         <section className="panel deadlines-panel">
-          <div className="panel-header"><div><h2>Événements à venir</h2><p>Les prochaines échéances de vos biens</p></div><button className="more-button" aria-label="Plus d’options"><MoreHorizontal size={20} /></button></div>
+          <div className="panel-header">
+            <div>
+              <h2>{t("dashboard.proprietaire.upcoming_deadlines_title", "Événements à venir")}</h2>
+              <p>{t("dashboard.proprietaire.upcoming_deadlines_sub", "Les prochaines échéances de vos biens")}</p>
+            </div>
+            <button className="more-button" aria-label="Plus d’options"><MoreHorizontal size={20} /></button>
+          </div>
           <div className="deadline-list">
             {ownerEcheances.length > 0 ? (
               ownerEcheances.slice(0, 3).map((e: any, idx) => {
                 const dateObj = e.date_echeance ? new Date(e.date_echeance) : new Date();
                 const day = dateObj.getDate().toString().padStart(2, '0');
-                const month = dateObj.toLocaleString('fr-FR', { month: 'short' }).toUpperCase();
+                const month = dateObj.toLocaleString(lang === 'en' ? 'en-US' : 'fr-FR', { month: 'short' }).toUpperCase();
                 return (
                   <div className="deadline" key={idx}>
                     <div className="date-block"><strong>{day}</strong><span>{month}</span></div>
-                    <div><strong>Loyer de {e.locataire_nom || 'Locataire inconnu'}</strong><p>{e.bien_titre} · {parseFloat(e.montant_attendu).toLocaleString('fr-FR')} Ariary</p></div>
+                    <div><strong>Loyer de {e.locataire_nom || 'Locataire inconnu'}</strong><p>{e.bien_titre} · {parseFloat(e.montant_attendu).toLocaleString(lang === 'en' ? 'en-US' : 'fr-FR')} Ariary</p></div>
                     <ChevronRight size={17} />
                   </div>
                 );
@@ -178,15 +179,102 @@ export function ProprietaireDashboard() {
           <button className="link-button">Voir mon calendrier <ArrowUpRight size={15} /></button>
         </section>
       </div>
-      <div className="lower-grid"><section className="panel"><div className="panel-header"><div><h2>Historique des paiements</h2><p>Les derniers encaissements de vos biens</p></div><Link href="/proprietaire/paiements" className="outline-button">Tout voir <ArrowUpRight size={15} /></Link></div><div className="table-wrap"><table><thead><tr><th>LOCATAIRE</th><th>BIEN</th><th>MONTANT</th><th>DATE</th><th>STATUT</th></tr></thead><tbody>{visiblePayments.map((payment) => <tr key={payment.id}><td><div className="tenant"><span>{(payment.locataire_nom || 'XX').substring(0, 2).toUpperCase()}</span><strong>{payment.locataire_nom || 'Inconnu'}</strong></div></td><td>{payment.bien_titre}</td><td><strong>{((parseFloat(payment.montant_paye as string) || parseFloat(payment.montant as string) || parseFloat(payment.montant_attendu as string) || 0)).toLocaleString('fr-FR')} Ariary</strong></td><td>{payment.date_paiement ? new Date(payment.date_paiement).toLocaleDateString('fr-FR') : '-'}</td><td><span className={`status ${payment.statut === 'PAYE' ? 'paid' : 'late'}`}>{payment.statut === 'PAYE' ? 'Payé' : 'En retard'}</span></td></tr>)}</tbody></table></div></section><section className="panel properties-panel"><div className="panel-header"><div><h2>Mes biens immobiliers</h2><p>La situation actuelle de votre parc</p></div><Link href="/proprietaire/biens" className="outline-button">Tout voir <ArrowUpRight size={15} /></Link></div><div className="property-list">{filtered.slice(0, 3).map((property) => <div className="property" key={property.id}><div className={`property-icon ${property.statut === 'LOUE' ? 'blue' : property.statut === 'DISPONIBLE' ? 'orange' : 'green'}`}><Building2 size={18} /></div><div className="property-info"><strong>{property.titre}</strong><span>{property.adresse}</span></div><div className="property-meta"><strong>{parseFloat(property.prix || property.loyer_mensuel || '0').toLocaleString('fr-FR')} Ariary</strong><span className={`mini-status ${property.statut === 'LOUE' ? 'green' : property.statut === 'RESERVE' ? 'purple' : 'orange'}`}>{property.statut === 'LOUE' ? 'Loué' : property.statut === 'VENDU' ? 'Vendu' : property.statut === 'RESERVE' ? 'Réservé' : property.statut === 'EN_TRAVAUX' ? 'En travaux' : 'Disponible'}</span></div></div>)}</div></section></div>
+      <div className="lower-grid">
+        <section className="panel">
+          <div className="panel-header">
+            <div>
+              <h2>{t("dashboard.proprietaire.payment_history_title", "Historique des paiements")}</h2>
+              <p>{t("dashboard.proprietaire.payment_history_sub", "Les derniers encaissements de vos biens")}</p>
+            </div>
+            <Link href="/proprietaire/paiements" className="outline-button">
+              {t("dashboard.common.view_all", "Tout voir")} <ArrowUpRight size={15} />
+            </Link>
+          </div>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>LOCATAIRE</th>
+                  <th>BIEN</th>
+                  <th>MONTANT</th>
+                  <th>DATE</th>
+                  <th>STATUT</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visiblePayments.map((payment) => (
+                  <tr key={payment.id}>
+                    <td>
+                      <div className="tenant">
+                        <span>{(payment.locataire_nom || 'XX').substring(0, 2).toUpperCase()}</span>
+                        <strong>{payment.locataire_nom || 'Inconnu'}</strong>
+                      </div>
+                    </td>
+                    <td>{payment.bien_titre}</td>
+                    <td><strong>{((parseFloat(payment.montant_paye as string) || parseFloat(payment.montant as string) || parseFloat(payment.montant_attendu as string) || 0)).toLocaleString(lang === 'en' ? 'en-US' : 'fr-FR')} Ariary</strong></td>
+                    <td>{payment.date_paiement ? new Date(payment.date_paiement).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR') : '-'}</td>
+                    <td>
+                      <span className={`status ${payment.statut === 'PAYE' ? 'paid' : 'late'}`}>
+                        {payment.statut === 'PAYE' ? t("dashboard.common.status_paye", "Payé") : t("dashboard.common.status_en_retard", "En retard")}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <section className="panel properties-panel">
+          <div className="panel-header">
+            <div>
+              <h2>{t("dashboard.proprietaire.properties_title", "Mes biens immobiliers")}</h2>
+              <p>{t("dashboard.proprietaire.properties_sub", "La situation actuelle de votre parc")}</p>
+            </div>
+            <Link href="/proprietaire/biens" className="outline-button">
+              {t("dashboard.common.view_all", "Tout voir")} <ArrowUpRight size={15} />
+            </Link>
+          </div>
+          <div className="property-list">
+            {filtered.slice(0, 3).map((property) => (
+              <div className="property" key={property.id}>
+                <div className={`property-icon ${property.statut === 'LOUE' ? 'blue' : property.statut === 'DISPONIBLE' ? 'orange' : 'green'}`}>
+                  <Building2 size={18} />
+                </div>
+                <div className="property-info">
+                  <strong>{property.titre}</strong>
+                  <span>{property.adresse}</span>
+                </div>
+                <div className="property-meta">
+                  <strong>{parseFloat(property.prix || property.loyer_mensuel || '0').toLocaleString(lang === 'en' ? 'en-US' : 'fr-FR')} Ariary</strong>
+                  <span className={`mini-status ${property.statut === 'LOUE' ? 'green' : property.statut === 'RESERVE' ? 'purple' : 'orange'}`}>
+                    {property.statut === 'LOUE' ? t("dashboard.common.status_loue", "Loué") : property.statut === 'VENDU' ? t("dashboard.common.status_vendu", "Vendu") : property.statut === 'RESERVE' ? t("dashboard.common.status_reserve", "Réservé") : property.statut === 'EN_TRAVAUX' ? t("dashboard.common.status_en_travaux", "En travaux") : t("dashboard.common.status_disponible", "Disponible")}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
       <section className="panel notifications-section">
-        <div className="panel-header"><div><h2>Notifications récentes</h2><p>Les informations importantes concernant vos biens</p></div><button className="outline-button" onClick={() => setNotificationsOpen(true)}>Tout afficher <ArrowUpRight size={15} /></button></div>
+        <div className="panel-header">
+          <div>
+            <h2>{t("dashboard.proprietaire.notifications_title", "Notifications récentes")}</h2>
+            <p>{t("dashboard.proprietaire.notifications_sub", "Les informations importantes concernant vos biens")}</p>
+          </div>
+          <button className="outline-button" onClick={() => setNotificationsOpen(true)}>
+            {t("dashboard.common.view_all", "Tout afficher")} <ArrowUpRight size={15} />
+          </button>
+        </div>
         <div className="notification-row">
           {notificationsList.length > 0 ? (
             notificationsList.slice(0, 3).map((item) => (
               <article className="notification-card" key={item.id}>
                 <div className={`notification-icon blue`}><CircleAlert size={17} /></div>
-                <div><strong>{item.titre || item.type_display}</strong><p>{item.message}</p><small>{item.date_creation ? new Date(item.date_creation).toLocaleDateString('fr-FR') : ''}</small></div>
+                <div>
+                  <strong>{item.titre || item.type_display}</strong>
+                  <p>{item.message}</p>
+                  <small>{item.date_creation ? new Date(item.date_creation).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR') : ''}</small>
+                </div>
               </article>
             ))
           ) : (

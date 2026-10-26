@@ -1,5 +1,6 @@
 import { Eye, Pencil, Trash2 } from 'lucide-react'
 import { Contrat } from '@/lib/api'
+import { useTranslation } from '@/lib/i18n'
 
 type ContratTableRowProps = {
   contrat: Contrat
@@ -9,6 +10,7 @@ type ContratTableRowProps = {
 }
 
 export function ContratTableRow({ contrat, onView, onEdit, onDelete }: ContratTableRowProps) {
+  const { t } = useTranslation()
   
   const formatCurrency = (val: any) => {
     if (val === null || val === undefined) return '-'
@@ -17,11 +19,11 @@ export function ContratTableRow({ contrat, onView, onEdit, onDelete }: ContratTa
 
   const renderStatut = (statut: string) => {
     switch (statut) {
-      case 'ACTIF': return <span className="status paid"><i />Actif</span>
-      case 'RESERVE': return <span className="status pending"><i />Réservé</span>
-      case 'RESILIE': return <span className="status disabled"><i />Résilié</span>
-      case 'TERMINE': return <span className="status disabled"><i />Terminé</span>
-      case 'VENDU': return <span className="status paid" style={{ background: '#e0e7ff', color: '#4f46e5' }}><i style={{ background: '#4f46e5' }} />Vendu</span>
+      case 'ACTIF': return <span className="status paid"><i />{t("dashboard.common.active", "Actif")}</span>
+      case 'RESERVE': return <span className="status pending"><i />{t("dashboard.common.status_reserve", "Réservé")}</span>
+      case 'RESILIE': return <span className="status disabled"><i />{t("dashboard.common.status_resilie", "Résilié")}</span>
+      case 'TERMINE': return <span className="status disabled"><i />{t("dashboard.common.status_termine", "Terminé")}</span>
+      case 'VENDU': return <span className="status paid" style={{ background: '#e0e7ff', color: '#4f46e5' }}><i style={{ background: '#4f46e5' }} />{t("dashboard.common.status_vendu", "Vendu")}</span>
       default: return <span className="status disabled"><i />{statut}</span>
     }
   }
@@ -37,7 +39,7 @@ export function ContratTableRow({ contrat, onView, onEdit, onDelete }: ContratTa
         <strong>{contrat.locataire_prenoms} {contrat.locataire_nom}</strong>
       </td>
       <td>
-        <span className="role-badge">{contrat.type_contrat}</span>
+        <span className="role-badge">{contrat.type_contrat === 'LOCATION' ? t("card.for_rent", 'Location') : t("card.for_sale", 'Achat')}</span>
       </td>
       <td>
         {contrat.type_contrat === 'LOCATION' 
@@ -47,14 +49,13 @@ export function ContratTableRow({ contrat, onView, onEdit, onDelete }: ContratTa
       <td>{renderStatut(contrat.statut)}</td>
       <td>
         <div className="row-actions" style={{ justifyContent: 'flex-end' }}>
-          <button aria-label="Voir" onClick={() => onView(contrat)} title="Détails"><Eye size={15} /></button>
+          <button aria-label={t("forms.view", "Voir")} onClick={() => onView(contrat)} title={t("forms.view", "Détails")}><Eye size={15} /></button>
           
-          {/* Edit restricted to certain statuses in backend, but we'll always show the button and let backend handle restrictions or hide it here */}
           {contrat.statut !== 'VENDU' && (
-            <button aria-label="Modifier" onClick={() => onEdit(contrat)} title="Modifier"><Pencil size={15} /></button>
+            <button aria-label={t("forms.edit", "Modifier")} onClick={() => onEdit(contrat)} title={t("forms.edit", "Modifier")}><Pencil size={15} /></button>
           )}
 
-          <button aria-label="Supprimer" onClick={() => onDelete(contrat)} title="Supprimer" style={{ color: '#ef6a76' }}>
+          <button aria-label={t("forms.delete", "Supprimer")} onClick={() => onDelete(contrat)} title={t("forms.delete", "Supprimer")} style={{ color: '#ef6a76' }}>
             <Trash2 size={15} />
           </button>
         </div>

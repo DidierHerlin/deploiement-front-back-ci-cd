@@ -4,6 +4,7 @@ import '@/app/admin/admin.css'
 import { useState, useEffect } from 'react'
 import { Search, Building2, Check } from 'lucide-react'
 import { getProfil, getBiensDisponibles, BienListItem } from '@/lib/api'
+import { useTranslation } from '@/lib/i18n'
 
 import { LocataireSidebar } from "@/components/organisms/LocataireSidebar"
 import { LocataireTopbar } from "@/components/organisms/LocataireTopbar"
@@ -12,6 +13,7 @@ import BienCard from "@/components/molecules/biens_BienCard"
 import ReservationModal from "@/components/organisms/ReservationModal"
 
 export default function BiensDisponiblesPage() {
+  const { t } = useTranslation()
   const [user, setUser] = useState<any>(null)
   const [mobileNav, setMobileNav] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
@@ -62,17 +64,19 @@ export default function BiensDisponiblesPage() {
         <LocataireTopbar
           setMobileNav={setMobileNav}
           setShowProfile={setShowProfile}
-          activeLabel="Biens disponibles"
+          activeLabel={t('dashboard.nav.available_properties', 'Biens disponibles')}
           user={user}
         />
 
         <div className="page-body">
           {/* Header */}
           <div style={{ marginBottom: 24 }}>
-            <p className="section-kicker">BIENS DISPONIBLES</p>
-            <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Explorer les biens</h1>
+            <p className="section-kicker">{t('locataire_pages.biens.eyebrow', 'BIENS DISPONIBLES')}</p>
+            <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>
+              {t('locataire_pages.biens.page_title', 'Explorer les biens')}
+            </h1>
             <p style={{ fontSize: 13, color: 'var(--muted-foreground)' }}>
-              Consultez les biens disponibles et soumettez une réservation.
+              {t('locataire_pages.biens.subtitle', 'Consultez les biens disponibles et soumettez une réservation.')}
             </p>
           </div>
 
@@ -83,7 +87,7 @@ export default function BiensDisponiblesPage() {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Rechercher un bien..."
+                placeholder={t('locataire_pages.biens.search_placeholder', 'Rechercher un bien...')}
                 style={{ width: '100%', padding: '8px 12px 8px 32px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', fontSize: 13 }}
               />
             </div>
@@ -92,20 +96,20 @@ export default function BiensDisponiblesPage() {
               onChange={(e) => setFilterType(e.target.value)}
               style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', fontSize: 13 }}
             >
-              <option value="Tous">Tous les types</option>
-              <option value="LOCATION">Location</option>
-              <option value="VENTE">Vente</option>
+              <option value="Tous">{t('locataire_pages.biens.filter_all', 'Tous les types')}</option>
+              <option value="LOCATION">{t('types.location', 'Location')}</option>
+              <option value="VENTE">{t('types.sale', 'Vente')}</option>
             </select>
           </div>
 
           <p style={{ fontSize: 12, color: 'var(--muted-foreground)', marginBottom: 16 }}>
-            {filtered.length} bien(s) disponible(s)
+            {t('locataire_pages.biens.count_available', '{count} bien(s) disponible(s)', { count: filtered.length })}
           </p>
 
           {/* Content */}
           {loading ? (
             <div style={{ padding: '3rem', textAlign: 'center' }}>
-              <p>Chargement des biens disponibles...</p>
+              <p>{t('locataire_pages.biens.loading', 'Chargement des biens disponibles...')}</p>
             </div>
           ) : error ? (
             <div style={{ padding: '3rem', textAlign: 'center', color: 'red' }}>
@@ -114,9 +118,11 @@ export default function BiensDisponiblesPage() {
           ) : filtered.length === 0 ? (
             <div className="panel" style={{ textAlign: 'center', padding: '3rem' }}>
               <Building2 size={40} style={{ margin: '0 auto 12px', color: 'var(--muted-foreground)' }} />
-              <p style={{ fontSize: 14, fontWeight: 500 }}>Aucun bien disponible</p>
+              <p style={{ fontSize: 14, fontWeight: 500 }}>
+                {t('locataire_pages.biens.empty_title', 'Aucun bien disponible')}
+              </p>
               <p style={{ fontSize: 13, color: 'var(--muted-foreground)' }}>
-                Il n'y a actuellement aucun bien correspondant à votre recherche.
+                {t('locataire_pages.biens.empty_desc', "Il n'y a actuellement aucun bien correspondant à votre recherche.")}
               </p>
             </div>
           ) : (
@@ -136,7 +142,7 @@ export default function BiensDisponiblesPage() {
           onClose={() => setSelectedBien(null)}
           onSuccess={() => {
             setSelectedBien(null)
-            showToast('Réservation soumise avec succès !')
+            showToast(t('locataire_pages.biens.reservation_success', 'Réservation soumise avec succès !'))
             fetchBiens()
           }}
         />

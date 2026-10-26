@@ -16,8 +16,10 @@ import ContractsList from "@/components/organisms/ContractsList"
 import PendingBanner from "@/components/molecules/PendingBanner"
 import DashboardFooter from "@/components/organisms/DashboardFooter"
 import { LoadingState, ErrorState } from "@/components/organisms/States"
+import { useTranslation } from '@/lib/i18n'
 
 export default function AgentDashboardPage() {
+  const { t } = useTranslation();
   const { data, loading, error } = useAgentDashboard();
   const [toast, setToast] = useState('')
 
@@ -27,22 +29,22 @@ export default function AgentDashboardPage() {
   }
 
   if (loading) return <LoadingState />;
-  if (error || !data) return <ErrorState error={error || "Données indisponibles."} onRetry={() => window.location.reload()} />;
+  if (error || !data) return <ErrorState error={error || t("dashboard.common.error_occurred", "Données indisponibles.")} onRetry={() => window.location.reload()} />;
 
   return (
     <>
       <div className="agent-head">
         <div>
-          <p className="eyebrow">DASHBOARD AGENT</p>
-          <h1>Tableau de bord <span>de gestion.</span></h1>
-          <p className="subtitle">Suivi de la performance locative et gestion au quotidien.</p>
+          <p className="eyebrow">{t("dashboard.agent.eyebrow", "DASHBOARD AGENT")}</p>
+          <h1>{t("dashboard.agent.title_main", "Tableau de bord")} <span>{t("dashboard.agent.title_highlight", "de gestion.")}</span></h1>
+          <p className="subtitle">{t("dashboard.agent.subtitle", "Suivi de la performance locative et gestion au quotidien.")}</p>
         </div>
         <div className="agent-head-actions">
           <Link className="agent-btn agent-btn-ghost" href="/agent/biens">
-            Voir les biens <ArrowUpRight size={15} />
+            {t("dashboard.agent.view_properties", "Voir les biens")} <ArrowUpRight size={15} />
           </Link>
           <Link className="agent-btn agent-btn-primary" href="/agent/contrats/ajouter">
-            Nouveau contrat
+            {t("dashboard.agent.new_contract", "Nouveau contrat")}
           </Link>
         </div>
       </div>

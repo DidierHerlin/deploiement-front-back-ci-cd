@@ -1,6 +1,7 @@
 import { X, FileText } from 'lucide-react'
 import { Contrat, Bien, Locataire, getBienInfo } from '@/lib/api'
 import { useState, useEffect } from 'react'
+import { useTranslation } from '@/lib/i18n'
 
 type ContratFormProps = {
   editingContrat: Contrat | null
@@ -11,6 +12,7 @@ type ContratFormProps = {
 }
 
 export function ContratForm({ editingContrat, disponiblesBiens, locataires, onClose, onSubmit }: ContratFormProps) {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState<any>({
     type_contrat: 'LOCATION',
     bien: '',
@@ -81,13 +83,10 @@ export function ContratForm({ editingContrat, disponiblesBiens, locataires, onCl
       delete payload.date_fin
     }
     
-    // En modification, la plupart des champs (bien, locataire, type) sont ignorés ou read_only côté backend,
-    // mais on envoie quand même la donnée formatée.
-    
     try {
       await onSubmit(payload)
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de l\'enregistrement')
+      setError(err.message || t("forms.error", 'Erreur lors de l\'enregistrement'))
     } finally {
       setLoading(false)
     }
@@ -98,11 +97,11 @@ export function ContratForm({ editingContrat, disponiblesBiens, locataires, onCl
   return (
     <div className="modal-backdrop" role="presentation" style={{ zIndex: 1100 }}>
       <section className="modal" role="dialog" aria-modal="true" style={{ width: '90vw', maxWidth: '1300px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', padding: '20px' }}>
-        <button type="button" className="modal-close" onClick={onClose} aria-label="Fermer" style={{ top: '20px', right: '20px' }}><X size={18} /></button>
+        <button type="button" className="modal-close" onClick={onClose} aria-label={t("forms.close", "Fermer")} style={{ top: '20px', right: '20px' }}><X size={18} /></button>
         
         <div style={{ flexShrink: 0, marginBottom: '20px' }}>
           <div className="modal-icon"><FileText size={20} /></div>
-          <h2>{editingContrat ? 'Modifier le contrat' : 'Nouveau Contrat'}</h2>
+          <h2>{editingContrat ? t("admin.contrats.edit_title", 'Modifier le contrat') : t("admin.contrats.create_title", 'Nouveau Contrat')}</h2>
           
           {error && (
             <div style={{ padding: '10px', background: '#fee2e2', color: '#b91c1c', borderRadius: '4px', marginTop: '15px', fontSize: '13px' }}>
@@ -114,18 +113,18 @@ export function ContratForm({ editingContrat, disponiblesBiens, locataires, onCl
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
           <div style={{ flex: 1, overflowY: 'auto', paddingRight: '10px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', alignContent: 'start' }}>
             
-            <label style={{ minWidth: 0 }}>Locataire / Acheteur *
+            <label style={{ minWidth: 0 }}>{t("admin.contrats.col_tenant", "Locataire / Acheteur *")}
               <select required value={formData.locataire} onChange={e => setFormData({ ...formData, locataire: e.target.value })} disabled={!!editingContrat} style={{ width: '100%', textOverflow: 'ellipsis' }}>
-                <option value="">-- Sélectionner --</option>
+                <option value="">{t("forms.select_placeholder", "-- Sélectionner --")}</option>
                 {locataires.map(l => (
                   <option key={l.id} value={l.id}>{l.user?.prenoms} {l.user?.nom}</option>
                 ))}
               </select>
             </label>
 
-            <label style={{ minWidth: 0 }}>Bien immobilier *
+            <label style={{ minWidth: 0 }}>{t("admin.contrats.col_property", "Bien immobilier *")}
               <select required value={formData.bien} onChange={e => handleBienChange(e.target.value)} disabled={!!editingContrat} style={{ width: '100%', textOverflow: 'ellipsis' }}>
-                <option value="">-- Sélectionner --</option>
+                <option value="">{t("forms.select_placeholder", "-- Sélectionner --")}</option>
                 {editingContrat && <option value={editingContrat.bien}>{editingContrat.bien_titre}</option>}
                 {disponiblesBiens.map(b => (
                   <option key={b.id} value={b.id}>{b.titre} ({b.mode_transaction})</option>
@@ -134,13 +133,13 @@ export function ContratForm({ editingContrat, disponiblesBiens, locataires, onCl
             </label>
 
             <div style={{ gridColumn: '1 / -1', minWidth: 0 }}>
-              <label style={{ width: '100%', maxWidth: '300px', minWidth: 0 }}>Type de contrat *
+              <label style={{ width: '100%', maxWidth: '300px', minWidth: 0 }}>{t("admin.contrats.col_type", "Type de contrat *")}
                 <select required value={formData.type_contrat} onChange={e => setFormData({ ...formData, type_contrat: e.target.value })} disabled style={{ width: '100%', textOverflow: 'ellipsis' }}>
-                  <option value="LOCATION">Location</option>
-                  <option value="ACHAT">Achat</option>
+                  <option value="LOCATION">{t("card.for_rent", "Location")}</option>
+                  <option value="ACHAT">{t("card.for_sale", "Achat")}</option>
                 </select>
                 <small style={{ display: 'block', color: '#666', marginTop: '5px' }}>
-                  Le type est déterminé automatiquement en fonction du bien sélectionné.
+                  {t("admin.contrats.type_auto_note", "Le type est déterminé automatiquement en fonction du bien sélectionné.")}
                 </small>
               </label>
             </div>
@@ -148,40 +147,40 @@ export function ContratForm({ editingContrat, disponiblesBiens, locataires, onCl
             {isLocation ? (
               <>
                 <div style={{ gridColumn: '1 / -1', marginTop: '10px' }}>
-                  <h3 style={{ fontSize: '14px', color: '#334155', borderBottom: '1px solid #e2e8f0', paddingBottom: '5px' }}>Conditions financières (Location)</h3>
+                  <h3 style={{ fontSize: '14px', color: '#334155', borderBottom: '1px solid #e2e8f0', paddingBottom: '5px' }}>{t("admin.contrats.financial_terms_rent", "Conditions financières (Location)")}</h3>
                 </div>
                 
-                <label>Loyer mensuel *
+                <label>{t("forms.monthly_rent", "Loyer mensuel *")}
                   <input type="number" step="0.01" required value={formData.loyer} onChange={e => setFormData({ ...formData, loyer: e.target.value })} />
                 </label>
-                <label>Dépôt de garantie *
+                <label>{t("locataire_pages.contrat.card_deposit", "Dépôt de garantie *")}
                   <input type="number" step="0.01" required value={formData.depot_garantie} onChange={e => setFormData({ ...formData, depot_garantie: e.target.value })} />
                 </label>
 
                 <div style={{ gridColumn: '1 / -1', marginTop: '10px' }}>
-                  <h3 style={{ fontSize: '14px', color: '#334155', borderBottom: '1px solid #e2e8f0', paddingBottom: '5px' }}>Période</h3>
+                  <h3 style={{ fontSize: '14px', color: '#334155', borderBottom: '1px solid #e2e8f0', paddingBottom: '5px' }}>{t("admin.contrats.col_period", "Période")}</h3>
                 </div>
 
-                <label>Date de début *
+                <label>{t("admin.contrats.col_start_date", "Date de début *")}
                   <input type="date" required value={formData.date_debut} onChange={e => setFormData({ ...formData, date_debut: e.target.value })} />
                 </label>
-                <label>Date de fin
+                <label>{t("admin.contrats.end_date", "Date de fin")}
                   <input type="date" value={formData.date_fin} onChange={e => setFormData({ ...formData, date_fin: e.target.value })} />
                 </label>
               </>
             ) : (
               <>
                 <div style={{ gridColumn: '1 / -1', marginTop: '10px' }}>
-                  <h3 style={{ fontSize: '14px', color: '#334155', borderBottom: '1px solid #e2e8f0', paddingBottom: '5px' }}>Conditions financières (Achat)</h3>
+                  <h3 style={{ fontSize: '14px', color: '#334155', borderBottom: '1px solid #e2e8f0', paddingBottom: '5px' }}>{t("admin.contrats.financial_terms_sale", "Conditions financières (Achat)")}</h3>
                 </div>
 
-                <label>Prix de vente *
+                <label>{t("forms.sale_price", "Prix de vente *")}
                   <input type="number" step="0.01" required value={formData.prix} onChange={e => setFormData({ ...formData, prix: e.target.value })} />
                 </label>
-                <label>Modalité de paiement *
+                <label>{t("admin.contrats.payment_mode_label", "Modalité de paiement *")}
                   <select required value={formData.type_paiement_achat} onChange={e => setFormData({ ...formData, type_paiement_achat: e.target.value })}>
-                    <option value="TOTALITE">Comptant (100%)</option>
-                    <option value="PARTIEL">Échelonné (50% puis mensualités)</option>
+                    <option value="TOTALITE">{t("admin.contrats.payment_full", "Comptant (100%)")}</option>
+                    <option value="PARTIEL">{t("admin.contrats.payment_installment", "Échelonné (50% puis mensualités)")}</option>
                   </select>
                 </label>
               </>
@@ -190,9 +189,9 @@ export function ContratForm({ editingContrat, disponiblesBiens, locataires, onCl
           </div>
 
           <div className="modal-actions" style={{ flexShrink: 0, marginTop: '20px', paddingTop: '15px', borderTop: '1px solid #e2e8f0' }}>
-            <button type="button" className="outline-button" onClick={onClose} disabled={loading}>Annuler</button>
+            <button type="button" className="outline-button" onClick={onClose} disabled={loading}>{t("forms.cancel", "Annuler")}</button>
             <button type="submit" className="primary-button" disabled={loading}>
-              {loading ? 'Enregistrement...' : 'Enregistrer'}
+              {loading ? t("forms.saving", 'Enregistrement...') : t("forms.save", 'Enregistrer')}
             </button>
           </div>
         </form>

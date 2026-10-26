@@ -2,15 +2,17 @@
 
 import { useState, type FormEvent } from "react"
 import Link from "next/link"
-import { ArrowLeft, CheckCircle2, LockKeyhole,ArrowRight } from "lucide-react"
+import { ArrowLeft, CheckCircle2, LockKeyhole, ArrowRight } from "lucide-react"
 import { ForgotPasswordForm } from "@/components/organisms/forgot-password-form"
 import { VerifyCodeForm } from "@/components/organisms/verify-code-form"
 import { ResetPasswordForm } from "@/components/organisms/reset-password-form"
 import { getApiUrl } from "@/lib/config"
+import { useTranslation, LanguageSwitcher } from "@/lib/i18n"
 
 type Etape = "email" | "code" | "nouveau-mdp" | "succes"
 
 export default function ForgotPasswordPage() {
+  const { t } = useTranslation()
   const [etape, setEtape] = useState<Etape>("email")
   const [email, setEmail] = useState("")
   const [code, setCode] = useState("")
@@ -39,7 +41,7 @@ export default function ForgotPasswordPage() {
 
       setEtape("code")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Une erreur est survenue.")
+      setError(err instanceof Error ? err.message : t("dashboard.common.error_occurred", "Une erreur est survenue."))
     } finally {
       setIsLoading(false)
     }
@@ -65,7 +67,7 @@ export default function ForgotPasswordPage() {
 
       setEtape("nouveau-mdp")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Une erreur est survenue.")
+      setError(err instanceof Error ? err.message : t("dashboard.common.error_occurred", "Une erreur est survenue."))
     } finally {
       setIsLoading(false)
     }
@@ -77,11 +79,11 @@ export default function ForgotPasswordPage() {
     setError("")
 
     if (newPassword !== confirmPassword) {
-      setError("Les mots de passe ne correspondent pas.")
+      setError(t("auth.signup.error_password_match", "Les mots de passe ne correspondent pas."))
       return
     }
     if (newPassword.length < 8) {
-      setError("Le mot de passe doit contenir au moins 8 caractères.")
+      setError(t("auth.signup.error_password_length", "Le mot de passe doit contenir au moins 8 caractères."))
       return
     }
 
@@ -101,14 +103,19 @@ export default function ForgotPasswordPage() {
 
       setEtape("succes")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Une erreur est survenue.")
+      setError(err instanceof Error ? err.message : t("dashboard.common.error_occurred", "Une erreur est survenue."))
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <main className="flex min-h-screen text-foreground">
+    <main className="flex min-h-screen text-foreground relative">
+      {/* Sélecteur de langue flottant */}
+      <div className="absolute top-6 right-6 z-30">
+        <LanguageSwitcher />
+      </div>
+
       {/* Côté gauche : Panneau Image */}
       <section className="relative hidden w-full flex-col justify-between p-12 text-white lg:flex lg:w-1/2 overflow-hidden">
         {/* Image et Overlay */}
@@ -122,44 +129,46 @@ export default function ForgotPasswordPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/40" />
         </div>
 
-        <div className="relative z-10 flex items-center gap-3" aria-label="Accueil">
+        <a href="/" className="relative z-10 flex items-center gap-3 w-fit" aria-label="Accueil">
           <div className="flex size-11 items-center justify-center rounded-2xl bg-white/20 text-white shadow-sm backdrop-blur-md">
             <LockKeyhole className="size-5" aria-hidden="true" />
           </div>
           <span className="font-sans text-xl font-semibold tracking-tight">ImmoConnect</span>
-        </div>
+        </a>
         
         <div className="relative z-10 max-w-md">
           <span className="mb-4 inline-block rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs font-semibold tracking-wider text-white backdrop-blur-md">
             ASSISTANCE
           </span>
-          <h2 className="mb-4 text-4xl font-bold leading-tight">Pas de panique, on s'occupe<br />de tout.</h2>
+          <h2 className="mb-4 text-4xl font-bold leading-tight">
+            {t("auth.forgot_password.title_step1", "Pas de panique, on s'occupe de tout.")}
+          </h2>
           <p className="mb-8 text-lg text-white/90">
-            Il arrive à tout le monde d'oublier son mot de passe. Suivez nos instructions sécurisées pour récupérer l'accès à votre espace.
+            {t("auth.forgot_password.subtitle_step1", "Suivez nos instructions sécurisées pour récupérer l'accès à votre espace.")}
           </p>
           
           <ul className="mb-10 space-y-4 text-sm text-white/80">
             <li className="flex items-start gap-3">
               <div className="mt-0.5 flex size-6 items-center justify-center rounded-full bg-white/20 shadow-sm backdrop-blur-md"><span className="text-xs font-bold text-white">1</span></div>
-              <span className="font-medium">Saisissez votre adresse email associée à votre compte ImmoConnect.</span>
+              <span className="font-medium">{t("auth.forgot_password.subtitle_step1", "Saisissez votre adresse email associée à votre compte ImmoConnect.")}</span>
             </li>
             <li className="flex items-start gap-3">
               <div className="mt-0.5 flex size-6 items-center justify-center rounded-full bg-white/20 shadow-sm backdrop-blur-md"><span className="text-xs font-bold text-white">2</span></div>
-              <span className="font-medium">Recevez un code secret de sécurité à 6 chiffres par email.</span>
+              <span className="font-medium">{t("auth.forgot_password.subtitle_step2", "Recevez un code secret de sécurité à 6 chiffres par email.")}</span>
             </li>
             <li className="flex items-start gap-3">
               <div className="mt-0.5 flex size-6 items-center justify-center rounded-full bg-white/20 shadow-sm backdrop-blur-md"><span className="text-xs font-bold text-white">3</span></div>
-              <span className="font-medium">Créez votre nouveau mot de passe et reconnectez-vous !</span>
+              <span className="font-medium">{t("auth.forgot_password.subtitle_step3", "Créez votre nouveau mot de passe et reconnectez-vous !")}</span>
             </li>
           </ul>
 
           <Link href="/login" className="inline-flex h-12 items-center justify-center rounded-xl border-2 border-white/20 bg-white/10 px-8 text-sm font-bold transition-all hover:scale-105 hover:bg-white hover:text-primary backdrop-blur-md">
-            Retour à la connexion
+            {t("auth.forgot_password.btn_back_login", "Retour à la connexion")}
           </Link>
         </div>
 
         <div className="relative z-10 text-sm text-white/60">
-           {new Date().getFullYear()} ImmoConnect. Tous droits réservés.
+           {new Date().getFullYear()} ImmoConnect. {t("footer.rights", "Tous droits réservés.")}
         </div>
       </section>
 
@@ -183,16 +192,16 @@ export default function ForgotPasswordPage() {
                 <CheckCircle2 className="size-7" aria-hidden="true" />
               </div>
               <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
-                Mot de passe modifié
+                {t("auth.forgot_password.title_step4", "Mot de passe modifié")}
               </h1>
               <p role="status" className="mt-3 text-sm leading-6 text-muted-foreground">
-                Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter.
+                {t("auth.forgot_password.subtitle_step4", "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter.")}
               </p>
               <Link
                 href="/login"
                 className="group mt-8 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[0_8px_16px_-4px_rgba(var(--primary),0.3)] transition-all hover:-translate-y-[1px] hover:shadow-[0_12px_20px_-4px_rgba(var(--primary),0.4)] active:translate-y-0 active:shadow-none"
               >
-                Se connecter
+                {t("auth.login.submit_btn", "Se connecter")}
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
               </Link>
             </div>
@@ -236,7 +245,7 @@ export default function ForgotPasswordPage() {
           )}
 
           <Link href="/login" className="mx-auto mt-8 flex w-fit items-center gap-2 text-sm font-semibold text-muted-foreground transition hover:text-foreground lg:hidden">
-            <ArrowLeft className="size-4" aria-hidden="true" /> Retour à la connexion
+            <ArrowLeft className="size-4" aria-hidden="true" /> {t("auth.forgot_password.btn_back_login", "Retour à la connexion")}
           </Link>
         </div>
       </section>

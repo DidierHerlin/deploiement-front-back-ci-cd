@@ -1,7 +1,11 @@
+'use client'
+
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { ReportingData } from '../hooks/useReporting';
+import { useTranslation } from '@/lib/i18n';
 
 export function OccupancyOverview({ data }: { data: ReportingData }) {
+  const { t } = useTranslation();
   const biensDisponibles = data.biens.filter(b => b.statut === 'DISPONIBLE').length;
   const biensLoues = data.biens.filter(b => b.statut === 'LOUE').length;
   const biensEnTravaux = data.biens.filter(b => b.statut === 'EN_TRAVAUX').length;
@@ -9,11 +13,11 @@ export function OccupancyOverview({ data }: { data: ReportingData }) {
   const biensReserves = data.biens.filter(b => b.statut === 'RESERVE').length;
 
   const chartData = [
-    { name: 'Disponible', value: biensDisponibles, color: '#3b82f6' },
-    { name: 'Loué', value: biensLoues, color: '#22c55e' },
-    { name: 'En travaux', value: biensEnTravaux, color: '#eab308' },
-    { name: 'Vendu', value: biensVendus, color: '#64748b' },
-    { name: 'Réservé', value: biensReserves, color: '#a855f7' },
+    { name: t('admin.reporting.status_disponible', 'Disponible'), value: biensDisponibles, color: '#3b82f6' },
+    { name: t('admin.reporting.status_loue', 'Loué'), value: biensLoues, color: '#22c55e' },
+    { name: t('admin.reporting.status_en_travaux', 'En travaux'), value: biensEnTravaux, color: '#eab308' },
+    { name: t('admin.reporting.status_vendu', 'Vendu'), value: biensVendus, color: '#64748b' },
+    { name: t('admin.reporting.status_reserve', 'Réservé'), value: biensReserves, color: '#a855f7' },
   ].filter(item => item.value > 0);
 
   const totalLocatifs = biensDisponibles + biensLoues + biensEnTravaux + biensReserves;
@@ -21,11 +25,15 @@ export function OccupancyOverview({ data }: { data: ReportingData }) {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-sm border col-span-1 md:col-span-1">
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">Taux d'occupation</h3>
+      <h3 className="text-lg font-semibold mb-4 text-gray-800">
+        {t('admin.reporting.occupancy_rate_title', "Taux d'occupation")}
+      </h3>
       
       <div className="flex flex-col items-center justify-center mb-4">
         <div className="text-3xl font-bold text-gray-800">{tauxOccupation}%</div>
-        <div className="text-sm text-gray-500">Biens loués vs parc total louable</div>
+        <div className="text-sm text-gray-500">
+          {t('admin.reporting.occupancy_sub', 'Biens loués vs parc total louable')}
+        </div>
       </div>
 
       <div className="h-64">

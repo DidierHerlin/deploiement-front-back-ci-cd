@@ -1,6 +1,7 @@
 import { X, Link2 } from 'lucide-react'
 import { Bien, Proprietaire } from '@/lib/api'
 import { useState } from 'react'
+import { useTranslation } from '@/lib/i18n'
 
 type AssignBienModalProps = {
   targetProprietaire: Proprietaire
@@ -10,6 +11,7 @@ type AssignBienModalProps = {
 }
 
 export function AssignBienModal({ targetProprietaire, allBiens, onClose, onAssign }: AssignBienModalProps) {
+  const { t } = useTranslation()
   const [selectedBienId, setSelectedBienId] = useState<number | ''>('')
   const [loading, setLoading] = useState(false)
   
@@ -34,33 +36,33 @@ export function AssignBienModal({ targetProprietaire, allBiens, onClose, onAssig
   return (
     <div className="modal-backdrop" role="presentation" style={{ zIndex: 1100 }}>
       <section className="modal" role="dialog" aria-modal="true" style={{ maxWidth: '500px' }}>
-        <button className="modal-close" onClick={onClose} aria-label="Fermer"><X size={18} /></button>
+        <button className="modal-close" onClick={onClose} aria-label={t("forms.close", "Fermer")}><X size={18} /></button>
         <div className="modal-icon"><Link2 size={20} /></div>
-        <h2>Associer un bien (Transfert)</h2>
-        <p>Règle RG-08 : Un bien immobilier appartient à <strong>un seul propriétaire</strong>. L'association transfèrera la propriété si le bien appartient déjà à quelqu'un d'autre.</p>
+        <h2>{t("admin.proprietaires.assign_title", "Associer un bien (Transfert)")}</h2>
+        <p>{t("admin.proprietaires.assign_desc", "Un bien immobilier appartient à un seul propriétaire. L'association transfèrera la propriété si le bien appartient déjà à quelqu'un d'autre.")}</p>
 
         <form onSubmit={handleSubmit} style={{ marginTop: '20px' }}>
-          <label>Sélectionner un bien
+          <label>{t("admin.proprietaires.assign_select", "Sélectionner un bien")}
             <select required value={selectedBienId} onChange={e => setSelectedBienId(e.target.value)}>
-              <option value="">-- Choisir un bien --</option>
+              <option value="">{t("admin.proprietaires.select_property", "-- Choisir un bien --")}</option>
               {availableBiens.map(b => (
                 <option key={b.id} value={b.id}>
-                  {b.titre} (Propriétaire actuel : {b.proprietaire?.user?.prenoms} {b.proprietaire?.user?.nom})
+                  {b.titre} ({t("admin.proprietaires.current_owner", "Propriétaire actuel")} : {b.proprietaire?.user?.prenoms} {b.proprietaire?.user?.nom})
                 </option>
               ))}
             </select>
           </label>
-          
-          {selectedBien && (
-            <div style={{ padding: '10px', background: '#fffbeb', color: '#b45309', borderRadius: '4px', marginTop: '10px', fontSize: '13px' }}>
-              <strong>Attention :</strong> Le bien "{selectedBien.titre}" sera retiré à {selectedBien.proprietaire?.user?.prenoms} {selectedBien.proprietaire?.user?.nom} pour être réattribué à {targetProprietaire.user?.prenoms} {targetProprietaire.user?.nom}.
+
+          {selectedBien && selectedBien.proprietaire && (
+            <div style={{ marginTop: '10px', padding: '10px', background: '#fef3c7', color: '#92400e', fontSize: '12px', borderRadius: '4px' }}>
+              {t("admin.proprietaires.transfer_warning", "Attention : Ce bien appartient déjà à un propriétaire. En validant, il sera transféré.")}
             </div>
           )}
 
           <div className="modal-actions" style={{ marginTop: '20px' }}>
-            <button type="button" className="outline-button" onClick={onClose} disabled={loading}>Annuler</button>
-            <button type="submit" className="primary-button" disabled={loading || !selectedBienId}>
-              {loading ? 'Association...' : 'Confirmer le transfert'}
+            <button type="button" className="outline-button" onClick={onClose}>{t("forms.cancel", "Annuler")}</button>
+            <button type="submit" disabled={loading || !selectedBienId} className="primary-button">
+              {loading ? t("forms.saving", "Association...") : t("admin.proprietaires.assign_confirm_btn", "Associer à ce propriétaire")}
             </button>
           </div>
         </form>

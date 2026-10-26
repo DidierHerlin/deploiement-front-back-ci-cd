@@ -1,4 +1,5 @@
 import { Filter, X, Smartphone } from 'lucide-react'
+import { useTranslation } from '@/lib/i18n'
 
 type PaiementFiltersProps = {
   statutFilter: string
@@ -19,6 +20,7 @@ export function PaiementFilters({
   setOnlyMobileMoneyPending,
   mobileMoneyPendingCount,
 }: PaiementFiltersProps) {
+  const { t } = useTranslation()
   const isFiltered = statutFilter !== 'Tous' || modeFilter !== 'Tous' || !!onlyMobileMoneyPending
 
   const resetFilters = () => {
@@ -31,7 +33,7 @@ export function PaiementFilters({
     <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b' }}>
         <Filter size={16} />
-        <span style={{ fontSize: '14px', fontWeight: 500 }}>Filtres :</span>
+        <span style={{ fontSize: '14px', fontWeight: 500 }}>{t("forms.filter", "Filtres :")}</span>
       </div>
 
       {setOnlyMobileMoneyPending && (
@@ -59,10 +61,10 @@ export function PaiementFilters({
             border: `1px solid ${onlyMobileMoneyPending ? '#059669' : '#a7f3d0'}`,
             transition: 'all 0.15s ease',
           }}
-          title="Afficher uniquement les demandes Mobile Money soumises par les locataires en attente de validation"
+          title={t("admin.paiements.mobile_money_pending_filter_title", "Afficher uniquement les demandes Mobile Money soumises par les locataires en attente de validation")}
         >
           <Smartphone size={13} />
-          <span>Mobile Money à valider</span>
+          <span>{t("admin.paiements.mobile_money_to_validate", "Mobile Money à valider")}</span>
           {mobileMoneyPendingCount !== undefined && (
             <span
               style={{
@@ -89,12 +91,12 @@ export function PaiementFilters({
         }}
         style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px' }}
       >
-        <option value="Tous">Tous les statuts</option>
-        <option value="EN_ATTENTE">En attente</option>
-        <option value="PAYE">Payé</option>
-        <option value="PARTIEL">Partiel</option>
-        <option value="EN_RETARD">En retard</option>
-        <option value="ANNULE">Annulé</option>
+        <option value="Tous">{t("admin.paiements.filter_all_status", "Tous les statuts")}</option>
+        <option value="EN_ATTENTE">{t("dashboard.common.status_en_attente", "En attente")}</option>
+        <option value="PAYE">{t("dashboard.common.status_paye", "Payé")}</option>
+        <option value="PARTIEL">{t("dashboard.common.status_partiel", "Partiel")}</option>
+        <option value="EN_RETARD">{t("dashboard.common.status_en_retard", "En retard")}</option>
+        <option value="ANNULE">{t("dashboard.common.status_annule", "Annulé")}</option>
       </select>
 
       <select 
@@ -106,13 +108,13 @@ export function PaiementFilters({
         }}
         style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px' }}
       >
-        <option value="Tous">Tous les modes</option>
+        <option value="Tous">{t("admin.paiements.filter_all_modes", "Tous les modes")}</option>
         <option value="MVOLA">Mvola</option>
         <option value="ORANGE_MONEY">Orange Money</option>
         <option value="AIRTEL_MONEY">Airtel Money</option>
-        <option value="VIREMENT">Virement</option>
-        <option value="CHEQUE">Chèque</option>
-        <option value="ESPECE">Espèce</option>
+        <option value="VIREMENT">{t("admin.paiements.mode_virement", "Virement")}</option>
+        <option value="CHEQUE">{t("admin.paiements.mode_cheque", "Chèque")}</option>
+        <option value="ESPECE">{t("admin.paiements.mode_especes", "Espèce")}</option>
       </select>
 
       {isFiltered && (
@@ -124,7 +126,7 @@ export function PaiementFilters({
             fontSize: '13px', cursor: 'pointer', padding: '8px'
           }}
         >
-          <X size={14} /> Réinitialiser
+          <X size={14} /> {t("forms.reset", "Réinitialiser")}
         </button>
       )}
     </div>

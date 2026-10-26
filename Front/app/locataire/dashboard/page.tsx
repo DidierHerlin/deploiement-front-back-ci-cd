@@ -3,6 +3,7 @@
 import '@/app/admin/admin.css'
 import { useState, useEffect } from 'react'
 import { getProfil } from '@/lib/api'
+import { useTranslation } from '@/lib/i18n'
 import { usePaiements } from '../paiements/hooks/usePaiements'
 import { useContrats } from '../contrat/hooks/useContrats'
 
@@ -19,10 +20,11 @@ import { DashboardDocumentsCard } from "@/components/molecules/DashboardDocument
 import { NotificationList } from "@/components/organisms/NotificationList"
 
 export default function LocataireDashboardPage() {
+  const { t } = useTranslation();
   const [user, setUser] = useState<any>(null);
   const [mobileNav, setMobileNav] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const active = "Tableau de bord";
+  const active = t('dashboard.nav.my_dashboard', 'Tableau de bord');
 
   // Récupération dynamique via nos hooks
   const { paiements, notifications, loading: loadingPaiements, error: errorPaiements } = usePaiements();
@@ -83,11 +85,16 @@ export default function LocataireDashboardPage() {
           <div className="lower-grid">
             <section className="panel notifications-section">
               <div className="panel-header">
-                <div><h2>Mes notifications</h2><p>Les informations importantes concernant votre dossier</p></div>
+                <div>
+                  <h2>{t('dashboard.locataire.my_notifications', 'Mes notifications')}</h2>
+                  <p>{t('dashboard.locataire.notifications_sub', 'Les informations importantes concernant votre dossier')}</p>
+                </div>
               </div>
               <NotificationList notifications={notifications} />
               {notifications.length === 0 && (
-                <div style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Aucune notification récente.</div>
+                <div style={{ padding: '1rem', color: 'var(--text-secondary)' }}>
+                  {t('dashboard.locataire.no_notifications', 'Aucune notification récente.')}
+                </div>
               )}
             </section>
             

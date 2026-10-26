@@ -3,7 +3,8 @@
 import '@/app/admin/admin.css'
 import { useState, useEffect, useMemo } from 'react'
 import { getProfil, Paiement } from '@/lib/api'
-import { Smartphone, Receipt, ListFilter, AlertCircle, Clock, PlusCircle } from 'lucide-react'
+import { Smartphone, Receipt, PlusCircle } from 'lucide-react'
+import { useTranslation } from '@/lib/i18n'
 
 import { LocataireSidebar } from "@/components/organisms/LocataireSidebar"
 import { LocataireTopbar } from "@/components/organisms/LocataireTopbar"
@@ -19,6 +20,7 @@ import { usePaiements } from './hooks/usePaiements'
 import { useContrats } from '../contrat/hooks/useContrats'
 
 export default function PaiementsPage() {
+  const { t, lang } = useTranslation();
   const [mobileNav, setMobileNav] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -87,7 +89,7 @@ export default function PaiementsPage() {
         <LocataireTopbar 
           setMobileNav={setMobileNav}
           setShowProfile={setShowProfile}
-          activeLabel="Mes paiements"
+          activeLabel={t('dashboard.nav.my_payments', 'Mes paiements')}
           user={user}
         />
         
@@ -96,7 +98,7 @@ export default function PaiementsPage() {
 
           {loading ? (
             <div style={{ padding: '3rem', textAlign: 'center' }}>
-              <p>Chargement de vos paiements...</p>
+              <p>{t('forms.loading', 'Chargement de vos paiements...')}</p>
             </div>
           ) : error ? (
             <div style={{ padding: '3rem', textAlign: 'center', color: 'red' }}>
@@ -138,10 +140,13 @@ export default function PaiementsPage() {
                     </div>
                     <div>
                       <h3 style={{ margin: '0 0 4px', fontSize: '1rem', fontWeight: 700, color: '#1e3a8a' }}>
-                        Facture en attente prête pour règlement Mobile Money
+                        {t('locataire_pages.paiements.eligible_title', 'Facture en attente prête pour règlement Mobile Money')}
                       </h3>
                       <p style={{ margin: 0, fontSize: '0.86rem', color: '#3b82f6' }}>
-                        Votre échéance prioritaire pour <strong>{facturesEligibles[0].date_echeance ? new Date(facturesEligibles[0].date_echeance).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : 'ce mois'}</strong> ({parseFloat((facturesEligibles[0].montant_attendu || facturesEligibles[0].montant || 0) as string).toLocaleString('fr-FR')} Ar) est prête à être réglée exclusivement par MVola, Orange Money ou Airtel Money.
+                        {t('locataire_pages.paiements.eligible_desc', 'Votre échéance prioritaire pour {period} ({amount} Ar) est prête à être réglée exclusivement par MVola, Orange Money ou Airtel Money.', {
+                          period: facturesEligibles[0].date_echeance ? new Date(facturesEligibles[0].date_echeance).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR', { month: 'long', year: 'numeric' }) : (lang === 'en' ? 'this month' : 'ce mois'),
+                          amount: parseFloat((facturesEligibles[0].montant_attendu || facturesEligibles[0].montant || 0) as string).toLocaleString('fr-FR'),
+                        })}
                       </p>
                     </div>
                   </div>
@@ -162,7 +167,7 @@ export default function PaiementsPage() {
                       border: 'none',
                     }}
                   >
-                    <Smartphone size={16} /> Demander le paiement Mobile Money
+                    <Smartphone size={16} /> {t('locataire_pages.paiements.request_payment_btn', 'Demander le paiement Mobile Money')}
                   </button>
                 </div>
               )}
@@ -194,7 +199,7 @@ export default function PaiementsPage() {
                     marginBottom: '-1px',
                   }}
                 >
-                  <Receipt size={17} /> Factures & Échéances
+                  <Receipt size={17} /> {t('locataire_pages.paiements.tab_invoices', 'Factures & Échéances')}
                   <span
                     style={{
                       fontSize: '0.75rem',
@@ -226,7 +231,7 @@ export default function PaiementsPage() {
                     marginBottom: '-1px',
                   }}
                 >
-                  <Smartphone size={17} /> Mes demandes Mobile Money
+                  <Smartphone size={17} /> {t('locataire_pages.paiements.tab_requests', 'Mes demandes Mobile Money')}
                   <span
                     style={{
                       fontSize: '0.75rem',
@@ -237,7 +242,7 @@ export default function PaiementsPage() {
                       fontWeight: 600,
                     }}
                   >
-                    {demandes.length} {pendingDemandesCount > 0 && `(${pendingDemandesCount} en attente)`}
+                    {demandes.length} {pendingDemandesCount > 0 && t('locataire_pages.paiements.pending_count', '({count} en attente)', { count: pendingDemandesCount })}
                   </span>
                 </button>
               </div>
@@ -274,7 +279,7 @@ export default function PaiementsPage() {
                           border: 'none',
                         }}
                       >
-                        <PlusCircle size={16} /> Nouvelle demande Mobile Money
+                        <PlusCircle size={16} /> {t('locataire_pages.paiements.new_request_btn', 'Nouvelle demande Mobile Money')}
                       </button>
                     </div>
                   )}

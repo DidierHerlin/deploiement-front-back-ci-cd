@@ -1,6 +1,7 @@
 import { FormEvent } from "react"
 import { ArrowRight } from "lucide-react"
 import { PasswordInput } from "@/components/atoms/password-input"
+import { useTranslation } from "@/lib/i18n"
 
 interface ResetPasswordFormProps {
   newPassword: string
@@ -21,23 +22,25 @@ export function ResetPasswordForm({
   isLoading,
   error
 }: ResetPasswordFormProps) {
+  const { t } = useTranslation()
+
   return (
     <>
       <div className="mb-8 text-center">
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-          Étape 3 / 3
+          {t("auth.forgot_password.instruction_step3", "Étape 3 / 3")}
         </p>
         <h1 className="bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-3xl font-semibold tracking-tight text-transparent">
-          Nouveau mot de passe
+          {t("auth.forgot_password.title_step3", "Nouveau mot de passe")}
         </h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Choisissez un nouveau mot de passe sécurisé.
+          {t("auth.forgot_password.subtitle_step3", "Choisissez un nouveau mot de passe sécurisé.")}
         </p>
       </div>
       <form onSubmit={onSubmit} className="space-y-5">
         <div className="space-y-2">
           <label htmlFor="new-password" className="text-sm font-medium text-foreground">
-            Nouveau mot de passe
+            {t("auth.forgot_password.new_password_label", "Nouveau mot de passe")}
           </label>
           <div className="relative">
             <PasswordInput
@@ -52,7 +55,7 @@ export function ResetPasswordForm({
         </div>
         <div className="space-y-2">
           <label htmlFor="confirm-new-password" className="text-sm font-medium text-foreground">
-            Confirmer le mot de passe
+            {t("auth.forgot_password.confirm_password_label", "Confirmer le mot de passe")}
           </label>
           <div className="relative">
             <PasswordInput
@@ -61,7 +64,7 @@ export function ResetPasswordForm({
               minLength={8}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirmez votre mot de passe"
+              placeholder="8 caractères minimum"
             />
           </div>
         </div>
@@ -69,9 +72,9 @@ export function ResetPasswordForm({
         <button
           type="submit"
           disabled={isLoading}
-          className="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary/80 px-4 text-sm font-semibold text-primary-foreground shadow-lg transition-all hover:scale-[1.02] hover:shadow-primary/25 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25"
+          className="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary/80 px-4 text-sm font-semibold text-primary-foreground shadow-lg transition-all hover:scale-[1.02] hover:shadow-primary/25 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25 cursor-pointer"
         >
-          {isLoading ? "Réinitialisation..." : "Enregistrer le mot de passe"}
+          {isLoading ? t("auth.forgot_password.resetting", "Mise à jour du mot de passe...") : t("auth.forgot_password.btn_reset", "Réinitialiser le mot de passe")}
           <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
         </button>
       </form>

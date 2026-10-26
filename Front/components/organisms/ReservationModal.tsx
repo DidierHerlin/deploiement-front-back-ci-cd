@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Check, MapPin, Maximize, DoorOpen, Tag } from 'lucide-react'
+import { X, Check, MapPin, Tag } from 'lucide-react'
 import { BienListItem, creerReservation } from '@/lib/api'
+import { useTranslation } from '@/lib/i18n'
 
 interface ReservationModalProps {
   bien: BienListItem
@@ -11,6 +12,7 @@ interface ReservationModalProps {
 }
 
 export default function ReservationModal({ bien, onClose, onSuccess }: ReservationModalProps) {
+  const { t } = useTranslation()
   const typeReservation = bien.mode_transaction === 'VENTE' ? 'ACHAT' : 'LOCATION'
   const [commentaire, setCommentaire] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -38,10 +40,10 @@ export default function ReservationModal({ bien, onClose, onSuccess }: Reservati
       <div className="panel" style={{ maxWidth: 520, width: '100%', maxHeight: '90vh', overflow: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div>
-            <p className="section-kicker">RÉSERVATION</p>
-            <h2 style={{ fontSize: 18, fontWeight: 700 }}>Réserver ce bien</h2>
+            <p className="section-kicker">{t('locataire_pages.biens.reserve_kicker', 'RÉSERVATION')}</p>
+            <h2 style={{ fontSize: 18, fontWeight: 700 }}>{t('locataire_pages.biens.reserve_title', 'Réserver ce bien')}</h2>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted-foreground)' }}>
+          <button onClick={onClose} aria-label={t('common.close', 'Fermer')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted-foreground)' }}>
             <X size={20} />
           </button>
         </div>
@@ -55,7 +57,7 @@ export default function ReservationModal({ bien, onClose, onSuccess }: Reservati
           </div>
           <div style={{ marginTop: 8, fontSize: 16, fontWeight: 700, color: 'var(--primary)' }}>
             {bien.mode_transaction === 'LOCATION'
-              ? `${Number(bien.loyer_mensuel || 0).toLocaleString()} Ar / mois`
+              ? `${Number(bien.loyer_mensuel || 0).toLocaleString()} Ar / ${t('card.per_month', 'mois')}`
               : `${Number(bien.prix || 0).toLocaleString()} Ar`
             }
           </div>
@@ -63,22 +65,28 @@ export default function ReservationModal({ bien, onClose, onSuccess }: Reservati
 
         {/* Type de réservation */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 13, fontWeight: 500, display: 'block', marginBottom: 6 }}>Type de réservation</label>
+          <label style={{ fontSize: 13, fontWeight: 500, display: 'block', marginBottom: 6 }}>
+            {t('locataire_pages.biens.reserve_type_label', 'Type de réservation')}
+          </label>
           <div style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--muted)', fontSize: 13, color: 'var(--muted-foreground)' }}>
-            {typeReservation === 'LOCATION' ? '📋 Location' : '🏠 Achat'}
+            {typeReservation === 'LOCATION'
+              ? t('locataire_pages.biens.type_location', '📋 Location')
+              : t('locataire_pages.biens.type_achat', '🏠 Achat')}
           </div>
           <p style={{ fontSize: 11, color: 'var(--muted-foreground)', marginTop: 4 }}>
-            Déterminé automatiquement selon le mode de transaction du bien.
+            {t('locataire_pages.biens.type_desc', 'Déterminé automatiquement selon le mode de transaction du bien.')}
           </p>
         </div>
 
         {/* Commentaire */}
         <div style={{ marginBottom: 20 }}>
-          <label style={{ fontSize: 13, fontWeight: 500, display: 'block', marginBottom: 6 }}>Commentaire (optionnel)</label>
+          <label style={{ fontSize: 13, fontWeight: 500, display: 'block', marginBottom: 6 }}>
+            {t('locataire_pages.biens.comment_label', 'Commentaire (optionnel)')}
+          </label>
           <textarea
             value={commentaire}
             onChange={(e) => setCommentaire(e.target.value)}
-            placeholder="Décrivez vos besoins, posez vos questions..."
+            placeholder={t('locataire_pages.biens.comment_placeholder', 'Décrivez vos besoins, posez vos questions...')}
             rows={4}
             style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', resize: 'vertical', fontSize: 13 }}
           />
@@ -95,7 +103,7 @@ export default function ReservationModal({ bien, onClose, onSuccess }: Reservati
             onClick={onClose}
             style={{ padding: '8px 16px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', cursor: 'pointer', fontSize: 13 }}
           >
-            Annuler
+            {t('common.cancel', 'Annuler')}
           </button>
           <button
             onClick={handleSubmit}
@@ -103,7 +111,7 @@ export default function ReservationModal({ bien, onClose, onSuccess }: Reservati
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 20px', borderRadius: 6, border: 'none', background: 'var(--primary)', color: 'var(--primary-foreground)', cursor: submitting ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: 13 }}
           >
             <Check size={16} />
-            {submitting ? 'Envoi...' : 'Confirmer la réservation'}
+            {submitting ? t('locataire_pages.biens.sending', 'Envoi...') : t('locataire_pages.biens.confirm_btn', 'Confirmer la réservation')}
           </button>
         </div>
       </div>

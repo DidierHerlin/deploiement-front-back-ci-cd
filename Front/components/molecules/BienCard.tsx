@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Bien, resolveMediaUrl } from '@/lib/api'
 import { Building2, MapPin, Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useTranslation } from '@/lib/i18n'
 
 interface BienCardProps {
   bien: Bien
@@ -11,6 +12,7 @@ interface BienCardProps {
 }
 
 export function BienCard({ bien, onEdit, onDelete }: BienCardProps) {
+  const { t } = useTranslation()
   const [photoIndex, setPhotoIndex] = useState(0)
 
   const getStatusColor = (statut: string) => {
@@ -24,14 +26,25 @@ export function BienCard({ bien, onEdit, onDelete }: BienCardProps) {
   }
 
   const getTypeLabel = (type: string) => {
-    const types: Record<string, string> = {
-      'APPARTEMENT': 'Appartement',
-      'MAISON': 'Maison',
-      'TERRAIN': 'Terrain',
-      'COMMERCE': 'Commerce',
-      'BUREAU': 'Bureau'
+    switch (type) {
+      case 'APPARTEMENT': return t("types.apartment", "Appartement")
+      case 'MAISON': return t("types.house", "Maison")
+      case 'TERRAIN': return t("types.land", "Terrain")
+      case 'COMMERCE': return t("types.commercial", "Commerce")
+      case 'BUREAU': return t("types.commercial", "Bureau")
+      default: return type
     }
-    return types[type] || type
+  }
+
+  const getStatusLabel = (statut: string) => {
+    switch (statut) {
+      case 'DISPONIBLE': return t("dashboard.common.status_disponible", "Disponible")
+      case 'LOUE': return t("dashboard.common.status_loue", "Loué")
+      case 'VENDU': return t("dashboard.common.status_vendu", "Vendu")
+      case 'RESERVE': return t("dashboard.common.status_reserve", "Réservé")
+      case 'EN_TRAVAUX': return t("dashboard.common.status_en_travaux", "En travaux")
+      default: return statut
+    }
   }
 
   const photosList = Array.isArray(bien.photos) ? bien.photos : []
@@ -101,10 +114,12 @@ export function BienCard({ bien, onEdit, onDelete }: BienCardProps) {
         )}
         <div className="absolute top-3 right-3 flex gap-2">
           <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${getStatusColor((bien?.statut || ''))}`}>
-            {(bien?.statut || '')}
+            {getStatusLabel(bien?.statut || '')}
           </span>
           <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white text-gray-700 shadow-sm">
-            {(bien?.mode_transaction || '') === 'LOCATION' ? 'À LOUER' : 'À VENDRE'}
+            {(bien?.mode_transaction || '') === 'LOCATION' 
+              ? t("card.for_rent", "À LOUER") 
+              : t("card.for_sale", "À VENDRE")}
           </span>
         </div>
       </div>
@@ -121,13 +136,13 @@ export function BienCard({ bien, onEdit, onDelete }: BienCardProps) {
         <div className="grid grid-cols-2 gap-y-2 text-xs text-gray-600 mb-4 mt-auto">
           {(bien?.type || '') !== 'TERRAIN' && (
             <div>
-              <span className="block text-gray-400 text-[10px] uppercase font-semibold">Surface</span>
+              <span className="block text-gray-400 text-[10px] uppercase font-semibold">{t("card.surface", "Surface")}</span>
               <strong className="text-gray-800">{bien.surface} m²</strong>
             </div>
           )}
           {(bien?.type || '') !== 'TERRAIN' && bien.nombre_pieces && (
             <div>
-              <span className="block text-gray-400 text-[10px] uppercase font-semibold">Pièces</span>
+              <span className="block text-gray-400 text-[10px] uppercase font-semibold">{t("card.rooms", "Pièces")}</span>
               <strong className="text-gray-800">{bien.nombre_pieces}</strong>
             </div>
           )}
@@ -136,11 +151,11 @@ export function BienCard({ bien, onEdit, onDelete }: BienCardProps) {
         <div className="border-t border-gray-100 pt-4 flex items-center justify-between mt-auto">
           <div className="font-bold text-[#17202b] text-lg">
             {(bien?.mode_transaction || '') === 'LOCATION' && bien.loyer_mensuel ? (
-              <>{parseFloat(bien.loyer_mensuel).toLocaleString('fr-FR')} Ar <span className="text-xs font-normal text-gray-500">/ mois</span></>
+              <>{parseFloat(bien.loyer_mensuel).toLocaleString('fr-FR')} Ar <span className="text-xs font-normal text-gray-500">{t("card.per_month", "/ mois")}</span></>
             ) : bien.prix ? (
               <>{parseFloat(bien.prix).toLocaleString('fr-FR')} Ar</>
             ) : (
-              <span className="text-sm text-gray-400">Prix sur demande</span>
+              <span className="text-sm text-gray-400">{t("card.price_on_request", "Prix sur demande")}</span>
             )}
           </div>
           
@@ -148,14 +163,14 @@ export function BienCard({ bien, onEdit, onDelete }: BienCardProps) {
             <button 
               onClick={onEdit}
               className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-              title="Modifier"
+              title={t("forms.edit", "Modifier")}
             >
               <Pencil size={15} />
             </button>
             <button 
               onClick={onDelete}
               className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors"
-              title="Supprimer"
+              title={t("forms.delete", "Supprimer")}
             >
               <Trash2 size={15} />
             </button>

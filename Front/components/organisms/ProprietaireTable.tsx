@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Proprietaire } from '@/lib/api'
 import { ProprietaireTableRow } from "@/components/organisms/ProprietaireTableRow"
 import { Pagination } from "@/components/molecules/pagination"
+import { useTranslation } from '@/lib/i18n'
 
 type ProprietaireTableProps = {
   proprietaires: Proprietaire[]
@@ -13,6 +14,7 @@ type ProprietaireTableProps = {
 }
 
 export function ProprietaireTable({ proprietaires, loading, onView, onEdit, onDisable, biensCountMap }: ProprietaireTableProps) {
+  const { t } = useTranslation()
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 5;
   const totalPages = Math.ceil(proprietaires.length / ITEMS_PER_PAGE);
@@ -24,17 +26,17 @@ export function ProprietaireTable({ proprietaires, loading, onView, onEdit, onDi
         <table>
           <thead>
             <tr>
-              <th>ID</th>
-              <th>PROPRIÉTAIRE</th>
-              <th>CONTACT</th>
-              <th>BIENS</th>
-              <th>STATUT</th>
-              <th style={{ textAlign: 'right' }}>ACTIONS</th>
+              <th>{t("admin.biens.col_id", "ID")}</th>
+              <th>{t("admin.proprietaires.col_owner", "PROPRIÉTAIRE")}</th>
+              <th>{t("admin.proprietaires.col_contact", "CONTACT & IBAN")}</th>
+              <th>{t("admin.proprietaires.col_properties_count", "PATRIMOINE")}</th>
+              <th>{t("admin.proprietaires.col_status", "STATUT")}</th>
+              <th style={{ textAlign: 'right' }}>{t("admin.proprietaires.col_actions", "ACTIONS")}</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '20px' }}>Chargement...</td></tr>
+              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '20px' }}>{t("forms.loading", "Chargement...")}</td></tr>
             ) : paginatedData.length > 0 ? (
               paginatedData.map(p => (
                 <ProprietaireTableRow 
@@ -47,7 +49,7 @@ export function ProprietaireTable({ proprietaires, loading, onView, onEdit, onDi
                 />
               ))
             ) : (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '30px', color: '#8993a3' }}>Aucun propriétaire trouvé.</td></tr>
+              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '30px', color: '#8993a3' }}>{t("admin.proprietaires.empty", "Aucun propriétaire trouvé.")}</td></tr>
             )}
           </tbody>
         </table>

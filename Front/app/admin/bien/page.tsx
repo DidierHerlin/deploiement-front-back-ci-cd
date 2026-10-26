@@ -6,6 +6,7 @@ import {
   getBiens, createBien, updateBien, deleteBien, getProprietaires,
   Bien, Proprietaire 
 } from '@/lib/api'
+import { useTranslation } from '@/lib/i18n'
 
 import { BienTable } from "@/components/organisms/BienTable"
 import { BienSearch } from "@/components/organisms/BienSearch"
@@ -15,6 +16,7 @@ import { BienModal } from "@/components/organisms/BienModal"
 import { DeleteBienModal } from "@/components/organisms/bien_DeleteBienModal"
 
 export default function BienPage() {
+  const { t } = useTranslation()
   const [biens, setBiens] = useState<Bien[]>([])
   const [proprietaires, setProprietaires] = useState<Proprietaire[]>([])
   const [loading, setLoading] = useState(true)
@@ -98,6 +100,7 @@ export default function BienPage() {
       if (editingBien) {
         const updated = await updateBien(editingBien.id, payload)
         if (updated) {
+          // Mise à jour optimiste directe dans le state local
           setBiens(prev => prev.map(b => b.id === editingBien.id ? { ...b, ...updated } : b))
         } else {
           await refreshBiens()
@@ -106,12 +109,11 @@ export default function BienPage() {
         await createBien(payload)
         await refreshBiens()
       }
-      
       setShowForm(false)
       setEditingBien(null)
       setNewBien(defaultNewBien)
-    } catch (error: any) {
-      alert("Erreur lors de l'enregistrement: " + error.message)
+    } catch (e: any) {
+      alert("Erreur lors de l'enregistrement: " + (e.message || "Erreur inconnue"))
     }
   }
 
@@ -146,11 +148,11 @@ export default function BienPage() {
     <>
       <div className="welcome-row" style={{ marginBottom: '20px' }}>
         <div>
-          <h1>Gestion des <span>Biens immobiliers</span></h1>
-          <p className="subtitle">Administrez votre parc immobilier, suivez les statuts et ajoutez de nouvelles propriétés.</p>
+          <h1>{t("admin.biens.title_start", "Gestion des")} <span>{t("admin.biens.title_highlight", "Biens immobiliers")}</span></h1>
+          <p className="subtitle">{t("admin.biens.subtitle", "Administrez votre parc immobilier, suivez les statuts et ajoutez de nouvelles propriétés.")}</p>
         </div>
         <button className="primary-button" onClick={handleCreateClick}>
-          <Plus size={16} /> Ajouter un bien
+          <Plus size={16} /> {t("admin.biens.add_property", "Ajouter un bien")}
         </button>
       </div>
 

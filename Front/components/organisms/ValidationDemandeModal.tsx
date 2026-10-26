@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { X, CheckCircle2, XCircle, Smartphone, AlertCircle, Loader2, ArrowRight } from 'lucide-react'
+import { X, CheckCircle2, XCircle, Smartphone, AlertCircle, Loader2 } from 'lucide-react'
 import { Paiement, validerDemandePaiement, refuserDemandePaiement, validerPaiement, refuserPaiement } from '@/lib/api'
+import { useTranslation } from '@/lib/i18n'
 
 interface ValidationDemandeModalProps {
   paiement: Paiement | null
@@ -19,6 +20,7 @@ export function ValidationDemandeModal({
   onClose,
   onSuccess,
 }: ValidationDemandeModalProps) {
+  const { t } = useTranslation()
   const [action, setAction] = useState<'valider' | 'refuser'>(initialAction)
   const [motifRefus, setMotifRefus] = useState('')
   const [loading, setLoading] = useState(false)
@@ -103,7 +105,7 @@ export function ValidationDemandeModal({
           className="modal-close"
           onClick={onClose}
           disabled={loading}
-          aria-label="Fermer"
+          aria-label={t('common.close', 'Fermer')}
           style={{ top: '16px', right: '16px' }}
         >
           <X size={20} />
@@ -127,10 +129,12 @@ export function ValidationDemandeModal({
           </div>
           <div>
             <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: '#0f172a' }}>
-              {action === 'valider' ? 'Valider le paiement Mobile Money' : 'Refuser la demande de paiement'}
+              {action === 'valider'
+                ? t('admin.paiements.valider_mobile_title', 'Valider le paiement Mobile Money')
+                : t('admin.paiements.refuser_mobile_title', 'Refuser la demande de paiement')}
             </h2>
             <p style={{ margin: '2px 0 0', fontSize: '13px', color: '#64748b' }}>
-              Échéance #{paiement.id} • {paiement.message_mois || 'Facture mensuelle'}
+              Échéance #{paiement.id} • {paiement.message_mois || t('common.monthly_invoice', 'Facture mensuelle')}
             </p>
           </div>
         </div>
@@ -164,7 +168,7 @@ export function ValidationDemandeModal({
               transition: 'all 0.15s ease',
             }}
           >
-            ✓ Valider le paiement
+            {t('admin.paiements.btn_valider_paiement', '✓ Valider le paiement')}
           </button>
           <button
             type="button"
@@ -184,7 +188,7 @@ export function ValidationDemandeModal({
               transition: 'all 0.15s ease',
             }}
           >
-            ✕ Refuser la demande
+            {t('admin.paiements.btn_refuser_demande', '✕ Refuser la demande')}
           </button>
         </div>
 
@@ -200,21 +204,29 @@ export function ValidationDemandeModal({
         >
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '13px' }}>
             <div>
-              <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>Locataire</span>
+              <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>
+                {t('admin.paiements.col_tenant', 'Locataire')}
+              </span>
               <div style={{ fontWeight: 600, color: '#1e293b' }}>{paiement.locataire_nom || 'Non renseigné'}</div>
             </div>
             <div>
-              <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>Bien</span>
+              <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>
+                {t('admin.paiements.col_property', 'Bien')}
+              </span>
               <div style={{ fontWeight: 600, color: '#1e293b' }}>{paiement.bien_titre || 'Non renseigné'}</div>
             </div>
             <div>
-              <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>Montant à valider</span>
+              <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>
+                {t('admin.paiements.montant_a_valider', 'Montant à valider')}
+              </span>
               <div style={{ fontWeight: 700, fontSize: '15px', color: '#0f172a' }}>
                 {montant.toLocaleString('fr-FR')} Ar
               </div>
             </div>
             <div>
-              <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>Opérateur</span>
+              <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>
+                {t('admin.paiements.col_mode', 'Opérateur')}
+              </span>
               <div style={{ marginTop: '2px' }}>
                 <span
                   style={{
@@ -235,11 +247,15 @@ export function ValidationDemandeModal({
               </div>
             </div>
             <div>
-              <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>Numéro Mobile Money</span>
+              <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>
+                {t('admin.paiements.num_mobile_money', 'Numéro Mobile Money')}
+              </span>
               <div style={{ fontWeight: 600, color: '#1e293b', fontFamily: 'monospace' }}>{telephone}</div>
             </div>
             <div>
-              <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>Référence transaction</span>
+              <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>
+                {t('admin.paiements.ref_transaction', 'Référence transaction')}
+              </span>
               <div style={{ fontWeight: 700, color: '#047857', fontFamily: 'monospace' }}>{reference}</div>
             </div>
           </div>
@@ -279,7 +295,7 @@ export function ValidationDemandeModal({
                 lineHeight: '1.5',
               }}
             >
-              <strong>Impact de la validation :</strong> La facture sera marquée comme <strong>PAYÉE</strong>, la quittance officielle en PDF sera immédiatement générée, et le locataire sera notifié.
+              <strong>Impact de la validation :</strong> {t('admin.paiements.validation_impact', 'La facture sera marquée comme PAYÉE, la quittance officielle en PDF sera immédiatement générée, et le locataire sera notifié.')}
             </div>
           ) : (
             <div style={{ marginBottom: '18px' }}>
@@ -292,12 +308,12 @@ export function ValidationDemandeModal({
                   marginBottom: '6px',
                 }}
               >
-                Motif du refus <span style={{ color: '#dc2626' }}>*</span>
+                {t('admin.paiements.motif_refus_label', 'Motif du refus')} <span style={{ color: '#dc2626' }}>*</span>
               </label>
               <textarea
                 value={motifRefus}
                 onChange={(e) => setMotifRefus(e.target.value)}
-                placeholder="Ex : Référence transaction introuvable, montant reçu incomplet sur le compte MVola..."
+                placeholder={t('admin.paiements.motif_refus_placeholder', 'Ex : Référence transaction introuvable, montant reçu incomplet sur le compte MVola...')}
                 rows={3}
                 required
                 disabled={loading}
@@ -312,7 +328,7 @@ export function ValidationDemandeModal({
                 }}
               />
               <span style={{ fontSize: '11px', color: '#64748b' }}>
-                Le locataire sera informé du motif et pourra renouveler sa demande.
+                {t('admin.paiements.refus_subtext', 'Le locataire sera informé du motif et pourra renouveler sa demande.')}
               </span>
             </div>
           )}
@@ -325,7 +341,7 @@ export function ValidationDemandeModal({
               className="outline-button"
               style={{ padding: '8px 16px', fontSize: '13px', borderRadius: '8px' }}
             >
-              Annuler
+              {t('common.cancel', 'Annuler')}
             </button>
             <button
               type="submit"
@@ -346,7 +362,9 @@ export function ValidationDemandeModal({
               }}
             >
               {loading && <Loader2 size={16} className="animate-spin" />}
-              {action === 'valider' ? 'Confirmer la validation' : 'Confirmer le refus'}
+              {action === 'valider'
+                ? t('admin.paiements.confirm_valider', 'Confirmer la validation')
+                : t('admin.paiements.confirm_refuser', 'Confirmer le refus')}
             </button>
           </div>
         </form>

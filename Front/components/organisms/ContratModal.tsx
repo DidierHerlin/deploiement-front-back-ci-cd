@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X, FileText, Calendar, Building2, User, CreditCard } from 'lucide-react'
 import { Contrat, Paiement } from '@/lib/api'
 import { Pagination } from "@/components/molecules/pagination"
+import { useTranslation } from '@/lib/i18n'
 
 type ContratModalProps = {
   contrat: Contrat
@@ -11,6 +12,7 @@ type ContratModalProps = {
 }
 
 export function ContratModal({ contrat, paiements, onClose, onAction }: ContratModalProps) {
+  const { t } = useTranslation()
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 5;
   const totalPages = Math.ceil(paiements.length / ITEMS_PER_PAGE);
@@ -31,13 +33,13 @@ export function ContratModal({ contrat, paiements, onClose, onAction }: ContratM
   return (
     <div className="modal-backdrop" role="presentation">
       <section className="modal" role="dialog" aria-modal="true" style={{ width: '90vw', maxWidth: '1300px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', padding: '20px' }}>
-        <button className="modal-close" onClick={onClose} aria-label="Fermer" style={{ top: '20px', right: '20px' }}><X size={18} /></button>
+        <button className="modal-close" onClick={onClose} aria-label={t("forms.close", "Fermer")} style={{ top: '20px', right: '20px' }}><X size={18} /></button>
         
         <div style={{ flexShrink: 0 }}>
           <div className="modal-icon"><FileText size={20} /></div>
-          <h2 style={{ marginBottom: '5px' }}>Détails du contrat #{contrat.id}</h2>
+          <h2 style={{ marginBottom: '5px' }}>{t("admin.contrats.modal_details_title", "Détails du contrat")} #{contrat.id}</h2>
           <p style={{ marginBottom: '20px', color: '#666' }}>
-            Statut actuel : <span style={{ fontWeight: 600 }}>{contrat.statut}</span> • Créé le {formatDate(contrat.date_creation)}
+            {t("forms.status", "Statut")} : <span style={{ fontWeight: 600 }}>{contrat.statut}</span> • {t("admin.contrats.created_on", "Créé le")} {formatDate(contrat.date_creation)}
           </p>
         </div>
 
@@ -47,33 +49,33 @@ export function ContratModal({ contrat, paiements, onClose, onAction }: ContratM
           
           <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '6px' }}>
             <h3 style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '10px' }}>
-              <Building2 size={14} /> Bien concerné
+              <Building2 size={14} /> {t("admin.contrats.property_concerned", "Bien concerné")}
             </h3>
             <p style={{ fontWeight: 500 }}>{contrat.bien_titre}</p>
-            <p style={{ fontSize: '12px', color: '#666' }}>Type : {contrat.bien_type}</p>
+            <p style={{ fontSize: '12px', color: '#666' }}>{t("forms.property_type", "Type")} : {contrat.bien_type}</p>
           </div>
 
           <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '6px' }}>
             <h3 style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '10px' }}>
-              <User size={14} /> Locataire / Acheteur
+              <User size={14} /> {t("admin.contrats.col_tenant", "Locataire / Acheteur")}
             </h3>
             <p style={{ fontWeight: 500 }}>{contrat.locataire_prenoms} {contrat.locataire_nom}</p>
           </div>
 
           <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '6px', gridColumn: isLocation ? '1 / 2' : '1 / -1' }}>
             <h3 style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '10px' }}>
-              <CreditCard size={14} /> Conditions Financières
+              <CreditCard size={14} /> {t("admin.contrats.financial_terms", "Conditions Financières")}
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               {isLocation ? (
                 <>
-                  <div><small style={{ color: '#666' }}>Loyer mensuel</small><br /><strong>{formatCurrency(contrat.loyer)}</strong></div>
-                  <div><small style={{ color: '#666' }}>Dépôt de garantie</small><br /><strong>{formatCurrency(contrat.depot_garantie)}</strong></div>
+                  <div><small style={{ color: '#666' }}>{t("forms.monthly_rent", "Loyer mensuel")}</small><br /><strong>{formatCurrency(contrat.loyer)}</strong></div>
+                  <div><small style={{ color: '#666' }}>{t("locataire_pages.contrat.card_deposit", "Dépôt de garantie")}</small><br /><strong>{formatCurrency(contrat.depot_garantie)}</strong></div>
                 </>
               ) : (
                 <>
-                  <div><small style={{ color: '#666' }}>Prix de vente</small><br /><strong>{formatCurrency(contrat.prix)}</strong></div>
-                  <div><small style={{ color: '#666' }}>Modalité</small><br /><strong>{contrat.type_paiement_achat}</strong></div>
+                  <div><small style={{ color: '#666' }}>{t("forms.sale_price", "Prix de vente")}</small><br /><strong>{formatCurrency(contrat.prix)}</strong></div>
+                  <div><small style={{ color: '#666' }}>{t("admin.contrats.payment_mode_label", "Modalité")}</small><br /><strong>{contrat.type_paiement_achat}</strong></div>
                 </>
               )}
             </div>
@@ -82,11 +84,11 @@ export function ContratModal({ contrat, paiements, onClose, onAction }: ContratM
           {isLocation && (
             <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '6px' }}>
               <h3 style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '10px' }}>
-                <Calendar size={14} /> Période
+                <Calendar size={14} /> {t("admin.contrats.col_period", "Période")}
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <div><small style={{ color: '#666' }}>Date de début</small><br /><strong>{formatDate(contrat.date_debut)}</strong></div>
-                <div><small style={{ color: '#666' }}>Date de fin</small><br /><strong>{formatDate(contrat.date_fin)}</strong></div>
+                <div><small style={{ color: '#666' }}>{t("admin.contrats.col_start_date", "Date de début")}</small><br /><strong>{formatDate(contrat.date_debut)}</strong></div>
+                <div><small style={{ color: '#666' }}>{t("admin.contrats.end_date", "Date de fin")}</small><br /><strong>{formatDate(contrat.date_fin)}</strong></div>
               </div>
             </div>
           )}
@@ -94,15 +96,15 @@ export function ContratModal({ contrat, paiements, onClose, onAction }: ContratM
         </div>
 
         <h3 style={{ fontSize: '15px', marginBottom: '10px', borderBottom: '1px solid #e2e8f0', paddingBottom: '5px' }}>
-          Échéancier & Paiements
+          {t("admin.contrats.schedule_payments", "Échéancier & Paiements")}
         </h3>
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>DATE</th>
-                <th>MONTANT</th>
-                <th>STATUT</th>
+                <th>{t("admin.reservations.col_date", "DATE")}</th>
+                <th>{t("admin.paiements.col_amount", "MONTANT")}</th>
+                <th>{t("admin.contrats.col_status", "STATUT")}</th>
               </tr>
             </thead>
             <tbody>
@@ -113,7 +115,7 @@ export function ContratModal({ contrat, paiements, onClose, onAction }: ContratM
                   <td><span className="role-badge">{p.statut}</span></td>
                 </tr>
               )) : (
-                <tr><td colSpan={3} style={{ textAlign: 'center', padding: '20px', color: '#666' }}>Aucun paiement associé.</td></tr>
+                <tr><td colSpan={3} style={{ textAlign: 'center', padding: '20px', color: '#666' }}>{t("admin.contrats.no_payments_associated", "Aucun paiement associé.")}</td></tr>
               )}
             </tbody>
           </table>
@@ -125,15 +127,15 @@ export function ContratModal({ contrat, paiements, onClose, onAction }: ContratM
           <div style={{ display: 'flex', gap: '10px' }}>
             {contrat.statut === 'ACTIF' && isLocation && (
               <>
-                <button className="danger-button" onClick={() => onAction('resilier')}>Résilier</button>
-                <button className="primary-button" onClick={() => onAction('terminer')}>Terminer le bail</button>
+                <button className="danger-button" onClick={() => onAction('resilier')}>{t("admin.contrats.terminate_action_btn", "Résilier")}</button>
+                <button className="primary-button" onClick={() => onAction('terminer')}>{t("admin.contrats.end_lease_title", "Terminer le bail")}</button>
               </>
             )}
             {(contrat.statut === 'ACTIF' || contrat.statut === 'RESERVE') && !isLocation && (
-              <button className="primary-button" onClick={() => onAction('finaliser_vente')}>Finaliser Vente</button>
+              <button className="primary-button" onClick={() => onAction('finaliser_vente')}>{t("admin.contrats.finalize_sale_title", "Finaliser Vente")}</button>
             )}
           </div>
-          <button className="outline-button" onClick={onClose}>Fermer</button>
+          <button className="outline-button" onClick={onClose}>{t("forms.close", "Fermer")}</button>
         </div>
       </section>
     </div>

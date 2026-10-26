@@ -7,6 +7,7 @@ import { marquerConnecte, sauvegarderTokens, getAccessToken } from "@/lib/auth"
 import { PasswordInput } from "@/components/atoms/password-input"
 import { toast } from "sonner"
 import { getApiUrl } from "@/lib/config"
+import { useTranslation, LanguageSwitcher } from "@/lib/i18n"
 
 // Redirection par défaut après connexion, si aucun ?redirect= n'est fourni par le middleware.
 function redirectionParRole(role: string) {
@@ -24,6 +25,7 @@ function redirectionParRole(role: string) {
 }
 
 export function LoginForm() {
+  const { t } = useTranslation()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [email, setEmail] = useState("")
@@ -52,7 +54,7 @@ export function LoginForm() {
         body: JSON.stringify({ email, password }),
       })
     } catch (networkError) {
-      const msg = "Impossible de joindre le serveur. Vérifie qu'il est démarré et accessible."
+      const msg = t("auth.login.error_network", "Impossible de joindre le serveur. Vérifie qu'il est démarré et accessible.")
       setError(msg)
       toast.error(msg)
       setIsLoading(false)
@@ -63,7 +65,7 @@ export function LoginForm() {
     try {
       data = await response.json()
     } catch (parseError) {
-      const msg = `Réponse inattendue du serveur (statut ${response.status}). Vérifie les logs Django.`
+      const msg = t("auth.login.error_unexpected", "Réponse inattendue du serveur.")
       setError(msg)
       toast.error(msg)
       setIsLoading(false)
@@ -71,7 +73,7 @@ export function LoginForm() {
     }
 
     if (!response.ok || !data.success) {
-      const msg = data.error ?? "Impossible de vous connecter."
+      const msg = data.error ?? t("auth.login.error_failed", "Impossible de vous connecter.")
       setError(msg)
       toast.error(msg)
       setIsLoading(false)
@@ -79,7 +81,7 @@ export function LoginForm() {
     }
 
     if (!data.user?.role || !data.access || !data.refresh) {
-      const msg = "Réponse de connexion incomplète du serveur."
+      const msg = t("auth.login.error_unexpected", "Réponse inattendue du serveur.")
       setError(msg)
       toast.error(msg)
       setIsLoading(false)
@@ -88,7 +90,7 @@ export function LoginForm() {
 
     sauvegarderTokens(data.access, data.refresh)
     marquerConnecte()
-    toast.success("Connexion réussie")
+    toast.success(t("auth.login.login_success", "Connexion réussie"))
 
     const redirect = searchParams.get("redirect")
     const destination = redirect && redirect !== "/login" ? redirect : redirectionParRole(data.user.role)
@@ -97,7 +99,12 @@ export function LoginForm() {
   }
 
   return (
-    <main className="flex min-h-screen text-foreground">
+    <main className="flex min-h-screen text-foreground relative">
+      {/* Sélecteur de langue flottant en haut à droite */}
+      <div className="absolute top-6 right-6 z-30">
+        <LanguageSwitcher />
+      </div>
+
       {/* Côté gauche : Panneau Image */}
       <section className="relative hidden w-full flex-col justify-between p-12 text-white lg:flex lg:w-1/2 overflow-hidden">
         {/* Image et Overlay */}
@@ -111,44 +118,46 @@ export function LoginForm() {
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/40" />
         </div>
 
-        <div className="relative z-10 flex items-center gap-3" aria-label="Accueil">
+        <a href="/" className="relative z-10 flex items-center gap-3 w-fit" aria-label="Accueil">
           <div className="flex size-11 items-center justify-center rounded-2xl bg-white/20 text-white shadow-sm backdrop-blur-md">
             <LockKeyhole className="size-5" aria-hidden="true" />
           </div>
           <span className="font-sans text-xl font-semibold tracking-tight">ImmoConnect</span>
-        </div>
+        </a>
 
         <div className="relative z-10 max-w-md">
           <span className="mb-4 inline-block rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs font-semibold tracking-wider text-white backdrop-blur-md">
-            PLATEFORME N°1
+            {t("auth.login.brand_subtitle", "PLATEFORME N°1")}
           </span>
-          <h2 className="mb-4 text-4xl font-bold leading-tight">Gérez votre immobilier<br />en toute simplicité</h2>
+          <h2 className="mb-4 text-4xl font-bold leading-tight">
+            {t("auth.login.hero_title", "Gérez votre immobilier en toute simplicité")}
+          </h2>
           <p className="mb-8 text-lg text-white/90">
-            ImmoConnect centralise la gestion de vos biens immobiliers. Rejoignez des milliers de propriétaires, locataires et professionnels.
+            {t("auth.login.hero_desc", "ImmoConnect centralise la gestion de vos biens immobiliers. Rejoignez des milliers de propriétaires, locataires et professionnels.")}
           </p>
           
           <ul className="mb-10 space-y-4 text-sm text-white/80">
             <li className="flex items-center gap-3">
               <div className="flex size-8 items-center justify-center rounded-full bg-white/20 shadow-sm backdrop-blur-md"><LockKeyhole className="size-4" /></div>
-              <span className="font-medium">Tableaux de bord sur-mesure selon votre profil</span>
+              <span className="font-medium">{t("auth.login.feature_dashboards", "Tableaux de bord sur-mesure selon votre profil")}</span>
             </li>
             <li className="flex items-center gap-3">
               <div className="flex size-8 items-center justify-center rounded-full bg-white/20 shadow-sm backdrop-blur-md"><LockKeyhole className="size-4" /></div>
-              <span className="font-medium">Suivi des loyers, quittances et paiements</span>
+              <span className="font-medium">{t("auth.login.feature_payments", "Suivi des loyers, quittances et paiements")}</span>
             </li>
             <li className="flex items-center gap-3">
               <div className="flex size-8 items-center justify-center rounded-full bg-white/20 shadow-sm backdrop-blur-md"><LockKeyhole className="size-4" /></div>
-              <span className="font-medium">Centralisation et sécurisation des documents</span>
+              <span className="font-medium">{t("auth.login.feature_security", "Centralisation et sécurisation des documents")}</span>
             </li>
           </ul>
 
           <a href="/inscription" className="inline-flex h-12 items-center justify-center rounded-xl border-2 border-white/20 bg-white/10 px-8 text-sm font-bold transition-all hover:scale-105 hover:bg-white hover:text-primary backdrop-blur-md">
-            Créer mon compte
+            {t("auth.login.create_account_btn", "Créer mon compte")}
           </a>
         </div>
 
         <div className="relative z-10 text-sm text-white/60">
-          {new Date().getFullYear()} ImmoConnect. Tous droits réservés.
+          {new Date().getFullYear()} ImmoConnect. {t("footer.rights", "Tous droits réservés.")}
         </div>
       </section>
 
@@ -164,29 +173,31 @@ export function LoginForm() {
             <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-[1.25rem] bg-gradient-to-br from-primary/10 to-primary/5 text-primary shadow-inner">
               <LockKeyhole className="size-7" aria-hidden="true" />
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Bon retour !</h1>
-            <p className="mt-3 text-sm text-muted-foreground">Heureux de vous revoir parmi nous.</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-foreground">{t("auth.login.welcome_back", "Bon retour !")}</h1>
+            <p className="mt-3 text-sm text-muted-foreground">{t("auth.login.welcome_subtitle", "Heureux de vous revoir parmi nous.")}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {searchParams.get("expired") === "1" && (
               <p role="alert" className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                Votre session a expiré. Veuillez vous reconnecter.
+                {t("auth.login.session_expired", "Votre session a expiré. Veuillez vous reconnecter.")}
               </p>
             )}
             
             <div className="space-y-2.5">
-              <label htmlFor="email" className="text-sm font-semibold text-foreground">Email</label>
+              <label htmlFor="email" className="text-sm font-semibold text-foreground">{t("auth.login.email_label", "Email")}</label>
               <div className="relative">
                 <Mail className="pointer-events-none absolute left-3.5 top-1/2 size-4.5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-                <input id="email" type="email" required autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="vous@exemple.com" className="h-12 w-full rounded-xl border border-input/60 bg-white/50 pl-11 pr-4 text-sm outline-none transition-all placeholder:text-muted-foreground hover:bg-white focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10" />
+                <input id="email" type="email" required autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder={t("auth.login.email_placeholder", "vous@exemple.com")} className="h-12 w-full rounded-xl border border-input/60 bg-white/50 pl-11 pr-4 text-sm outline-none transition-all placeholder:text-muted-foreground hover:bg-white focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10" />
               </div>
             </div>
 
             <div className="space-y-2.5">
               <div className="flex items-center justify-between gap-3">
-                <label htmlFor="password" className="text-sm font-semibold text-foreground">Mot de passe</label>
-                <a href="/mot-de-passe-oublie" className="text-xs font-medium text-primary transition-all hover:text-primary/80 hover:underline">Mot de passe oublié ?</a>
+                <label htmlFor="password" className="text-sm font-semibold text-foreground">{t("auth.login.password_label", "Mot de passe")}</label>
+                <a href="/mot-de-passe-oublie" className="text-xs font-medium text-primary transition-all hover:text-primary/80 hover:underline">
+                  {t("auth.login.forgot_password_link", "Mot de passe oublié ?")}
+                </a>
               </div>
               <div className="relative">
                 <PasswordInput id="password" required autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••" />
@@ -195,14 +206,17 @@ export function LoginForm() {
 
             {error && <p role="alert" className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p>}
 
-            <button type="submit" disabled={isLoading} className="group mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-[0_8px_16px_-4px_rgba(var(--primary),0.3)] transition-all hover:-translate-y-[1px] hover:shadow-[0_12px_20px_-4px_rgba(var(--primary),0.4)] active:translate-y-0 active:shadow-none disabled:cursor-not-allowed disabled:opacity-60">
-              {isLoading ? "Connexion..." : "Se connecter"}
+            <button type="submit" disabled={isLoading} className="group mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-[0_8px_16px_-4px_rgba(var(--primary),0.3)] transition-all hover:-translate-y-[1px] hover:shadow-[0_12px_20px_-4px_rgba(var(--primary),0.4)] active:translate-y-0 active:shadow-none disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer">
+              {isLoading ? t("auth.login.submitting_btn", "Connexion...") : t("auth.login.submit_btn", "Se connecter")}
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
             </button>
           </form>
 
           <p className="mt-8 text-center text-sm font-medium text-muted-foreground">
-            Pas encore de compte ? <a href="/inscription" className="font-bold text-primary transition-all hover:text-primary/80 hover:underline">S'inscrire</a>
+            {t("auth.login.no_account", "Pas encore de compte ?")}{" "}
+            <a href="/inscription" className="font-bold text-primary transition-all hover:text-primary/80 hover:underline">
+              {t("auth.login.sign_up", "S'inscrire")}
+            </a>
           </p>
 
         </div>

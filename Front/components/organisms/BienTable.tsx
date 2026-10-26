@@ -3,6 +3,7 @@ import { Bien } from '@/lib/api'
 import { BienTableHeader } from "@/components/organisms/BienTableHeader"
 import { BienTableRow } from "@/components/organisms/BienTableRow"
 import { Pagination } from "@/components/molecules/pagination"
+import { useTranslation } from '@/lib/i18n'
 
 type BienTableProps = {
   biens: Bien[]
@@ -13,6 +14,7 @@ type BienTableProps = {
 }
 
 export function BienTable({ biens, loading, onView, onEdit, onDelete }: BienTableProps) {
+  const { t } = useTranslation()
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 5;
   const totalPages = Math.ceil(biens.length / ITEMS_PER_PAGE);
@@ -25,7 +27,7 @@ export function BienTable({ biens, loading, onView, onEdit, onDelete }: BienTabl
           <BienTableHeader />
           <tbody>
             {loading ? (
-              <tr><td colSpan={9} style={{ textAlign: 'center', padding: '20px' }}>Chargement...</td></tr>
+              <tr><td colSpan={9} style={{ textAlign: 'center', padding: '20px' }}>{t("forms.loading", "Chargement...")}</td></tr>
             ) : paginatedData.length > 0 ? (
               paginatedData.map(bien => (
                 <BienTableRow 
@@ -37,7 +39,7 @@ export function BienTable({ biens, loading, onView, onEdit, onDelete }: BienTabl
                 />
               ))
             ) : (
-              <tr><td colSpan={9} style={{ textAlign: 'center', padding: '30px', color: '#8993a3' }}>Aucun bien trouvé.</td></tr>
+              <tr><td colSpan={9} style={{ textAlign: 'center', padding: '30px', color: '#8993a3' }}>{t("admin.biens.empty", "Aucun bien trouvé.")}</td></tr>
             )}
           </tbody>
         </table>

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { UserProfil, updateProfil, resolveMediaUrl } from "@/lib/api";
 import { Camera, CheckCircle, AlertCircle, Save } from "lucide-react";
 import { PasswordInput } from "@/components/atoms/password-input";
+import { useTranslation } from "@/lib/i18n";
 
 interface ProfilFormProps {
   initialData: UserProfil;
@@ -11,6 +12,7 @@ interface ProfilFormProps {
 }
 
 export default function ProfilForm({ initialData, onUpdate }: ProfilFormProps) {
+  const { t, lang } = useTranslation();
   const [formData, setFormData] = useState({
     nom: initialData.nom || "",
     prenoms: initialData.prenoms || "",
@@ -59,7 +61,7 @@ export default function ProfilForm({ initialData, onUpdate }: ProfilFormProps) {
       // Password change
       if (formData.new_password) {
         if (!formData.current_password) {
-          throw new Error("Vous devez fournir votre mot de passe actuel pour le modifier.");
+          throw new Error(t("profile.current_password_required", "Vous devez fournir votre mot de passe actuel pour le modifier."));
         }
         payload.append("current_password", formData.current_password);
         payload.append("new_password", formData.new_password);
@@ -79,7 +81,7 @@ export default function ProfilForm({ initialData, onUpdate }: ProfilFormProps) {
       
       if (!hasUpdates) {
         setLoading(false);
-        setSuccessMsg("Aucune modification à enregistrer.");
+        setSuccessMsg(t("profile.no_changes", "Aucune modification à enregistrer."));
         return;
       }
 
@@ -93,7 +95,7 @@ export default function ProfilForm({ initialData, onUpdate }: ProfilFormProps) {
       }));
       setPhotoFile(null);
       
-      setSuccessMsg("Votre profil a été mis à jour avec succès.");
+      setSuccessMsg(t("profile.update_success", "Votre profil a été mis à jour avec succès."));
       
       // Hide success message after 5 seconds
       setTimeout(() => {
@@ -101,7 +103,7 @@ export default function ProfilForm({ initialData, onUpdate }: ProfilFormProps) {
       }, 5000);
       
     } catch (err: any) {
-      let errorMessage = "Une erreur est survenue lors de la mise à jour.";
+      let errorMessage = t("profile.update_error", "Une erreur est survenue lors de la mise à jour.");
       try {
         const parsed = JSON.parse(err.message);
         if (parsed.message) {
@@ -160,7 +162,7 @@ export default function ProfilForm({ initialData, onUpdate }: ProfilFormProps) {
             
             <label htmlFor="photo-upload" className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex flex-col items-center justify-center text-white">
               <Camera className="w-8 h-8 mb-1" />
-              <span className="text-xs font-medium">Modifier</span>
+              <span className="text-xs font-medium">{t("profile.modify_photo", "Modifier")}</span>
             </label>
             <input 
               id="photo-upload" 
@@ -172,10 +174,14 @@ export default function ProfilForm({ initialData, onUpdate }: ProfilFormProps) {
           </div>
           <div className="text-center">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Rôle : <span className="uppercase text-blue-600 dark:text-blue-400">{initialData.role}</span>
+              {t("profile.role", "Rôle :")}{" "}
+              <span className="uppercase text-blue-600 dark:text-blue-400">
+                {t(`dashboard.roles.${initialData.role}`, initialData.role)}
+              </span>
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Membre depuis le {new Date(initialData.date_creation).toLocaleDateString()}
+              {t("profile.member_since", "Membre depuis le")}{" "}
+              {new Date(initialData.date_creation).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR')}
             </p>
           </div>
         </div>
@@ -184,7 +190,7 @@ export default function ProfilForm({ initialData, onUpdate }: ProfilFormProps) {
         <div className="flex-1 space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Prénoms</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("profile.first_name", "Prénoms")}</label>
               <input
                 type="text"
                 name="prenoms"
@@ -196,7 +202,7 @@ export default function ProfilForm({ initialData, onUpdate }: ProfilFormProps) {
             </div>
             
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Nom</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("profile.last_name", "Nom")}</label>
               <input
                 type="text"
                 name="nom"
@@ -210,7 +216,7 @@ export default function ProfilForm({ initialData, onUpdate }: ProfilFormProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("profile.email", "Email")}</label>
               <input
                 type="email"
                 name="email"
@@ -222,7 +228,7 @@ export default function ProfilForm({ initialData, onUpdate }: ProfilFormProps) {
             </div>
             
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Téléphone</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("profile.phone", "Téléphone")}</label>
               <input
                 type="tel"
                 name="telephone"
@@ -235,12 +241,12 @@ export default function ProfilForm({ initialData, onUpdate }: ProfilFormProps) {
 
           <div className="pt-4 border-t border-gray-100 dark:border-gray-700 mt-6">
             <h3 className="text-lg font-medium text-gray-800 dark:text-white mb-4">
-              Changer de mot de passe (optionnel)
+              {t("profile.change_password_optional", "Changer de mot de passe (optionnel)")}
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Mot de passe actuel</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("profile.current_password", "Mot de passe actuel")}</label>
                 <PasswordInput
                   name="current_password"
                   value={formData.current_password}
@@ -249,7 +255,7 @@ export default function ProfilForm({ initialData, onUpdate }: ProfilFormProps) {
               </div>
               
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Nouveau mot de passe</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("profile.new_password", "Nouveau mot de passe")}</label>
                 <PasswordInput
                   name="new_password"
                   value={formData.new_password}
@@ -266,14 +272,14 @@ export default function ProfilForm({ initialData, onUpdate }: ProfilFormProps) {
         <button
           type="submit"
           disabled={loading}
-          className="flex items-center px-6 py-2.5 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:ring-4 focus:ring-blue-500/50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+          className="flex items-center px-6 py-2.5 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:ring-4 focus:ring-blue-500/50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
         >
           {loading ? (
             <div className="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           ) : (
             <Save className="w-5 h-5 mr-2" />
           )}
-          Enregistrer les modifications
+          {loading ? t("profile.saving", "Enregistrement...") : t("profile.save_changes", "Enregistrer les modifications")}
         </button>
       </div>
 

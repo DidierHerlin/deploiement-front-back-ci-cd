@@ -107,33 +107,35 @@ export async function fetchBiensDisponibles(filters?: BienFilters): Promise<Bien
 }
 
 /**
- * Formate le prix d'un bien de façon claire et lisible.
- * Ex: "1 500 000 Ar / mois" pour une location, "250 000 000 Ar" pour une vente.
+ * Formate le prix d'un bien de façon claire et lisible (supporte FR et EN).
+ * Ex: "1 500 000 Ar / mois" (FR) ou "1,500,000 Ar / month" (EN).
  */
-export function formatPrixBien(bien: Bien): string {
+export function formatPrixBien(bien: Bien, lang: "fr" | "en" = "fr"): string {
+  const locale = lang === "en" ? "en-US" : "fr-FR"
   if (bien.mode_transaction === "LOCATION") {
     const montant = bien.loyer_mensuel ? Number(bien.loyer_mensuel) : 0
-    return `${montant.toLocaleString("fr-FR")} Ar / mois`
+    const suffix = lang === "en" ? "Ar / month" : "Ar / mois"
+    return `${montant.toLocaleString(locale)} ${suffix}`
   }
   const montant = bien.prix ? Number(bien.prix) : 0
-  return `${montant.toLocaleString("fr-FR")} Ar`
+  return `${montant.toLocaleString(locale)} Ar`
 }
 
 /**
- * Libellé lisible en français pour le type de bien.
+ * Libellé lisible pour le type de bien (supporte FR et EN).
  */
-export function getTypeBienLabel(type: string): string {
+export function getTypeBienLabel(type: string, lang: "fr" | "en" = "fr"): string {
   switch (type?.toUpperCase()) {
     case "APPARTEMENT":
-      return "Appartement"
+      return lang === "en" ? "Apartment" : "Appartement"
     case "MAISON":
-      return "Maison"
+      return lang === "en" ? "House" : "Maison"
     case "LOCAL_COMMERCIAL":
-      return "Local commercial"
+      return lang === "en" ? "Commercial space" : "Local commercial"
     case "TERRAIN":
-      return "Terrain"
+      return lang === "en" ? "Land" : "Terrain"
     default:
-      return type || "Bien"
+      return type || (lang === "en" ? "Property" : "Bien")
   }
 }
 

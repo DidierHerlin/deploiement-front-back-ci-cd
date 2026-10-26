@@ -1,6 +1,9 @@
+'use client'
+
 import React from 'react';
 import { LockKeyhole, FileCheck2, FileText, ReceiptText, ArrowDownToLine, CheckCircle2 } from 'lucide-react';
 import { Contrat, Paiement } from '@/lib/api';
+import { useTranslation } from '@/lib/i18n';
 
 interface DashboardDocumentsCardProps {
   contrat: Contrat | null;
@@ -8,6 +11,7 @@ interface DashboardDocumentsCardProps {
 }
 
 export function DashboardDocumentsCard({ contrat, paiements }: DashboardDocumentsCardProps) {
+  const { t, lang } = useTranslation();
   
   // Chercher la dernière quittance disponible
   const paiementsPayes = paiements.filter(p => p.statut === 'PAYE' || p.statut === 'VALIDE');
@@ -31,7 +35,7 @@ export function DashboardDocumentsCard({ contrat, paiements }: DashboardDocument
     } catch (e: any) {
       const isIDM = e.message && (e.message.includes('Failed to fetch') || e.message.includes('NetworkError') || e.name === 'TypeError');
       if (!isIDM) { 
-        alert("Erreur de téléchargement"); 
+        alert(t('common.error_occurred', "Erreur de téléchargement")); 
       } else { 
         console.log("Téléchargement intercepté"); 
       }
@@ -55,7 +59,7 @@ export function DashboardDocumentsCard({ contrat, paiements }: DashboardDocument
     } catch (e: any) {
       const isIDM = e.message && (e.message.includes('Failed to fetch') || e.message.includes('NetworkError') || e.name === 'TypeError');
       if (!isIDM) { 
-        alert("Erreur de téléchargement"); 
+        alert(t('common.error_occurred', "Erreur de téléchargement")); 
       } else { 
         console.log("Téléchargement intercepté"); 
       }
@@ -66,22 +70,31 @@ export function DashboardDocumentsCard({ contrat, paiements }: DashboardDocument
     <section className="panel documents-panel">
       <div className="panel-header">
         <div>
-          <h2>Mes documents</h2>
-          <p>Pièces stockées de manière sécurisée</p>
+          <h2>{t('dashboard.locataire.my_documents', 'Mes documents')}</h2>
+          <p>{t('dashboard.locataire.documents_sub', 'Pièces stockées de manière sécurisée')}</p>
         </div>
         <LockKeyhole size={19} className="security-check" />
       </div>
       <div className="document-list">
         <div>
           <FileCheck2 size={17} />
-          <span>Pièce d'identité<small>Vérifiée • Document sécurisé</small></span>
+          <span>
+            {t('dashboard.locataire.id_card', "Pièce d'identité")}
+            <small>{t('dashboard.locataire.verified_doc', 'Vérifiée • Document sécurisé')}</small>
+          </span>
           <CheckCircle2 size={15} style={{ color: 'var(--primary)' }} />
         </div>
         
         {contrat && (
           <div style={{ cursor: 'pointer' }} onClick={handleDownloadContrat}>
             <FileText size={17} />
-            <span>Contrat de location<small>Signé le {new Date(contrat.date_creation || contrat.date_debut || '').toLocaleDateString('fr-FR')}</small></span>
+            <span>
+              {t('dashboard.locataire.rental_contract', 'Contrat de location')}
+              <small>
+                {lang === 'en' ? 'Signed on ' : 'Signé le '}
+                {new Date(contrat.date_creation || contrat.date_debut || '').toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR')}
+              </small>
+            </span>
             <ArrowDownToLine size={15} />
           </div>
         )}
@@ -89,7 +102,12 @@ export function DashboardDocumentsCard({ contrat, paiements }: DashboardDocument
         {derniereQuittance && (
           <div style={{ cursor: 'pointer' }} onClick={handleDownloadQuittance}>
             <ReceiptText size={17} />
-            <span>Dernière quittance<small>{new Date(derniereQuittance.date_echeance).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</small></span>
+            <span>
+              {t('dashboard.locataire.latest_receipt', 'Dernière quittance')}
+              <small>
+                {new Date(derniereQuittance.date_echeance).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR', { month: 'long', year: 'numeric' })}
+              </small>
+            </span>
             <ArrowDownToLine size={15} />
           </div>
         )}

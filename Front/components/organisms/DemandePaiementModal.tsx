@@ -6,14 +6,11 @@ import {
   Smartphone,
   CheckCircle2,
   AlertCircle,
-  Building2,
-  Calendar,
-  CreditCard,
-  Send,
   ShieldCheck,
-  Receipt,
+  Send,
 } from 'lucide-react'
 import { Paiement, DemandePaiement, creerDemandePaiement } from '@/lib/api'
+import { useTranslation } from '@/lib/i18n'
 
 interface DemandePaiementModalProps {
   isOpen: boolean
@@ -32,6 +29,7 @@ export function DemandePaiementModal({
   onClose,
   onSuccess,
 }: DemandePaiementModalProps) {
+  const { t } = useTranslation()
   const [selectedFacture, setSelectedFacture] = useState<Paiement | null>(
     initialFacture || (facturesEligibles.length > 0 ? facturesEligibles[0] : null)
   )
@@ -65,17 +63,17 @@ export function DemandePaiementModal({
     setError(null)
 
     if (!selectedFacture) {
-      setError('Veuillez sélectionner une facture éligible.')
+      setError(t('locataire_pages.paiements.select_invoice_error', 'Veuillez sélectionner une facture éligible.'))
       return
     }
 
     if (!moyenPaiement) {
-      setError('Veuillez sélectionner un opérateur Mobile Money.')
+      setError(t('locataire_pages.paiements.select_operator_error', 'Veuillez sélectionner un opérateur Mobile Money.'))
       return
     }
 
     if (!telephone.trim()) {
-      setError('Le numéro de téléphone Mobile Money est requis.')
+      setError(t('locataire_pages.paiements.phone_required', 'Le numéro de téléphone Mobile Money est requis.'))
       return
     }
 
@@ -91,8 +89,7 @@ export function DemandePaiementModal({
       setSuccessDemande(res)
       onSuccess(res)
     } catch (err: any) {
-      // Extraire message d'erreur clair
-      let msg = err.message || 'Une erreur est survenue lors de la soumission.'
+      let msg = err.message || t('common.error_occurred', 'Une erreur est survenue lors de la soumission.')
       try {
         const parsed = JSON.parse(msg.replace(/^Erreur API \(\d+\)[^:]*:\s*/, ''))
         if (parsed.facture) msg = Array.isArray(parsed.facture) ? parsed.facture[0] : parsed.facture
@@ -100,7 +97,7 @@ export function DemandePaiementModal({
         else if (parsed.moyen_paiement) msg = Array.isArray(parsed.moyen_paiement) ? parsed.moyen_paiement[0] : parsed.moyen_paiement
         else if (parsed.non_field_errors) msg = Array.isArray(parsed.non_field_errors) ? parsed.non_field_errors[0] : parsed.non_field_errors
       } catch {
-        // Garder le message brut
+        // Keep raw
       }
       setError(msg)
     } finally {
@@ -171,15 +168,16 @@ export function DemandePaiementModal({
             </div>
             <div>
               <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: '#0f172a' }}>
-                Demande de paiement Mobile Money
+                {t('locataire_pages.paiements.modal_title', 'Demande de paiement Mobile Money')}
               </h2>
               <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>
-                Règlement sécurisé de votre facture du mois à venir
+                {t('locataire_pages.paiements.modal_subtitle', 'Règlement sécurisé de votre facture du mois à venir')}
               </p>
             </div>
           </div>
           <button
             onClick={handleResetAndClose}
+            aria-label={t('common.close', 'Fermer')}
             style={{
               border: 'none',
               background: 'transparent',
@@ -214,11 +212,10 @@ export function DemandePaiementModal({
                 <CheckCircle2 size={36} />
               </div>
               <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.5rem' }}>
-                Demande transmise avec succès !
+                {t('locataire_pages.paiements.success_title', 'Demande transmise avec succès !')}
               </h3>
               <p style={{ fontSize: '0.9rem', color: '#64748b', maxWidth: '420px', margin: '0 auto 1.5rem' }}>
-                Votre demande de paiement a bien été enregistrée dans la base de données. Elle est actuellement{' '}
-                <strong style={{ color: '#b45309' }}>en attente de validation</strong> par le gestionnaire.
+                {t('locataire_pages.paiements.success_desc', 'Votre demande de paiement a bien été enregistrée dans la base de données. Elle est actuellement en attente de validation par le gestionnaire.')}
               </p>
 
               <div
@@ -322,7 +319,7 @@ export function DemandePaiementModal({
                   cursor: 'pointer',
                 }}
               >
-                Fermer
+                {t('common.close', 'Fermer')}
               </button>
             </div>
           ) : (
@@ -351,7 +348,7 @@ export function DemandePaiementModal({
               {/* Sélection / Résumé de la Facture */}
               <div style={{ marginBottom: '1.25rem' }}>
                 <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
-                  Facture mensuelle à régler
+                  {t('locataire_pages.paiements.select_invoice', 'Facture mensuelle à régler')}
                 </label>
                 {facturesEligibles.length > 1 ? (
                   <select
@@ -448,7 +445,7 @@ export function DemandePaiementModal({
               {/* Sélection Opérateur Mobile Money (EXCLUSIVEMENT) */}
               <div style={{ marginBottom: '1.25rem' }}>
                 <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>
-                  Moyen de paiement (Exclusivement Mobile Money)
+                  {t('locataire_pages.paiements.select_operator', 'Moyen de paiement (Exclusivement Mobile Money)')}
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
                   {/* MVOLA */}
@@ -588,12 +585,12 @@ export function DemandePaiementModal({
               {/* Champ Téléphone */}
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
-                  Numéro de téléphone {moyenPaiement === 'MVOLA' ? 'Telma' : moyenPaiement === 'ORANGE_MONEY' ? 'Orange' : 'Airtel'} *
+                  {t('locataire_pages.paiements.phone_label', 'Numéro de téléphone')} {moyenPaiement === 'MVOLA' ? 'Telma' : moyenPaiement === 'ORANGE_MONEY' ? 'Orange' : 'Airtel'} *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="Ex : 034 00 000 00"
+                  placeholder={t('locataire_pages.paiements.phone_placeholder', 'Ex : 034 00 000 00')}
                   value={telephone}
                   onChange={(e) => setTelephone(e.target.value)}
                   style={{
@@ -611,11 +608,11 @@ export function DemandePaiementModal({
               {/* Champ Référence de transaction */}
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
-                  Référence ou ID de transaction Mobile Money <span style={{ color: '#94a3b8', fontWeight: 400 }}>(recommandé)</span>
+                  {t('locataire_pages.paiements.ref_label', 'Référence ou ID de transaction Mobile Money')} <span style={{ color: '#94a3b8', fontWeight: 400 }}>(recommandé)</span>
                 </label>
                 <input
                   type="text"
-                  placeholder="Ex : MV-12345678 ou code SMS de confirmation"
+                  placeholder={t('locataire_pages.paiements.ref_placeholder', 'Ex : MV-12345678 ou code SMS de confirmation')}
                   value={reference}
                   onChange={(e) => setReference(e.target.value)}
                   style={{
@@ -666,7 +663,7 @@ export function DemandePaiementModal({
                     cursor: 'pointer',
                   }}
                 >
-                  Annuler
+                  {t('common.cancel', 'Annuler')}
                 </button>
                 <button
                   type="submit"
@@ -688,7 +685,7 @@ export function DemandePaiementModal({
                   }}
                 >
                   <Send size={16} />
-                  {loading ? 'Traitement en cours...' : 'Envoyer la demande de paiement'}
+                  {loading ? t('forms.saving', 'Traitement en cours...') : t('locataire_pages.paiements.submit_btn', 'Envoyer la demande de paiement')}
                 </button>
               </div>
             </form>

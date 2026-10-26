@@ -1,6 +1,9 @@
+'use client'
+
 import React from 'react';
-import { Building2, FileText, ChevronRight, Loader2, AlertCircle } from 'lucide-react';
+import { Building2, FileText, Loader2, AlertCircle } from 'lucide-react';
 import { Contrat } from '@/lib/api';
+import { useTranslation } from '@/lib/i18n';
 
 interface DashboardContratCardProps {
   contrat: Contrat | null;
@@ -9,6 +12,8 @@ interface DashboardContratCardProps {
 }
 
 export function DashboardContratCard({ contrat, loading, error }: DashboardContratCardProps) {
+  const { t, lang } = useTranslation();
+
   if (loading) {
     return (
       <section className="panel contract-panel" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
@@ -21,22 +26,24 @@ export function DashboardContratCard({ contrat, loading, error }: DashboardContr
     return (
       <section className="panel contract-panel" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '300px', gap: '1rem' }}>
         <AlertCircle size={32} color="var(--text-secondary)" />
-        <p style={{ color: 'var(--text-secondary)' }}>{error || "Aucun contrat de location actif trouvé."}</p>
+        <p style={{ color: 'var(--text-secondary)' }}>
+          {error || t('locataire_pages.contrat.no_contract', "Aucun contrat de location actif trouvé.")}
+        </p>
       </section>
     );
   }
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return 'N/A';
-    return new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+    return new Date(dateStr).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
   };
 
   return (
     <section className="panel contract-panel">
       <div className="panel-header">
         <div>
-          <h2>Mon contrat en cours</h2>
-          <p>Contrat #{contrat.id} — Créé le {formatDate(contrat.date_creation)}</p>
+          <h2>{t('dashboard.locataire.current_contract', 'Mon contrat en cours')}</h2>
+          <p>Contrat #{contrat.id} — {t('locataire_pages.reservations.submitted_on', 'Créé le')} {formatDate(contrat.date_creation)}</p>
         </div>
         <span className="status paid"><i />{contrat.statut}</span>
       </div>
@@ -45,18 +52,18 @@ export function DashboardContratCard({ contrat, loading, error }: DashboardContr
         <div>
           <strong>{contrat.bien_titre}</strong>
           <p>{contrat.bien_type}</p>
-          <span>Loyer mensuel : {parseFloat(contrat.loyer || '0').toLocaleString('fr-FR', { maximumFractionDigits: 0 })} Ar</span>
+          <span>{t('locataire_pages.contrat.card_rent', 'Loyer mensuel')} : {parseFloat(contrat.loyer || '0').toLocaleString('fr-FR', { maximumFractionDigits: 0 })} Ar</span>
         </div>
       </div>
       <div className="contract-details">
-        <div><span>Date de début</span><strong>{formatDate(contrat.date_debut)}</strong></div>
+        <div><span>{t('locataire_pages.contrat.start_date', 'Date de début')}</span><strong>{formatDate(contrat.date_debut)}</strong></div>
         {contrat.date_fin && (
-          <div><span>Échéance du bail</span><strong>{formatDate(contrat.date_fin)}</strong></div>
+          <div><span>{t('locataire_pages.contrat.end_date', 'Échéance du bail')}</span><strong>{formatDate(contrat.date_fin)}</strong></div>
         )}
       </div>
       <div className="panel-actions">
         <button className="outline-button" onClick={() => window.location.href = '/locataire/contrat'}>
-          <FileText size={15} />Voir tous mes contrats
+          <FileText size={15} />{t('dashboard.locataire.view_all_contracts', 'Voir tous mes contrats')}
         </button>
       </div>
     </section>

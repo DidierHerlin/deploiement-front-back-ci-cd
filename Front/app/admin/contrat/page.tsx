@@ -7,6 +7,7 @@ import {
   getBiens, getLocataires, getPaiements,
   Contrat, Bien, Locataire, Paiement 
 } from '@/lib/api'
+import { useTranslation } from '@/lib/i18n'
 
 import { ContratTable } from "@/components/organisms/ContratTable"
 import { ContratSearch } from "@/components/organisms/ContratSearch"
@@ -16,6 +17,7 @@ import { ContratModal } from "@/components/organisms/ContratModal"
 import { ActionContratModal } from "@/components/organisms/ActionContratModal"
 
 export default function ContratPage() {
+  const { t } = useTranslation()
   const [contrats, setContrats] = useState<Contrat[]>([])
   const [biens, setBiens] = useState<Bien[]>([])
   const [locataires, setLocataires] = useState<Locataire[]>([])
@@ -100,8 +102,10 @@ export default function ContratPage() {
     })
   }, [contrats, query, typeFilter, statutFilter])
 
-  // Données pour les listes déroulantes (Seulement les biens DISPONIBLE à la création)
-  const disponiblesBiens = biens.filter(b => b.statut === 'DISPONIBLE')
+  // Filtrer les biens qui sont DISPONIBLES pour un nouveau contrat
+  const disponiblesBiens = useMemo(() => {
+    return biens.filter(b => b.statut === 'DISPONIBLE')
+  }, [biens])
 
   const openCreateModal = () => {
     setEditingContrat(null)
@@ -112,11 +116,11 @@ export default function ContratPage() {
     <>
       <div className="welcome-row" style={{ marginBottom: '20px' }}>
         <div>
-          <h1>Gestion des <span>Contrats</span></h1>
-          <p className="subtitle">Administrez les contrats de location et de vente, suivez leur statut et les échéances associées.</p>
+          <h1>{t("admin.contrats.title_start", "Gestion des")} <span>{t("admin.contrats.title_highlight", "Contrats")}</span></h1>
+          <p className="subtitle">{t("admin.contrats.subtitle", "Administrez les contrats de location et de vente, suivez leur statut et les échéances associées.")}</p>
         </div>
         <button className="primary-button" onClick={openCreateModal}>
-          <Plus size={16} /> Nouveau contrat
+          <Plus size={16} /> {t("admin.contrats.add_contract", "Nouveau contrat")}
         </button>
       </div>
 
@@ -141,29 +145,26 @@ export default function ContratPage() {
 
       {showForm && (
         <ContratForm 
-          editingContrat={editingContrat} 
+          editingContrat={editingContrat}
           disponiblesBiens={disponiblesBiens}
           locataires={locataires}
-          onClose={() => setShowForm(false)} 
-          onSubmit={handleFormSubmit} 
+          onClose={() => setShowForm(false)}
+          onSubmit={handleFormSubmit}
         />
       )}
 
-      {viewContrat && (() => {
-        const cPaiements = paiements.filter(p => p.contrat === viewContrat.id)
-        return (
-          <ContratModal 
-            contrat={viewContrat} 
-            paiements={cPaiements}
-            onClose={() => setViewContrat(null)} 
-            onAction={(action) => setActionModal({ contrat: viewContrat, action })}
-          />
-        )
-      })()}
+      {viewContrat && (
+        <ContratModal 
+          contrat={viewContrat}
+          paiements={paiements.filter(p => p.contrat === viewContrat.id)}
+          onClose={() => setViewContrat(null)}
+          onAction={action => setActionModal({ contrat: viewContrat, action })}
+        />
+      )}
 
       {actionModal && (
         <ActionContratModal 
-          contrat={actionModal.contrat} 
+          contrat={actionModal.contrat}
           actionType={actionModal.action}
           onCancel={() => setActionModal(null)}
           onConfirm={handleActionConfirm}

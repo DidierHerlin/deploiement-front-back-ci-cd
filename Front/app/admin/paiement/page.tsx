@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { FileX, ArrowLeft, Receipt } from 'lucide-react'
 import { getPaiements, getContrats, Paiement, Contrat } from '@/lib/api'
+import { useTranslation } from '@/lib/i18n'
 import { PaiementStats } from "@/components/molecules/paiement_PaiementStats"
 import { PaiementSearch } from "@/components/organisms/PaiementSearch"
 import { PaiementFilters } from "@/components/organisms/PaiementFilters"
@@ -12,6 +13,7 @@ import { PaiementDetails } from "@/components/organisms/PaiementDetails"
 import { ValidationDemandeModal } from "@/components/organisms/ValidationDemandeModal"
 
 export default function PaiementPage() {
+  const { t } = useTranslation()
   const [paiements, setPaiements] = useState<Paiement[]>([])
   const [contrats, setContrats] = useState<Contrat[]>([])
   const [loading, setLoading] = useState(true)
@@ -133,8 +135,8 @@ export default function PaiementPage() {
     <>
       <div className="welcome-row" style={{ marginBottom: '20px' }}>
         <div>
-          <h1>Gestion des <span>Paiements</span></h1>
-          <p className="subtitle">Supervisez l'ensemble des paiements, validez les demandes Mobile Money et générez les quittances.</p>
+          <h1>{t('admin.paiements.title_prefix', 'Gestion des')} <span>{t('admin.paiements.title_span', 'Paiements')}</span></h1>
+          <p className="subtitle">{t('admin.paiements.subtitle', "Supervisez l'ensemble des paiements, validez les demandes Mobile Money et générez les quittances.")}</p>
         </div>
       </div>
 
@@ -166,7 +168,7 @@ export default function PaiementPage() {
             }}
           >
             <Receipt size={15} />
-            Paiements actifs ({paiementsNonResilies.length})
+            {t('admin.paiements.tab_active', 'Paiements actifs')} ({paiementsNonResilies.length})
           </button>
 
           <button
@@ -190,10 +192,10 @@ export default function PaiementPage() {
               color: showResilies ? '#dc2626' : '#64748b',
               transition: 'all 0.15s ease',
             }}
-            title="Afficher les factures dont le contrat associé a été résilié"
+            title={t('admin.paiements.tab_cancelled', 'Afficher les factures résiliées')}
           >
             <FileX size={15} />
-            Afficher les factures résiliées
+            {t('admin.paiements.tab_cancelled', 'Afficher les factures résiliées')}
             {paiementsResilies.length > 0 && (
               <span
                 style={{
@@ -232,7 +234,7 @@ export default function PaiementPage() {
               color: '#475569',
             }}
           >
-            <ArrowLeft size={14} /> Retour aux paiements actifs
+            <ArrowLeft size={14} /> {t('admin.paiements.back_to_active', 'Retour aux paiements actifs')}
           </button>
         )}
       </div>
@@ -243,9 +245,11 @@ export default function PaiementPage() {
             {/* Bannière d'en-tête pour le tableau des factures résiliées */}
             <div style={{ padding: '12px 18px', background: '#fef2f2', borderBottom: '1px solid #fecaca', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
               <div>
-                <strong style={{ fontSize: '14px', color: '#991b1b' }}>Tableau des factures résiliées</strong>
+                <strong style={{ fontSize: '14px', color: '#991b1b' }}>
+                  {t('admin.paiements.tab_cancelled_table_title', 'Tableau des factures résiliées')}
+                </strong>
                 <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#b91c1c' }}>
-                  Ces paiements et échéances correspondent à des contrats résiliés ({paiementsResilies.length} facture(s)). Ils ne sont pas comptabilisés dans les paiements actifs.
+                  {t('admin.paiements.cancelled_banner_desc', 'Ces paiements et échéances correspondent à des contrats résiliés ({count} facture(s)). Ils ne sont pas comptabilisés dans les paiements actifs.', { count: paiementsResilies.length })}
                 </p>
               </div>
             </div>
@@ -260,7 +264,7 @@ export default function PaiementPage() {
               loading={loading}
               error={error}
               allowResilie={true}
-              emptyMessage="Aucune facture résiliée trouvée."
+              emptyMessage={t('admin.paiements.empty_cancelled', 'Aucune facture résiliée trouvée.')}
               onView={setViewPaiement}
               onEdit={setEditPaiement}
             />
@@ -284,7 +288,7 @@ export default function PaiementPage() {
               loading={loading}
               error={error}
               allowResilie={false}
-              emptyMessage="Aucun paiement trouvé."
+              emptyMessage={t('admin.paiements.empty_active', 'Aucun paiement trouvé.')}
               onView={setViewPaiement}
               onEdit={setEditPaiement}
               onValiderDemande={(p) => {

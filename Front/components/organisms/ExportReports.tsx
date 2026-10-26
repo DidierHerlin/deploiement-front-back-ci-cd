@@ -1,9 +1,13 @@
+'use client'
+
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Download, FileText } from 'lucide-react';
 import { ReportingData } from '../hooks/useReporting';
+import { useTranslation } from '@/lib/i18n';
 
 export function ExportReports({ data }: { data: ReportingData }) {
+  const { t } = useTranslation();
   
   const exportPDF = () => {
     const doc = new jsPDF();
@@ -159,14 +163,14 @@ export function ExportReports({ data }: { data: ReportingData }) {
         className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition shadow-sm font-medium"
       >
         <FileText className="w-5 h-5 mr-2" />
-        Exporter en PDF
+        {t('admin.reporting.export_pdf', 'Exporter en PDF')}
       </button>
       <button 
         onClick={exportCSV}
         className="flex items-center px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 hover:border-gray-400 transition shadow-sm font-medium"
       >
         <Download className="w-5 h-5 mr-2" />
-        Exporter en CSV
+        {t('admin.reporting.export_csv', 'Exporter en CSV')}
       </button>
     </div>
   );

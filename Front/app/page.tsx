@@ -33,9 +33,7 @@ import {
   Tag,
   Menu,
   FileText,
-  Users,
   Building,
-  Check,
   HelpCircle,
 } from "lucide-react"
 
@@ -48,6 +46,7 @@ import {
 } from "@/services/bienService"
 import { isTokenValid } from "@/lib/auth"
 import { resolveMediaUrl } from "@/lib/api"
+import { useTranslation, LanguageSwitcher } from "@/lib/i18n"
 
 interface AuthUser {
   token: string
@@ -58,6 +57,7 @@ interface AuthUser {
 
 export default function HomePage() {
   const router = useRouter()
+  const { t, lang } = useTranslation()
 
   // Authentification facultative (pour l'en-tête dynamique)
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null)
@@ -161,14 +161,11 @@ export default function HomePage() {
       })
       setBiens(data)
     } catch (err: any) {
-      setError(
-        err?.message ||
-          "Nous ne parvenons pas à afficher les biens pour l'instant. Prenez une respiration et réessayez dans un instant."
-      )
+      setError(err?.message || t("error.generic"))
     } finally {
       setLoading(false)
     }
-  }, [searchTerm, typeFilter, modeFilter])
+  }, [searchTerm, typeFilter, modeFilter, t])
 
   useEffect(() => {
     loadBiens()
@@ -187,12 +184,12 @@ export default function HomePage() {
         const q = searchTerm.toLowerCase()
         const matchTitre = bien.titre?.toLowerCase().includes(q)
         const matchAdresse = bien.adresse?.toLowerCase().includes(q)
-        const matchType = getTypeBienLabel(bien.type).toLowerCase().includes(q)
+        const matchType = getTypeBienLabel(bien.type, lang).toLowerCase().includes(q)
         if (!matchTitre && !matchAdresse && !matchType) return false
       }
       return true
     })
-  }, [biens, modeFilter, typeFilter, searchTerm])
+  }, [biens, modeFilter, typeFilter, searchTerm, lang])
 
   const hasActiveFilters = searchTerm.trim() !== "" || modeFilter !== "TOUS" || typeFilter !== "TOUS"
 
@@ -222,10 +219,10 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-stone-800 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
       {/* =========================================================================
-          1. HEADER SIGNATURE IMMOCONNECT AVEC NAVIGATION ENRICHIE
+          1. HEADER SIGNATURE IMMOCONNECT AVEC SÉLECTEUR DE LANGUE (FR / EN)
       ========================================================================= */}
       <header className="sticky top-0 z-40 bg-[#FAF7F2]/90 backdrop-blur-xl border-b border-[#EDE6DC] transition-all shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-3 sm:gap-4">
           {/* Logo signature & Slogan */}
           <Link href="/" className="flex items-center gap-3.5 group shrink-0" aria-label="Accueil ImmoConnect">
             <div className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25 group-hover:scale-105 group-hover:rotate-1 transition-all duration-300">
@@ -236,7 +233,7 @@ export default function HomePage() {
                 ImmoConnect
               </span>
               <span className="text-[11px] text-stone-500 font-medium tracking-wide">
-                L&apos;immobilier à visage humain
+                {t("nav.brand_tagline")}
               </span>
             </div>
           </Link>
@@ -246,22 +243,22 @@ export default function HomePage() {
             {/* Bouton raccourci Catalogue */}
             <button
               onClick={scrollToCatalog}
-              className="px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold text-stone-600 hover:text-blue-600 hover:bg-stone-100/70 transition-colors"
+              className="px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold text-stone-600 hover:text-blue-600 hover:bg-stone-100/70 transition-colors"
             >
-              Biens disponibles
+              {t("nav.catalog")}
             </button>
 
             {/* Menu déroulant Fonctionnalités par profil */}
             <div className="relative" ref={featuresMenuRef}>
               <button
                 onClick={() => setShowFeaturesMenu((prev) => !prev)}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
                   showFeaturesMenu
                     ? "bg-blue-50 text-blue-700"
                     : "text-stone-600 hover:text-blue-600 hover:bg-stone-100/70"
                 }`}
               >
-                <span>Fonctionnalités</span>
+                <span>{t("nav.features")}</span>
                 <ChevronDown
                   className={`size-4 transition-transform duration-200 ${
                     showFeaturesMenu ? "rotate-180 text-blue-600" : "text-stone-400"
@@ -273,7 +270,7 @@ export default function HomePage() {
               {showFeaturesMenu && (
                 <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[480px] bg-white rounded-3xl shadow-xl shadow-stone-300/40 border border-[#EDE6DC] p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                   <div className="text-[11px] font-bold uppercase tracking-wider text-stone-400 px-3 pb-2 border-b border-stone-100">
-                    Découvrir la plateforme selon votre profil
+                    {t("features_menu.title")}
                   </div>
 
                   <div className="grid gap-2.5 mt-2.5">
@@ -285,14 +282,14 @@ export default function HomePage() {
                       <div>
                         <div className="flex items-center gap-1.5">
                           <h4 className="text-xs font-bold text-stone-900 group-hover:text-blue-600 transition-colors">
-                            Espace Locataire
+                            {t("features_menu.tenant_title")}
                           </h4>
                           <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-blue-50 text-blue-600">
-                            Candidat & Résident
+                            {t("features_menu.tenant_badge")}
                           </span>
                         </div>
                         <p className="text-[11px] text-stone-500 mt-0.5 leading-snug">
-                          Suivi des paiements, quittances téléchargeables, consultation des biens disponibles et gestion de vos réservations.
+                          {t("features_menu.tenant_desc")}
                         </p>
                       </div>
                     </div>
@@ -305,14 +302,14 @@ export default function HomePage() {
                       <div>
                         <div className="flex items-center gap-1.5">
                           <h4 className="text-xs font-bold text-stone-900 group-hover:text-amber-700 transition-colors">
-                            Espace Propriétaire
+                            {t("features_menu.owner_title")}
                           </h4>
                           <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-amber-50 text-amber-700">
-                            Bailleurs
+                            {t("features_menu.owner_badge")}
                           </span>
                         </div>
                         <p className="text-[11px] text-stone-500 mt-0.5 leading-snug">
-                          Publication et gestion de vos biens, suivi des loyers perçus, contrats de bail et état d&apos;occupation en temps réel.
+                          {t("features_menu.owner_desc")}
                         </p>
                       </div>
                     </div>
@@ -325,14 +322,14 @@ export default function HomePage() {
                       <div>
                         <div className="flex items-center gap-1.5">
                           <h4 className="text-xs font-bold text-stone-900 group-hover:text-indigo-600 transition-colors">
-                            Espace Administrateur & Agent
+                            {t("features_menu.admin_title")}
                           </h4>
                           <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-indigo-50 text-indigo-600">
-                            Gestion Pro
+                            {t("features_menu.admin_badge")}
                           </span>
                         </div>
                         <p className="text-[11px] text-stone-500 mt-0.5 leading-snug">
-                          Supervision globale, validation des utilisateurs et contrats, reporting financier et sécurité documentaire.
+                          {t("features_menu.admin_desc")}
                         </p>
                       </div>
                     </div>
@@ -341,23 +338,27 @@ export default function HomePage() {
               )}
             </div>
 
-            {/* Lien Conditions d'utilisation (ouvre la modale CGU) */}
+            {/* Lien Conditions d'utilisation */}
             <button
               onClick={() => setShowCguModal(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs lg:text-sm font-semibold text-stone-600 hover:text-blue-600 hover:bg-stone-100/70 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold text-stone-600 hover:text-blue-600 hover:bg-stone-100/70 transition-colors"
             >
               <FileText className="size-4 text-stone-400" />
-              <span>Conditions d&apos;utilisation</span>
+              <span>{t("nav.terms")}</span>
             </button>
           </nav>
 
-          {/* Actions utilisateurs (Connecté vs Visiteur) */}
-          <div className="hidden sm:flex items-center gap-3">
+          {/* Actions utilisateurs & Sélecteur de langue */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Sélecteur de langue discret FR / EN */}
+            <LanguageSwitcher />
+
+            {/* Boutons d'accès auth */}
             {currentUser ? (
-              <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-3">
                 <div className="hidden lg:flex flex-col text-right">
                   <span className="text-xs font-bold text-stone-800">
-                    Bonjour, {currentUser.nom || "cher visiteur"}
+                    {t("nav.hello")}, {currentUser.nom || t("nav.guest")}
                   </span>
                   <span className="text-[10px] text-blue-600 font-semibold tracking-wider uppercase">
                     Espace {currentUser.role}
@@ -365,41 +366,41 @@ export default function HomePage() {
                 </div>
                 <Link
                   href={currentUser.dashboardUrl}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold shadow-sm shadow-blue-600/20 transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold shadow-sm shadow-blue-600/20 transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
                 >
                   <LayoutDashboard className="size-4" />
-                  <span>Mon Espace</span>
+                  <span>{t("nav.my_space")}</span>
                 </Link>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2">
                 <Link
                   href="/login"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-stone-700 hover:text-blue-600 hover:bg-stone-100/80 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-stone-700 hover:text-blue-600 hover:bg-stone-100/80 transition-colors"
                 >
                   <LogIn className="size-4 text-stone-500" />
-                  <span>Se connecter</span>
+                  <span>{t("nav.sign_in")}</span>
                 </Link>
                 <Link
                   href="/inscription"
-                  className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-blue-600/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                  className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-blue-600/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <UserPlus className="size-4" />
-                  <span className="hidden sm:inline">Créer mon compte</span>
-                  <span className="sm:hidden">Inscription</span>
+                  <span className="hidden lg:inline">{t("nav.create_account")}</span>
+                  <span className="lg:hidden">{t("nav.sign_up_short")}</span>
                 </Link>
               </div>
             )}
-          </div>
 
-          {/* Bouton Burger Mobile */}
-          <button
-            onClick={() => setMobileNavOpen((prev) => !prev)}
-            aria-label="Ouvrir le menu de navigation"
-            className="md:hidden flex size-10 items-center justify-center rounded-xl border border-stone-200 text-stone-700 hover:bg-stone-100/80 transition-colors"
-          >
-            {mobileNavOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-          </button>
+            {/* Bouton Burger Mobile */}
+            <button
+              onClick={() => setMobileNavOpen((prev) => !prev)}
+              aria-label="Menu"
+              className="md:hidden flex size-10 items-center justify-center rounded-xl border border-stone-200 text-stone-700 hover:bg-stone-100/80 transition-colors"
+            >
+              {mobileNavOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+            </button>
+          </div>
         </div>
 
         {/* =========================================================================
@@ -416,7 +417,7 @@ export default function HomePage() {
                 }}
                 className="w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-semibold text-stone-700 hover:bg-white transition-colors"
               >
-                Explorer les biens disponibles
+                {t("nav.catalog")}
               </button>
 
               <button
@@ -427,27 +428,27 @@ export default function HomePage() {
                 className="w-full flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-stone-700 hover:bg-white transition-colors"
               >
                 <FileText className="size-4 text-stone-400" />
-                <span>Conditions d&apos;utilisation (CGU)</span>
+                <span>{t("nav.terms")}</span>
               </button>
             </div>
 
             {/* Accordéon Fonctionnalités pour mobile */}
             <div className="bg-white rounded-2xl p-3 border border-[#EDE6DC] space-y-2.5">
               <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 px-1">
-                Nos fonctionnalités
+                {t("nav.features")}
               </span>
               <div className="grid gap-2">
                 <div className="flex items-center gap-2.5 text-xs text-stone-700 p-2 rounded-lg bg-stone-50">
                   <Key className="size-4 text-blue-600 shrink-0" />
-                  <span><strong>Locataire :</strong> Suivi des loyers, quittances et réservations</span>
+                  <span><strong>{t("features_menu.tenant_title")} :</strong> {t("features_menu.tenant_desc")}</span>
                 </div>
                 <div className="flex items-center gap-2.5 text-xs text-stone-700 p-2 rounded-lg bg-stone-50">
                   <Building className="size-4 text-amber-700 shrink-0" />
-                  <span><strong>Propriétaire :</strong> Publication de biens et gestion des baux</span>
+                  <span><strong>{t("features_menu.owner_title")} :</strong> {t("features_menu.owner_desc")}</span>
                 </div>
                 <div className="flex items-center gap-2.5 text-xs text-stone-700 p-2 rounded-lg bg-stone-50">
                   <ShieldCheck className="size-4 text-indigo-600 shrink-0" />
-                  <span><strong>Agent / Admin :</strong> Supervision globale et reporting</span>
+                  <span><strong>{t("features_menu.admin_title")} :</strong> {t("features_menu.admin_desc")}</span>
                 </div>
               </div>
             </div>
@@ -461,7 +462,7 @@ export default function HomePage() {
                   className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-blue-600 text-white text-sm font-bold shadow-md shadow-blue-600/20"
                 >
                   <LayoutDashboard className="size-4" />
-                  <span>Accéder à Mon Espace</span>
+                  <span>{t("nav.my_space")}</span>
                 </Link>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
@@ -471,7 +472,7 @@ export default function HomePage() {
                     className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-stone-300 bg-white text-stone-800 text-xs font-semibold hover:bg-stone-50"
                   >
                     <LogIn className="size-4" />
-                    <span>Connexion</span>
+                    <span>{t("nav.sign_in")}</span>
                   </Link>
                   <Link
                     href="/inscription"
@@ -479,7 +480,7 @@ export default function HomePage() {
                     className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-sm shadow-blue-600/20"
                   >
                     <UserPlus className="size-4" />
-                    <span>Créer un compte</span>
+                    <span>{t("nav.create_account")}</span>
                   </Link>
                 </div>
               )}
@@ -499,34 +500,37 @@ export default function HomePage() {
           {/* Badge doux rassurant */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white text-blue-800 text-xs font-semibold shadow-xs border border-blue-200/80 mb-5 animate-in fade-in duration-500">
             <Sparkles className="size-3.5 text-blue-600" />
-            <span>Des lieux de vie prêts à vous accueillir</span>
+            <span>{t("hero.badge")}</span>
           </div>
 
           {/* Titre orienté projet de vie */}
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-stone-900 tracking-tight leading-[1.15]">
-            Trouvez l&apos;endroit où commence votre <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 bg-clip-text text-transparent">nouvelle histoire</span>
+            {t("hero.title_start")}{" "}
+            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 bg-clip-text text-transparent">
+              {t("hero.title_highlight")}
+            </span>
           </h1>
 
           {/* Sous-titre bienveillant */}
           <p className="mt-4 text-base sm:text-lg text-stone-600 max-w-2xl mx-auto font-normal leading-relaxed">
-            Que vous rêviez d&apos;un cocon douillet où poser vos valises, d&apos;une maison chaleureuse pour votre famille ou d&apos;un espace pour vos projets, découvrez des biens sélectionnés avec soin et transparents.
+            {t("hero.subtitle")}
           </p>
 
           {/* Micro-textes rassurants & badges de confiance */}
           <div className="mt-5 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-stone-600 font-medium">
             <span className="inline-flex items-center gap-1.5 bg-white px-3.5 py-1.5 rounded-full border border-[#EDE6DC] shadow-2xs">
               <ShieldCheck className="size-4 text-emerald-600" />
-              Logements vérifiés & certifiés
+              {t("hero.trust_verified")}
             </span>
             <span className="hidden sm:inline text-stone-300">•</span>
             <span className="inline-flex items-center gap-1.5 bg-white px-3.5 py-1.5 rounded-full border border-[#EDE6DC] shadow-2xs">
               <CalendarCheck className="size-4 text-blue-600" />
-              Disponibilité en temps réel
+              {t("hero.trust_realtime")}
             </span>
             <span className="hidden sm:inline text-stone-300">•</span>
             <span className="inline-flex items-center gap-1.5 bg-white px-3.5 py-1.5 rounded-full border border-[#EDE6DC] shadow-2xs">
               <Smile className="size-4 text-amber-600" />
-              Accompagnement simple & humain
+              {t("hero.trust_support")}
             </span>
           </div>
         </div>
@@ -543,13 +547,13 @@ export default function HomePage() {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Où aimeriez-vous poser vos valises ? (ville, quartier...)"
+                placeholder={t("search.placeholder")}
                 className="w-full pl-11 pr-9 py-3 bg-[#FAF7F2] hover:bg-white focus:bg-white rounded-2xl border border-stone-200/90 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-3 focus:ring-blue-500/20 focus:border-blue-600 transition-all font-medium"
               />
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm("")}
-                  title="Effacer la recherche"
+                  title={t("search.clear_search")}
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 transition-colors"
                 >
                   <X className="size-4" />
@@ -564,9 +568,9 @@ export default function HomePage() {
                 onChange={(e) => setModeFilter(e.target.value)}
                 className="w-full px-3.5 py-3 bg-[#FAF7F2] hover:bg-white focus:bg-white rounded-2xl border border-stone-200/90 text-sm text-stone-700 font-semibold focus:outline-none focus:ring-3 focus:ring-blue-500/20 focus:border-blue-600 transition-all cursor-pointer"
               >
-                <option value="TOUS">Tous nos projets (Location & Achat)</option>
-                <option value="LOCATION">Pour louer un cocon (Location)</option>
-                <option value="VENTE">Pour devenir propriétaire (Vente)</option>
+                <option value="TOUS">{t("search.mode_all")}</option>
+                <option value="LOCATION">{t("search.mode_location")}</option>
+                <option value="VENTE">{t("search.mode_vente")}</option>
               </select>
             </div>
 
@@ -577,11 +581,11 @@ export default function HomePage() {
                 onChange={(e) => setTypeFilter(e.target.value)}
                 className="w-full px-3.5 py-3 bg-[#FAF7F2] hover:bg-white focus:bg-white rounded-2xl border border-stone-200/90 text-sm text-stone-700 font-semibold focus:outline-none focus:ring-3 focus:ring-blue-500/20 focus:border-blue-600 transition-all cursor-pointer"
               >
-                <option value="TOUS">Tous types de lieux</option>
-                <option value="APPARTEMENT">Appartement chaleureux</option>
-                <option value="MAISON">Maison de famille</option>
-                <option value="LOCAL_COMMERCIAL">Local pour votre activité</option>
-                <option value="TERRAIN">Terrain pour bâtir votre rêve</option>
+                <option value="TOUS">{t("search.type_all")}</option>
+                <option value="APPARTEMENT">{t("search.type_apartment")}</option>
+                <option value="MAISON">{t("search.type_house")}</option>
+                <option value="LOCAL_COMMERCIAL">{t("search.type_commercial")}</option>
+                <option value="TERRAIN">{t("search.type_land")}</option>
               </select>
             </div>
 
@@ -589,7 +593,7 @@ export default function HomePage() {
             <div className="md:col-span-1 flex justify-center">
               <button
                 onClick={resetFilters}
-                title="Réinitialiser tous les critères"
+                title={t("search.reset_title")}
                 disabled={!hasActiveFilters}
                 className={`p-3 rounded-2xl border transition-all duration-200 flex items-center justify-center w-full md:w-auto ${
                   hasActiveFilters
@@ -608,12 +612,12 @@ export default function HomePage() {
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-stone-500 font-semibold mr-1 flex items-center gap-1.5">
               <Compass className="size-3.5 text-blue-600" />
-              Envie de :
+              {t("search.want_to")}
             </span>
             {[
-              { id: "TOUS", label: "Tout explorer", icon: Sparkles },
-              { id: "LOCATION", label: "Louer un cocon", icon: Key },
-              { id: "VENTE", label: "Acheter & s'installer", icon: Home },
+              { id: "TOUS", label: t("search.pill_all"), icon: Sparkles },
+              { id: "LOCATION", label: t("search.pill_rent"), icon: Key },
+              { id: "VENTE", label: t("search.pill_buy"), icon: Home },
             ].map((m) => {
               const Icon = m.icon
               const active = modeFilter === m.id
@@ -638,12 +642,13 @@ export default function HomePage() {
             {loading ? (
               <span className="inline-flex items-center gap-1.5 text-stone-600">
                 <Loader2 className="size-3.5 animate-spin text-blue-600" />
-                Découverte des pépites en cours...
+                {t("search.discovering")}
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 text-stone-700 bg-white px-3.5 py-1 rounded-full border border-[#EDE6DC] shadow-2xs">
                 <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                <strong>{filteredBiens.length}</strong> {filteredBiens.length > 1 ? "adresses prêtes à vous accueillir" : "adresse prête à vous accueillir"}
+                <strong>{filteredBiens.length}</strong>{" "}
+                {filteredBiens.length > 1 ? t("search.available_plural") : t("search.available_singular")}
               </span>
             )}
           </div>
@@ -661,7 +666,7 @@ export default function HomePage() {
               <AlertCircle className="size-6 text-blue-600 shrink-0 mt-0.5" />
               <div>
                 <h3 className="text-sm font-bold text-blue-950">
-                  Un petit contretemps dans le chargement
+                  {t("error.title")}
                 </h3>
                 <p className="text-xs text-blue-800 mt-1">{error}</p>
               </div>
@@ -671,7 +676,7 @@ export default function HomePage() {
               className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-2"
             >
               <RefreshCw className="size-3.5" />
-              <span>Réessayer maintenant</span>
+              <span>{t("error.retry")}</span>
             </button>
           </div>
         )}
@@ -706,10 +711,10 @@ export default function HomePage() {
               <Compass className="size-8 stroke-[1.7]" />
             </div>
             <h3 className="text-xl font-bold text-stone-900">
-              Aucun coup de cœur avec ces critères
+              {t("empty.title")}
             </h3>
             <p className="mt-2 text-sm text-stone-600 max-w-md mx-auto leading-relaxed">
-              Ne vous découragez pas ! Élargissez un peu votre recherche ou réinitialisez les critères pour découvrir tous nos lieux de vie disponibles.
+              {t("empty.desc")}
             </p>
             {hasActiveFilters && (
               <button
@@ -717,7 +722,7 @@ export default function HomePage() {
                 className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm"
               >
                 <RefreshCw className="size-3.5" />
-                <span>Découvrir tous les biens disponibles</span>
+                <span>{t("empty.reset_btn")}</span>
               </button>
             )}
           </div>
@@ -731,8 +736,8 @@ export default function HomePage() {
             {filteredBiens.map((bien) => {
               const photoUrl = getPhotoBienUrl(bien)
               const isLocation = bien.mode_transaction === "LOCATION"
-              const typeLabel = getTypeBienLabel(bien.type)
-              const formattedPrice = formatPrixBien(bien)
+              const typeLabel = getTypeBienLabel(bien.type, lang)
+              const formattedPrice = formatPrixBien(bien, lang)
               const isFav = favorites.includes(bien.id)
 
               return (
@@ -756,7 +761,7 @@ export default function HomePage() {
                       <div className="w-full h-full flex flex-col items-center justify-center text-stone-400 bg-gradient-to-b from-stone-100 to-stone-200/60">
                         <Home className="size-12 stroke-[1.2] mb-1.5 text-stone-400" />
                         <span className="text-xs font-medium text-stone-500">
-                          Photos en cours d&apos;ajout
+                          {t("card.photos_pending")}
                         </span>
                       </div>
                     )}
@@ -767,19 +772,19 @@ export default function HomePage() {
                     {/* Badges discrets et élégants en haut */}
                     <div className="absolute top-4 left-4 flex items-center gap-2">
                       <span className="px-3 py-1 rounded-full text-[11px] font-bold tracking-wide bg-blue-600 text-white shadow-xs backdrop-blur-md">
-                        {isLocation ? "À louer" : "À acquérir"}
+                        {isLocation ? t("card.for_rent") : t("card.for_sale")}
                       </span>
 
                       <span className="px-3 py-1 rounded-full text-[11px] font-semibold bg-emerald-500 text-white shadow-xs backdrop-blur-md flex items-center gap-1.5">
                         <span className="size-1.5 rounded-full bg-white animate-pulse" />
-                        Prêt à emménager
+                        {t("card.ready_move_in")}
                       </span>
                     </div>
 
                     {/* Bouton Coup de cœur (Favori) */}
                     <button
                       onClick={(e) => toggleFavorite(bien.id, e)}
-                      title={isFav ? "Retirer de mes coups de cœur" : "Ajouter à mes coups de cœur"}
+                      title={isFav ? t("card.fav_remove") : t("card.fav_add")}
                       className={`absolute top-4 right-4 size-9 rounded-full flex items-center justify-center backdrop-blur-md shadow-sm transition-all duration-200 ${
                         isFav
                           ? "bg-rose-500 text-white scale-110"
@@ -792,7 +797,7 @@ export default function HomePage() {
                     {/* Nombre de photos si disponible */}
                     {bien.photos && bien.photos.length > 1 && (
                       <div className="absolute bottom-3 right-4 bg-black/60 text-white text-[11px] font-medium px-2.5 py-0.5 rounded-full backdrop-blur-md">
-                        {bien.photos.length} photos
+                        {bien.photos.length} {t("card.photos_count")}
                       </div>
                     )}
                   </div>
@@ -806,7 +811,7 @@ export default function HomePage() {
                         {typeLabel}
                       </span>
                       <span className="text-[11px] text-stone-400 font-medium">
-                        Réf. #{bien.id}
+                        {t("card.ref")}{bien.id}
                       </span>
                     </div>
 
@@ -826,7 +831,7 @@ export default function HomePage() {
                       <div className="flex items-center gap-2">
                         <Maximize2 className="size-4 text-stone-400" />
                         <span>
-                          <strong className="text-stone-800">{bien.surface}</strong> m² habitables
+                          <strong className="text-stone-800">{bien.surface}</strong> {t("card.living_surface")}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -834,10 +839,10 @@ export default function HomePage() {
                         <span>
                           {bien.nombre_pieces ? (
                             <>
-                              <strong className="text-stone-800">{bien.nombre_pieces}</strong> pièce(s)
+                              <strong className="text-stone-800">{bien.nombre_pieces}</strong> {t("card.rooms")}
                             </>
                           ) : (
-                            <span className="text-stone-400">Espace modulable</span>
+                            <span className="text-stone-400">{t("card.flexible_space")}</span>
                           )}
                         </span>
                       </div>
@@ -847,7 +852,7 @@ export default function HomePage() {
                     <div className="mt-auto pt-4 border-t border-[#EDE6DC] flex items-center justify-between gap-2">
                       <div>
                         <span className="block text-[11px] text-stone-400 font-medium">
-                          {isLocation ? "Loyer mensuel" : "Prix d'acquisition"}
+                          {isLocation ? t("card.monthly_rent") : t("card.sale_price")}
                         </span>
                         <div className="text-lg font-black text-blue-600 group-hover:text-blue-700 transition-colors">
                           {formattedPrice}
@@ -861,7 +866,7 @@ export default function HomePage() {
                         }}
                         className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all duration-200 shadow-xs hover:shadow-md"
                       >
-                        <span>Découvrir</span>
+                        <span>{t("card.discover")}</span>
                         <ArrowUpRight className="size-3.5" />
                       </button>
                     </div>
@@ -880,17 +885,17 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
           <div className="space-y-1.5">
             <h3 className="text-xl font-bold text-stone-900">
-              Besoin d&apos;aide pour trouver votre coup de cœur ?
+              {t("banner.title")}
             </h3>
             <p className="text-sm text-stone-600 max-w-xl">
-              Nos conseillers locaux vous guident à chaque étape pour visiter, louer ou acheter en toute sérénité et sans stress.
+              {t("banner.desc")}
             </p>
           </div>
           <Link
             href="/inscription"
             className="shrink-0 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-blue-600/20 transition-all duration-200 hover:scale-105"
           >
-            Créer mon compte gratuitement
+            {t("banner.cta")}
           </Link>
         </div>
       </section>
@@ -959,18 +964,18 @@ export default function HomePage() {
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-stone-400 bg-stone-800">
                   <Home className="size-16 stroke-[1.2] mb-2 text-stone-400" />
-                  <span className="text-sm">Photos complémentaires en cours d&apos;arrivée</span>
+                  <span className="text-sm">{t("modal.photos_pending")}</span>
                 </div>
               )}
 
               {/* Badges sur l'image du modal */}
               <div className="absolute top-4 left-4 flex gap-2">
                 <span className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-blue-600 text-white shadow-xs">
-                  {selectedBien.mode_transaction === "LOCATION" ? "À louer" : "À acquérir"}
+                  {selectedBien.mode_transaction === "LOCATION" ? t("modal.rent") : t("modal.sale")}
                 </span>
                 <span className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-600 text-white shadow-xs flex items-center gap-1.5">
                   <span className="size-1.5 rounded-full bg-white animate-pulse" />
-                  Prêt à emménager
+                  {t("card.ready_move_in")}
                 </span>
               </div>
             </div>
@@ -980,7 +985,7 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
                 <div>
                   <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200/60">
-                    {getTypeBienLabel(selectedBien.type)}
+                    {getTypeBienLabel(selectedBien.type, lang)}
                   </span>
                   <h2 className="text-2xl font-extrabold text-stone-900 mt-2">
                     {selectedBien.titre}
@@ -992,10 +997,10 @@ export default function HomePage() {
                 </div>
                 <div className="sm:text-right shrink-0 bg-[#FAF7F2] sm:bg-transparent p-3 sm:p-0 rounded-2xl">
                   <span className="text-xs text-stone-400 uppercase font-semibold block">
-                    {selectedBien.mode_transaction === "LOCATION" ? "Loyer mensuel" : "Prix de vente"}
+                    {selectedBien.mode_transaction === "LOCATION" ? t("card.monthly_rent") : t("card.sale_price")}
                   </span>
                   <span className="text-2xl font-black text-blue-600">
-                    {formatPrixBien(selectedBien)}
+                    {formatPrixBien(selectedBien, lang)}
                   </span>
                 </div>
               </div>
@@ -1003,21 +1008,21 @@ export default function HomePage() {
               {/* Fiche des caractéristiques */}
               <div className="grid grid-cols-3 gap-3 p-4 bg-[#FAF7F2] rounded-2xl my-5 text-center border border-[#EDE6DC]">
                 <div className="border-r border-[#EDE6DC] pr-2">
-                  <span className="text-xs text-stone-500 block">Surface</span>
+                  <span className="text-xs text-stone-500 block">{t("modal.surface")}</span>
                   <span className="text-base font-bold text-stone-900">
                     {selectedBien.surface} m²
                   </span>
                 </div>
                 <div className="border-r border-[#EDE6DC] pr-2">
-                  <span className="text-xs text-stone-500 block">Pièces</span>
+                  <span className="text-xs text-stone-500 block">{t("modal.rooms")}</span>
                   <span className="text-base font-bold text-stone-900">
-                    {selectedBien.nombre_pieces ? `${selectedBien.nombre_pieces} pièces` : "Libre"}
+                    {selectedBien.nombre_pieces ? `${selectedBien.nombre_pieces} ${t("card.rooms")}` : t("modal.free_space")}
                   </span>
                 </div>
                 <div>
-                  <span className="text-xs text-stone-500 block">Projet</span>
+                  <span className="text-xs text-stone-500 block">{t("modal.project")}</span>
                   <span className="text-base font-bold text-stone-900">
-                    {selectedBien.mode_transaction === "LOCATION" ? "Location" : "Vente"}
+                    {selectedBien.mode_transaction === "LOCATION" ? t("modal.rent") : t("modal.sale")}
                   </span>
                 </div>
               </div>
@@ -1026,7 +1031,7 @@ export default function HomePage() {
               <div className="flex items-center gap-2.5 p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-900 mb-6">
                 <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />
                 <span>
-                  Ce bien est vérifié par nos équipes. Vous pouvez poser une option ou planifier une visite en quelques clics.
+                  {t("modal.verified_notice")}
                 </span>
               </div>
 
@@ -1036,7 +1041,7 @@ export default function HomePage() {
                   onClick={closeBienDetail}
                   className="w-full sm:w-auto px-5 py-3 rounded-xl border border-stone-200 text-xs font-bold text-stone-700 hover:bg-stone-50 transition-colors"
                 >
-                  Continuer à explorer
+                  {t("modal.continue_exploring")}
                 </button>
 
                 {currentUser ? (
@@ -1044,7 +1049,7 @@ export default function HomePage() {
                     href="/locataire/biens"
                     className="w-full sm:w-auto px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-600/20 transition-all flex items-center justify-center gap-2 hover:scale-[1.02]"
                   >
-                    <span>Poser une option / Réserver</span>
+                    <span>{t("modal.book_option")}</span>
                     <ArrowRight className="size-4" />
                   </Link>
                 ) : (
@@ -1053,7 +1058,7 @@ export default function HomePage() {
                     className="w-full sm:w-auto px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-600/20 transition-all flex items-center justify-center gap-2 hover:scale-[1.02]"
                   >
                     <LogIn className="size-4" />
-                    <span>Se connecter pour réserver</span>
+                    <span>{t("modal.sign_in_to_book")}</span>
                   </Link>
                 )}
               </div>
@@ -1076,10 +1081,10 @@ export default function HomePage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-stone-900">
-                    Conditions Générales d&apos;Utilisation
+                    {t("cgu.title")}
                   </h3>
                   <p className="text-xs text-stone-500">
-                    Engagements, transparence et sécurité sur ImmoConnect
+                    {t("cgu.subtitle")}
                   </p>
                 </div>
               </div>
@@ -1096,42 +1101,42 @@ export default function HomePage() {
               <section className="space-y-1.5">
                 <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
                   <ShieldCheck className="size-4 text-emerald-600" />
-                  1. Objet et Mission d&apos;ImmoConnect
+                  {t("cgu.sec1_title")}
                 </h4>
                 <p>
-                  ImmoConnect est une plateforme collaborative de gestion et d&apos;exploration immobilière. Elle vise à simplifier la relation entre locataires, propriétaires et agents grâce à un suivi clair, transparent et humain de chaque dossier.
+                  {t("cgu.sec1_text")}
                 </p>
               </section>
 
               <section className="space-y-1.5">
                 <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
                   <Key className="size-4 text-blue-600" />
-                  2. Engagements des Utilisateurs
+                  {t("cgu.sec2_title")}
                 </h4>
                 <ul className="list-disc pl-5 space-y-1 text-stone-600">
-                  <li><strong>Locataires :</strong> Fournir des informations authentiques et honorer les échéances convenues dans le cadre des baux établis.</li>
-                  <li><strong>Propriétaires :</strong> Garantir l&apos;exactitude des descriptions et photographies des biens mis à disposition.</li>
-                  <li><strong>Agents & Administrateurs :</strong> Assurer une médiation impartiale et la validation rigoureuse des pièces justificatives.</li>
+                  <li><strong>{t("features_menu.tenant_title")} :</strong> {t("cgu.sec2_tenant")}</li>
+                  <li><strong>{t("features_menu.owner_title")} :</strong> {t("cgu.sec2_owner")}</li>
+                  <li><strong>{t("features_menu.admin_title")} :</strong> {t("cgu.sec2_admin")}</li>
                 </ul>
               </section>
 
               <section className="space-y-1.5">
                 <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
                   <CheckCircle2 className="size-4 text-indigo-600" />
-                  3. Sécurité des Données et Confidentialité
+                  {t("cgu.sec3_title")}
                 </h4>
                 <p>
-                  Vos documents personnels (pièces d&apos;identité, quittances, justificatifs) sont chiffrés et hébergés en conformité avec les réglementations de protection des données (RGPD). Aucune donnée n&apos;est cédée à des tiers à des fins publicitaires.
+                  {t("cgu.sec3_text")}
                 </p>
               </section>
 
               <section className="space-y-1.5">
                 <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
                   <HelpCircle className="size-4 text-amber-600" />
-                  4. Réservations et Visites
+                  {t("cgu.sec4_title")}
                 </h4>
                 <p>
-                  La réservation d&apos;un bien via la plateforme constitue une demande de mise en relation prioritaire et ne remplace pas la signature formelle d&apos;un bail ou acte de vente validé par les deux parties.
+                  {t("cgu.sec4_text")}
                 </p>
               </section>
             </div>
@@ -1142,7 +1147,7 @@ export default function HomePage() {
                 onClick={() => setShowCguModal(false)}
                 className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition-colors"
               >
-                J&apos;ai compris et j&apos;accepte
+                {t("cgu.understood_btn")}
               </button>
             </div>
           </div>
@@ -1160,7 +1165,7 @@ export default function HomePage() {
             </div>
             <div>
               <span className="font-bold text-stone-800">ImmoConnect</span>
-              <span className="text-stone-400 ml-2">— Des projets de vie menés avec cœur.</span>
+              <span className="text-stone-400 ml-2">— {t("footer.brand_note")}</span>
             </div>
           </div>
 
@@ -1169,15 +1174,15 @@ export default function HomePage() {
               onClick={() => setShowCguModal(true)}
               className="hover:text-blue-600 transition-colors"
             >
-              Conditions d&apos;utilisation
+              {t("footer.terms")}
             </button>
             <Link href="/login" className="hover:text-blue-600 transition-colors">
-              Espace Client
+              {t("footer.client_space")}
             </Link>
             <Link href="/inscription" className="hover:text-blue-600 transition-colors">
-              Créer un compte
+              {t("footer.create_account")}
             </Link>
-            <span>&copy; {new Date().getFullYear()} ImmoConnect. Tous droits réservés.</span>
+            <span>&copy; {new Date().getFullYear()} ImmoConnect. {t("footer.rights")}</span>
           </div>
         </div>
       </footer>

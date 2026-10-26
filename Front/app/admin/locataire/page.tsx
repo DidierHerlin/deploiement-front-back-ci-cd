@@ -7,6 +7,7 @@ import {
   getContrats, getPaiements, updateUser,
   Locataire, Contrat, Paiement 
 } from '@/lib/api'
+import { useTranslation } from '@/lib/i18n'
 
 import { LocataireTable } from "@/components/organisms/LocataireTable"
 import { LocataireSearch } from "@/components/organisms/LocataireSearch"
@@ -16,6 +17,7 @@ import { LocataireModal } from "@/components/organisms/LocataireModal"
 import { DisableLocataireModal } from "@/components/organisms/DisableLocataireModal"
 
 export default function LocatairePage() {
+  const { t } = useTranslation()
   const [locataires, setLocataires] = useState<Locataire[]>([])
   const [contrats, setContrats] = useState<Contrat[]>([])
   const [paiements, setPaiements] = useState<Paiement[]>([])
@@ -102,8 +104,7 @@ export default function LocatairePage() {
     contrats.forEach(c => {
       if (c.locataire) {
         cMap[c.locataire] = (cMap[c.locataire] || 0) + 1
-        // We assume 1 contrat = 1 bien. If multiple contrats for same bien, this counts instances.
-        if (c.bien) {
+        if (c.statut === 'ACTIF' || c.statut === 'EN_ATTENTE') {
           bMap[c.locataire] = (bMap[c.locataire] || 0) + 1
         }
       }
@@ -111,8 +112,8 @@ export default function LocatairePage() {
     return { contratsCountMap: cMap, biensCountMap: bMap }
   }, [contrats])
 
-  const openEditModal = (l: Locataire) => {
-    setEditingLoc(l)
+  const openEditModal = (loc: Locataire) => {
+    setEditingLoc(loc)
     setShowForm(true)
   }
 
@@ -125,11 +126,11 @@ export default function LocatairePage() {
     <>
       <div className="welcome-row" style={{ marginBottom: '20px' }}>
         <div>
-          <h1>Gestion des <span>Locataires</span></h1>
-          <p className="subtitle">Gérez les locataires, leurs contrats, leurs accès et consultez l'historique de leurs locations.</p>
+          <h1>{t("admin.locataires.title_start", "Gestion des")} <span>{t("admin.locataires.title_highlight", "Locataires")}</span></h1>
+          <p className="subtitle">{t("admin.locataires.subtitle", "Gérez les locataires, leurs contrats, leurs accès et consultez l'historique de leurs locations.")}</p>
         </div>
         <button className="primary-button" onClick={openCreateModal}>
-          <Plus size={16} /> Ajouter un locataire
+          <Plus size={16} /> {t("admin.locataires.add_tenant", "Ajouter un locataire")}
         </button>
       </div>
 
@@ -159,18 +160,17 @@ export default function LocatairePage() {
         />
       )}
 
-      {viewLoc && (() => {
-        const locContrats = contrats.filter(c => c.locataire === viewLoc.id)
-        const locPaiements = paiements.filter(p => locContrats.some(c => c.id === p.contrat))
-        return (
-          <LocataireModal 
-            locataire={viewLoc} 
-            contrats={locContrats}
-            paiements={locPaiements}
-            onClose={() => setViewLoc(null)} 
-          />
-        )
-      })()}
+      {viewLoc && (
+        <LocataireModal 
+          locataire={viewLoc} 
+          contrats={contrats.filter(c => c.locataire === viewLoc.id)}
+          paiements={paiements.filter(p => {
+            const contrat = contrats.find(c => c.id === p.contrat)
+            return contrat?.locataire === viewLoc.id
+          })}
+          onClose={() => setViewLoc(null)} 
+        />
+      )}
 
       {disableLoc && (
         <DisableLocataireModal 

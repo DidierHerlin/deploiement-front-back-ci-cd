@@ -1,5 +1,6 @@
 import { Eye, Pencil, UserMinus } from 'lucide-react'
 import { Locataire } from '@/lib/api'
+import { useTranslation } from '@/lib/i18n'
 
 type LocataireTableRowProps = {
   locataire: Locataire
@@ -11,6 +12,7 @@ type LocataireTableRowProps = {
 }
 
 export function LocataireTableRow({ locataire, contratsCount, biensCount, onView, onEdit, onDisable }: LocataireTableRowProps) {
+  const { t } = useTranslation()
   const user = locataire.user
   const isActive = user?.is_active ?? true
 
@@ -31,17 +33,17 @@ export function LocataireTableRow({ locataire, contratsCount, biensCount, onView
       <td><span className="role-badge" style={{ background: '#e0e7ff', color: '#4f46e5' }}>{biensCount}</span></td>
       <td>
         {isActive ? (
-          <span className="status paid"><i />Actif</span>
+          <span className="status paid"><i />{t("dashboard.common.active", "Actif")}</span>
         ) : (
-          <span className="status disabled"><i />Désactivé</span>
+          <span className="status disabled"><i />{t("dashboard.common.inactive", "Désactivé")}</span>
         )}
       </td>
       <td>
         <div className="row-actions" style={{ justifyContent: 'flex-end' }}>
-          <button aria-label="Voir" onClick={() => onView(locataire)} title="Détails"><Eye size={15} /></button>
-          <button aria-label="Modifier" onClick={() => onEdit(locataire)} title="Modifier"><Pencil size={15} /></button>
+          <button aria-label={t("forms.view", "Voir")} onClick={() => onView(locataire)} title={t("forms.view", "Détails")}><Eye size={15} /></button>
+          <button aria-label={t("forms.edit", "Modifier")} onClick={() => onEdit(locataire)} title={t("forms.edit", "Modifier")}><Pencil size={15} /></button>
           {isActive && (
-            <button aria-label="Désactiver" onClick={() => onDisable(locataire)} title="Désactiver" style={{ color: '#ef6a76' }}>
+            <button aria-label={t("admin.users.deactivate", "Désactiver")} onClick={() => onDisable(locataire)} title={t("admin.users.deactivate", "Désactiver")} style={{ color: '#ef6a76' }}>
               <UserMinus size={15} />
             </button>
           )}

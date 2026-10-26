@@ -1,13 +1,23 @@
+'use client'
+
 import { format, parseISO } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr, enUS } from 'date-fns/locale';
 import { ReportingData } from '../hooks/useReporting';
+import { useTranslation } from '@/lib/i18n';
 
 export function UnpaidRentals({ data }: { data: ReportingData }) {
+  const { t, lang } = useTranslation();
+  const dateLocale = lang === 'en' ? enUS : fr;
+
   if (data.impayes.length === 0) {
     return (
       <div className="p-6 bg-white rounded-lg shadow-sm border mt-8">
-        <h3 className="text-lg font-semibold mb-4 text-gray-800">Impayés & Retards</h3>
-        <p className="text-gray-500">Aucun paiement en retard ou impayé.</p>
+        <h3 className="text-lg font-semibold mb-4 text-gray-800">
+          {t('admin.reporting.unpaid_retards_title', 'Impayés & Retards')}
+        </h3>
+        <p className="text-gray-500">
+          {t('admin.reporting.no_unpaid', 'Aucun paiement en retard ou impayé.')}
+        </p>
       </div>
     );
   }
@@ -15,17 +25,17 @@ export function UnpaidRentals({ data }: { data: ReportingData }) {
   return (
     <div className="p-6 bg-white rounded-lg shadow-sm border mt-8">
       <h3 className="text-lg font-semibold mb-4 text-gray-800">
-        Impayés & Retards ({data.impayes.length})
+        {t('admin.reporting.unpaid_retards_title', 'Impayés & Retards')} ({data.impayes.length})
       </h3>
       <div className="overflow-x-auto">
         <table className="w-full text-sm text-left text-gray-500">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50">
             <tr>
-              <th className="px-4 py-3">Contrat ID</th>
-              <th className="px-4 py-3">Échéance</th>
-              <th className="px-4 py-3">Montant Attendu</th>
-              <th className="px-4 py-3">Reste à payer</th>
-              <th className="px-4 py-3">Statut</th>
+              <th className="px-4 py-3">{t('admin.reporting.col_contrat_id', 'Contrat ID')}</th>
+              <th className="px-4 py-3">{t('admin.reporting.col_echeance', 'Échéance')}</th>
+              <th className="px-4 py-3">{t('admin.reporting.col_montant_attendu', 'Montant Attendu')}</th>
+              <th className="px-4 py-3">{t('admin.reporting.col_reste_a_payer', 'Reste à payer')}</th>
+              <th className="px-4 py-3">{t('admin.reporting.col_statut', 'Statut')}</th>
             </tr>
           </thead>
           <tbody>
@@ -35,7 +45,7 @@ export function UnpaidRentals({ data }: { data: ReportingData }) {
                   {p.contrat}
                 </td>
                 <td className="px-4 py-3">
-                  {p.date_echeance ? format(parseISO(p.date_echeance), 'dd MMM yyyy', { locale: fr }) : '-'}
+                  {p.date_echeance ? format(parseISO(p.date_echeance), 'dd MMM yyyy', { locale: dateLocale }) : '-'}
                 </td>
                 <td className="px-4 py-3">
                   {p.montant_attendu ? `${parseFloat(p.montant_attendu).toLocaleString('fr-MG')} Ar` : '-'}

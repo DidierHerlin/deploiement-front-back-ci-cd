@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { Bien } from '@/lib/api'
 import { BienCard } from "@/components/molecules/BienCard"
-import { DeleteBienModal } from "@/components/organisms/bien_DeleteBienModal"
+import { DeleteBienModal } from "@/components/organisms/DeleteBienModal"
+import { useTranslation } from '@/lib/i18n'
 
 interface BienListProps {
   biens: Bien[]
@@ -12,12 +13,13 @@ interface BienListProps {
 }
 
 export function BienList({ biens, onEdit, onRefresh }: BienListProps) {
+  const { t } = useTranslation()
   const [deletingBien, setDeletingBien] = useState<Bien | null>(null)
 
   if (biens.length === 0) {
     return (
       <div className="text-center p-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-        <p className="text-gray-500 mb-2">Vous n'avez pas encore de biens.</p>
+        <p className="text-gray-500 mb-2">{t("proprietaire_pages.biens.empty", "Vous n'avez pas encore de biens.")}</p>
       </div>
     )
   }

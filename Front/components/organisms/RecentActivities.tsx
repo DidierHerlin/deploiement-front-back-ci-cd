@@ -1,17 +1,19 @@
 import React from 'react';
 import { FileText, Wallet, Clock } from 'lucide-react';
 import { AdminDashboardData } from '../../app/admin/dashboard/hooks/useAdminDashboard';
+import { useTranslation } from '@/lib/i18n';
 
 export function RecentActivities({ data }: { data: AdminDashboardData }) {
+  const { t } = useTranslation();
   const { recentEvents } = data;
   
   const getTimeAgo = (dateStr: string) => {
     const date = new Date(dateStr);
     const diff = Math.floor((new Date().getTime() - date.getTime()) / 1000); // secondes
-    if (diff < 60) return "À l'instant";
-    if (diff < 3600) return `Il y a ${Math.floor(diff/60)} min`;
-    if (diff < 86400) return `Il y a ${Math.floor(diff/3600)} h`;
-    return `Il y a ${Math.floor(diff/86400)} j`;
+    if (diff < 60) return t("dashboard.common.just_now", "À l'instant");
+    if (diff < 3600) return `${t("dashboard.common.ago", "Il y a")} ${Math.floor(diff/60)} min`;
+    if (diff < 86400) return `${t("dashboard.common.ago", "Il y a")} ${Math.floor(diff/3600)} h`;
+    return `${t("dashboard.common.ago", "Il y a")} ${Math.floor(diff/86400)} j`;
   };
 
   const getIcon = (iconName: string) => {
@@ -24,15 +26,15 @@ export function RecentActivities({ data }: { data: AdminDashboardData }) {
     <section className="panel" style={{ display: 'flex', flexDirection: 'column' }}>
       <div className="panel-header" style={{ marginBottom: '16px' }}>
         <div>
-          <h2>Activité Récente</h2>
-          <p>Derniers événements sur la plateforme</p>
+          <h2>{t("dashboard.admin.recent_activity", "Activité Récente")}</h2>
+          <p>{t("dashboard.admin.recent_activity_sub", "Derniers événements sur la plateforme")}</p>
         </div>
       </div>
       
       {(!recentEvents || recentEvents.length === 0) ? (
         <div style={{ padding: '2rem 0', textAlign: 'center', color: 'var(--text-secondary)' }}>
           <Clock size={32} style={{ opacity: 0.2, margin: '0 auto 10px' }} />
-          <p>Aucune activité récente.</p>
+          <p>{t("dashboard.admin.no_recent_activity", "Aucune activité récente.")}</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

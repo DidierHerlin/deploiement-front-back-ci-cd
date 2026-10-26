@@ -3,6 +3,7 @@ import { UserProfil } from '@/lib/api'
 import { UserTableHeader } from "@/components/organisms/UserTableHeader"
 import { UserTableRow } from "@/components/organisms/UserTableRow"
 import { Pagination } from "@/components/molecules/pagination"
+import { useTranslation } from '@/lib/i18n'
 
 type UserTableProps = {
   users: UserProfil[]
@@ -14,6 +15,7 @@ type UserTableProps = {
 }
 
 export function UserTable({ users, loading, onView, onEdit, onToggleStatus, onDelete }: UserTableProps) {
+  const { t } = useTranslation()
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 5;
   const totalPages = Math.ceil(users.length / ITEMS_PER_PAGE);
@@ -26,7 +28,7 @@ export function UserTable({ users, loading, onView, onEdit, onToggleStatus, onDe
           <UserTableHeader />
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '20px' }}>Chargement...</td></tr>
+              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '20px' }}>{t("forms.loading", "Chargement...")}</td></tr>
             ) : paginatedData.length > 0 ? (
               paginatedData.map(user => (
                 <UserTableRow 
@@ -39,7 +41,7 @@ export function UserTable({ users, loading, onView, onEdit, onToggleStatus, onDe
                 />
               ))
             ) : (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '30px', color: '#8993a3' }}>Aucun utilisateur trouvé.</td></tr>
+              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '30px', color: '#8993a3' }}>{t("admin.users.empty", "Aucun utilisateur trouvé.")}</td></tr>
             )}
           </tbody>
         </table>
