@@ -33,6 +33,8 @@ jobs:
     steps:
       - name: Checkout du code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Filtrage par chemins modifiés
         uses: dorny/paths-filter@v3
@@ -46,12 +48,10 @@ jobs:
               - 'k8s/k3s-secret.yaml'
               - 'k8s/namespace.yaml'
               - 'k8s/hpa.yaml'
-              - '.github/workflows/ci-cd.yml'
             frontend:
               - 'Front/**'
               - 'k8s/frontend.yaml'
               - 'k8s/deploy-frontend.sh'
-              - '.github/workflows/ci-cd.yml'
 
       - name: Résolution finale des cibles (Support Push & Workflow Dispatch)
         id: resolve
