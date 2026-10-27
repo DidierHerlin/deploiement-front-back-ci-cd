@@ -12,9 +12,9 @@ export function middleware(request: NextRequest) {
   const estMarqueConnecte = request.cookies.get("auth")?.value === "1"
 
   if (estPublique(pathname)) {
-    // Si l'utilisateur est déjà connecté et tente d'aller sur login/inscription,
+    // Si l'utilisateur est déjà connecté et tente d'aller sur login/inscription/connexion,
     // on le renvoie vers la racine qui le dispatchera vers le bon dashboard.
-    if (estMarqueConnecte && (pathname === "/login" || pathname === "/inscription" || pathname === "/mot-de-passe-oublie")) {
+    if (estMarqueConnecte && (pathname === "/login" || pathname === "/connexion" || pathname === "/inscription" || pathname === "/mot-de-passe-oublie")) {
       return NextResponse.redirect(new URL("/", request.url))
     }
     return NextResponse.next()

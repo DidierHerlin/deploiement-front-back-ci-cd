@@ -1,4 +1,4 @@
-export const CHEMINS_PUBLICS = ["/", "/login", "/inscription", "/mot-de-passe-oublie"]
+export const CHEMINS_PUBLICS = ["/", "/login", "/connexion", "/inscription", "/mot-de-passe-oublie"]
 
 export function estPublique(pathname: string): boolean {
   return CHEMINS_PUBLICS.some(

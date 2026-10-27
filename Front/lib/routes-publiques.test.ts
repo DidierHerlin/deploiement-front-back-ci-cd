@@ -12,6 +12,7 @@ describe("routes-publiques", () => {
 
   it("autorise les pages de connexion et d'inscription", () => {
     expect(estPublique("/login")).toBe(true)
+    expect(estPublique("/connexion")).toBe(true)
     expect(estPublique("/inscription")).toBe(true)
     expect(estPublique("/mot-de-passe-oublie")).toBe(true)
   })

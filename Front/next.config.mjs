@@ -18,6 +18,14 @@ const nextConfig = {
     ],
   },
   output: 'standalone',
+  async rewrites() {
+    return [
+      {
+        source: '/connexion',
+        destination: '/login',
+      },
+    ]
+  },
   async headers() {
     return [
       {

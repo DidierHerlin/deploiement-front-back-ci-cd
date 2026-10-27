@@ -4,7 +4,7 @@ import { useState, type FormEvent, useEffect } from "react"
 import Link from "next/link"
 import { ArrowLeft, ArrowRight, LockKeyhole, Mail } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { marquerConnecte, sauvegarderTokens, getAccessToken } from "@/lib/auth"
+import { marquerConnecte, marquerDeconnecte, sauvegarderTokens, getAccessToken, isTokenValid } from "@/lib/auth"
 import { PasswordInput } from "@/components/atoms/password-input"
 import { toast } from "sonner"
 import { getApiUrl } from "@/lib/config"
@@ -34,12 +34,32 @@ export function LoginForm() {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  // Pare la navigation côté client (soft navigation) si l'utilisateur fait "Retour"
+  // Vérifie si une session valide existe déjà, sinon nettoie un token obsolète
   useEffect(() => {
-    if (getAccessToken()) {
-      router.replace("/") // Le dispatcher racine le renverra au bon endroit
+    const token = getAccessToken()
+    if (token) {
+      if (isTokenValid(token)) {
+        try {
+          const payloadBase64 = token.split(".")[1]
+          if (payloadBase64) {
+            const payloadJson = atob(payloadBase64.replace(/-/g, "+").replace(/_/g, "/"))
+            const payload = JSON.parse(payloadJson)
+            const role = (payload.role || "LOCATAIRE").toUpperCase()
+            const redirect = searchParams.get("redirect")
+            const destination = redirect && redirect !== "/login" && redirect !== "/connexion"
+              ? redirect
+              : redirectionParRole(role)
+            router.replace(destination)
+            return
+          }
+        } catch {
+          marquerDeconnecte()
+        }
+      } else {
+        marquerDeconnecte()
+      }
     }
-  }, [router])
+  }, [router, searchParams])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -94,7 +114,7 @@ export function LoginForm() {
     toast.success(t("auth.login.login_success", "Connexion réussie"))
 
     const redirect = searchParams.get("redirect")
-    const destination = redirect && redirect !== "/login" ? redirect : redirectionParRole(data.user.role)
+    const destination = redirect && redirect !== "/login" && redirect !== "/connexion" ? redirect : redirectionParRole(data.user.role)
     router.replace(destination)
     setIsLoading(false)
   }
