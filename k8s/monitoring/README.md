@@ -169,11 +169,11 @@ kubectl exec -n monitoring deploy/prometheus -- wget -qO- http://localhost:9090/
 
 ## 6. Tableaux de Bord Grafana
 
-Les dashboards sont automatiquement chargés depuis `/var/lib/grafana/dashboards` dans le dossier **«Gestion-Immobilier »** :
+Les dashboards sont automatiquement chargés depuis `/var/lib/grafana/dashboards` dans le dossier **« Gestion-immobilier »** :
 
 | Dashboard | Description | Métriques / Requêtes clés |
 | :--- | :--- | :--- |
-| **1. Cluster K3s & Infrastructure** | Supervision matérielle et Kubernetes du nœud EC2 | `node_cpu_seconds_total`, `node_memory_MemAvailable_bytes`, `container_cpu_usage_seconds_total`, `container_memory_working_set_bytes` |
+| **Gestion-immobilier** (`cluster-overview.json`) | Supervision de santé serveur EC2 (CPU, RAM, Stockage disque, Swap, Uptime) & pods K3s | `node_cpu_seconds_total`, `node_memory_MemAvailable_bytes`, `node_filesystem_avail_bytes`, `node_memory_SwapFree_bytes`, `node_boot_time_seconds`, `container_cpu_usage_seconds_total` |
 | **2. Application & Logs en Direct** | Suivi applicatif temps réel (Django DRF & Next.js) | `{namespace="immobilier", container="backend"}`, erreurs 4xx/5xx, détection d'exceptions, sonder `/api/health/` |
 | **3. AWS RDS PostgreSQL Monitoring** | Supervision dédiée de l'instance PostgreSQL RDS | `pg_up`, `pg_stat_database_numbackends`, `pg_settings_max_connections`, transactions/s, cache hit ratio, deadlocks, taille de base |
 
