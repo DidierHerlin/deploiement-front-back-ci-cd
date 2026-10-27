@@ -259,4 +259,21 @@ button, input { font: inherit; } button { cursor: pointer; }
   color: #94a3b8;
   border: 1px solid #334155;
 }
+.dark .tenant-help {
+  background: rgba(15, 23, 42, 0.8) !important;
+  border: 1px solid #1e293b !important;
+}
+
+.dark .tenant-help strong {
+  color: #e2e8f0 !important;
+}
+
+.dark .tenant-help p {
+  color: #94a3b8 !important;
+}
+
+.dark .top-user-button,
+.dark .top-user span {
+  color: #e2e8f0;
+}
 

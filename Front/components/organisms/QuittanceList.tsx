@@ -91,10 +91,14 @@ export function QuittanceList({ paiements, contrats, loading }: QuittanceListPro
       </div>
 
       {quittancesDisponibles.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-secondary)', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px dashed #ccc' }}>
-          <FileText size={48} style={{ opacity: 0.2, margin: '0 auto 1rem' }} />
-          <h3>{t('locataire_pages.quittances.empty_title', 'Aucune quittance disponible')}</h3>
-          <p>{t('locataire_pages.quittances.empty_desc', "Les quittances s'affichent ici une fois vos paiements de loyer validés.")}</p>
+        <div className="text-center py-16 px-4 bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-800">
+          <FileText size={48} className="mx-auto mb-4 text-slate-400 dark:text-slate-600" />
+          <h3 className="text-slate-800 dark:text-slate-200 font-medium text-base mb-1">
+            {t('locataire_pages.quittances.empty_title', 'Aucune quittance disponible')}
+          </h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            {t('locataire_pages.quittances.empty_desc', "Les quittances s'affichent ici une fois vos paiements de loyer validés.")}
+          </p>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>

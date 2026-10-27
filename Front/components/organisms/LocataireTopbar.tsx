@@ -6,6 +6,7 @@ import { getNotifications, markNotificationsAsRead, Notification } from '@/lib/a
 import { getUserFullName, getUserInitials } from "@/components/organisms/userUtils";
 import { getUserPhotoSrc } from '@/lib/api';
 import { useTranslation, LanguageSwitcher } from '@/lib/i18n';
+import { ThemeToggle } from '@/components/molecules/ThemeToggle';
 
 interface LocataireTopbarProps {
   setMobileNav: (open: boolean) => void;
@@ -42,6 +43,7 @@ export function LocataireTopbar({ setMobileNav, setShowProfile, activeLabel, use
         <span>{t("dashboard.topbar.tenant_space", "Espace locataire")}</span><ChevronRight size={15} /><strong>{activeLabel}</strong>
       </div>
       <div className="top-actions">
+        <ThemeToggle />
         <LanguageSwitcher />
 
         <div className="notification-wrap" style={{ position: 'relative' }}>
@@ -83,7 +85,7 @@ export function LocataireTopbar({ setMobileNav, setShowProfile, activeLabel, use
           ) : (
             <div className="user-initial blue">{initials}</div>
           )}
-          <span>{fullName}</span>
+          <span className="text-slate-700 dark:text-slate-200">{fullName}</span>
           <ChevronDown size={15} />
         </button>
       </div>

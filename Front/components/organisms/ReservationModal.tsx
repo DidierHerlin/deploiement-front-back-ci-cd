@@ -70,8 +70,8 @@ export default function ReservationModal({ bien, onClose, onSuccess }: Reservati
           </label>
           <div style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--muted)', fontSize: 13, color: 'var(--muted-foreground)' }}>
             {typeReservation === 'LOCATION'
-              ? t('locataire_pages.biens.type_location', '📋 Location')
-              : t('locataire_pages.biens.type_achat', '🏠 Achat')}
+              ? t('locataire_pages.biens.type_location', 'Location')
+              : t('locataire_pages.biens.type_achat', 'Achat')}
           </div>
           <p style={{ fontSize: 11, color: 'var(--muted-foreground)', marginTop: 4 }}>
             {t('locataire_pages.biens.type_desc', 'Déterminé automatiquement selon le mode de transaction du bien.')}

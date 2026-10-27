@@ -80,10 +80,14 @@ export function LocataireSidebar({ mobileNav, setMobileNav, activeHref, user }: 
         <button onClick={deconnecter} style={{ color: '#ef4444' }}>
           <LogOut size={18} />{t("dashboard.nav.logout", "Se déconnecter")}
         </button>
-        <div className="tenant-help">
-          <ShieldCheck size={18} />
-          <strong>{t("dashboard.locataire.security_notice", "Mes données sont protégées")}</strong>
-          <p>{t("dashboard.locataire.security_sub", "Vous consultez uniquement vos informations personnelles et contractuelles.")}</p>
+        <div className="tenant-help dark:bg-slate-900/80 dark:border-slate-800 border border-transparent">
+          <ShieldCheck size={18} className="text-blue-600 dark:text-blue-400" />
+          <strong className="text-slate-900 dark:text-slate-200 font-semibold">
+            {t("dashboard.locataire.security_notice", "Mes données sont protégées")}
+          </strong>
+          <p className="text-slate-500 dark:text-slate-400">
+            {t("dashboard.locataire.security_sub", "Vous consultez uniquement vos informations personnelles et contractuelles.")}
+          </p>
         </div>
         <div className="account">
           {photoSrc ? (
