@@ -22,24 +22,32 @@ export function ContratTable({ contrats, loading, error, onView, onEdit, onDelet
 
   return (
     <>
-      <div className="table-wrap" style={{ flex: 1 }}>
+      <div className="table-wrap flex-1">
         <table>
           <thead>
             <tr>
-              <th>{t("admin.biens.col_id", "ID")}</th>
-              <th>{t("admin.contrats.col_property", "BIEN")}</th>
-              <th>{t("admin.contrats.col_tenant", "LOCATAIRE / ACHETEUR")}</th>
-              <th>{t("admin.contrats.col_type", "TYPE")}</th>
-              <th>{t("admin.paiements.col_amount", "MONTANT")}</th>
-              <th>{t("admin.contrats.col_status", "STATUT")}</th>
-              <th style={{ textAlign: 'right' }}>{t("admin.contrats.col_actions", "ACTIONS")}</th>
+              <th className="uppercase text-xs font-semibold text-slate-500 dark:text-slate-400">{t("admin.biens.col_id", "ID")}</th>
+              <th className="uppercase text-xs font-semibold text-slate-500 dark:text-slate-400">{t("admin.contrats.col_property", "BIEN ASSOCIÉ")}</th>
+              <th className="uppercase text-xs font-semibold text-slate-500 dark:text-slate-400">{t("admin.contrats.col_tenant", "LOCATAIRE / ACQUÉREUR")}</th>
+              <th className="uppercase text-xs font-semibold text-slate-500 dark:text-slate-400">{t("admin.contrats.col_type", "TYPE DE CONTRAT")}</th>
+              <th className="uppercase text-xs font-semibold text-slate-500 dark:text-slate-400">{t("admin.paiements.col_amount", "MONTANT")}</th>
+              <th className="uppercase text-xs font-semibold text-slate-500 dark:text-slate-400">{t("admin.contrats.col_status", "STATUT")}</th>
+              <th className="uppercase text-xs font-semibold text-slate-500 dark:text-slate-400 text-right">{t("admin.contrats.col_actions", "ACTIONS")}</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={7} style={{ textAlign: 'center', padding: '20px' }}>{t("forms.loading", "Chargement...")}</td></tr>
+              <tr>
+                <td colSpan={7} className="text-center py-6 text-slate-500 dark:text-slate-400">
+                  {t("forms.loading", "Chargement...")}
+                </td>
+              </tr>
             ) : error ? (
-              <tr><td colSpan={7} style={{ textAlign: 'center', padding: '30px', color: '#dc2626' }}>{error}</td></tr>
+              <tr>
+                <td colSpan={7} className="text-center py-6 text-rose-500 dark:text-rose-400">
+                  {error}
+                </td>
+              </tr>
             ) : paginatedData.length > 0 ? (
               paginatedData.map(c => (
                 <ContratTableRow 
@@ -51,7 +59,11 @@ export function ContratTable({ contrats, loading, error, onView, onEdit, onDelet
                 />
               ))
             ) : (
-              <tr><td colSpan={7} style={{ textAlign: 'center', padding: '30px', color: '#8993a3' }}>{t("admin.contrats.empty", "Aucun contrat trouvé.")}</td></tr>
+              <tr>
+                <td colSpan={7} className="text-center py-8 text-slate-500 dark:text-slate-400 italic">
+                  {t("admin.contrats.empty", "Aucun contrat trouvé.")}
+                </td>
+              </tr>
             )}
           </tbody>
         </table>

@@ -24,25 +24,25 @@ export function LocataireTable({ locataires, loading, error, contratsCountMap, b
 
   return (
     <>
-      <div className="table-wrap" style={{ flex: 1 }}>
+      <div className="table-wrap flex-1">
         <table>
           <thead>
             <tr>
-              <th>{t("admin.biens.col_id", "ID")}</th>
-              <th>{t("admin.locataires.col_tenant", "LOCATAIRE")}</th>
-              <th>{t("profile.email", "EMAIL")}</th>
-              <th>{t("profile.phone", "TÉLÉPHONE")}</th>
-              <th>{t("admin.locataires.col_lease", "CONTRATS")}</th>
-              <th>{t("admin.proprietaires.col_properties_count", "BIENS LOUÉS")}</th>
-              <th>{t("admin.locataires.col_status", "STATUT")}</th>
-              <th style={{ textAlign: 'right' }}>{t("admin.locataires.col_actions", "ACTIONS")}</th>
+              <th className="uppercase">{t("admin.biens.col_id", "ID")}</th>
+              <th className="uppercase">{t("admin.locataires.col_tenant", "LOCATAIRE")}</th>
+              <th className="uppercase">{t("profile.email", "EMAIL")}</th>
+              <th className="uppercase">{t("profile.phone", "TÉLÉPHONE")}</th>
+              <th className="uppercase">{t("admin.locataires.col_lease", "BAIL EN COURS")}</th>
+              <th className="uppercase">{t("admin.locataires.col_dossiers", "DOSSIERS")}</th>
+              <th className="uppercase">{t("admin.locataires.col_status", "STATUT")}</th>
+              <th className="uppercase text-right">{t("admin.locataires.col_actions", "ACTIONS")}</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={8} style={{ textAlign: 'center', padding: '20px' }}>{t("forms.loading", "Chargement...")}</td></tr>
+              <tr><td colSpan={8} className="text-center py-6 text-slate-400 dark:text-slate-500">{t("forms.loading", "Chargement...")}</td></tr>
             ) : error ? (
-              <tr><td colSpan={8} style={{ textAlign: 'center', padding: '30px', color: '#dc2626' }}>{error}</td></tr>
+              <tr><td colSpan={8} className="text-center py-6 text-rose-500">{error}</td></tr>
             ) : paginatedData.length > 0 ? (
               paginatedData.map(l => (
                 <LocataireTableRow 
@@ -56,7 +56,7 @@ export function LocataireTable({ locataires, loading, error, contratsCountMap, b
                 />
               ))
             ) : (
-              <tr><td colSpan={8} style={{ textAlign: 'center', padding: '30px', color: '#8993a3' }}>{t("admin.locataires.empty", "Aucun locataire trouvé.")}</td></tr>
+              <tr><td colSpan={8} className="text-center py-8 text-slate-400 dark:text-slate-500">{t("admin.locataires.empty", "Aucun locataire trouvé.")}</td></tr>
             )}
           </tbody>
         </table>

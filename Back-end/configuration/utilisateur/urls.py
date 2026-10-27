@@ -22,6 +22,7 @@ from .views import (
     ReportingStatsView,
     RequestPasswordResetView,
     ResetPasswordView,
+    SignUpView,
     UpdateProfilePhotoView,
     UpdateUserProfileView,
     UtilisateurDetailView,
@@ -34,12 +35,16 @@ urlpatterns = [
     path("tous-utilisateurs/", UtilisateurListView.as_view(), name="tous-utilisateurs"),
     path("tous-utilisateurs/<int:pk>/", UtilisateurDetailView.as_view(), name="detail-utilisateur"),
 
-    # Authentification
+    # Authentification & Inscription unifiée
     path("auth/login/", LoginView.as_view(), name="login"),
     path("auth/logout/", LogoutView.as_view(), name="logout"),
     path("auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("auth/signup/", SignUpView.as_view(), name="signup"),
+    path("auth/signup", SignUpView.as_view()),
+    path("auth/register/", SignUpView.as_view(), name="register"),
+    path("auth/register", SignUpView.as_view()),
 
-    # Inscription
+    # Inscription par rôle (spécifique)
     path("locataires/register/", LocataireRegisterView.as_view(), name="locataire-register"),
     path("proprietaires/register/", ProprietaireRegisterView.as_view(), name="proprietaire-register"),
     path("agents/register/", AgentRegisterView.as_view(), name="agent-register"),

@@ -172,6 +172,20 @@
       "confirm_password": "Confirm password",
       "submit_btn": "Create my account",
       "submitting_btn": "Creating account...",
+      "step_1_title": "Identity",
+      "step_1_subtitle": "Fill in your profile and identity details.",
+      "step_2_title": "Contact",
+      "step_2_subtitle": "Provide your contact details so we can reach you and verify your account.",
+      "step_3_title": "Security",
+      "step_3_subtitle": "Set your credentials to secure your personal space.",
+      "next_step": "Next",
+      "previous_step": "Previous",
+      "error_nom_required": "Last name is required.",
+      "error_prenoms_required": "First name is required.",
+      "error_email_required": "Email address is required.",
+      "error_email_invalid": "Please enter a valid email address.",
+      "error_phone_required": "Phone number is required.",
+      "error_phone_invalid": "Please enter a valid phone number (at least 8 digits).",
       "already_account": "Already have an account?",
       "sign_in": "Sign in",
       "error_password_match": "Passwords do not match.",
@@ -381,7 +395,11 @@
     "update_error": "An error occurred while updating.",
     "save_changes": "Save changes",
     "saving": "Saving...",
-    "modify_photo": "Change"
+    "modify_photo": "Change",
+    "not_provided": "Not specified",
+    "iban_not_provided": "IBAN not specified",
+    "full_name": "Full name",
+    "iban": "IBAN"
   },
   "admin": {
     "users": {
@@ -404,7 +422,8 @@
       "confirm_delete_title": "Delete this account?",
       "confirm_delete_desc": "Deletion is permanent and all associated records will be removed from the system.",
       "toggle_status_title": "Change status?",
-      "toggle_status_desc": "Do you want to toggle the active/inactive state of this user?"
+      "toggle_status_desc": "Do you want to toggle the active/inactive state of this user?",
+      "user_details_title": "User details"
     },
     "biens": {
       "title": "Housing Portfolio Management",
@@ -416,7 +435,8 @@
       "filter_all_status": "All statuses",
       "col_property": "PROPERTY",
       "col_owner": "LANDLORD",
-      "col_type": "TYPE & AREA",
+      "col_type": "TYPE",
+      "unassigned": "Unassigned",
       "col_price": "RENT / PRICE",
       "col_status": "STATUS",
       "col_actions": "ACTIONS",
@@ -465,7 +485,11 @@
       "create_sub": "Role: Tenant (exclusive). This account allows viewing contracts and receipts.",
       "edit_sub": "Update tenant profile details and phone number.",
       "confirm_disable_title": "Deactivate this tenant?",
-      "confirm_disable_desc": "The tenant will no longer be able to log in, but their payment and lease history will remain."
+      "confirm_disable_desc": "The tenant will no longer be able to log in, but their payment and lease history will remain.",
+      "title_start": "Management of",
+      "title_highlight": "Tenants",
+      "col_dossiers": "FILES",
+      "col_reservations": "BOOKINGS"
     },
     "reservations": {
       "title": "Reservation Management",
@@ -483,7 +507,25 @@
       "status_cancelled": "Cancelled",
       "mark_processed": "Approve request",
       "cancel_reservation": "Cancel reservation",
-      "reply_modal_title": "Respond to reservation"
+      "reply_modal_title": "Respond to reservation",
+      "title_start": "Management of",
+      "title_highlight": "Bookings",
+      "filter_all_status": "All statuses",
+      "detail_modal_title": "Booking Details",
+      "tenant_info": "Candidate / Tenant information",
+      "property_info": "Property information",
+      "manage_reservation_btn": "Manage booking",
+      "decision_label": "Decision",
+      "accept_opt": "Accept booking (Processed)",
+      "reject_opt": "Reject booking (Cancelled)",
+      "reply_message_label": "Reply message",
+      "reply_rent_placeholder": "Ex: Your booking was approved. Please check your lease contract for details.",
+      "reply_sale_placeholder": "Ex: Your booking was approved. Please check your purchase contract for details.",
+      "send_reply_btn": "Send reply",
+      "reject_and_send_btn": "Reject and send reply",
+      "reply_sent_label": "Reply sent",
+      "reply_sent_toast": "Reply sent to tenant.",
+      "empty": "No bookings found."
     },
     "contrats": {
       "title": "Lease & Sales Contract Supervision",
@@ -507,7 +549,10 @@
       "terminate_desc": "This action will terminate the contract early. The property will return to AVAILABLE status.",
       "end_lease_title": "End lease",
       "finalize_sale_title": "Finalize sale",
-      "delete_contract_title": "Delete contract"
+      "delete_contract_title": "Delete contract",
+      "title_start": "Manage",
+      "title_highlight": "Contracts",
+      "empty": "No contract found."
     },
     "paiements": {
       "title": "Payment Tracking & Invoicing",
@@ -796,5 +841,30 @@
     "saving": "Saving...",
     "success": "Operation completed successfully.",
     "error": "An error occurred during operation."
+  },
+  "settings": {
+    "eyebrow": "SYSTEM CONFIGURATION",
+    "title": "Settings",
+    "subtitle": "Manage your display preferences, theme and language for the administration area.",
+    "theme_section_title": "Display Mode (Theme)",
+    "theme_section_desc": "Choose the visual appearance of the application according to your preferences.",
+    "theme_light_title": "Light (Normal)",
+    "theme_light_desc": "Forces the bright theme for optimal clarity during the day.",
+    "theme_dark_title": "Dark",
+    "theme_dark_desc": "Forces the dark theme to reduce eye strain.",
+    "theme_system_title": "System (Auto)",
+    "theme_system_desc": "Automatically adapts according to your operating system preferences.",
+    "lang_section_title": "Interface Language (Internationalization)",
+    "lang_section_desc": "Select your preferred display language for the entire platform.",
+    "lang_fr_title": "French",
+    "lang_fr_desc": "Platform default language.",
+    "lang_en_title": "English",
+    "lang_en_desc": "Interface translated into English.",
+    "active_badge": "Active",
+    "saved_notification": "Preference saved",
+    "summary_title": "Preferences Summary",
+    "current_theme": "Selected theme",
+    "current_lang": "Active language",
+    "system_detected": "Detected system mode"
   }
 }

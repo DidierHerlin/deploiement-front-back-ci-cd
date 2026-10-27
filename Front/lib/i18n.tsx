@@ -110,7 +110,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
     if (params && typeof text === "string") {
       for (const [key, val] of Object.entries(params)) {
-        text = text.replace(new RegExp(`\\{${key}\\}`, "g"), String(val))
+        text = text.replace(new RegExp(`\\{\\{?\\s*${key}\\s*\\}?}`, "g"), String(val))
       }
     }
 
@@ -162,9 +162,9 @@ export function LanguageSwitcher({ className = "", variant = "default" }: Langua
 
   const current = languages.find((l) => l.code === lang) || languages[0]
 
-  let buttonStyle = "px-2.5 py-1.5 rounded-xl border border-stone-200/90 bg-white/90 text-stone-700 hover:text-blue-600 hover:border-blue-200 text-xs font-semibold shadow-2xs hover:bg-stone-50"
+  let buttonStyle = "px-2.5 py-1.5 rounded-xl border border-stone-200/90 bg-white/90 text-stone-700 hover:text-blue-600 hover:border-blue-200 text-xs font-semibold shadow-2xs hover:bg-stone-50 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-700 dark:hover:text-white"
   if (variant === "compact") {
-    buttonStyle = "px-2 py-1 rounded-lg border border-slate-200 bg-white text-slate-700 hover:text-blue-600 text-xs font-medium"
+    buttonStyle = "px-2 py-1 rounded-lg border border-slate-200 bg-white text-slate-700 hover:text-blue-600 text-xs font-medium dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-700 dark:hover:text-white"
   } else if (variant === "transparent") {
     buttonStyle = "px-2.5 py-1.5 rounded-xl border border-white/20 bg-white/10 text-white hover:bg-white/20 text-xs font-semibold backdrop-blur-md"
   } else if (variant === "dark") {
@@ -185,7 +185,7 @@ export function LanguageSwitcher({ className = "", variant = "default" }: Langua
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-1.5 w-36 bg-white rounded-2xl shadow-xl shadow-stone-300/40 border border-[#EDE6DC] py-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+        <div className="absolute right-0 top-full mt-1.5 w-36 bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-stone-300/40 dark:shadow-black/60 border border-[#EDE6DC] dark:border-slate-700 py-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
           {languages.map((l) => {
             const isSelected = l.code === lang
             return (
@@ -197,8 +197,8 @@ export function LanguageSwitcher({ className = "", variant = "default" }: Langua
                 }}
                 className={`w-full flex items-center justify-between px-3 py-2 text-xs font-medium transition-colors cursor-pointer ${
                   isSelected
-                    ? "bg-blue-50 text-blue-700 font-bold"
-                    : "text-stone-700 hover:bg-stone-50 hover:text-blue-600"
+                    ? "bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold"
+                    : "text-stone-700 dark:text-slate-200 hover:bg-stone-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-300"
                 }`}
               >
                 <span className="flex items-center gap-2">

@@ -9,19 +9,47 @@ import { useTranslation } from '@/lib/i18n'
 
 function StatutBadge({ statut }: { statut: string }) {
   const { t } = useTranslation()
-  const config: Record<string, { bg: string; color: string; label: string }> = {
-    EN_ATTENTE: { bg: '#fef3c7', color: '#92400e', label: t("admin.reservations.status_pending", 'En attente') },
-    TRAITEE: { bg: '#dcfce7', color: '#166534', label: t("admin.reservations.status_processed", 'Traitée') },
-    ANNULEE: { bg: '#fef2f2', color: '#dc2626', label: t("admin.reservations.status_cancelled", 'Annulée') },
+  switch (statut) {
+    case 'TRAITEE':
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border dark:border-emerald-500/30">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          {t("admin.reservations.status_processed", 'Traitée')}
+        </span>
+      )
+    case 'ANNULEE':
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 dark:border dark:border-rose-500/30">
+          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+          {t("admin.reservations.status_cancelled", 'Annulée')}
+        </span>
+      )
+    case 'EN_ATTENTE':
+    default:
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border dark:border-amber-500/30">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+          {t("admin.reservations.status_pending", 'En attente')}
+        </span>
+      )
   }
-  const c = config[statut] || config.EN_ATTENTE
-  return <span style={{ padding: '2px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600, background: c.bg, color: c.color }}>{c.label}</span>
 }
 
 function TypeBadge({ type }: { type: string }) {
   const { t } = useTranslation()
   const isLocation = type === 'LOCATION'
-  return <span style={{ padding: '2px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600, background: isLocation ? '#dbeafe' : '#fef3c7', color: isLocation ? '#1e40af' : '#92400e' }}>{isLocation ? t("card.for_rent", 'Location') : t("card.for_sale", 'Achat')}</span>
+  if (isLocation) {
+    return (
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-500/15 dark:text-blue-400 dark:border dark:border-blue-500/30">
+        {t("card.for_rent", 'À louer')}
+      </span>
+    )
+  }
+  return (
+    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-100 dark:bg-purple-500/15 dark:text-purple-400 dark:border dark:border-purple-500/30">
+      {t("card.for_sale", 'À acheter')}
+    </span>
+  )
 }
 
 export default function AdminReservationsPage() {
@@ -78,179 +106,317 @@ export default function AdminReservationsPage() {
   }
 
   return (
-    <div>
+    <div className="flex flex-col gap-4">
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <p className="section-kicker">{t("admin.reservations.eyebrow", "GESTION")}</p>
-        <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>{t("admin.reservations.title", "Réservations")}</h1>
-        <p style={{ fontSize: 13, color: 'var(--muted-foreground)' }}>
-          {t("admin.reservations.subtitle", "Consultez et gérez les réservations soumises par les locataires.")}
-        </p>
-      </div>
-
-      {/* Toolbar */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
-        <div style={{ flex: 1, minWidth: 200, position: 'relative' }}>
-          <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--muted-foreground)' }} />
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("admin.reservations.search_placeholder", "Rechercher...")} style={{ width: '100%', padding: '8px 12px 8px 32px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', fontSize: 13 }} />
+      <div className="welcome-row mb-2">
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            {t("admin.reservations.title_start", "Gestion des")}{" "}
+            <span className="text-slate-900 dark:text-white font-extrabold">{t("admin.reservations.title_highlight", "Réservations")}</span>
+          </h1>
+          <p className="subtitle text-xs text-slate-500 dark:text-slate-400 mt-1">
+            {t("admin.reservations.subtitle", "Consultez et gérez les réservations soumises par les locataires.")}
+          </p>
         </div>
-        <select value={filterStatut} onChange={(e) => setFilterStatut(e.target.value)} style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', fontSize: 13 }}>
-          <option value="Tous">{t("admin.reservations.filter_all_status", "Tous les statuts")}</option>
-          <option value="EN_ATTENTE">{t("admin.reservations.status_pending", "En attente")}</option>
-          <option value="TRAITEE">{t("admin.reservations.status_processed", "Traitée")}</option>
-          <option value="ANNULEE">{t("admin.reservations.status_cancelled", "Annulée")}</option>
-        </select>
       </div>
 
-      {/* Table */}
-      {loading ? (
-        <div style={{ padding: '3rem', textAlign: 'center' }}><p>{t("forms.loading", "Chargement...")}</p></div>
-      ) : error ? (
-        <div style={{ padding: '3rem', textAlign: 'center', color: 'red' }}><p>{error}</p></div>
-      ) : (
-        <div className="panel" style={{ overflow: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+      {/* Main card container with integrated toolbar */}
+      <section className="panel user-panel flex-1 flex flex-col">
+        <div className="user-toolbar">
+          <div className="search-box table-search flex items-center gap-2 text-slate-400 dark:text-slate-500">
+            <Search size={16} />
+            <input 
+              value={search} 
+              onChange={(e) => setSearch(e.target.value)} 
+              placeholder={t("admin.reservations.search_placeholder", "Rechercher une réservation par bien ou candidat...")} 
+              className="bg-transparent text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs focus:outline-none w-full"
+            />
+          </div>
+          <select 
+            value={filterStatut} 
+            onChange={(e) => setFilterStatut(e.target.value)}
+            aria-label={t("admin.reservations.filter_all_status", "Tous les statuts")}
+            className="rounded-lg text-xs"
+          >
+            <option value="Tous">{t("admin.reservations.filter_all_status", "Tous les statuts")}</option>
+            <option value="EN_ATTENTE">{t("admin.reservations.status_pending", "En attente")}</option>
+            <option value="TRAITEE">{t("admin.reservations.status_processed", "Traitée")}</option>
+            <option value="ANNULEE">{t("admin.reservations.status_cancelled", "Annulée")}</option>
+          </select>
+        </div>
+
+        {/* Table */}
+        <div className="table-wrap flex-1">
+          <table>
             <thead>
-              <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--muted-foreground)', fontSize: 12 }}>{t("admin.locataires.col_tenant", "Locataire")}</th>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--muted-foreground)', fontSize: 12 }}>{t("admin.reservations.col_property", "Bien")}</th>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--muted-foreground)', fontSize: 12 }}>{t("admin.reservations.col_type", "Type")}</th>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--muted-foreground)', fontSize: 12 }}>{t("admin.reservations.col_status", "Statut")}</th>
-                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--muted-foreground)', fontSize: 12 }}>{t("admin.reservations.col_date", "Date")}</th>
-                <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600, color: 'var(--muted-foreground)', fontSize: 12 }}>{t("admin.reservations.col_actions", "Actions")}</th>
+              <tr>
+                <th className="uppercase">{t("admin.reservations.col_candidate", "CANDIDAT")}</th>
+                <th className="uppercase">{t("admin.reservations.col_property", "BIEN CONCERNÉ")}</th>
+                <th className="uppercase">{t("admin.reservations.col_type", "TYPE DE DEMANDE")}</th>
+                <th className="uppercase">{t("admin.reservations.col_status", "STATUT")}</th>
+                <th className="uppercase">{t("admin.reservations.col_date", "DATE DE DEMANDE")}</th>
+                <th className="uppercase text-right">{t("admin.reservations.col_actions", "ACTIONS")}</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
-                <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: 'var(--muted-foreground)' }}>{t("admin.reservations.empty", "Aucune réservation trouvée.")}</td></tr>
-              ) : filtered.map((r) => (
-                <tr key={r.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td style={{ padding: '10px 12px' }}>{r.locataire_prenoms} {r.locataire_nom}</td>
-                  <td style={{ padding: '10px 12px' }}>{r.bien_titre}</td>
-                  <td style={{ padding: '10px 12px' }}><TypeBadge type={r.type_reservation} /></td>
-                  <td style={{ padding: '10px 12px' }}><StatutBadge statut={r.statut} /></td>
-                  <td style={{ padding: '10px 12px' }}>{new Date(r.date_creation).toLocaleDateString('fr-FR')}</td>
-                  <td style={{ padding: '10px 12px', textAlign: 'center' }}>
-                    <button onClick={() => { setSelected(r); setReponse('') }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)' }} title={t("forms.view", "Voir le détail")}>
-                      <Eye size={16} />
-                    </button>
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-6 text-slate-400 dark:text-slate-500">
+                    {t("forms.loading", "Chargement...")}
                   </td>
                 </tr>
-              ))}
+              ) : error ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-6 text-rose-500">
+                    {error}
+                  </td>
+                </tr>
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-8 text-slate-400 dark:text-slate-500">
+                    {t("admin.reservations.empty", "Aucune réservation trouvée.")}
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((r) => (
+                  <tr key={r.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
+                    <td>
+                      <div className="flex items-center gap-2.5">
+                        <div className="user-initial blue border border-transparent dark:border-slate-700/80 dark:bg-blue-500/15 dark:text-blue-300 shrink-0">
+                          {r.locataire_prenoms?.[0] || '?'}{r.locataire_nom?.[0] || '?'}
+                        </div>
+                        <div>
+                          <strong className="text-slate-900 dark:text-slate-100 block">{r.locataire_prenoms} {r.locataire_nom}</strong>
+                          <small className="block text-slate-500 dark:text-slate-400 text-xs mt-0.5">{r.locataire_email}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <strong className="text-slate-900 dark:text-slate-100 block">{r.bien_titre}</strong>
+                      <small className="block text-slate-500 dark:text-slate-400 text-xs mt-0.5">{r.bien_adresse}</small>
+                    </td>
+                    <td><TypeBadge type={r.type_reservation} /></td>
+                    <td><StatutBadge statut={r.statut} /></td>
+                    <td className="text-slate-700 dark:text-slate-300 text-xs">
+                      {new Date(r.date_creation).toLocaleDateString('fr-FR')}
+                    </td>
+                    <td>
+                      <div className="row-actions flex items-center justify-end">
+                        <button 
+                          onClick={() => { setSelected(r); setReponse('') }} 
+                          className="p-1.5 rounded-md text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-500/10 transition-colors cursor-pointer" 
+                          title={t("forms.view", "Voir le détail")}
+                          aria-label={t("forms.view", "Voir le détail")}
+                        >
+                          <Eye size={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
-      )}
+      </section>
 
       {/* Modal détail */}
       {selected && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div className="panel" style={{ maxWidth: 640, width: '100%', maxHeight: '90vh', overflow: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700 }}>{t("admin.reservations.detail_modal_title", "Détail de la réservation")} #{selected.id}</h2>
-              <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          role="presentation"
+          onClick={(e) => { if (e.target === e.currentTarget) setSelected(null); }}
+        >
+          <section 
+            className="w-full max-w-[620px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+          >
+            <button 
+              onClick={() => setSelected(null)} 
+              className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg transition-colors cursor-pointer"
+              aria-label={t("forms.close", "Fermer")}
+            >
+              <X size={18} />
+            </button>
+
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3.5 bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-500/10 dark:text-blue-400 dark:border dark:border-blue-500/20">
+              <CalendarCheck size={20} />
             </div>
 
-            <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white m-0">
+              {t("admin.reservations.detail_modal_title", "Détail de la réservation")} #{selected.id}
+            </h2>
+
+            <div className="flex gap-2 my-4">
               <TypeBadge type={selected.type_reservation} />
               <StatutBadge statut={selected.statut} />
             </div>
 
             {/* Locataire info */}
-            <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted-foreground)', marginBottom: 8 }}>{t("admin.reservations.tenant_info", "Information sur le locataire")}</h4>
-            <div style={{ background: 'var(--muted)', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 13 }}>
-              <p><strong>{selected.locataire_prenoms} {selected.locataire_nom}</strong></p>
-              <p>{t("profile.email", "Email")} : {selected.locataire_email}</p>
-              {selected.locataire_telephone && <p>{t("profile.phone", "Tél")} : {selected.locataire_telephone}</p>}
+            <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+              {t("admin.reservations.tenant_info", "Information sur le candidat / locataire")}
+            </h4>
+            <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 text-xs mb-4 flex flex-col gap-1.5">
+              <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm m-0">
+                {selected.locataire_prenoms} {selected.locataire_nom}
+              </p>
+              <p className="text-slate-600 dark:text-slate-300 m-0">
+                <span className="text-slate-500 dark:text-slate-400">{t("profile.email", "Email")} : </span>
+                {selected.locataire_email}
+              </p>
+              {selected.locataire_telephone && (
+                <p className="text-slate-600 dark:text-slate-300 m-0">
+                  <span className="text-slate-500 dark:text-slate-400">{t("profile.phone", "Tél")} : </span>
+                  {selected.locataire_telephone}
+                </p>
+              )}
             </div>
 
             {/* Bien info */}
-            <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted-foreground)', marginBottom: 8 }}>{t("admin.reservations.property_info", "Information sur le bien")}</h4>
-            <div style={{ background: 'var(--muted)', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 13 }}>
-              <p><strong>{selected.bien_titre}</strong></p>
-              <p>{t("forms.property_type", "Type")} : {selected.bien_type} • {t("forms.address", "Adresse")} : {selected.bien_adresse}</p>
-              {selected.bien_surface && <p>{t("forms.surface", "Surface")} : {selected.bien_surface} m²</p>}
-              {selected.bien_nombre_pieces && <p>{t("forms.rooms_count", "Pièces")} : {selected.bien_nombre_pieces}</p>}
-              {selected.bien_loyer_mensuel && <p>{t("forms.monthly_rent", "Loyer")} : {Number(selected.bien_loyer_mensuel).toLocaleString()} Ar/mois</p>}
-              {selected.bien_prix && <p>{t("forms.sale_price", "Prix")} : {Number(selected.bien_prix).toLocaleString()} Ar</p>}
+            <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+              {t("admin.reservations.property_info", "Information sur le bien")}
+            </h4>
+            <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 text-xs mb-4 flex flex-col gap-1.5">
+              <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm m-0">{selected.bien_titre}</p>
+              <p className="text-slate-600 dark:text-slate-300 m-0">
+                <span className="text-slate-500 dark:text-slate-400">{t("forms.property_type", "Type")} : </span>
+                {selected.bien_type} • <span className="text-slate-500 dark:text-slate-400">{t("forms.address", "Adresse")} : </span>{selected.bien_adresse}
+              </p>
+              {selected.bien_surface && (
+                <p className="text-slate-600 dark:text-slate-300 m-0">
+                  <span className="text-slate-500 dark:text-slate-400">{t("forms.surface", "Surface")} : </span>
+                  {selected.bien_surface} m²
+                  {selected.bien_nombre_pieces ? ` • ${selected.bien_nombre_pieces} ${t("forms.rooms_count", "pièces")}` : ''}
+                </p>
+              )}
+              {selected.bien_loyer_mensuel && (
+                <p className="text-slate-900 dark:text-white font-semibold m-0">
+                  <span className="text-slate-500 dark:text-slate-400 font-normal">{t("forms.monthly_rent", "Loyer")} : </span>
+                  {Number(selected.bien_loyer_mensuel).toLocaleString('fr-FR')} Ar / {t("card.per_month", "mois")}
+                </p>
+              )}
+              {selected.bien_prix && (
+                <p className="text-slate-900 dark:text-white font-semibold m-0">
+                  <span className="text-slate-500 dark:text-slate-400 font-normal">{t("forms.sale_price", "Prix")} : </span>
+                  {Number(selected.bien_prix).toLocaleString('fr-FR')} Ar
+                </p>
+              )}
             </div>
 
             {/* Reservation info */}
-            <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted-foreground)', marginBottom: 8 }}>{t("admin.reservations.title", "Réservation")}</h4>
-            <div style={{ background: 'var(--muted)', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 13 }}>
-              <p>{t("forms.property_type", "Type")} : {selected.type_reservation === 'LOCATION' ? t("card.for_rent", 'Location') : t("card.for_sale", 'Achat')}</p>
-              <p>{t("admin.reservations.col_date", "Date")} : {new Date(selected.date_creation).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-              {selected.commentaire && <p style={{ marginTop: 8 }}>{t("admin.reservations.col_comment", "Commentaire")} : « {selected.commentaire} »</p>}
+            <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+              {t("admin.reservations.title", "Réservation")}
+            </h4>
+            <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 text-xs mb-4 flex flex-col gap-1.5">
+              <p className="text-slate-600 dark:text-slate-300 m-0">
+                <span className="text-slate-500 dark:text-slate-400">{t("forms.property_type", "Type")} : </span>
+                {selected.type_reservation === 'LOCATION' ? t("card.for_rent", 'Location') : t("card.for_sale", 'Achat')}
+              </p>
+              <p className="text-slate-600 dark:text-slate-300 m-0">
+                <span className="text-slate-500 dark:text-slate-400">{t("admin.reservations.col_date", "Date de soumission")} : </span>
+                {new Date(selected.date_creation).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              </p>
+              {selected.commentaire && (
+                <div className="mt-1">
+                  <span className="text-slate-500 dark:text-slate-400 block mb-1">{t("admin.reservations.col_comment", "Commentaire du candidat")} :</span>
+                  <p className="p-2.5 rounded border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 italic m-0">
+                    « {selected.commentaire} »
+                  </p>
+                </div>
+              )}
             </div>
 
-            {/* Actions */}
+            {/* Actions when EN_ATTENTE */}
             {selected.statut === 'EN_ATTENTE' && (
               <>
-                {/* Gérer la réservation */}
                 <button
                   onClick={() => handleGerer(selected)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 8, border: 'none', background: 'var(--primary)', color: 'var(--primary-foreground)', cursor: 'pointer', fontWeight: 600, fontSize: 13, marginBottom: 20, width: '100%', justifyContent: 'center' }}
+                  className="w-full py-2.5 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer mb-4"
                 >
                   <FileText size={16} /> {t("admin.reservations.manage_reservation_btn", "Gérer la réservation")}
                 </button>
 
-                {/* Répondre au locataire */}
-                <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted-foreground)', marginBottom: 8 }}>{t("admin.reservations.reply_modal_title", "Répondre à la réservation")}</h4>
-                
-                <div style={{ marginBottom: 12 }}>
-                  <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>{t("admin.reservations.decision_label", "Décision")}</label>
-                  <select
-                    value={newStatut}
-                    onChange={(e) => setNewStatut(e.target.value)}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', fontSize: 13 }}
-                  >
-                    <option value="TRAITEE">{t("admin.reservations.accept_opt", "Accepter la réservation (Traitée)")}</option>
-                    <option value="ANNULEE">{t("admin.reservations.reject_opt", "Refuser la réservation (Annulée)")}</option>
-                  </select>
-                </div>
+                <div className="pt-4 border-t border-slate-200 dark:border-slate-800 mb-4">
+                  <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">
+                    {t("admin.reservations.reply_modal_title", "Répondre à la réservation")}
+                  </h4>
+                  
+                  <div className="mb-3">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex flex-col gap-1.5">
+                      <span>{t("admin.reservations.decision_label", "Décision")}</span>
+                      <select
+                        value={newStatut}
+                        onChange={(e) => setNewStatut(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="TRAITEE">{t("admin.reservations.accept_opt", "Accepter la réservation (Traitée)")}</option>
+                        <option value="ANNULEE">{t("admin.reservations.reject_opt", "Refuser la réservation (Annulée)")}</option>
+                      </select>
+                    </label>
+                  </div>
 
-                <div style={{ marginBottom: 12 }}>
-                  <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>{t("admin.reservations.reply_message_label", "Message de réponse")}</label>
-                  <textarea
-                    value={reponse}
-                    onChange={(e) => setReponse(e.target.value)}
-                    placeholder={
-                      selected.type_reservation === 'LOCATION'
-                        ? t("admin.reservations.reply_rent_placeholder", "Ex : Votre réservation a été validée. Veuillez consulter votre contrat de bail pour prendre connaissance des détails.")
-                        : t("admin.reservations.reply_sale_placeholder", "Ex : Votre réservation a été validée. Veuillez consulter votre contrat de vente pour prendre connaissance des détails.")
-                    }
-                    rows={3}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', resize: 'vertical', fontSize: 13 }}
-                  />
+                  <div className="mb-3">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex flex-col gap-1.5">
+                      <span>{t("admin.reservations.reply_message_label", "Message de réponse")}</span>
+                      <textarea
+                        value={reponse}
+                        onChange={(e) => setReponse(e.target.value)}
+                        placeholder={
+                          selected.type_reservation === 'LOCATION'
+                            ? t("admin.reservations.reply_rent_placeholder", "Ex : Votre réservation a été validée. Veuillez consulter votre contrat de bail pour prendre connaissance des détails.")
+                            : t("admin.reservations.reply_sale_placeholder", "Ex : Votre réservation a été validée. Veuillez consulter votre contrat de vente pour prendre connaissance des détails.")
+                        }
+                        rows={3}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 resize-y"
+                      />
+                    </label>
+                  </div>
+                  
+                  <div className="flex justify-start">
+                    <button
+                      onClick={handleRepondre}
+                      disabled={sending || !reponse.trim()}
+                      className={`px-4 py-2 rounded-lg text-xs font-semibold text-white shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                        newStatut === 'TRAITEE' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'
+                      }`}
+                    >
+                      <Send size={14} />
+                      {sending 
+                        ? t("forms.saving", 'Envoi...') 
+                        : (newStatut === 'TRAITEE' 
+                            ? t("admin.reservations.send_reply_btn", 'Envoyer la réponse') 
+                            : t("admin.reservations.reject_and_send_btn", 'Refuser et envoyer la réponse'))}
+                    </button>
+                  </div>
                 </div>
-                
-                <button
-                  onClick={handleRepondre}
-                  disabled={sending || !reponse.trim()}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 6, border: 'none', background: newStatut === 'TRAITEE' ? '#16a34a' : '#dc2626', color: 'white', cursor: (sending || !reponse.trim()) ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: 13 }}
-                >
-                  <Send size={14} />
-                  {sending ? t("forms.saving", 'Envoi...') : (newStatut === 'TRAITEE' ? t("admin.reservations.send_reply_btn", 'Envoyer la réponse') : t("admin.reservations.reject_and_send_btn", 'Refuser et envoyer la réponse'))}
-                </button>
               </>
             )}
 
             {selected.statut === 'TRAITEE' && selected.reponse_admin && (
-              <div style={{ padding: 12, background: '#f0fdf4', borderRadius: 6, borderLeft: '3px solid #22c55e', marginTop: 8 }}>
-                <p style={{ fontSize: 12, fontWeight: 600, color: '#166534', marginBottom: 4 }}>✅ {t("admin.reservations.reply_sent_label", "Réponse envoyée")}</p>
-                <p style={{ fontSize: 13, color: '#15803d' }}>{selected.reponse_admin}</p>
+              <div className="p-3 rounded-lg text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20 my-3">
+                <p className="font-semibold text-emerald-700 dark:text-emerald-400 mb-1">
+                  ✓ {t("admin.reservations.reply_sent_label", "Réponse envoyée")}
+                </p>
+                <p className="m-0 text-slate-800 dark:text-slate-200">{selected.reponse_admin}</p>
               </div>
             )}
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
-              <button onClick={() => setSelected(null)} style={{ padding: '8px 16px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', cursor: 'pointer', fontSize: 13 }}>{t("forms.close", "Fermer")}</button>
+            <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end">
+              <button 
+                type="button"
+                onClick={() => setSelected(null)} 
+                className="px-4 py-2 rounded-lg text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+              >
+                {t("forms.close", "Fermer")}
+              </button>
             </div>
-          </div>
+          </section>
         </div>
       )}
 
       {toast && (
-        <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 1100, display: 'flex', alignItems: 'center', gap: 8, background: '#166534', color: 'white', padding: '10px 20px', borderRadius: 8, fontSize: 13, fontWeight: 500, boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-xs font-semibold shadow-lg">
           <CalendarCheck size={16} /> {toast}
         </div>
       )}

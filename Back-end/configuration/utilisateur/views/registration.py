@@ -139,3 +139,42 @@ class AgentRegisterView(ApiResponseMixin, APIView):
 
         logger.warning(f"Validation agent échouée: {serializer.errors}")
         return self.error_response("Données invalides", details=serializer.errors)
+
+
+class SignUpView(ApiResponseMixin, APIView):
+    """
+    Point d'entrée unifié pour l'inscription : POST /api/auth/signup/
+    Délègue l'enregistrement selon le rôle spécifié dans le corps de la requête :
+    - LOCATAIRE (par défaut) : compte immédiatement actif
+    - PROPRIETAIRE : compte avec IBAN, activé après validation
+    - AGENT : compte avec rôle AGENT, activé après validation
+    """
+    permission_classes = [AllowAny]
+    authentication_classes = []
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
+
+    def post(self, request, *args, **kwargs):
+        role = request.data.get("role", "LOCATAIRE")
+        if isinstance(role, str):
+            role = role.strip().upper()
+
+        if role == "LOCATAIRE":
+            view = LocataireRegisterView()
+            view.request = request
+            view.format_kwarg = None
+            return view.post(request)
+        elif role == "PROPRIETAIRE":
+            view = ProprietaireRegisterView()
+            view.request = request
+            view.format_kwarg = None
+            return view.post(request)
+        elif role == "AGENT":
+            view = AgentRegisterView()
+            view.request = request
+            view.format_kwarg = None
+            return view.post(request)
+        else:
+            return self.error_response(
+                f"Rôle invalide: '{role}'. Les rôles autorisés sont LOCATAIRE, PROPRIETAIRE, AGENT.",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )

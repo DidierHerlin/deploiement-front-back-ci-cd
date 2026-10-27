@@ -47,6 +47,7 @@ import {
 import { isTokenValid } from "@/lib/auth"
 import { resolveMediaUrl } from "@/lib/api"
 import { useTranslation, LanguageSwitcher } from "@/lib/i18n"
+import { ThemeToggle } from "@/components/molecules/ThemeToggle"
 
 interface AuthUser {
   token: string
@@ -217,11 +218,11 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-stone-800 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
+    <div className="min-h-screen bg-[#FAF7F2] dark:bg-slate-950 text-stone-800 dark:text-slate-200 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900 dark:selection:bg-blue-900/30 dark:selection:text-blue-200">
       {/* =========================================================================
-          1. HEADER SIGNATURE IMMOCONNECT AVEC SÉLECTEUR DE LANGUE (FR / EN)
+          1. HEADER SIGNATURE IMMOCONNECT AVEC SÉLECTEUR DE THÈME & LANGUE (FR / EN)
       ========================================================================= */}
-      <header className="sticky top-0 z-40 bg-[#FAF7F2]/90 backdrop-blur-xl border-b border-[#EDE6DC] transition-all shadow-xs">
+      <header className="sticky top-0 z-40 bg-[#FAF7F2]/90 dark:bg-slate-900/80 backdrop-blur-xl border-b border-[#EDE6DC] dark:border-slate-800 transition-all shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-3 sm:gap-4">
           {/* Logo signature & Slogan */}
           <Link href="/" className="flex items-center gap-3.5 group shrink-0" aria-label="Accueil ImmoConnect">
@@ -229,10 +230,10 @@ export default function HomePage() {
               <Home className="size-5.5 stroke-[2.2]" aria-hidden="true" />
             </div>
             <div className="flex flex-col">
-              <span className="font-sans text-xl font-extrabold tracking-tight text-stone-900 group-hover:text-blue-600 transition-colors">
+              <span className="font-sans text-xl font-extrabold tracking-tight text-stone-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                 ImmoConnect
               </span>
-              <span className="text-[11px] text-stone-500 font-medium tracking-wide">
+              <span className="text-[11px] text-stone-500 dark:text-slate-400 font-medium tracking-wide">
                 {t("nav.brand_tagline")}
               </span>
             </div>
@@ -243,7 +244,7 @@ export default function HomePage() {
             {/* Bouton raccourci Catalogue */}
             <button
               onClick={scrollToCatalog}
-              className="px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold text-stone-600 hover:text-blue-600 hover:bg-stone-100/70 transition-colors"
+              className="px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold text-stone-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white hover:bg-stone-100/70 dark:hover:bg-slate-800/70 transition-colors cursor-pointer"
             >
               {t("nav.catalog")}
             </button>
@@ -252,83 +253,83 @@ export default function HomePage() {
             <div className="relative" ref={featuresMenuRef}>
               <button
                 onClick={() => setShowFeaturesMenu((prev) => !prev)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors cursor-pointer ${
                   showFeaturesMenu
-                    ? "bg-blue-50 text-blue-700"
-                    : "text-stone-600 hover:text-blue-600 hover:bg-stone-100/70"
+                    ? "bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400"
+                    : "text-stone-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white hover:bg-stone-100/70 dark:hover:bg-slate-800/70"
                 }`}
               >
                 <span>{t("nav.features")}</span>
                 <ChevronDown
                   className={`size-4 transition-transform duration-200 ${
-                    showFeaturesMenu ? "rotate-180 text-blue-600" : "text-stone-400"
+                    showFeaturesMenu ? "rotate-180 text-blue-600 dark:text-blue-400" : "text-stone-400 dark:text-slate-500"
                   }`}
                 />
               </button>
 
               {/* Panneau déroulant Méga-menu Fonctionnalités */}
               {showFeaturesMenu && (
-                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[480px] bg-white rounded-3xl shadow-xl shadow-stone-300/40 border border-[#EDE6DC] p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-stone-400 px-3 pb-2 border-b border-stone-100">
+                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[480px] bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-stone-300/40 dark:shadow-black/60 border border-[#EDE6DC] dark:border-slate-800 p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-stone-400 dark:text-slate-500 px-3 pb-2 border-b border-stone-100 dark:border-slate-800">
                     {t("features_menu.title")}
                   </div>
 
                   <div className="grid gap-2.5 mt-2.5">
                     {/* Profil Locataire */}
-                    <div className="flex items-start gap-3 p-3 rounded-2xl hover:bg-blue-50/60 transition-colors border border-transparent hover:border-blue-100 group">
-                      <div className="flex size-10 rounded-xl bg-blue-100 text-blue-600 items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    <div className="flex items-start gap-3 p-3 rounded-2xl hover:bg-blue-50/60 dark:hover:bg-slate-800/60 transition-colors border border-transparent hover:border-blue-100 dark:hover:border-slate-700 group cursor-pointer">
+                      <div className="flex size-10 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                         <Key className="size-5" />
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <h4 className="text-xs font-bold text-stone-900 group-hover:text-blue-600 transition-colors">
+                          <h4 className="text-xs font-bold text-stone-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                             {t("features_menu.tenant_title")}
                           </h4>
-                          <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-blue-50 text-blue-600">
+                          <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-slate-300 border border-transparent dark:border-slate-700">
                             {t("features_menu.tenant_badge")}
                           </span>
                         </div>
-                        <p className="text-[11px] text-stone-500 mt-0.5 leading-snug">
+                        <p className="text-[11px] text-stone-500 dark:text-slate-400 mt-0.5 leading-snug">
                           {t("features_menu.tenant_desc")}
                         </p>
                       </div>
                     </div>
 
                     {/* Profil Propriétaire */}
-                    <div className="flex items-start gap-3 p-3 rounded-2xl hover:bg-amber-50/60 transition-colors border border-transparent hover:border-amber-100 group">
-                      <div className="flex size-10 rounded-xl bg-amber-100 text-amber-700 items-center justify-center shrink-0 group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                    <div className="flex items-start gap-3 p-3 rounded-2xl hover:bg-amber-50/60 dark:hover:bg-slate-800/60 transition-colors border border-transparent hover:border-amber-100 dark:hover:border-slate-700 group cursor-pointer">
+                      <div className="flex size-10 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400 items-center justify-center shrink-0 group-hover:bg-amber-600 group-hover:text-white transition-colors">
                         <Building className="size-5" />
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <h4 className="text-xs font-bold text-stone-900 group-hover:text-amber-700 transition-colors">
+                          <h4 className="text-xs font-bold text-stone-900 dark:text-white group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
                             {t("features_menu.owner_title")}
                           </h4>
-                          <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-amber-50 text-amber-700">
+                          <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-amber-50 dark:bg-slate-800 text-amber-700 dark:text-slate-300 border border-transparent dark:border-slate-700">
                             {t("features_menu.owner_badge")}
                           </span>
                         </div>
-                        <p className="text-[11px] text-stone-500 mt-0.5 leading-snug">
+                        <p className="text-[11px] text-stone-500 dark:text-slate-400 mt-0.5 leading-snug">
                           {t("features_menu.owner_desc")}
                         </p>
                       </div>
                     </div>
 
                     {/* Profil Admin & Agent */}
-                    <div className="flex items-start gap-3 p-3 rounded-2xl hover:bg-indigo-50/60 transition-colors border border-transparent hover:border-indigo-100 group">
-                      <div className="flex size-10 rounded-xl bg-indigo-100 text-indigo-600 items-center justify-center shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                    <div className="flex items-start gap-3 p-3 rounded-2xl hover:bg-indigo-50/60 dark:hover:bg-slate-800/60 transition-colors border border-transparent hover:border-indigo-100 dark:hover:border-slate-700 group cursor-pointer">
+                      <div className="flex size-10 rounded-xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 items-center justify-center shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                         <ShieldCheck className="size-5" />
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <h4 className="text-xs font-bold text-stone-900 group-hover:text-indigo-600 transition-colors">
+                          <h4 className="text-xs font-bold text-stone-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                             {t("features_menu.admin_title")}
                           </h4>
-                          <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-indigo-50 text-indigo-600">
+                          <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-indigo-50 dark:bg-slate-800 text-indigo-600 dark:text-slate-300 border border-transparent dark:border-slate-700">
                             {t("features_menu.admin_badge")}
                           </span>
                         </div>
-                        <p className="text-[11px] text-stone-500 mt-0.5 leading-snug">
+                        <p className="text-[11px] text-stone-500 dark:text-slate-400 mt-0.5 leading-snug">
                           {t("features_menu.admin_desc")}
                         </p>
                       </div>
@@ -341,15 +342,18 @@ export default function HomePage() {
             {/* Lien Conditions d'utilisation */}
             <button
               onClick={() => setShowCguModal(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold text-stone-600 hover:text-blue-600 hover:bg-stone-100/70 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold text-stone-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white hover:bg-stone-100/70 dark:hover:bg-slate-800/70 transition-colors cursor-pointer"
             >
-              <FileText className="size-4 text-stone-400" />
+              <FileText className="size-4 text-stone-400 dark:text-slate-400" />
               <span>{t("nav.terms")}</span>
             </button>
           </nav>
 
-          {/* Actions utilisateurs & Sélecteur de langue */}
+          {/* Actions utilisateurs & Sélecteurs de thème & langue */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Basculeur de thème clair / sombre */}
+            <ThemeToggle />
+
             {/* Sélecteur de langue discret FR / EN */}
             <LanguageSwitcher />
 
@@ -357,10 +361,10 @@ export default function HomePage() {
             {currentUser ? (
               <div className="hidden sm:flex items-center gap-3">
                 <div className="hidden lg:flex flex-col text-right">
-                  <span className="text-xs font-bold text-stone-800">
+                  <span className="text-xs font-bold text-stone-800 dark:text-slate-200">
                     {t("nav.hello")}, {currentUser.nom || t("nav.guest")}
                   </span>
-                  <span className="text-[10px] text-blue-600 font-semibold tracking-wider uppercase">
+                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold tracking-wider uppercase">
                     Espace {currentUser.role}
                   </span>
                 </div>
@@ -376,9 +380,9 @@ export default function HomePage() {
               <div className="hidden sm:flex items-center gap-2">
                 <Link
                   href="/login"
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-stone-700 hover:text-blue-600 hover:bg-stone-100/80 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-stone-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white hover:bg-stone-100/80 dark:hover:bg-slate-800 transition-colors"
                 >
-                  <LogIn className="size-4 text-stone-500" />
+                  <LogIn className="size-4 text-stone-500 dark:text-slate-400" />
                   <span>{t("nav.sign_in")}</span>
                 </Link>
                 <Link
@@ -396,7 +400,7 @@ export default function HomePage() {
             <button
               onClick={() => setMobileNavOpen((prev) => !prev)}
               aria-label="Menu"
-              className="md:hidden flex size-10 items-center justify-center rounded-xl border border-stone-200 text-stone-700 hover:bg-stone-100/80 transition-colors"
+              className="md:hidden flex size-10 items-center justify-center rounded-xl border border-stone-200 dark:border-slate-800 text-stone-700 dark:text-slate-300 hover:bg-stone-100/80 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
               {mobileNavOpen ? <X className="size-5" /> : <Menu className="size-5" />}
             </button>
@@ -407,7 +411,7 @@ export default function HomePage() {
             MENU BURGER MOBILE RESPONSIVE
         ========================================================================= */}
         {mobileNavOpen && (
-          <div className="md:hidden border-t border-[#EDE6DC] bg-[#FAF7F2] px-4 pt-4 pb-6 space-y-4 animate-in slide-in-from-top duration-200">
+          <div className="md:hidden border-t border-[#EDE6DC] dark:border-slate-800 bg-[#FAF7F2] dark:bg-slate-950 px-4 pt-4 pb-6 space-y-4 animate-in slide-in-from-top duration-200">
             {/* Liens de navigation mobile */}
             <div className="space-y-1">
               <button
@@ -415,7 +419,7 @@ export default function HomePage() {
                   setMobileNavOpen(false)
                   scrollToCatalog()
                 }}
-                className="w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-semibold text-stone-700 hover:bg-white transition-colors"
+                className="w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-semibold text-stone-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-900 transition-colors cursor-pointer"
               >
                 {t("nav.catalog")}
               </button>
@@ -425,36 +429,36 @@ export default function HomePage() {
                   setMobileNavOpen(false)
                   setShowCguModal(true)
                 }}
-                className="w-full flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-stone-700 hover:bg-white transition-colors"
+                className="w-full flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-stone-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-900 transition-colors cursor-pointer"
               >
-                <FileText className="size-4 text-stone-400" />
+                <FileText className="size-4 text-stone-400 dark:text-slate-500" />
                 <span>{t("nav.terms")}</span>
               </button>
             </div>
 
             {/* Accordéon Fonctionnalités pour mobile */}
-            <div className="bg-white rounded-2xl p-3 border border-[#EDE6DC] space-y-2.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 px-1">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-3 border border-[#EDE6DC] dark:border-slate-800 space-y-2.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-slate-500 px-1">
                 {t("nav.features")}
               </span>
               <div className="grid gap-2">
-                <div className="flex items-center gap-2.5 text-xs text-stone-700 p-2 rounded-lg bg-stone-50">
-                  <Key className="size-4 text-blue-600 shrink-0" />
+                <div className="flex items-center gap-2.5 text-xs text-stone-700 dark:text-slate-300 p-2 rounded-lg bg-stone-50 dark:bg-slate-800/60">
+                  <Key className="size-4 text-blue-600 dark:text-blue-400 shrink-0" />
                   <span><strong>{t("features_menu.tenant_title")} :</strong> {t("features_menu.tenant_desc")}</span>
                 </div>
-                <div className="flex items-center gap-2.5 text-xs text-stone-700 p-2 rounded-lg bg-stone-50">
-                  <Building className="size-4 text-amber-700 shrink-0" />
+                <div className="flex items-center gap-2.5 text-xs text-stone-700 dark:text-slate-300 p-2 rounded-lg bg-stone-50 dark:bg-slate-800/60">
+                  <Building className="size-4 text-amber-700 dark:text-amber-400 shrink-0" />
                   <span><strong>{t("features_menu.owner_title")} :</strong> {t("features_menu.owner_desc")}</span>
                 </div>
-                <div className="flex items-center gap-2.5 text-xs text-stone-700 p-2 rounded-lg bg-stone-50">
-                  <ShieldCheck className="size-4 text-indigo-600 shrink-0" />
+                <div className="flex items-center gap-2.5 text-xs text-stone-700 dark:text-slate-300 p-2 rounded-lg bg-stone-50 dark:bg-slate-800/60">
+                  <ShieldCheck className="size-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
                   <span><strong>{t("features_menu.admin_title")} :</strong> {t("features_menu.admin_desc")}</span>
                 </div>
               </div>
             </div>
 
             {/* Actions d'authentification mobile */}
-            <div className="pt-2 border-t border-stone-200 space-y-2">
+            <div className="pt-2 border-t border-stone-200 dark:border-slate-800 space-y-2">
               {currentUser ? (
                 <Link
                   href={currentUser.dashboardUrl}
@@ -469,7 +473,7 @@ export default function HomePage() {
                   <Link
                     href="/login"
                     onClick={() => setMobileNavOpen(false)}
-                    className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-stone-300 bg-white text-stone-800 text-xs font-semibold hover:bg-stone-50"
+                    className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-800 dark:text-slate-200 text-xs font-semibold hover:bg-stone-50 dark:hover:bg-slate-800"
                   >
                     <LogIn className="size-4" />
                     <span>{t("nav.sign_in")}</span>
@@ -492,44 +496,44 @@ export default function HomePage() {
       {/* =========================================================================
           2. SECTION D'ACCUEIL & RECHERCHE (UX EMPATHIQUE & CENTRÉE SUR LE FOYER)
       ========================================================================= */}
-      <section className="relative overflow-hidden pt-14 pb-12 px-4 sm:px-6 lg:px-8 border-b border-[#EDE6DC] bg-gradient-to-b from-blue-50/40 via-[#FAF7F2] to-[#FAF7F2]">
+      <section className="relative overflow-hidden pt-14 pb-12 px-4 sm:px-6 lg:px-8 border-b border-[#EDE6DC] dark:border-slate-800 bg-gradient-to-b from-blue-50/40 via-[#FAF7F2] to-[#FAF7F2] dark:from-slate-900/60 dark:via-slate-950 dark:to-slate-950">
         {/* Halos doux en arrière-plan */}
-        <div className="absolute top-8 left-1/2 -translate-x-1/2 w-[760px] h-[360px] bg-gradient-to-r from-blue-200/20 via-indigo-100/25 to-amber-100/20 blur-3xl -z-10 rounded-full pointer-events-none" />
+        <div className="absolute top-8 left-1/2 -translate-x-1/2 w-[760px] h-[360px] bg-gradient-to-r from-blue-200/20 via-indigo-100/25 to-amber-100/20 dark:from-blue-950/30 dark:via-indigo-950/30 dark:to-slate-900/20 blur-3xl -z-10 rounded-full pointer-events-none" />
 
         <div className="max-w-4xl mx-auto text-center mb-8 sm:mb-10">
           {/* Badge doux rassurant */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white text-blue-800 text-xs font-semibold shadow-xs border border-blue-200/80 mb-5 animate-in fade-in duration-500">
-            <Sparkles className="size-3.5 text-blue-600" />
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white dark:bg-slate-900 text-blue-800 dark:text-blue-300 text-xs font-semibold shadow-xs border border-blue-200/80 dark:border-blue-900/50 mb-5 animate-in fade-in duration-500">
+            <Sparkles className="size-3.5 text-blue-600 dark:text-blue-400" />
             <span>{t("hero.badge")}</span>
           </div>
 
           {/* Titre orienté projet de vie */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-stone-900 tracking-tight leading-[1.15]">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-stone-900 dark:text-white tracking-tight leading-[1.15]">
             {t("hero.title_start")}{" "}
-            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 dark:from-blue-400 dark:via-indigo-400 dark:to-sky-400 bg-clip-text text-transparent">
               {t("hero.title_highlight")}
             </span>
           </h1>
 
           {/* Sous-titre bienveillant */}
-          <p className="mt-4 text-base sm:text-lg text-stone-600 max-w-2xl mx-auto font-normal leading-relaxed">
+          <p className="mt-4 text-base sm:text-lg text-stone-600 dark:text-slate-400 max-w-2xl mx-auto font-normal leading-relaxed">
             {t("hero.subtitle")}
           </p>
 
           {/* Micro-textes rassurants & badges de confiance */}
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-stone-600 font-medium">
-            <span className="inline-flex items-center gap-1.5 bg-white px-3.5 py-1.5 rounded-full border border-[#EDE6DC] shadow-2xs">
-              <ShieldCheck className="size-4 text-emerald-600" />
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-stone-600 dark:text-slate-400 font-medium">
+            <span className="inline-flex items-center gap-1.5 bg-white dark:bg-slate-900 px-3.5 py-1.5 rounded-full border border-[#EDE6DC] dark:border-slate-800 shadow-2xs text-stone-700 dark:text-slate-300">
+              <ShieldCheck className="size-4 text-emerald-600 dark:text-emerald-400" />
               {t("hero.trust_verified")}
             </span>
-            <span className="hidden sm:inline text-stone-300">•</span>
-            <span className="inline-flex items-center gap-1.5 bg-white px-3.5 py-1.5 rounded-full border border-[#EDE6DC] shadow-2xs">
-              <CalendarCheck className="size-4 text-blue-600" />
+            <span className="hidden sm:inline text-stone-300 dark:text-slate-700">•</span>
+            <span className="inline-flex items-center gap-1.5 bg-white dark:bg-slate-900 px-3.5 py-1.5 rounded-full border border-[#EDE6DC] dark:border-slate-800 shadow-2xs text-stone-700 dark:text-slate-300">
+              <CalendarCheck className="size-4 text-blue-600 dark:text-blue-400" />
               {t("hero.trust_realtime")}
             </span>
-            <span className="hidden sm:inline text-stone-300">•</span>
-            <span className="inline-flex items-center gap-1.5 bg-white px-3.5 py-1.5 rounded-full border border-[#EDE6DC] shadow-2xs">
-              <Smile className="size-4 text-amber-600" />
+            <span className="hidden sm:inline text-stone-300 dark:text-slate-700">•</span>
+            <span className="inline-flex items-center gap-1.5 bg-white dark:bg-slate-900 px-3.5 py-1.5 rounded-full border border-[#EDE6DC] dark:border-slate-800 shadow-2xs text-stone-700 dark:text-slate-300">
+              <Smile className="size-4 text-amber-600 dark:text-amber-400" />
               {t("hero.trust_support")}
             </span>
           </div>
@@ -538,23 +542,23 @@ export default function HomePage() {
         {/* =========================================================================
             BARRE DE RECHERCHE INTUITIVE & FILTRES DYNAMIQUES
         ========================================================================= */}
-        <div className="max-w-4xl mx-auto bg-white rounded-[2rem] shadow-[0_20px_50px_-15px_rgba(37,99,235,0.06)] border border-[#EDE6DC] p-3 sm:p-5 transition-all">
+        <div className="max-w-4xl mx-auto bg-white dark:bg-slate-900 rounded-[2rem] shadow-[0_20px_50px_-15px_rgba(37,99,235,0.06)] dark:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.5)] border border-[#EDE6DC] dark:border-slate-800 p-3 sm:p-5 transition-all">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-center">
             {/* Champ de recherche texte */}
             <div className="md:col-span-5 relative">
-              <Search className="size-4 absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
+              <Search className="size-4 absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 dark:text-slate-500" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder={t("search.placeholder")}
-                className="w-full pl-11 pr-9 py-3 bg-[#FAF7F2] hover:bg-white focus:bg-white rounded-2xl border border-stone-200/90 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-3 focus:ring-blue-500/20 focus:border-blue-600 transition-all font-medium"
+                className="w-full pl-11 pr-9 py-3 bg-[#FAF7F2] dark:bg-slate-950 hover:bg-white dark:hover:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 rounded-2xl border border-stone-200/90 dark:border-slate-800 text-sm text-stone-900 dark:text-slate-100 placeholder:text-stone-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-3 focus:ring-blue-500/20 focus:border-blue-600 transition-all font-medium"
               />
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm("")}
                   title={t("search.clear_search")}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 transition-colors"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 dark:text-slate-500 hover:text-stone-700 dark:hover:text-slate-200 transition-colors"
                 >
                   <X className="size-4" />
                 </button>
@@ -566,11 +570,11 @@ export default function HomePage() {
               <select
                 value={modeFilter}
                 onChange={(e) => setModeFilter(e.target.value)}
-                className="w-full px-3.5 py-3 bg-[#FAF7F2] hover:bg-white focus:bg-white rounded-2xl border border-stone-200/90 text-sm text-stone-700 font-semibold focus:outline-none focus:ring-3 focus:ring-blue-500/20 focus:border-blue-600 transition-all cursor-pointer"
+                className="w-full px-3.5 py-3 bg-[#FAF7F2] dark:bg-slate-950 hover:bg-white dark:hover:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 rounded-2xl border border-stone-200/90 dark:border-slate-800 text-sm text-stone-700 dark:text-slate-200 font-semibold focus:outline-none focus:ring-3 focus:ring-blue-500/20 focus:border-blue-600 transition-all cursor-pointer"
               >
-                <option value="TOUS">{t("search.mode_all")}</option>
-                <option value="LOCATION">{t("search.mode_location")}</option>
-                <option value="VENTE">{t("search.mode_vente")}</option>
+                <option value="TOUS" className="dark:bg-slate-900 dark:text-slate-200">{t("search.mode_all")}</option>
+                <option value="LOCATION" className="dark:bg-slate-900 dark:text-slate-200">{t("search.mode_location")}</option>
+                <option value="VENTE" className="dark:bg-slate-900 dark:text-slate-200">{t("search.mode_vente")}</option>
               </select>
             </div>
 
@@ -579,13 +583,13 @@ export default function HomePage() {
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="w-full px-3.5 py-3 bg-[#FAF7F2] hover:bg-white focus:bg-white rounded-2xl border border-stone-200/90 text-sm text-stone-700 font-semibold focus:outline-none focus:ring-3 focus:ring-blue-500/20 focus:border-blue-600 transition-all cursor-pointer"
+                className="w-full px-3.5 py-3 bg-[#FAF7F2] dark:bg-slate-950 hover:bg-white dark:hover:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 rounded-2xl border border-stone-200/90 dark:border-slate-800 text-sm text-stone-700 dark:text-slate-200 font-semibold focus:outline-none focus:ring-3 focus:ring-blue-500/20 focus:border-blue-600 transition-all cursor-pointer"
               >
-                <option value="TOUS">{t("search.type_all")}</option>
-                <option value="APPARTEMENT">{t("search.type_apartment")}</option>
-                <option value="MAISON">{t("search.type_house")}</option>
-                <option value="LOCAL_COMMERCIAL">{t("search.type_commercial")}</option>
-                <option value="TERRAIN">{t("search.type_land")}</option>
+                <option value="TOUS" className="dark:bg-slate-900 dark:text-slate-200">{t("search.type_all")}</option>
+                <option value="APPARTEMENT" className="dark:bg-slate-900 dark:text-slate-200">{t("search.type_apartment")}</option>
+                <option value="MAISON" className="dark:bg-slate-900 dark:text-slate-200">{t("search.type_house")}</option>
+                <option value="LOCAL_COMMERCIAL" className="dark:bg-slate-900 dark:text-slate-200">{t("search.type_commercial")}</option>
+                <option value="TERRAIN" className="dark:bg-slate-900 dark:text-slate-200">{t("search.type_land")}</option>
               </select>
             </div>
 
@@ -597,8 +601,8 @@ export default function HomePage() {
                 disabled={!hasActiveFilters}
                 className={`p-3 rounded-2xl border transition-all duration-200 flex items-center justify-center w-full md:w-auto ${
                   hasActiveFilters
-                    ? "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
-                    : "bg-[#FAF7F2] text-stone-300 border-stone-200 cursor-not-allowed"
+                    ? "bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-900/60 hover:bg-blue-100 dark:hover:bg-blue-900/60"
+                    : "bg-[#FAF7F2] dark:bg-slate-950 text-stone-300 dark:text-slate-700 border-stone-200 dark:border-slate-800 cursor-not-allowed"
                 }`}
               >
                 <RefreshCw className="size-4" />
@@ -610,8 +614,8 @@ export default function HomePage() {
         {/* Pilules de filtres thématiques & Compteur rassurant */}
         <div className="max-w-4xl mx-auto mt-5 flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-stone-500 font-semibold mr-1 flex items-center gap-1.5">
-              <Compass className="size-3.5 text-blue-600" />
+            <span className="text-stone-500 dark:text-slate-400 font-semibold mr-1 flex items-center gap-1.5">
+              <Compass className="size-3.5 text-blue-600 dark:text-blue-400" />
               {t("search.want_to")}
             </span>
             {[
@@ -625,27 +629,27 @@ export default function HomePage() {
                 <button
                   key={m.id}
                   onClick={() => setModeFilter(m.id)}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold transition-all duration-200 ${
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold transition-all duration-200 cursor-pointer ${
                     active
                       ? "bg-blue-600 text-white shadow-sm shadow-blue-600/20"
-                      : "bg-white text-stone-600 hover:text-blue-700 hover:bg-stone-100/80 border border-stone-200/80"
+                      : "bg-white dark:bg-slate-900 text-stone-600 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-400 hover:bg-stone-100/80 dark:hover:bg-slate-800 border border-stone-200/80 dark:border-slate-800"
                   }`}
                 >
-                  <Icon className={`size-3.5 ${active ? "text-blue-200" : "text-stone-400"}`} />
+                  <Icon className={`size-3.5 ${active ? "text-blue-200" : "text-stone-400 dark:text-slate-500"}`} />
                   <span>{m.label}</span>
                 </button>
               )
             })}
           </div>
 
-          <div className="flex items-center gap-2 text-stone-600 font-medium">
+          <div className="flex items-center gap-2 text-stone-600 dark:text-slate-400 font-medium">
             {loading ? (
-              <span className="inline-flex items-center gap-1.5 text-stone-600">
-                <Loader2 className="size-3.5 animate-spin text-blue-600" />
+              <span className="inline-flex items-center gap-1.5 text-stone-600 dark:text-slate-400">
+                <Loader2 className="size-3.5 animate-spin text-blue-600 dark:text-blue-400" />
                 {t("search.discovering")}
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 text-stone-700 bg-white px-3.5 py-1 rounded-full border border-[#EDE6DC] shadow-2xs">
+              <span className="inline-flex items-center gap-1.5 text-stone-700 dark:text-slate-300 bg-white dark:bg-slate-900 px-3.5 py-1 rounded-full border border-[#EDE6DC] dark:border-slate-800 shadow-2xs">
                 <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
                 <strong>{filteredBiens.length}</strong>{" "}
                 {filteredBiens.length > 1 ? t("search.available_plural") : t("search.available_singular")}
@@ -661,19 +665,19 @@ export default function HomePage() {
       <main id="catalogue-biens" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Notification en cas d'erreur réseau */}
         {error && (
-          <div className="mb-10 p-6 rounded-3xl bg-blue-50/80 border border-blue-200 text-blue-950 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+          <div className="mb-10 p-6 rounded-3xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 text-blue-950 dark:text-blue-200 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
             <div className="flex items-start gap-3.5">
-              <AlertCircle className="size-6 text-blue-600 shrink-0 mt-0.5" />
+              <AlertCircle className="size-6 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
               <div>
-                <h3 className="text-sm font-bold text-blue-950">
+                <h3 className="text-sm font-bold text-blue-950 dark:text-blue-200">
                   {t("error.title")}
                 </h3>
-                <p className="text-xs text-blue-800 mt-1">{error}</p>
+                <p className="text-xs text-blue-800 dark:text-blue-300 mt-1">{error}</p>
               </div>
             </div>
             <button
               onClick={loadBiens}
-              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-2"
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-2 cursor-pointer"
             >
               <RefreshCw className="size-3.5" />
               <span>{t("error.retry")}</span>
@@ -687,16 +691,16 @@ export default function HomePage() {
             {[1, 2, 3, 4, 5, 6].map((idx) => (
               <div
                 key={idx}
-                className="bg-white rounded-3xl border border-[#EDE6DC] overflow-hidden shadow-xs animate-pulse"
+                className="bg-white dark:bg-slate-900 rounded-3xl border border-[#EDE6DC] dark:border-slate-800 overflow-hidden shadow-xs animate-pulse"
               >
-                <div className="h-60 bg-stone-200/60" />
+                <div className="h-60 bg-stone-200/60 dark:bg-slate-800" />
                 <div className="p-6 space-y-3.5">
-                  <div className="h-4 bg-stone-200/70 rounded-full w-1/3" />
-                  <div className="h-5 bg-stone-200/70 rounded-full w-4/5" />
-                  <div className="h-3 bg-stone-200/70 rounded-full w-2/3" />
-                  <div className="pt-4 border-t border-stone-100 flex justify-between items-center">
-                    <div className="h-6 bg-stone-200/70 rounded-full w-2/5" />
-                    <div className="h-9 bg-stone-200/70 rounded-xl w-1/4" />
+                  <div className="h-4 bg-stone-200/70 dark:bg-slate-800 rounded-full w-1/3" />
+                  <div className="h-5 bg-stone-200/70 dark:bg-slate-800 rounded-full w-4/5" />
+                  <div className="h-3 bg-stone-200/70 dark:bg-slate-800 rounded-full w-2/3" />
+                  <div className="pt-4 border-t border-stone-100 dark:border-slate-800 flex justify-between items-center">
+                    <div className="h-6 bg-stone-200/70 dark:bg-slate-800 rounded-full w-2/5" />
+                    <div className="h-9 bg-stone-200/70 dark:bg-slate-800 rounded-xl w-1/4" />
                   </div>
                 </div>
               </div>
@@ -706,20 +710,20 @@ export default function HomePage() {
 
         {/* Aucun résultat avec message bienveillant et humain */}
         {!loading && !error && filteredBiens.length === 0 && (
-          <div className="text-center py-20 px-6 bg-white rounded-3xl border border-dashed border-[#EDE6DC] max-w-2xl mx-auto shadow-xs">
-            <div className="size-16 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-4">
+          <div className="text-center py-20 px-6 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-[#EDE6DC] dark:border-slate-800 max-w-2xl mx-auto shadow-xs">
+            <div className="size-16 rounded-3xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto mb-4">
               <Compass className="size-8 stroke-[1.7]" />
             </div>
-            <h3 className="text-xl font-bold text-stone-900">
+            <h3 className="text-xl font-bold text-stone-900 dark:text-white">
               {t("empty.title")}
             </h3>
-            <p className="mt-2 text-sm text-stone-600 max-w-md mx-auto leading-relaxed">
+            <p className="mt-2 text-sm text-stone-600 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
               {t("empty.desc")}
             </p>
             {hasActiveFilters && (
               <button
                 onClick={resetFilters}
-                className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm"
+                className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
               >
                 <RefreshCw className="size-3.5" />
                 <span>{t("empty.reset_btn")}</span>
@@ -744,10 +748,10 @@ export default function HomePage() {
                 <div
                   key={bien.id}
                   onClick={() => openBienDetail(bien)}
-                  className="group bg-white rounded-3xl border border-[#EDE6DC] overflow-hidden shadow-[0_4px_20px_-6px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-10px_rgba(37,99,235,0.12)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col cursor-pointer"
+                  className="group bg-white dark:bg-slate-900 rounded-3xl border border-[#EDE6DC] dark:border-slate-800 overflow-hidden shadow-[0_4px_20px_-6px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_20px_-6px_rgba(0,0,0,0.4)] hover:shadow-[0_20px_40px_-10px_rgba(37,99,235,0.12)] dark:hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.6)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col cursor-pointer hover:border-blue-200 dark:hover:border-slate-700"
                 >
                   {/* Photo & Badges d'ambiance */}
-                  <div className="relative h-60 bg-stone-100 overflow-hidden rounded-t-3xl">
+                  <div className="relative h-60 bg-stone-100 dark:bg-slate-800 overflow-hidden rounded-t-3xl">
                     {photoUrl ? (
                       <img
                         src={photoUrl}
@@ -758,9 +762,9 @@ export default function HomePage() {
                         }}
                       />
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-stone-400 bg-gradient-to-b from-stone-100 to-stone-200/60">
-                        <Home className="size-12 stroke-[1.2] mb-1.5 text-stone-400" />
-                        <span className="text-xs font-medium text-stone-500">
+                      <div className="w-full h-full flex flex-col items-center justify-center text-stone-400 dark:text-slate-500 bg-gradient-to-b from-stone-100 to-stone-200/60 dark:from-slate-800 dark:to-slate-900">
+                        <Home className="size-12 stroke-[1.2] mb-1.5 text-stone-400 dark:text-slate-500" />
+                        <span className="text-xs font-medium text-stone-500 dark:text-slate-400">
                           {t("card.photos_pending")}
                         </span>
                       </div>
@@ -771,11 +775,11 @@ export default function HomePage() {
 
                     {/* Badges discrets et élégants en haut */}
                     <div className="absolute top-4 left-4 flex items-center gap-2">
-                      <span className="px-3 py-1 rounded-full text-[11px] font-bold tracking-wide bg-blue-600 text-white shadow-xs backdrop-blur-md">
+                      <span className="px-3 py-1 rounded-full text-[11px] font-bold tracking-wide bg-blue-600 dark:bg-blue-500 text-white shadow-xs backdrop-blur-md">
                         {isLocation ? t("card.for_rent") : t("card.for_sale")}
                       </span>
 
-                      <span className="px-3 py-1 rounded-full text-[11px] font-semibold bg-emerald-500 text-white shadow-xs backdrop-blur-md flex items-center gap-1.5">
+                      <span className="px-3 py-1 rounded-full text-[11px] font-semibold bg-emerald-500 dark:bg-emerald-600 text-white shadow-xs backdrop-blur-md flex items-center gap-1.5">
                         <span className="size-1.5 rounded-full bg-white animate-pulse" />
                         {t("card.ready_move_in")}
                       </span>
@@ -785,10 +789,10 @@ export default function HomePage() {
                     <button
                       onClick={(e) => toggleFavorite(bien.id, e)}
                       title={isFav ? t("card.fav_remove") : t("card.fav_add")}
-                      className={`absolute top-4 right-4 size-9 rounded-full flex items-center justify-center backdrop-blur-md shadow-sm transition-all duration-200 ${
+                      className={`absolute top-4 right-4 size-9 rounded-full flex items-center justify-center backdrop-blur-md shadow-sm transition-all duration-200 cursor-pointer ${
                         isFav
                           ? "bg-rose-500 text-white scale-110"
-                          : "bg-white/90 hover:bg-white text-stone-700 hover:text-rose-500 hover:scale-105"
+                          : "bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-900 text-stone-700 dark:text-slate-200 hover:text-rose-500 hover:scale-105"
                       }`}
                     >
                       <Heart className={`size-4 ${isFav ? "fill-white" : ""}`} />
@@ -796,7 +800,7 @@ export default function HomePage() {
 
                     {/* Nombre de photos si disponible */}
                     {bien.photos && bien.photos.length > 1 && (
-                      <div className="absolute bottom-3 right-4 bg-black/60 text-white text-[11px] font-medium px-2.5 py-0.5 rounded-full backdrop-blur-md">
+                      <div className="absolute bottom-3 right-4 bg-black/60 dark:bg-slate-950/70 text-white text-[11px] font-medium px-2.5 py-0.5 rounded-full backdrop-blur-md">
                         {bien.photos.length} {t("card.photos_count")}
                       </div>
                     )}
@@ -806,55 +810,55 @@ export default function HomePage() {
                   <div className="p-6 flex-1 flex flex-col">
                     {/* Type de bien & Réf */}
                     <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-lg border border-blue-200/60">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-0.5 rounded-lg border border-blue-200/60 dark:border-blue-900/60">
                         <Tag className="size-3" />
                         {typeLabel}
                       </span>
-                      <span className="text-[11px] text-stone-400 font-medium">
+                      <span className="text-[11px] text-stone-400 dark:text-slate-500 font-medium">
                         {t("card.ref")}{bien.id}
                       </span>
                     </div>
 
                     {/* Titre chaleureux */}
-                    <h3 className="text-lg font-bold text-stone-900 group-hover:text-blue-600 transition-colors line-clamp-1 mb-1.5">
+                    <h3 className="text-lg font-bold text-stone-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1 mb-1.5">
                       {bien.titre}
                     </h3>
 
                     {/* Adresse avec icône douce */}
-                    <p className="text-xs text-stone-500 flex items-center gap-1.5 mb-4 line-clamp-1">
-                      <MapPin className="size-3.5 text-blue-600 shrink-0" />
+                    <p className="text-xs text-stone-500 dark:text-slate-400 flex items-center gap-1.5 mb-4 line-clamp-1">
+                      <MapPin className="size-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
                       <span>{bien.adresse}</span>
                     </p>
 
                     {/* Caractéristiques (Surface & Pièces) */}
-                    <div className="grid grid-cols-2 gap-2.5 py-3 px-3.5 bg-[#FAF7F2] rounded-2xl mb-5 text-xs text-stone-600 border border-[#EDE6DC]/70">
+                    <div className="grid grid-cols-2 gap-2.5 py-3 px-3.5 bg-[#FAF7F2] dark:bg-slate-950/70 rounded-2xl mb-5 text-xs text-stone-600 dark:text-slate-400 border border-[#EDE6DC]/70 dark:border-slate-800">
                       <div className="flex items-center gap-2">
-                        <Maximize2 className="size-4 text-stone-400" />
+                        <Maximize2 className="size-4 text-stone-400 dark:text-slate-500" />
                         <span>
-                          <strong className="text-stone-800">{bien.surface}</strong> {t("card.living_surface")}
+                          <strong className="text-stone-800 dark:text-slate-200">{bien.surface}</strong> {t("card.living_surface")}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <DoorOpen className="size-4 text-stone-400" />
+                        <DoorOpen className="size-4 text-stone-400 dark:text-slate-500" />
                         <span>
                           {bien.nombre_pieces ? (
                             <>
-                              <strong className="text-stone-800">{bien.nombre_pieces}</strong> {t("card.rooms")}
+                              <strong className="text-stone-800 dark:text-slate-200">{bien.nombre_pieces}</strong> {t("card.rooms")}
                             </>
                           ) : (
-                            <span className="text-stone-400">{t("card.flexible_space")}</span>
+                            <span className="text-stone-400 dark:text-slate-500">{t("card.flexible_space")}</span>
                           )}
                         </span>
                       </div>
                     </div>
 
                     {/* Ligne Prix + Action bouton bleu élégant */}
-                    <div className="mt-auto pt-4 border-t border-[#EDE6DC] flex items-center justify-between gap-2">
+                    <div className="mt-auto pt-4 border-t border-[#EDE6DC] dark:border-slate-800 flex items-center justify-between gap-2">
                       <div>
-                        <span className="block text-[11px] text-stone-400 font-medium">
+                        <span className="block text-[11px] text-stone-400 dark:text-slate-500 font-medium">
                           {isLocation ? t("card.monthly_rent") : t("card.sale_price")}
                         </span>
-                        <div className="text-lg font-black text-blue-600 group-hover:text-blue-700 transition-colors">
+                        <div className="text-lg font-black text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
                           {formattedPrice}
                         </div>
                       </div>
@@ -864,7 +868,7 @@ export default function HomePage() {
                           e.stopPropagation()
                           openBienDetail(bien)
                         }}
-                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all duration-200 shadow-xs hover:shadow-md"
+                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all duration-200 shadow-xs hover:shadow-md cursor-pointer"
                       >
                         <span>{t("card.discover")}</span>
                         <ArrowUpRight className="size-3.5" />
@@ -881,13 +885,13 @@ export default function HomePage() {
       {/* =========================================================================
           4. BANNIÈRE D'ACCOMPAGNEMENT HUMAIN
       ========================================================================= */}
-      <section className="bg-gradient-to-r from-blue-50 via-indigo-50/60 to-amber-50/50 border-t border-b border-[#EDE6DC] py-12 px-4 sm:px-6 lg:px-8">
+      <section className="bg-gradient-to-r from-blue-50 via-indigo-50/60 to-amber-50/50 dark:from-slate-900 dark:via-slate-900/80 dark:to-slate-900 border-t border-b border-[#EDE6DC] dark:border-slate-800 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
           <div className="space-y-1.5">
-            <h3 className="text-xl font-bold text-stone-900">
+            <h3 className="text-xl font-bold text-stone-900 dark:text-white">
               {t("banner.title")}
             </h3>
-            <p className="text-sm text-stone-600 max-w-xl">
+            <p className="text-sm text-stone-600 dark:text-slate-400 max-w-xl">
               {t("banner.desc")}
             </p>
           </div>
@@ -904,12 +908,12 @@ export default function HomePage() {
           5. MODAL DÉTAILS D'UN BIEN : LIVRE D'ACCUEIL CHALEUREUX
       ========================================================================= */}
       {selectedBien && (
-        <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
-          <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-[#EDE6DC] my-8">
+        <div className="fixed inset-0 z-50 bg-stone-950/60 dark:bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-[#EDE6DC] dark:border-slate-800 my-8">
             {/* Bouton Fermer */}
             <button
               onClick={closeBienDetail}
-              className="absolute top-4 right-4 z-20 size-10 rounded-full bg-white/90 hover:bg-white text-stone-700 flex items-center justify-center shadow-md transition-all duration-150 hover:scale-105"
+              className="absolute top-4 right-4 z-20 size-10 rounded-full bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-800 text-stone-700 dark:text-slate-200 flex items-center justify-center shadow-md transition-all duration-150 hover:scale-105 cursor-pointer"
             >
               <X className="size-5" />
             </button>
@@ -932,7 +936,7 @@ export default function HomePage() {
                             prev === 0 ? selectedBien.photos.length - 1 : prev - 1
                           )
                         }}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 size-9 rounded-full bg-black/50 hover:bg-black/80 text-white flex items-center justify-center transition-all duration-150"
+                        className="absolute left-4 top-1/2 -translate-y-1/2 size-9 rounded-full bg-black/50 hover:bg-black/80 text-white flex items-center justify-center transition-all duration-150 cursor-pointer"
                       >
                         <ChevronLeft className="size-5" />
                       </button>
@@ -943,7 +947,7 @@ export default function HomePage() {
                             (prev + 1) % selectedBien.photos.length
                           )
                         }}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 size-9 rounded-full bg-black/50 hover:bg-black/80 text-white flex items-center justify-center transition-all duration-150"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 size-9 rounded-full bg-black/50 hover:bg-black/80 text-white flex items-center justify-center transition-all duration-150 cursor-pointer"
                       >
                         <ChevronRight className="size-5" />
                       </button>
@@ -952,7 +956,7 @@ export default function HomePage() {
                           <button
                             key={idx}
                             onClick={() => setCurrentPhotoIdx(idx)}
-                            className={`h-1.5 rounded-full transition-all duration-300 ${
+                            className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
                               idx === currentPhotoIdx ? "w-6 bg-white" : "w-2 bg-white/60"
                             }`}
                           />
@@ -970,7 +974,7 @@ export default function HomePage() {
 
               {/* Badges sur l'image du modal */}
               <div className="absolute top-4 left-4 flex gap-2">
-                <span className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-blue-600 text-white shadow-xs">
+                <span className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-blue-600 dark:bg-blue-500 text-white shadow-xs">
                   {selectedBien.mode_transaction === "LOCATION" ? t("modal.rent") : t("modal.sale")}
                 </span>
                 <span className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-600 text-white shadow-xs flex items-center gap-1.5">
@@ -984,62 +988,62 @@ export default function HomePage() {
             <div className="p-6 sm:p-8">
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
                 <div>
-                  <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200/60">
+                  <span className="text-xs font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-md border border-blue-200/60 dark:border-blue-900/60">
                     {getTypeBienLabel(selectedBien.type, lang)}
                   </span>
-                  <h2 className="text-2xl font-extrabold text-stone-900 mt-2">
+                  <h2 className="text-2xl font-extrabold text-stone-900 dark:text-white mt-2">
                     {selectedBien.titre}
                   </h2>
-                  <p className="text-sm text-stone-500 flex items-center gap-1.5 mt-1">
-                    <MapPin className="size-4 text-blue-600 shrink-0" />
+                  <p className="text-sm text-stone-500 dark:text-slate-400 flex items-center gap-1.5 mt-1">
+                    <MapPin className="size-4 text-blue-600 dark:text-blue-400 shrink-0" />
                     <span>{selectedBien.adresse}</span>
                   </p>
                 </div>
-                <div className="sm:text-right shrink-0 bg-[#FAF7F2] sm:bg-transparent p-3 sm:p-0 rounded-2xl">
-                  <span className="text-xs text-stone-400 uppercase font-semibold block">
+                <div className="sm:text-right shrink-0 bg-[#FAF7F2] dark:bg-slate-950 sm:bg-transparent dark:sm:bg-transparent p-3 sm:p-0 rounded-2xl">
+                  <span className="text-xs text-stone-400 dark:text-slate-500 uppercase font-semibold block">
                     {selectedBien.mode_transaction === "LOCATION" ? t("card.monthly_rent") : t("card.sale_price")}
                   </span>
-                  <span className="text-2xl font-black text-blue-600">
+                  <span className="text-2xl font-black text-blue-600 dark:text-blue-400">
                     {formatPrixBien(selectedBien, lang)}
                   </span>
                 </div>
               </div>
 
               {/* Fiche des caractéristiques */}
-              <div className="grid grid-cols-3 gap-3 p-4 bg-[#FAF7F2] rounded-2xl my-5 text-center border border-[#EDE6DC]">
-                <div className="border-r border-[#EDE6DC] pr-2">
-                  <span className="text-xs text-stone-500 block">{t("modal.surface")}</span>
-                  <span className="text-base font-bold text-stone-900">
+              <div className="grid grid-cols-3 gap-3 p-4 bg-[#FAF7F2] dark:bg-slate-950 rounded-2xl my-5 text-center border border-[#EDE6DC] dark:border-slate-800">
+                <div className="border-r border-[#EDE6DC] dark:border-slate-800 pr-2">
+                  <span className="text-xs text-stone-500 dark:text-slate-400 block">{t("modal.surface")}</span>
+                  <span className="text-base font-bold text-stone-900 dark:text-white">
                     {selectedBien.surface} m²
                   </span>
                 </div>
-                <div className="border-r border-[#EDE6DC] pr-2">
-                  <span className="text-xs text-stone-500 block">{t("modal.rooms")}</span>
-                  <span className="text-base font-bold text-stone-900">
+                <div className="border-r border-[#EDE6DC] dark:border-slate-800 pr-2">
+                  <span className="text-xs text-stone-500 dark:text-slate-400 block">{t("modal.rooms")}</span>
+                  <span className="text-base font-bold text-stone-900 dark:text-white">
                     {selectedBien.nombre_pieces ? `${selectedBien.nombre_pieces} ${t("card.rooms")}` : t("modal.free_space")}
                   </span>
                 </div>
                 <div>
-                  <span className="text-xs text-stone-500 block">{t("modal.project")}</span>
-                  <span className="text-base font-bold text-stone-900">
+                  <span className="text-xs text-stone-500 dark:text-slate-400 block">{t("modal.project")}</span>
+                  <span className="text-base font-bold text-stone-900 dark:text-white">
                     {selectedBien.mode_transaction === "LOCATION" ? t("modal.rent") : t("modal.sale")}
                   </span>
                 </div>
               </div>
 
               {/* Phrase bienveillante */}
-              <div className="flex items-center gap-2.5 p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-900 mb-6">
-                <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />
+              <div className="flex items-center gap-2.5 p-3.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 rounded-2xl text-xs text-emerald-900 dark:text-emerald-300 mb-6">
+                <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <span>
                   {t("modal.verified_notice")}
                 </span>
               </div>
 
               {/* Actions de réservation / visite */}
-              <div className="pt-4 border-t border-[#EDE6DC] flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="pt-4 border-t border-[#EDE6DC] dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <button
                   onClick={closeBienDetail}
-                  className="w-full sm:w-auto px-5 py-3 rounded-xl border border-stone-200 text-xs font-bold text-stone-700 hover:bg-stone-50 transition-colors"
+                  className="w-full sm:w-auto px-5 py-3 rounded-xl border border-stone-200 dark:border-slate-700 text-xs font-bold text-stone-700 dark:text-slate-300 hover:bg-stone-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 >
                   {t("modal.continue_exploring")}
                 </button>
@@ -1071,36 +1075,36 @@ export default function HomePage() {
           6. MODAL CONDITIONS GÉNÉRALES D'UTILISATION (CGU)
       ========================================================================= */}
       {showCguModal && (
-        <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
-          <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-[#EDE6DC] overflow-hidden my-8">
+        <div className="fixed inset-0 z-50 bg-stone-950/60 dark:bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-[#EDE6DC] dark:border-slate-800 overflow-hidden my-8">
             {/* Header modal CGU */}
-            <div className="px-6 sm:px-8 pt-6 pb-4 border-b border-stone-100 flex items-center justify-between">
+            <div className="px-6 sm:px-8 pt-6 pb-4 border-b border-stone-100 dark:border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex size-10 rounded-xl bg-blue-50 text-blue-600 items-center justify-center">
+                <div className="flex size-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 items-center justify-center">
                   <FileText className="size-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-stone-900">
+                  <h3 className="text-lg font-bold text-stone-900 dark:text-white">
                     {t("cgu.title")}
                   </h3>
-                  <p className="text-xs text-stone-500">
+                  <p className="text-xs text-stone-500 dark:text-slate-400">
                     {t("cgu.subtitle")}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowCguModal(false)}
-                className="size-9 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 flex items-center justify-center transition-colors"
+                className="size-9 rounded-full bg-stone-100 dark:bg-slate-800 hover:bg-stone-200 dark:hover:bg-slate-700 text-stone-600 dark:text-slate-300 flex items-center justify-center transition-colors cursor-pointer"
               >
                 <X className="size-5" />
               </button>
             </div>
 
             {/* Contenu textuel CGU */}
-            <div className="p-6 sm:p-8 space-y-5 text-xs text-stone-600 max-h-[60vh] overflow-y-auto leading-relaxed">
+            <div className="p-6 sm:p-8 space-y-5 text-xs text-stone-600 dark:text-slate-300 max-h-[60vh] overflow-y-auto leading-relaxed">
               <section className="space-y-1.5">
-                <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
-                  <ShieldCheck className="size-4 text-emerald-600" />
+                <h4 className="font-bold text-sm text-stone-900 dark:text-white flex items-center gap-2">
+                  <ShieldCheck className="size-4 text-emerald-600 dark:text-emerald-400" />
                   {t("cgu.sec1_title")}
                 </h4>
                 <p>
@@ -1109,11 +1113,11 @@ export default function HomePage() {
               </section>
 
               <section className="space-y-1.5">
-                <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
-                  <Key className="size-4 text-blue-600" />
+                <h4 className="font-bold text-sm text-stone-900 dark:text-white flex items-center gap-2">
+                  <Key className="size-4 text-blue-600 dark:text-blue-400" />
                   {t("cgu.sec2_title")}
                 </h4>
-                <ul className="list-disc pl-5 space-y-1 text-stone-600">
+                <ul className="list-disc pl-5 space-y-1 text-stone-600 dark:text-slate-300">
                   <li><strong>{t("features_menu.tenant_title")} :</strong> {t("cgu.sec2_tenant")}</li>
                   <li><strong>{t("features_menu.owner_title")} :</strong> {t("cgu.sec2_owner")}</li>
                   <li><strong>{t("features_menu.admin_title")} :</strong> {t("cgu.sec2_admin")}</li>
@@ -1121,8 +1125,8 @@ export default function HomePage() {
               </section>
 
               <section className="space-y-1.5">
-                <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
-                  <CheckCircle2 className="size-4 text-indigo-600" />
+                <h4 className="font-bold text-sm text-stone-900 dark:text-white flex items-center gap-2">
+                  <CheckCircle2 className="size-4 text-indigo-600 dark:text-indigo-400" />
                   {t("cgu.sec3_title")}
                 </h4>
                 <p>
@@ -1131,8 +1135,8 @@ export default function HomePage() {
               </section>
 
               <section className="space-y-1.5">
-                <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
-                  <HelpCircle className="size-4 text-amber-600" />
+                <h4 className="font-bold text-sm text-stone-900 dark:text-white flex items-center gap-2">
+                  <HelpCircle className="size-4 text-amber-600 dark:text-amber-400" />
                   {t("cgu.sec4_title")}
                 </h4>
                 <p>
@@ -1142,10 +1146,10 @@ export default function HomePage() {
             </div>
 
             {/* Footer modal CGU */}
-            <div className="px-6 sm:px-8 py-4 bg-stone-50 border-t border-stone-100 flex justify-end">
+            <div className="px-6 sm:px-8 py-4 bg-stone-50 dark:bg-slate-950/60 border-t border-stone-100 dark:border-slate-800 flex justify-end">
               <button
                 onClick={() => setShowCguModal(false)}
-                className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition-colors"
+                className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition-colors cursor-pointer"
               >
                 {t("cgu.understood_btn")}
               </button>
@@ -1157,29 +1161,29 @@ export default function HomePage() {
       {/* =========================================================================
           7. FOOTER CHALEUREUX & HARMONIEUX
       ========================================================================= */}
-      <footer className="mt-auto bg-white border-t border-[#EDE6DC] py-10 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 text-xs text-stone-500">
+      <footer className="mt-auto bg-white dark:bg-slate-900 border-t border-[#EDE6DC] dark:border-slate-800 py-10 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 text-xs text-stone-500 dark:text-slate-400">
           <div className="flex items-center gap-3">
             <div className="size-7 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-xs">
               <Home className="size-4" />
             </div>
             <div>
-              <span className="font-bold text-stone-800">ImmoConnect</span>
-              <span className="text-stone-400 ml-2">— {t("footer.brand_note")}</span>
+              <span className="font-bold text-stone-800 dark:text-slate-200">ImmoConnect</span>
+              <span className="text-stone-400 dark:text-slate-500 ml-2">— {t("footer.brand_note")}</span>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-6">
             <button
               onClick={() => setShowCguModal(true)}
-              className="hover:text-blue-600 transition-colors"
+              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
             >
               {t("footer.terms")}
             </button>
-            <Link href="/login" className="hover:text-blue-600 transition-colors">
+            <Link href="/login" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               {t("footer.client_space")}
             </Link>
-            <Link href="/inscription" className="hover:text-blue-600 transition-colors">
+            <Link href="/inscription" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               {t("footer.create_account")}
             </Link>
             <span>&copy; {new Date().getFullYear()} ImmoConnect. {t("footer.rights")}</span>

@@ -172,6 +172,20 @@
       "confirm_password": "Confirmer le mot de passe",
       "submit_btn": "Créer mon compte",
       "submitting_btn": "Création du compte en cours...",
+      "step_1_title": "Identité",
+      "step_1_subtitle": "Renseignez votre profil et vos informations d'identité.",
+      "step_2_title": "Contact",
+      "step_2_subtitle": "Indiquez vos coordonnées pour vous joindre et valider votre compte.",
+      "step_3_title": "Sécurité",
+      "step_3_subtitle": "Définissez vos identifiants pour sécuriser votre espace personnel.",
+      "next_step": "Suivant",
+      "previous_step": "Précédent",
+      "error_nom_required": "Le nom est obligatoire.",
+      "error_prenoms_required": "Le prénom est obligatoire.",
+      "error_email_required": "L'adresse email est obligatoire.",
+      "error_email_invalid": "Veuillez saisir une adresse email valide.",
+      "error_phone_required": "Le numéro de téléphone est obligatoire.",
+      "error_phone_invalid": "Veuillez saisir un numéro de téléphone valide (au moins 8 chiffres).",
       "already_account": "Vous avez déjà un compte ?",
       "sign_in": "Se connecter",
       "error_password_match": "Les mots de passe ne correspondent pas.",
@@ -381,7 +395,11 @@
     "update_error": "Une erreur est survenue lors de la mise à jour.",
     "save_changes": "Enregistrer les modifications",
     "saving": "Enregistrement...",
-    "modify_photo": "Modifier"
+    "modify_photo": "Modifier",
+    "not_provided": "Non renseigné",
+    "iban_not_provided": "IBAN non renseigné",
+    "full_name": "Nom et prénoms",
+    "iban": "IBAN"
   },
   "admin": {
     "users": {
@@ -404,7 +422,8 @@
       "confirm_delete_title": "Supprimer ce compte ?",
       "confirm_delete_desc": "La suppression est définitive et toutes les données associées seront supprimées du système.",
       "toggle_status_title": "Modifier le statut ?",
-      "toggle_status_desc": "Voulez-vous modifier l'état actif/inactif de cet utilisateur ?"
+      "toggle_status_desc": "Voulez-vous modifier l'état actif/inactif de cet utilisateur ?",
+      "user_details_title": "Détails de l'utilisateur"
     },
     "biens": {
       "title": "Gestion du parc immobilier",
@@ -416,7 +435,8 @@
       "filter_all_status": "Tous les statuts",
       "col_property": "BIEN IMMOBILIER",
       "col_owner": "PROPRIÉTAIRE",
-      "col_type": "TYPE & SURFACE",
+      "col_type": "TYPE",
+      "unassigned": "Non affecté",
       "col_price": "LOYER / PRIX",
       "col_status": "STATUT",
       "col_actions": "ACTIONS",
@@ -465,7 +485,11 @@
       "create_sub": "Rôle : Locataire (exclusif). Ce compte permet de consulter ses contrats et quittances.",
       "edit_sub": "Mettez à jour les coordonnées du locataire.",
       "confirm_disable_title": "Désactiver ce locataire ?",
-      "confirm_disable_desc": "Le locataire ne pourra plus se connecter, mais son historique de paiement et de bail sera conservé."
+      "confirm_disable_desc": "Le locataire ne pourra plus se connecter, mais son historique de paiement et de bail sera conservé.",
+      "title_start": "Gestion des",
+      "title_highlight": "Locataires",
+      "col_dossiers": "DOSSIERS",
+      "col_reservations": "RÉSERVATIONS"
     },
     "reservations": {
       "title": "Gestion des réservations",
@@ -483,7 +507,25 @@
       "status_cancelled": "Annulée",
       "mark_processed": "Valider la demande",
       "cancel_reservation": "Annuler la réservation",
-      "reply_modal_title": "Répondre à la réservation"
+      "reply_modal_title": "Répondre à la réservation",
+      "title_start": "Gestion des",
+      "title_highlight": "Réservations",
+      "filter_all_status": "Tous les statuts",
+      "detail_modal_title": "Détail de la réservation",
+      "tenant_info": "Information sur le candidat / locataire",
+      "property_info": "Information sur le bien",
+      "manage_reservation_btn": "Gérer la réservation",
+      "decision_label": "Décision",
+      "accept_opt": "Accepter la réservation (Traitée)",
+      "reject_opt": "Refuser la réservation (Annulée)",
+      "reply_message_label": "Message de réponse",
+      "reply_rent_placeholder": "Ex : Votre réservation a été validée. Veuillez consulter votre contrat de bail pour prendre connaissance des détails.",
+      "reply_sale_placeholder": "Ex : Votre réservation a été validée. Veuillez consulter votre contrat de vente pour prendre connaissance des détails.",
+      "send_reply_btn": "Envoyer la réponse",
+      "reject_and_send_btn": "Refuser et envoyer la réponse",
+      "reply_sent_label": "Réponse envoyée",
+      "reply_sent_toast": "Réponse envoyée au locataire.",
+      "empty": "Aucune réservation trouvée."
     },
     "contrats": {
       "title": "Supervision des contrats de bail & ventes",
@@ -507,7 +549,10 @@
       "terminate_desc": "Cette action mettra fin au contrat avant son terme. Le bien repassera au statut DISPONIBLE.",
       "end_lease_title": "Terminer le bail",
       "finalize_sale_title": "Finaliser la vente",
-      "delete_contract_title": "Supprimer le contrat"
+      "delete_contract_title": "Supprimer le contrat",
+      "title_start": "Gestion des",
+      "title_highlight": "Contrats",
+      "empty": "Aucun contrat trouvé."
     },
     "paiements": {
       "title": "Suivi des encaissements & facturation",
@@ -796,5 +841,30 @@
     "saving": "Enregistrement en cours...",
     "success": "Opération effectuée avec succès.",
     "error": "Une erreur est survenue lors de l'opération."
+  },
+  "settings": {
+    "eyebrow": "CONFIGURATION SYSTÈME",
+    "title": "Paramètres",
+    "subtitle": "Gérez vos préférences d'affichage, le thème et la langue de l'interface d'administration.",
+    "theme_section_title": "Mode d'affichage (Thème)",
+    "theme_section_desc": "Choisissez l'apparence visuelle de l'application selon vos préférences.",
+    "theme_light_title": "Clair (Normal)",
+    "theme_light_desc": "Force le thème lumineux pour une clarté optimale en journée.",
+    "theme_dark_title": "Sombre (Dark)",
+    "theme_dark_desc": "Force le thème sombre pour réduire la fatigue oculaire.",
+    "theme_system_title": "Système (Auto)",
+    "theme_system_desc": "Adapte automatiquement selon les préférences de votre système d'exploitation.",
+    "lang_section_title": "Langue de l'interface (Internationalisation)",
+    "lang_section_desc": "Sélectionnez votre langue d'affichage préférée pour toute la plateforme.",
+    "lang_fr_title": "Français",
+    "lang_fr_desc": "Langue par défaut de la plateforme.",
+    "lang_en_title": "Anglais (English)",
+    "lang_en_desc": "Interface traduite en anglais.",
+    "active_badge": "Actif",
+    "saved_notification": "Préférence enregistrée",
+    "summary_title": "Aperçu des préférences",
+    "current_theme": "Thème sélectionné",
+    "current_lang": "Langue active",
+    "system_detected": "Mode système détecté"
   }
 }

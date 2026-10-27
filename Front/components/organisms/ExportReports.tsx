@@ -167,7 +167,7 @@ export function ExportReports({ data }: { data: ReportingData }) {
       </button>
       <button 
         onClick={exportCSV}
-        className="flex items-center px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 hover:border-gray-400 transition shadow-sm font-medium"
+        className="flex items-center px-4 py-2 bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-200 border border-gray-300 dark:border-slate-700 rounded-md hover:bg-gray-50 dark:hover:bg-slate-700 hover:border-gray-400 dark:hover:border-slate-600 transition shadow-sm font-medium"
       >
         <Download className="w-5 h-5 mr-2" />
         {t('admin.reporting.export_csv', 'Exporter en CSV')}

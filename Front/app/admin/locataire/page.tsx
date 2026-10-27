@@ -124,17 +124,22 @@ export default function LocatairePage() {
 
   return (
     <>
-      <div className="welcome-row" style={{ marginBottom: '20px' }}>
+      <div className="welcome-row mb-5">
         <div>
-          <h1>{t("admin.locataires.title_start", "Gestion des")} <span>{t("admin.locataires.title_highlight", "Locataires")}</span></h1>
-          <p className="subtitle">{t("admin.locataires.subtitle", "Gérez les locataires, leurs contrats, leurs accès et consultez l'historique de leurs locations.")}</p>
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            {t("admin.locataires.title_start", "Gestion des")}{" "}
+            <span className="text-slate-900 dark:text-white font-extrabold">{t("admin.locataires.title_highlight", "Locataires")}</span>
+          </h1>
+          <p className="subtitle text-xs text-slate-500 dark:text-slate-400 mt-1">
+            {t("admin.locataires.subtitle", "Gérez les locataires, leurs contrats, leurs accès et consultez l'historique de leurs locations.")}
+          </p>
         </div>
-        <button className="primary-button" onClick={openCreateModal}>
+        <button className="primary-button flex items-center gap-2" onClick={openCreateModal}>
           <Plus size={16} /> {t("admin.locataires.add_tenant", "Ajouter un locataire")}
         </button>
       </div>
 
-      <section className="panel user-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <section className="panel user-panel flex-1 flex flex-col">
         <div className="user-toolbar">
           <LocataireSearch query={query} onQueryChange={setQuery} />
           <LocataireFilters statutFilter={statutFilter} setStatutFilter={setStatutFilter} />

@@ -27,6 +27,7 @@ from .registration import (
     AgentRegisterView,
     LocataireRegisterView,
     ProprietaireRegisterView,
+    SignUpView,
 )
 from .reporting import ReportingStatsView
 from .users import UtilisateurDetailView, UtilisateurListView
@@ -52,6 +53,7 @@ __all__ = [
     "ReportingStatsView",
     "RequestPasswordResetView",
     "ResetPasswordView",
+    "SignUpView",
     "UpdateProfilePhotoView",
     "UpdateUserProfileView",
     "VerifyResetCodeView",

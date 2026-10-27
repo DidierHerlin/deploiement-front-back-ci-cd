@@ -23,6 +23,8 @@ export interface Proprietaire {
     telephone?: string
     is_active?: boolean
   }
+  iban?: string
+  contact?: string
 }
 
 export interface Bien {

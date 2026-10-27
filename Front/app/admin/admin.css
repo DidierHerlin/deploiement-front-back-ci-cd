@@ -23,3 +23,240 @@ button, input { font: inherit; } button { cursor: pointer; }
 .page-body { padding: 0 34px 34px; flex: 1; overflow-y: auto; overflow-x: hidden; }
 
 .app-shell { overflow: hidden; }
+
+/* Dark Mode Theme Overrides */
+.dark {
+  color-scheme: dark;
+  --background: #0b1120;
+  --foreground: #f1f5f9;
+  --card: #131c2e;
+  --border: #223049;
+  --muted-foreground: #94a3b8;
+  --navy: #f8fafc;
+}
+
+.dark .app-shell {
+  background: #090e1a;
+}
+
+.dark .sidebar,
+.dark .topbar {
+  background: #0f172a;
+  border-color: #1e293b;
+}
+
+.dark .stat-card,
+.dark .panel {
+  background: #131c2e;
+  border-color: #223049;
+}
+
+.dark .panel h2 {
+  color: #f8fafc;
+}
+
+.dark .panel-header p {
+  color: #94a3b8;
+}
+
+.dark .link-button {
+  color: #60a5fa;
+}
+
+.dark .breadcrumbs strong {
+  color: #f1f5f9;
+}
+
+.dark .breadcrumbs span,
+.dark .breadcrumbs svg {
+  color: #64748b;
+}
+
+.dark .search-box {
+  color: #64748b;
+}
+
+.dark .search-box input {
+  color: #f1f5f9;
+}
+
+.dark .main-nav button,
+.dark .sidebar-bottom>button,
+.dark .main-nav a,
+.dark .sidebar-bottom>a {
+  color: #94a3b8;
+}
+
+.dark .main-nav button:hover,
+.dark .sidebar-bottom>button:hover,
+.dark .main-nav a:hover,
+.dark .sidebar-bottom>a:hover {
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+.dark .main-nav .active {
+  background: #1e3a8a33;
+  color: #60a5fa;
+  border-left: 3px solid #3b82f6;
+}
+
+.dark .workspace,
+.dark .select-button,
+.dark .more-button,
+.dark .outline-button,
+.dark .table-search,
+.dark .user-toolbar select,
+.dark .filter-button {
+  background: #172338;
+  border-color: #223049;
+  color: #cbd5e1;
+}
+
+.dark .table-search input {
+  color: #f1f5f9;
+  background: transparent;
+}
+
+.dark th {
+  color: #94a3b8;
+}
+
+.dark td {
+  border-color: #1e293b;
+  color: #cbd5e1;
+}
+
+.dark td>strong,
+.dark .tenant strong,
+.dark .property-info strong,
+.dark .property-meta strong {
+  color: #f1f5f9;
+}
+
+.dark .modal {
+  background: #131c2e;
+  color: #f1f5f9;
+  border: 1px solid #223049;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+.dark .modal input,
+.dark .modal select {
+  background: #0f172a;
+  border-color: #223049;
+  color: #f1f5f9;
+}
+
+.dark .modal label {
+  color: #94a3b8;
+}
+
+.dark .role-badge {
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.dark .notification-popover {
+  background: #131c2e;
+  border-color: #223049;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.dark .popover-head {
+  background: #0f172a !important;
+  border-color: #223049 !important;
+}
+
+.dark .activity,
+.dark .deadline {
+  border-color: #1e293b;
+}
+
+.dark .activity strong,
+.dark .deadline strong {
+  color: #f1f5f9;
+}
+
+.dark .owner-banner,
+.dark .admin-banner {
+  background: #172338;
+  border-color: #223049;
+}
+
+.dark .owner-banner strong,
+.dark .admin-banner strong {
+  color: #f1f5f9;
+}
+
+.dark .admin-banner .banner-icon {
+  background: #064e3b;
+  color: #34d399;
+}
+
+.dark .admin-help {
+  background: #1e1b4b;
+  color: #a5b4fc;
+}
+
+.dark .admin-help strong {
+  color: #e0e7ff;
+}
+
+.dark .notification-card {
+  background: #172338;
+  border-color: #223049;
+}
+
+.dark .grid-lines i {
+  border-top-color: #1e293b;
+}
+
+.dark .welcome-row h1 {
+  color: #f8fafc;
+}
+
+.dark .welcome-row h1 span {
+  color: #cbd5e1;
+}
+
+.dark .subtitle {
+  color: #94a3b8;
+}
+
+.dark .user-initial.blue {
+  background: rgba(37, 99, 235, 0.18);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.dark .user-initial.green {
+  background: rgba(16, 185, 129, 0.18);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.dark .user-initial.purple {
+  background: rgba(139, 92, 246, 0.18);
+  color: #c084fc;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.dark .user-initial.orange {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.dark .status.paid {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.dark .status.disabled {
+  background: #1e293b;
+  color: #94a3b8;
+  border: 1px solid #334155;
+}
+

@@ -1,5 +1,6 @@
 'use client'
 
+import '@/app/admin/admin.css'
 import { useState, useEffect, useMemo } from 'react'
 import { Plus } from 'lucide-react'
 import { 
@@ -113,18 +114,23 @@ export default function ContratPage() {
   }
 
   return (
-    <>
-      <div className="welcome-row" style={{ marginBottom: '20px' }}>
+    <div className="flex flex-col gap-4">
+      <div className="welcome-row mb-2">
         <div>
-          <h1>{t("admin.contrats.title_start", "Gestion des")} <span>{t("admin.contrats.title_highlight", "Contrats")}</span></h1>
-          <p className="subtitle">{t("admin.contrats.subtitle", "Administrez les contrats de location et de vente, suivez leur statut et les échéances associées.")}</p>
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            {t("admin.contrats.title_start", "Gestion des")}{" "}
+            <span className="text-slate-900 dark:text-white font-extrabold">{t("admin.contrats.title_highlight", "Contrats")}</span>
+          </h1>
+          <p className="subtitle text-xs text-slate-500 dark:text-slate-400 mt-1">
+            {t("admin.contrats.subtitle", "Administrez les contrats de location et de vente, suivez leur statut et les échéances associées.")}
+          </p>
         </div>
-        <button className="primary-button" onClick={openCreateModal}>
+        <button className="primary-button flex items-center gap-2" onClick={openCreateModal}>
           <Plus size={16} /> {t("admin.contrats.add_contract", "Nouveau contrat")}
         </button>
       </div>
 
-      <section className="panel user-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <section className="panel user-panel flex-1 flex flex-col">
         <div className="user-toolbar">
           <ContratSearch query={query} onQueryChange={setQuery} />
           <ContratFilters 
@@ -170,6 +176,6 @@ export default function ContratPage() {
           onConfirm={handleActionConfirm}
         />
       )}
-    </>
+    </div>
   )
 }

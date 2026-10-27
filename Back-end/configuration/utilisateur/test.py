@@ -250,6 +250,62 @@ class RegistrationViewsTests(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_signup_locataire_unified_endpoint(self):
+        url = reverse('signup')
+        data = {
+            "role": "LOCATAIRE",
+            "email": "unified_loc@test.com",
+            "password": "Password123!",
+            "nom": "Dupont",
+            "prenoms": "Jean",
+            "telephone": "0601020304",
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Utilisateur.objects.filter(email="unified_loc@test.com").exists())
+        self.assertTrue(Locataire.objects.filter(user__email="unified_loc@test.com").exists())
+
+    def test_signup_proprietaire_unified_endpoint(self):
+        url = reverse('signup')
+        data = {
+            "role": "PROPRIETAIRE",
+            "email": "unified_prop@test.com",
+            "password": "Password123!",
+            "nom": "Martin",
+            "prenoms": "Sophie",
+            "telephone": "0601020305",
+            "iban": "FR7612345678901234567890189",
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Utilisateur.objects.filter(email="unified_prop@test.com").exists())
+        self.assertTrue(Proprietaire.objects.filter(user__email="unified_prop@test.com").exists())
+
+    def test_signup_agent_unified_endpoint(self):
+        url = reverse('signup')
+        data = {
+            "role": "AGENT",
+            "email": "unified_agent@test.com",
+            "password": "Password123!",
+            "nom": "Durand",
+            "prenoms": "Alex",
+            "telephone": "0601020306",
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Utilisateur.objects.filter(email="unified_agent@test.com").exists())
+
+    def test_signup_invalid_role(self):
+        url = reverse('signup')
+        data = {
+            "role": "SUPER_HERO",
+            "email": "batman@test.com",
+            "password": "Password123!",
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Rôle invalide", response.data.get("error", ""))
+
 
 class AuthRegistrationCoverageTests(APITestCase):
 

@@ -97,7 +97,7 @@ export default function ProprietairePage() {
   const filteredProps = useMemo(() => {
     return proprietaires.filter(p => {
       const u = p.user
-      const searchStr = `${u.nom} ${u.prenoms} ${u.email} ${u.telephone || ''}`.toLowerCase()
+      const searchStr = `${u.nom} ${u.prenoms} ${u.email} ${u.telephone || ''} ${p.iban || ''}`.toLowerCase()
       const matchQuery = searchStr.includes(query.toLowerCase())
       
       const isActive = u.is_active ?? true
@@ -132,17 +132,22 @@ export default function ProprietairePage() {
 
   return (
     <>
-      <div className="welcome-row" style={{ marginBottom: '20px' }}>
+      <div className="welcome-row mb-5">
         <div>
-          <h1>{t("admin.proprietaires.title_start", "Gestion des")} <span>{t("admin.proprietaires.title_highlight", "Propriétaires")}</span></h1>
-          <p className="subtitle">{t("admin.proprietaires.subtitle", "Administrez les comptes propriétaires, attribuez des rôles exclusifs et gérez leurs biens.")}</p>
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            {t("admin.proprietaires.title_start", "Gestion des")}{" "}
+            <span className="text-slate-500 dark:text-slate-200 font-semibold">{t("admin.proprietaires.title_highlight", "Propriétaires")}</span>
+          </h1>
+          <p className="subtitle text-xs text-slate-500 dark:text-slate-400 mt-1">
+            {t("admin.proprietaires.subtitle", "Administrez les comptes propriétaires, attribuez des rôles exclusifs et gérez leurs biens.")}
+          </p>
         </div>
-        <button className="primary-button" onClick={openCreateModal}>
+        <button className="primary-button flex items-center gap-2" onClick={openCreateModal}>
           <Plus size={16} /> {t("admin.proprietaires.add_owner", "Ajouter un propriétaire")}
         </button>
       </div>
 
-      <section className="panel user-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <section className="panel user-panel flex-1 flex flex-col">
         <div className="user-toolbar">
           <ProprietaireSearch query={query} onQueryChange={setQuery} />
           <ProprietaireFilters statutFilter={statutFilter} setStatutFilter={setStatutFilter} />

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { LayoutDashboard, Users, Building2, UserRound, FileText, Activity, CreditCard, CalendarCheck } from 'lucide-react'
+import { LayoutDashboard, Users, Building2, UserRound, FileText, Activity, CreditCard, CalendarCheck, Settings } from 'lucide-react'
 import Navbar from "@/components/organisms/Navbar"
 
 import { getProfil, UserProfil } from '@/lib/api'
@@ -16,6 +16,7 @@ const adminNavItems = [
   { label: 'Contrats', icon: FileText, href: '/admin/contrat' },
   { label: 'Paiements', icon: CreditCard, href: '/admin/paiement' },
   { label: 'Reporting', icon: Activity, href: '/admin/reporting' },
+  { label: 'Paramètres', icon: Settings, href: '/admin/parametres' },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

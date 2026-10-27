@@ -146,10 +146,15 @@ export default function BienPage() {
 
   return (
     <>
-      <div className="welcome-row" style={{ marginBottom: '20px' }}>
+      <div className="welcome-row mb-5">
         <div>
-          <h1>{t("admin.biens.title_start", "Gestion des")} <span>{t("admin.biens.title_highlight", "Biens immobiliers")}</span></h1>
-          <p className="subtitle">{t("admin.biens.subtitle", "Administrez votre parc immobilier, suivez les statuts et ajoutez de nouvelles propriétés.")}</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
+            {t("admin.biens.title_start", "Gestion des")}{' '}
+            <span className="font-semibold text-slate-700 dark:text-white">{t("admin.biens.title_highlight", "Biens immobiliers")}</span>
+          </h1>
+          <p className="subtitle text-sm text-slate-500 dark:text-slate-400 mt-1">
+            {t("admin.biens.subtitle", "Administrez votre parc immobilier, suivez les statuts et ajoutez de nouvelles propriétés.")}
+          </p>
         </div>
         <button className="primary-button" onClick={handleCreateClick}>
           <Plus size={16} /> {t("admin.biens.add_property", "Ajouter un bien")}
@@ -170,6 +175,7 @@ export default function BienPage() {
         
         <BienTable 
           biens={filteredBiens} 
+          proprietaires={proprietaires}
           loading={loading} 
           onView={setViewBien} 
           onEdit={openEditModal} 

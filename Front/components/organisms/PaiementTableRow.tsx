@@ -39,7 +39,7 @@ export function PaiementTableRow({ paiement, contrats, onView, onEdit, onValider
   const isContratResilie = Boolean(contratStatut && ['RESILIE', 'RÉSILIÉ'].includes(contratStatut.trim().toUpperCase()))
 
   return (
-    <tr style={{ backgroundColor: isMobileMoneyPending ? '#f0fdf4' : undefined }}>
+    <tr className={isMobileMoneyPending ? 'bg-emerald-50/70 dark:bg-emerald-950/20' : undefined}>
       <td>
         <div style={{ fontWeight: 500 }}>#{paiement.id}</div>
         <small style={{ color: '#64748b' }}>{t("admin.paiements.due_num", "Éch.")} {paiement.num_echeance || '-'}</small>
@@ -52,7 +52,7 @@ export function PaiementTableRow({ paiement, contrats, onView, onEdit, onValider
       </td>
       <td>
         <div style={{ fontSize: '13px' }}><span style={{ color: '#64748b' }}>{t("admin.paiements.due_prefix", "Éch:")}</span> {formatDate(paiement.date_echeance)}</div>
-        {paiement.date_paiement && <div style={{ fontSize: '13px' }}><span style={{ color: '#10b981' }}>{t("admin.paiements.paid_prefix", "Payé:")}</span> {formatDate(paiement.date_paiement)}</div>}
+        {paiement.date_paiement && <div style={{ fontSize: '13px' }}><span className="text-emerald-600 dark:text-emerald-400">{t("admin.paiements.paid_prefix", "Payé:")}</span> {formatDate(paiement.date_paiement)}</div>}
       </td>
       <td>
         <PaiementStatusBadge statut={paiement.statut} contratStatut={contratStatut} />
@@ -60,24 +60,11 @@ export function PaiementTableRow({ paiement, contrats, onView, onEdit, onValider
       <td>
         {isMobileMoneyPending ? (
           <div>
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-                padding: '2px 6px',
-                borderRadius: '4px',
-                fontSize: '11px',
-                fontWeight: 700,
-                backgroundColor: '#ecfdf5',
-                color: '#047857',
-                border: '1px solid #a7f3d0'
-              }}
-            >
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/60">
               <Smartphone size={11} /> {paiement.demande_en_cours?.moyen_paiement || paiement.mode_paiement || 'Mobile Money'}
             </span>
             {(paiement.demande_en_cours?.reference || paiement.reference) && (
-              <small style={{ display: 'block', color: '#047857', fontFamily: 'monospace', marginTop: '2px' }}>
+              <small className="block text-emerald-700 dark:text-emerald-400 font-mono mt-0.5 text-xs">
                 {t("admin.paiements.ref_prefix", "Réf:")} {paiement.demande_en_cours?.reference || paiement.reference}
               </small>
             )}
@@ -90,35 +77,33 @@ export function PaiementTableRow({ paiement, contrats, onView, onEdit, onValider
         <div style={{ display: 'flex', gap: '5px', justifyContent: 'flex-end', alignItems: 'center' }}>
           {isMobileMoneyPending && onValiderDemande && (
             <button
-              className="action-icon"
+              className="action-icon text-emerald-600 bg-emerald-50 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 p-1.5 rounded-md"
               onClick={() => onValiderDemande(paiement)}
               title={t("admin.paiements.validate_hint", "Valider la demande Mobile Money")}
-              style={{ color: '#059669', background: '#ecfdf5', border: '1px solid #a7f3d0' }}
             >
               <CheckCircle2 size={16} />
             </button>
           )}
           {isMobileMoneyPending && onRefuserDemande && (
             <button
-              className="action-icon"
+              className="action-icon text-rose-600 bg-rose-50 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800/60 hover:bg-rose-100 dark:hover:bg-rose-900/40 p-1.5 rounded-md"
               onClick={() => onRefuserDemande(paiement)}
               title={t("admin.paiements.reject_hint", "Refuser la demande Mobile Money")}
-              style={{ color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca' }}
             >
               <XCircle size={16} />
             </button>
           )}
           {paiement.statut === 'PAYE' && (
-            <button className="action-icon" onClick={() => downloadQuittance(paiement.id)} title={t("locataire_pages.quittances.download_btn", "Télécharger la quittance")} style={{ color: '#2563eb' }}>
+            <button className="action-icon text-blue-600 dark:text-blue-400 p-1.5 rounded-md hover:bg-blue-50 dark:hover:bg-blue-950/30" onClick={() => downloadQuittance(paiement.id)} title={t("locataire_pages.quittances.download_btn", "Télécharger la quittance")}>
               <Download size={16} />
             </button>
           )}
           {paiement.statut !== 'PAYE' && paiement.statut !== 'ANNULE' && paiement.statut !== 'RESILIE' && !isContratResilie && (
-            <button className="action-icon" onClick={() => onEdit(paiement)} title={t("admin.paiements.modal_validate_title", "Enregistrer / Valider")}>
+            <button className="action-icon p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300" onClick={() => onEdit(paiement)} title={t("admin.paiements.modal_validate_title", "Enregistrer / Valider")}>
               <Edit size={16} />
             </button>
           )}
-          <button className="action-icon" onClick={() => onView(paiement)} title={t("forms.view", "Détails")}>
+          <button className="action-icon p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300" onClick={() => onView(paiement)} title={t("forms.view", "Détails")}>
             <Eye size={16} />
           </button>
         </div>

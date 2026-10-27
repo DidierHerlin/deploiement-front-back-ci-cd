@@ -4,8 +4,7 @@ type PaiementStatusBadgeProps = {
 }
 
 export function PaiementStatusBadge({ statut, contratStatut }: PaiementStatusBadgeProps) {
-  let color = '#64748b'
-  let bg = '#f1f5f9'
+  let colorClass = 'text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
   let label = statut
 
   const isContratResilie = Boolean(contratStatut && ['RESILIE', 'RÉSILIÉ'].includes(contratStatut.trim().toUpperCase()))
@@ -15,47 +14,33 @@ export function PaiementStatusBadge({ statut, contratStatut }: PaiementStatusBad
 
   switch (effectiveStatut) {
     case 'PAYE':
-      color = '#059669'
-      bg = '#d1fae5'
+      colorClass = 'text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800/60'
       label = 'Payé'
       break
     case 'EN_ATTENTE':
-      color = '#d97706'
-      bg = '#fef3c7'
+      colorClass = 'text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 border-amber-200 dark:border-amber-800/60'
       label = 'En attente'
       break
     case 'PARTIEL':
-      color = '#2563eb'
-      bg = '#dbeafe'
+      colorClass = 'text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800/60'
       label = 'Partiel'
       break
     case 'EN_RETARD':
-      color = '#dc2626'
-      bg = '#fee2e2'
+      colorClass = 'text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800/60'
       label = 'En retard'
       break
     case 'ANNULE':
-      color = '#475569'
-      bg = '#e2e8f0'
+      colorClass = 'text-slate-700 dark:text-slate-300 bg-slate-200 dark:bg-slate-800 border-slate-300 dark:border-slate-700'
       label = 'Annulé'
       break
     case 'RESILIE':
-      color = '#dc2626'
-      bg = '#fee2e2'
+      colorClass = 'text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800/60'
       label = 'Résilié'
       break
   }
 
   return (
-    <span style={{
-      display: 'inline-block',
-      padding: '4px 10px',
-      borderRadius: '20px',
-      fontSize: '12px',
-      fontWeight: 600,
-      color: color,
-      backgroundColor: bg
-    }}>
+    <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold border ${colorClass}`}>
       {label}
     </span>
   )

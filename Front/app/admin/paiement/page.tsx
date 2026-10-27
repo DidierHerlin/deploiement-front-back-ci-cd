@@ -133,42 +133,37 @@ export default function PaiementPage() {
 
   return (
     <>
-      <div className="welcome-row" style={{ marginBottom: '20px' }}>
+      <div className="welcome-row mb-5">
         <div>
-          <h1>{t('admin.paiements.title_prefix', 'Gestion des')} <span>{t('admin.paiements.title_span', 'Paiements')}</span></h1>
-          <p className="subtitle">{t('admin.paiements.subtitle', "Supervisez l'ensemble des paiements, validez les demandes Mobile Money et générez les quittances.")}</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
+            {t('admin.paiements.title_prefix', 'Gestion des')}{' '}
+            <span className="font-semibold text-slate-700 dark:text-slate-200">{t('admin.paiements.title_span', 'Paiements')}</span>
+          </h1>
+          <p className="subtitle text-sm text-slate-500 dark:text-slate-400 mt-1">
+            {t('admin.paiements.subtitle', "Supervisez l'ensemble des paiements, validez les demandes Mobile Money et générez les quittances.")}
+          </p>
         </div>
       </div>
 
       <PaiementStats paiements={paiementsNonResilies} />
 
       {/* Onglets / Sélecteur de vue : Paiements actifs vs Factures résiliées */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
-        <div style={{ display: 'flex', gap: '8px' }}>
+      <div className="flex justify-between items-center mb-4 flex-wrap gap-2.5">
+        <div className="flex gap-2">
           <button
             type="button"
             onClick={() => {
               setShowResilies(false)
               setQuery('')
             }}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 16px',
-              borderRadius: '8px',
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              border: '1px solid',
-              borderColor: !showResilies ? '#2563eb' : '#cbd5e1',
-              backgroundColor: !showResilies ? '#eff6ff' : '#ffffff',
-              color: !showResilies ? '#2563eb' : '#64748b',
-              transition: 'all 0.15s ease',
-            }}
+            className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-semibold cursor-pointer border transition-all ${
+              !showResilies
+                ? 'bg-blue-50 border-blue-600 text-blue-600 dark:bg-blue-600/20 dark:text-blue-400 dark:border-blue-500/50'
+                : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800'
+            }`}
           >
             <Receipt size={15} />
-            {t('admin.paiements.tab_active', 'Paiements actifs')} ({paiementsNonResilies.length})
+            {t('admin.paiements.tab_active', 'Paiements & Loyers actifs')} ({paiementsNonResilies.length})
           </button>
 
           <button
@@ -177,35 +172,22 @@ export default function PaiementPage() {
               setShowResilies(true)
               setQuery('')
             }}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 16px',
-              borderRadius: '8px',
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              border: '1px solid',
-              borderColor: showResilies ? '#dc2626' : '#cbd5e1',
-              backgroundColor: showResilies ? '#fef2f2' : '#ffffff',
-              color: showResilies ? '#dc2626' : '#64748b',
-              transition: 'all 0.15s ease',
-            }}
+            className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-semibold cursor-pointer border transition-all ${
+              showResilies
+                ? 'bg-red-50 border-red-600 text-red-600 dark:bg-red-950/40 dark:text-rose-400 dark:border-rose-500/50'
+                : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800'
+            }`}
             title={t('admin.paiements.tab_cancelled', 'Afficher les factures résiliées')}
           >
             <FileX size={15} />
             {t('admin.paiements.tab_cancelled', 'Afficher les factures résiliées')}
             {paiementsResilies.length > 0 && (
               <span
-                style={{
-                  backgroundColor: showResilies ? '#dc2626' : '#fee2e2',
-                  color: showResilies ? '#ffffff' : '#b91c1c',
-                  borderRadius: '999px',
-                  padding: '1px 7px',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                }}
+                className={`rounded-full px-1.5 py-0.5 text-[11px] font-bold ${
+                  showResilies
+                    ? 'bg-red-600 text-white dark:bg-rose-500 dark:text-white'
+                    : 'bg-red-100 text-red-700 dark:bg-rose-950/60 dark:text-rose-400'
+                }`}
               >
                 {paiementsResilies.length}
               </span>
@@ -220,19 +202,7 @@ export default function PaiementPage() {
               setShowResilies(false)
               setQuery('')
             }}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 12px',
-              borderRadius: '6px',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              border: '1px solid #cbd5e1',
-              background: '#ffffff',
-              color: '#475569',
-            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold cursor-pointer border bg-white border-slate-300 text-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700 transition-all"
           >
             <ArrowLeft size={14} /> {t('admin.paiements.back_to_active', 'Retour aux paiements actifs')}
           </button>
@@ -243,12 +213,12 @@ export default function PaiementPage() {
         {showResilies ? (
           <>
             {/* Bannière d'en-tête pour le tableau des factures résiliées */}
-            <div style={{ padding: '12px 18px', background: '#fef2f2', borderBottom: '1px solid #fecaca', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
+            <div className="px-4 py-3 bg-red-50 dark:bg-red-950/30 border-b border-red-200 dark:border-red-900/50 flex items-center justify-between gap-2.5 flex-wrap">
               <div>
-                <strong style={{ fontSize: '14px', color: '#991b1b' }}>
+                <strong className="text-sm font-bold text-red-900 dark:text-red-300">
                   {t('admin.paiements.tab_cancelled_table_title', 'Tableau des factures résiliées')}
                 </strong>
-                <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#b91c1c' }}>
+                <p className="m-0 mt-0.5 text-xs text-red-700 dark:text-red-400">
                   {t('admin.paiements.cancelled_banner_desc', 'Ces paiements et échéances correspondent à des contrats résiliés ({count} facture(s)). Ils ne sont pas comptabilisés dans les paiements actifs.', { count: paiementsResilies.length })}
                 </p>
               </div>

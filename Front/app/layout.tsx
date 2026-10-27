@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google'
 import AuthGuard from "@/components/organisms/auth-guard"
 import { Toaster } from "@/components/molecules/sonner"
 import { LanguageProvider } from "@/lib/i18n"
+import { ThemeProvider } from "@/components/theme-provider"
 import './globals.css'
 import './admin/admin.css'
 
@@ -36,15 +37,17 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="fr" className={`${inter.variable} ${inter.className} bg-background`}>
+    <html lang="fr" className={`${inter.variable} ${inter.className} bg-background`} suppressHydrationWarning>
       <body className={`${inter.className} antialiased`} suppressHydrationWarning>
-        <LanguageProvider>
-          <AuthGuard>
-            {children}
-          </AuthGuard>
-          <Toaster />
-          {process.env.NODE_ENV === 'production' && <Analytics />}
-        </LanguageProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <LanguageProvider>
+            <AuthGuard>
+              {children}
+            </AuthGuard>
+            <Toaster />
+            {process.env.NODE_ENV === 'production' && <Analytics />}
+          </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

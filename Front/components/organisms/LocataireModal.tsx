@@ -34,125 +34,190 @@ export function LocataireModal({ locataire, contrats, paiements, onClose }: Loca
   }
 
   return (
-    <div className="modal-backdrop" role="presentation">
-      <section className="modal" role="dialog" aria-modal="true" style={{ maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto' }}>
-        <button className="modal-close" onClick={onClose} aria-label={t("forms.close", "Fermer")}><X size={18} /></button>
-        <div className="modal-icon"><User size={20} /></div>
-        <h2 style={{ marginBottom: '5px' }}>{t("admin.locataires.sheet_title", "Détails Locataire")}</h2>
-        <p style={{ marginBottom: '20px', color: '#666' }}>{user?.prenoms} {user?.nom}</p>
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" 
+      role="presentation"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <section 
+        className="w-full max-w-[800px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto" 
+        role="dialog" 
+        aria-modal="true"
+      >
+        <button 
+          className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg transition-colors cursor-pointer" 
+          onClick={onClose} 
+          aria-label={t("forms.close", "Fermer")}
+        >
+          <X size={18} />
+        </button>
+        
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3.5 bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-500/10 dark:text-blue-400 dark:border dark:border-blue-500/20">
+          <User size={20} />
+        </div>
 
-        <div style={{ display: 'flex', gap: '15px', borderBottom: '1px solid #e2e8f0', marginBottom: '20px' }}>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white m-0">
+          {t("admin.locataires.sheet_title", "Détails Locataire")}
+        </h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">
+          {user?.prenoms} {user?.nom}
+        </p>
+
+        <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 mb-5">
           <button 
-            style={{ padding: '10px', background: 'none', border: 'none', borderBottom: activeTab === 'infos' ? '2px solid #4f46e5' : '2px solid transparent', color: activeTab === 'infos' ? '#4f46e5' : '#666', fontWeight: activeTab === 'infos' ? 600 : 400, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+            type="button"
+            className={`px-3 py-2 text-xs font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
+              activeTab === 'infos' 
+                ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400' 
+                : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+            }`}
             onClick={() => setActiveTab('infos')}
-          ><User size={16} /> {t("profile.general_info", "Informations")}</button>
+          >
+            <User size={16} /> {t("profile.general_info", "Informations")}
+          </button>
           
           <button 
-            style={{ padding: '10px', background: 'none', border: 'none', borderBottom: activeTab === 'contrats' ? '2px solid #4f46e5' : '2px solid transparent', color: activeTab === 'contrats' ? '#4f46e5' : '#666', fontWeight: activeTab === 'contrats' ? 600 : 400, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+            type="button"
+            className={`px-3 py-2 text-xs font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
+              activeTab === 'contrats' 
+                ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400' 
+                : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+            }`}
             onClick={() => setActiveTab('contrats')}
-          ><FileText size={16} /> {t("admin.locataires.leases_properties", "Contrats & Biens")}</button>
+          >
+            <FileText size={16} /> {t("admin.locataires.leases_properties", "Contrats & Biens")}
+          </button>
           
           <button 
-            style={{ padding: '10px', background: 'none', border: 'none', borderBottom: activeTab === 'paiements' ? '2px solid #4f46e5' : '2px solid transparent', color: activeTab === 'paiements' ? '#4f46e5' : '#666', fontWeight: activeTab === 'paiements' ? 600 : 400, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+            type="button"
+            className={`px-3 py-2 text-xs font-semibold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
+              activeTab === 'paiements' 
+                ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400' 
+                : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+            }`}
             onClick={() => setActiveTab('paiements')}
-          ><CreditCard size={16} /> {t("dashboard.nav.payments", "Paiements")}</button>
+          >
+            <CreditCard size={16} /> {t("dashboard.nav.payments", "Paiements")}
+          </button>
         </div>
         
         {activeTab === 'infos' && (
-          <div className="detail-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-            <div>
-              <small style={{ color: '#586577' }}>{t("profile.full_name", "Nom et prénoms")}</small>
-              <p style={{ fontWeight: 500 }}>{user?.prenoms} {user?.nom}</p>
+          <div className="flex flex-col gap-3 text-xs">
+            <div className="flex justify-between items-center py-1.5 border-b border-slate-100 dark:border-slate-800/80">
+              <span className="text-slate-500 dark:text-slate-400 font-normal">{t("profile.full_name", "Nom et prénoms :")}</span>
+              <span className="text-slate-900 dark:text-slate-100 font-medium text-right">{user?.prenoms} {user?.nom}</span>
             </div>
-            <div>
-              <small style={{ color: '#586577' }}>{t("profile.email", "Email")}</small>
-              <p style={{ fontWeight: 500 }}>{user?.email}</p>
+            <div className="flex justify-between items-center py-1.5 border-b border-slate-100 dark:border-slate-800/80">
+              <span className="text-slate-500 dark:text-slate-400 font-normal">{t("profile.email", "Email :")}</span>
+              <span className="text-slate-900 dark:text-slate-100 font-medium text-right">{user?.email}</span>
             </div>
-            <div>
-              <small style={{ color: '#586577' }}>{t("profile.phone", "Téléphone")}</small>
-              <p style={{ fontWeight: 500 }}>{user?.telephone || t("profile.not_provided", 'Non renseigné')}</p>
+            <div className="flex justify-between items-center py-1.5 border-b border-slate-100 dark:border-slate-800/80">
+              <span className="text-slate-500 dark:text-slate-400 font-normal">{t("profile.phone", "Téléphone :")}</span>
+              <span className={`font-medium text-right ${user?.telephone ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500 italic'}`}>
+                {user?.telephone || t("profile.not_provided", 'Non renseigné')}
+              </span>
             </div>
-            <div>
-              <small style={{ color: '#586577' }}>{t("admin.proprietaires.account_status", "Statut du compte")}</small>
-              <p style={{ fontWeight: 500 }}>
-                {isActive ? <span style={{ color: '#16a34a' }}>{t("dashboard.common.active", "Actif")}</span> : <span style={{ color: '#dc2626' }}>{t("dashboard.common.inactive", "Désactivé")}</span>}
-              </p>
+            <div className="flex justify-between items-center py-1.5">
+              <span className="text-slate-500 dark:text-slate-400 font-normal">{t("admin.proprietaires.account_status", "Statut du compte :")}</span>
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+                isActive
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border dark:border-emerald-500/30'
+                  : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                {isActive ? t("dashboard.common.active", "Actif") : t("dashboard.common.inactive", "Désactivé")}
+              </span>
             </div>
           </div>
         )}
 
         {activeTab === 'contrats' && (
-          <>
+          <div>
             <div className="table-wrap">
               <table>
                 <thead>
                   <tr>
-                    <th>{t("admin.biens.col_id", "RÉF")}</th>
-                    <th>{t("admin.contrats.col_property", "BIEN")}</th>
-                    <th>{t("admin.contrats.col_type", "TYPE")}</th>
-                    <th>{t("admin.contrats.col_period", "PÉRIODE")}</th>
-                    <th>{t("locataire_pages.contrat.card_rent", "LOYER")}</th>
-                    <th>{t("admin.contrats.col_status", "STATUT")}</th>
+                    <th className="uppercase">{t("admin.biens.col_id", "RÉF")}</th>
+                    <th className="uppercase">{t("admin.contrats.col_property", "BIEN")}</th>
+                    <th className="uppercase">{t("admin.contrats.col_type", "TYPE")}</th>
+                    <th className="uppercase">{t("admin.contrats.col_period", "PÉRIODE")}</th>
+                    <th className="uppercase">{t("locataire_pages.contrat.card_rent", "LOYER")}</th>
+                    <th className="uppercase">{t("admin.contrats.col_status", "STATUT")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginatedContrats.length > 0 ? paginatedContrats.map(c => (
-                    <tr key={c.id}>
-                      <td>#{c.id}</td>
+                    <tr key={c.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
+                      <td><span className="font-semibold text-slate-700 dark:text-slate-300 text-xs">#{c.id}</span></td>
                       <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><Building2 size={14} style={{ color: '#888' }} /> <strong>{c.bien_titre}</strong></div>
+                        <div className="flex items-center gap-1.5">
+                          <Building2 size={14} className="text-slate-400 shrink-0" />
+                          <strong className="text-slate-900 dark:text-slate-100">{c.bien_titre}</strong>
+                        </div>
                       </td>
-                      <td>{c.type_contrat}</td>
-                      <td><small>{c.date_debut} au {c.date_fin || t("dashboard.common.undefined", 'Indéfini')}</small></td>
-                      <td><strong>{formatCurrency(c.loyer || c.prix)}</strong></td>
-                      <td><span className="role-badge">{c.statut}</span></td>
+                      <td className="text-slate-600 dark:text-slate-300">{c.type_contrat}</td>
+                      <td><small className="text-slate-500 dark:text-slate-400">{c.date_debut} au {c.date_fin || t("dashboard.common.undefined", 'Indéfini')}</small></td>
+                      <td><strong className="text-slate-900 dark:text-slate-100">{formatCurrency(c.loyer || c.prix)}</strong></td>
+                      <td><span className="role-badge dark:bg-slate-800 dark:text-slate-200 dark:border dark:border-slate-700">{c.statut}</span></td>
                     </tr>
                   )) : (
-                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: '20px', color: '#666' }}>{t("admin.locataires.no_contract_associated", "Aucun contrat associé.")}</td></tr>
+                    <tr><td colSpan={6} className="text-center py-6 text-slate-400 dark:text-slate-500">{t("admin.locataires.no_contract_associated", "Aucun contrat associé.")}</td></tr>
                   )}
                 </tbody>
               </table>
             </div>
             <Pagination currentPage={currentPageContrats} totalPages={totalPagesContrats} onPageChange={setCurrentPageContrats} />
-          </>
+          </div>
         )}
 
         {activeTab === 'paiements' && (
-          <>
+          <div>
             <div className="table-wrap">
               <table>
                 <thead>
                   <tr>
-                    <th>{t("admin.reservations.col_date", "DATE")}</th>
-                    <th>{t("dashboard.nav.contracts", "CONTRAT")}</th>
-                    <th>{t("admin.paiements.col_amount", "MONTANT")}</th>
-                    <th>{t("admin.paiements.col_status", "STATUT")}</th>
+                    <th className="uppercase">{t("admin.reservations.col_date", "DATE")}</th>
+                    <th className="uppercase">{t("dashboard.nav.contracts", "CONTRAT")}</th>
+                    <th className="uppercase">{t("admin.paiements.col_amount", "MONTANT")}</th>
+                    <th className="uppercase">{t("admin.paiements.col_status", "STATUT")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginatedPaiements.length > 0 ? paginatedPaiements.map(p => (
-                    <tr key={p.id}>
-                      <td>{p.date_paiement || p.date_paiement_prevue}</td>
-                      <td>#{p.contrat}</td>
-                      <td><strong>{formatCurrency(p.montant_paye || p.montant_attendu)}</strong></td>
+                    <tr key={p.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="text-slate-700 dark:text-slate-300">{p.date_paiement || p.date_paiement_prevue}</td>
+                      <td className="text-slate-900 dark:text-slate-100 font-medium">#{p.contrat}</td>
+                      <td><strong className="text-slate-900 dark:text-slate-100">{formatCurrency(p.montant_paye || p.montant_attendu)}</strong></td>
                       <td>
-                        <span className={`status ${p.statut === 'VALIDE' ? 'paid' : p.statut === 'EN_ATTENTE' ? 'pending' : 'disabled'}`}>
+                        <span className={`status ${
+                          p.statut === 'VALIDE' 
+                            ? 'paid dark:bg-emerald-500/15 dark:text-emerald-400 dark:border dark:border-emerald-500/30' 
+                            : p.statut === 'EN_ATTENTE' 
+                            ? 'pending dark:bg-amber-500/15 dark:text-amber-400 dark:border dark:border-amber-500/30' 
+                            : 'disabled dark:bg-slate-800 dark:text-slate-400 dark:border dark:border-slate-700'
+                        }`}>
                           <i />{p.statut}
                         </span>
                       </td>
                     </tr>
                   )) : (
-                    <tr><td colSpan={4} style={{ textAlign: 'center', padding: '20px', color: '#666' }}>{t("admin.locataires.no_payment_history", "Aucun historique de paiement.")}</td></tr>
+                    <tr><td colSpan={4} className="text-center py-6 text-slate-400 dark:text-slate-500">{t("admin.locataires.no_payment_history", "Aucun historique de paiement.")}</td></tr>
                   )}
                 </tbody>
               </table>
             </div>
             <Pagination currentPage={currentPagePaiements} totalPages={totalPagesPaiements} onPageChange={setCurrentPagePaiements} />
-          </>
+          </div>
         )}
 
-        <div className="modal-actions" style={{ marginTop: '30px' }}>
-          <button className="outline-button" onClick={onClose}>{t("forms.close", "Fermer")}</button>
+        <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end">
+          <button 
+            type="button" 
+            className="px-4 py-2 rounded-lg text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer" 
+            onClick={onClose}
+          >
+            {t("forms.close", "Fermer")}
+          </button>
         </div>
       </section>
     </div>

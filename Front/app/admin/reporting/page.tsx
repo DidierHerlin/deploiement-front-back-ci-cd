@@ -34,7 +34,7 @@ export default function ReportingPage() {
     return (
       <div className="flex h-screen items-center justify-center">
         <RefreshCw className="w-8 h-8 animate-spin text-blue-500" />
-        <span className="ml-3 text-lg text-gray-600">
+        <span className="ml-3 text-lg text-gray-600 dark:text-slate-300">
           {t('admin.reporting.loading_realtime', 'Chargement des données en temps réel...')}
         </span>
       </div>
@@ -44,12 +44,12 @@ export default function ReportingPage() {
   if (error) {
     return (
       <div className="p-8">
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
-          <h3 className="text-red-800 font-bold">{t('common.error_occurred', 'Erreur')}</h3>
-          <p className="text-red-700 mt-1">{error}</p>
+        <div className="bg-red-50 dark:bg-red-950/40 border-l-4 border-red-500 p-4 rounded-md dark:border-red-600">
+          <h3 className="text-red-800 dark:text-red-300 font-bold">{t('common.error_occurred', 'Erreur')}</h3>
+          <p className="text-red-700 dark:text-red-400 mt-1">{error}</p>
           <button 
             onClick={refresh}
-            className="mt-4 px-4 py-2 bg-red-100 text-red-800 rounded hover:bg-red-200"
+            className="mt-4 px-4 py-2 bg-red-100 dark:bg-red-900/60 text-red-800 dark:text-red-200 rounded hover:bg-red-200 dark:hover:bg-red-900"
           >
             {t('common.retry', 'Réessayer')}
           </button>
@@ -62,17 +62,17 @@ export default function ReportingPage() {
     <div className="p-8 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             {t('admin.reporting.admin_reporting_title', 'Reporting Administrateur')}
           </h1>
-          <p className="text-gray-500 mt-1">
+          <p className="text-gray-500 dark:text-slate-400 mt-1">
             {t('admin.reporting.admin_reporting_sub', "Supervision de l'activité immobilière et financière")}
           </p>
         </div>
         <div className="flex items-center space-x-4">
           <button 
             onClick={refresh}
-            className="flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition"
+            className="flex items-center px-4 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-200 rounded-md hover:bg-gray-50 dark:hover:bg-slate-700 transition"
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             {t('admin.reporting.refresh_btn', 'Actualiser')}

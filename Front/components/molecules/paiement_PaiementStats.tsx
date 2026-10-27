@@ -73,27 +73,27 @@ export function PaiementStats({ paiements, user, userId, stats }: PaiementStatsP
   const formatMontant = (m: number) => m.toLocaleString('fr-FR', { minimumFractionDigits: 0 }) + ' Ar'
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
       
-      <div style={{ background: 'white', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-        <p style={{ margin: 0, fontSize: '14px', color: '#64748b' }}>Total des paiements</p>
-        <p style={{ margin: '10px 0 0', fontSize: '24px', fontWeight: 600, color: '#0f172a' }}>{total}</p>
-        <div style={{ marginTop: '10px', display: 'flex', gap: '10px', fontSize: '13px' }}>
-          <span style={{ color: '#10b981' }}>{countPaye} payés</span>
-          <span style={{ color: '#f59e0b' }}>{countAttente} en attente</span>
-          <span style={{ color: '#ef4444' }}>{countRetard} en retard</span>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-xs transition-colors">
+        <p className="m-0 text-sm font-medium text-slate-500 dark:text-slate-400">Total des paiements</p>
+        <p className="mt-2.5 mb-0 text-2xl font-bold text-slate-900 dark:text-white">{total}</p>
+        <div className="mt-2.5 flex flex-wrap gap-2.5 text-xs font-semibold">
+          <span className="text-emerald-600 dark:text-emerald-400">{countPaye} payés</span>
+          <span className="text-amber-600 dark:text-amber-400">{countAttente} en attente</span>
+          <span className="text-rose-600 dark:text-rose-400">{countRetard} en retard</span>
         </div>
       </div>
 
-      <div style={{ background: 'white', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-        <p style={{ margin: 0, fontSize: '14px', color: '#64748b' }}>Montant total encaissé</p>
-        <p style={{ margin: '10px 0 0', fontSize: '24px', fontWeight: 600, color: '#10b981' }}>{formatMontant(totalEncaisse)}</p>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-xs transition-colors">
+        <p className="m-0 text-sm font-medium text-slate-500 dark:text-slate-400">Montant total encaissé</p>
+        <p className="mt-2.5 mb-0 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatMontant(totalEncaisse)}</p>
       </div>
 
-      <div style={{ background: 'white', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-        <p style={{ margin: 0, fontSize: '14px', color: '#64748b' }}>Montant restant à payer</p>
-        <p style={{ margin: '10px 0 0', fontSize: '24px', fontWeight: 600, color: '#ef4444' }}>{formatMontant(montantRestant)}</p>
-        <p style={{ margin: '5px 0 0', fontSize: '12px', color: '#64748b' }}>(Inclut les retards et paiements partiels)</p>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-xs transition-colors">
+        <p className="m-0 text-sm font-medium text-slate-500 dark:text-slate-400">Montant restant à payer</p>
+        <p className="mt-2.5 mb-0 text-2xl font-bold text-rose-600 dark:text-rose-400">{formatMontant(montantRestant)}</p>
+        <p className="mt-1 mb-0 text-xs text-slate-500 dark:text-slate-400">(Inclut les retards et paiements partiels)</p>
       </div>
       
     </div>

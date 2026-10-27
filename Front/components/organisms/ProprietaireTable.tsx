@@ -22,7 +22,7 @@ export function ProprietaireTable({ proprietaires, loading, onView, onEdit, onDi
 
   return (
     <>
-      <div className="table-wrap" style={{ flex: 1 }}>
+      <div className="table-wrap flex-1">
         <table>
           <thead>
             <tr>
@@ -36,7 +36,7 @@ export function ProprietaireTable({ proprietaires, loading, onView, onEdit, onDi
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '20px' }}>{t("forms.loading", "Chargement...")}</td></tr>
+              <tr><td colSpan={6} className="text-center py-6 text-slate-400 dark:text-slate-500">{t("forms.loading", "Chargement...")}</td></tr>
             ) : paginatedData.length > 0 ? (
               paginatedData.map(p => (
                 <ProprietaireTableRow 
@@ -49,7 +49,7 @@ export function ProprietaireTable({ proprietaires, loading, onView, onEdit, onDi
                 />
               ))
             ) : (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '30px', color: '#8993a3' }}>{t("admin.proprietaires.empty", "Aucun propriétaire trouvé.")}</td></tr>
+              <tr><td colSpan={6} className="text-center py-8 text-slate-400 dark:text-slate-500">{t("admin.proprietaires.empty", "Aucun propriétaire trouvé.")}</td></tr>
             )}
           </tbody>
         </table>

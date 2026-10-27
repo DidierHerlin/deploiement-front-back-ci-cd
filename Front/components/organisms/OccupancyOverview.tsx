@@ -24,14 +24,14 @@ export function OccupancyOverview({ data }: { data: ReportingData }) {
   const tauxOccupation = totalLocatifs > 0 ? ((biensLoues / totalLocatifs) * 100).toFixed(1) : 0;
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-sm border col-span-1 md:col-span-1">
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">
+    <div className="p-6 bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-200 dark:border-slate-800 col-span-1 md:col-span-1">
+      <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
         {t('admin.reporting.occupancy_rate_title', "Taux d'occupation")}
       </h3>
       
       <div className="flex flex-col items-center justify-center mb-4">
-        <div className="text-3xl font-bold text-gray-800">{tauxOccupation}%</div>
-        <div className="text-sm text-gray-500">
+        <div className="text-3xl font-bold text-gray-800 dark:text-white">{tauxOccupation}%</div>
+        <div className="text-sm text-gray-500 dark:text-slate-400">
           {t('admin.reporting.occupancy_sub', 'Biens loués vs parc total louable')}
         </div>
       </div>

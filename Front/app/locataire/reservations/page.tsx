@@ -150,14 +150,14 @@ export default function MesReservationsPage() {
               <p>{selected.bien_type} • {selected.bien_adresse}</p>
               {selected.bien_surface && <p>{t('locataire_pages.reservations.surface', 'Surface')} : {selected.bien_surface} m²</p>}
               {selected.bien_nombre_pieces && <p>{t('locataire_pages.reservations.rooms', 'Pièces')} : {selected.bien_nombre_pieces}</p>}
-              {selected.bien_loyer_mensuel && <p>{t('locataire_pages.reservations.rent', 'Loyer')} : {Number(selected.bien_loyer_mensuel).toLocaleString()} Ar/{t('card.per_month', 'mois')}</p>}
+              {selected.bien_loyer_mensuel && <p>{t('locataire_pages.reservations.rent', 'Loyer')} : {Number(selected.bien_loyer_mensuel).toLocaleString()} Ar{t('card.per_month', 'mois')}</p>}
               {selected.bien_prix && <p>{t('locataire_pages.reservations.price', 'Prix')} : {Number(selected.bien_prix).toLocaleString()} Ar</p>}
             </div>
 
             {selected.commentaire && (
               <>
                 <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted-foreground)', marginBottom: 8 }}>
-                  {t('locataire_pages.reservations.your_comment', '💬 Votre commentaire')}
+                  {t('locataire_pages.reservations.your_comment', ' Votre commentaire')}
                 </h4>
                 <div style={{ background: 'var(--muted)', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 13 }}>
                   {selected.commentaire}

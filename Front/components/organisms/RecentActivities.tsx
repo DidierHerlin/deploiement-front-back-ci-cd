@@ -20,35 +20,35 @@ export function RecentActivities({ data }: { data: AdminDashboardData }) {
     if (iconName === 'FileText') return FileText;
     if (iconName === 'Wallet') return Wallet;
     return Clock;
-  }
+  };
 
   return (
-    <section className="panel" style={{ display: 'flex', flexDirection: 'column' }}>
-      <div className="panel-header" style={{ marginBottom: '16px' }}>
+    <section className="panel flex flex-col">
+      <div className="panel-header mb-4 flex items-start justify-between">
         <div>
-          <h2>{t("dashboard.admin.recent_activity", "Activité Récente")}</h2>
-          <p>{t("dashboard.admin.recent_activity_sub", "Derniers événements sur la plateforme")}</p>
+          <h2 className="text-base font-bold text-slate-900 dark:text-white">{t("dashboard.admin.recent_activity", "Activités récentes")}</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{t("dashboard.admin.recent_activity_sub", "Derniers événements sur la plateforme")}</p>
         </div>
       </div>
       
       {(!recentEvents || recentEvents.length === 0) ? (
-        <div style={{ padding: '2rem 0', textAlign: 'center', color: 'var(--text-secondary)' }}>
-          <Clock size={32} style={{ opacity: 0.2, margin: '0 auto 10px' }} />
-          <p>{t("dashboard.admin.no_recent_activity", "Aucune activité récente.")}</p>
+        <div className="py-8 text-center text-slate-400 dark:text-slate-500">
+          <Clock size={32} className="opacity-20 mx-auto mb-2.5" />
+          <p className="text-xs">{t("dashboard.admin.no_recent_activity", "Aucune activité récente.")}</p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div className="flex flex-col gap-4">
           {recentEvents.map(ev => {
             const Icon = getIcon(ev.icon);
             return (
-              <div key={ev.id} style={{ display: 'flex', gap: '12px' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: `var(--${ev.color}-light, #f1f5f9)`, color: `var(--${ev.color}, #64748b)`, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+              <div key={ev.id} className="flex gap-3">
+                <div className="w-8 h-8 rounded-lg grid place-items-center shrink-0 bg-amber-50 text-amber-600 border border-amber-200/60 dark:bg-amber-500/10 dark:text-amber-400 dark:border dark:border-amber-500/20">
                   <Icon size={16} />
                 </div>
                 <div>
-                  <strong style={{ fontSize: '12px', color: 'var(--navy)', display: 'block' }}>{ev.title}</strong>
-                  <p style={{ fontSize: '11px', color: '#64748b', margin: '2px 0 4px' }}>{ev.text}</p>
-                  <span style={{ fontSize: '10px', color: '#a0a8b5' }}>{getTimeAgo(ev.date)}</span>
+                  <strong className="text-xs font-semibold text-slate-900 dark:text-slate-100 block">{ev.title}</strong>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 my-0.5">{ev.text}</p>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">{getTimeAgo(ev.date)}</span>
                 </div>
               </div>
             );

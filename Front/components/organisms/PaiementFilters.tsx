@@ -30,10 +30,10 @@ export function PaiementFilters({
   }
 
   return (
-    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b' }}>
+    <div className="flex gap-3 items-center flex-wrap">
+      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
         <Filter size={16} />
-        <span style={{ fontSize: '14px', fontWeight: 500 }}>{t("forms.filter", "Filtres :")}</span>
+        <span className="text-sm font-medium">{t("forms.filter", "Filtres :")}</span>
       </div>
 
       {setOnlyMobileMoneyPending && (
@@ -47,34 +47,22 @@ export function PaiementFilters({
               setModeFilter('Tous');
             }
           }}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '6px 12px',
-            borderRadius: '6px',
-            fontSize: '12px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            backgroundColor: onlyMobileMoneyPending ? '#059669' : '#ecfdf5',
-            color: onlyMobileMoneyPending ? '#ffffff' : '#047857',
-            border: `1px solid ${onlyMobileMoneyPending ? '#059669' : '#a7f3d0'}`,
-            transition: 'all 0.15s ease',
-          }}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer border transition-all ${
+            onlyMobileMoneyPending
+              ? 'bg-emerald-600 border-emerald-600 text-white dark:bg-emerald-600 dark:border-emerald-500'
+              : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/60 dark:hover:bg-emerald-900/40'
+          }`}
           title={t("admin.paiements.mobile_money_pending_filter_title", "Afficher uniquement les demandes Mobile Money soumises par les locataires en attente de validation")}
         >
           <Smartphone size={13} />
           <span>{t("admin.paiements.mobile_money_to_validate", "Mobile Money à valider")}</span>
           {mobileMoneyPendingCount !== undefined && (
             <span
-              style={{
-                backgroundColor: onlyMobileMoneyPending ? 'rgba(255,255,255,0.25)' : '#10b981',
-                color: '#ffffff',
-                borderRadius: '999px',
-                padding: '1px 6px',
-                fontSize: '11px',
-                fontWeight: 700,
-              }}
+              className={
+                onlyMobileMoneyPending
+                  ? "bg-white/25 text-white rounded-full px-1.5 py-0.2 text-[11px] font-bold"
+                  : "bg-emerald-600 dark:bg-emerald-500 text-white rounded-full px-1.5 py-0.2 text-[11px] font-bold"
+              }
             >
               {mobileMoneyPendingCount}
             </span>
@@ -83,13 +71,12 @@ export function PaiementFilters({
       )}
 
       <select 
-        className="filter-select" 
+        className="filter-select px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-[13px] font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer" 
         value={onlyMobileMoneyPending ? 'EN_ATTENTE' : statutFilter} 
         onChange={(e) => {
           if (setOnlyMobileMoneyPending) setOnlyMobileMoneyPending(false);
           setStatutFilter(e.target.value);
         }}
-        style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px' }}
       >
         <option value="Tous">{t("admin.paiements.filter_all_status", "Tous les statuts")}</option>
         <option value="EN_ATTENTE">{t("dashboard.common.status_en_attente", "En attente")}</option>
@@ -100,13 +87,12 @@ export function PaiementFilters({
       </select>
 
       <select 
-        className="filter-select" 
+        className="filter-select px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-[13px] font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer" 
         value={onlyMobileMoneyPending ? 'Tous' : modeFilter} 
         onChange={(e) => {
           if (setOnlyMobileMoneyPending) setOnlyMobileMoneyPending(false);
           setModeFilter(e.target.value);
         }}
-        style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px' }}
       >
         <option value="Tous">{t("admin.paiements.filter_all_modes", "Tous les modes")}</option>
         <option value="MVOLA">Mvola</option>
@@ -120,11 +106,7 @@ export function PaiementFilters({
       {isFiltered && (
         <button 
           onClick={resetFilters}
-          style={{ 
-            display: 'flex', alignItems: 'center', gap: '4px', 
-            background: 'none', border: 'none', color: '#ef4444', 
-            fontSize: '13px', cursor: 'pointer', padding: '8px'
-          }}
+          className="inline-flex items-center gap-1 bg-transparent border-0 text-rose-600 dark:text-rose-400 text-xs font-semibold cursor-pointer px-2 py-1.5 hover:underline"
         >
           <X size={14} /> {t("forms.reset", "Réinitialiser")}
         </button>

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { deconnecter } from '@/lib/auth'
 import { useTranslation, LanguageSwitcher } from '@/lib/i18n'
+import { ThemeToggle } from '@/components/molecules/ThemeToggle'
 import '@/app/admin/admin.css' // We use the admin CSS because the user wants EXACTLY the same styles
 
 export type NavItem = {
@@ -92,6 +93,10 @@ export default function Navbar({
       case '/admin/reporting':
       case '/dashboard/reporting':
         return t("dashboard.nav.reporting", item.label)
+      case '/admin/parametres':
+      case '/agent/parametres':
+      case '/dashboard/parametres':
+        return t("dashboard.nav.settings", item.label)
       case '/agent/profil':
         return t("dashboard.nav.profile", item.label)
       default:
@@ -100,7 +105,7 @@ export default function Navbar({
   }
 
   const currentNav = navItems.find(item => item.href === pathname || (item.href !== '#' && pathname.startsWith(item.href)))
-  const activeLabel = currentNav ? getNavLabel(currentNav) : t("dashboard.nav.overview", "Vue d’ensemble")
+  const activeLabel = currentNav ? getNavLabel(currentNav) : (pathname === '/admin/parametres' ? t("dashboard.nav.settings", "Paramètres") : t("dashboard.nav.overview", "Vue d’ensemble"))
 
   return (
     <div className="app-shell">
@@ -130,7 +135,6 @@ export default function Navbar({
         </nav>
         
         <div className="sidebar-bottom">
-          <button><Settings size={18} />{t("dashboard.nav.settings", "Paramètres")}</button>
           <button onClick={deconnecter} style={{ color: '#ef4444' }}><LogOut size={18} />{t("dashboard.nav.logout", "Déconnexion")}</button>
           <div className="account">
             <div className="user-avatar">{userInitials}</div>
@@ -155,6 +159,7 @@ export default function Navbar({
               <input aria-label="Rechercher" placeholder={t("dashboard.topbar.search_placeholder", "Rechercher...")} value={query} onChange={(event) => setQuery(event.target.value)} />
             </div>
             
+            <ThemeToggle />
             <LanguageSwitcher />
 
             <div className="notification-wrap" style={{ position: 'relative' }}>
