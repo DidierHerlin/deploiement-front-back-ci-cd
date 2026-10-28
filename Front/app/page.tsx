@@ -22,14 +22,11 @@ import {
   UserPlus,
   X,
   RefreshCw,
-  Sparkles,
   Heart,
   Home,
   ShieldCheck,
   Compass,
-  Smile,
   Key,
-  CalendarCheck,
   Tag,
   Menu,
   FileText,
@@ -223,45 +220,45 @@ export default function HomePage() {
           1. HEADER SIGNATURE IMMOCONNECT AVEC SÉLECTEUR DE THÈME & LANGUE (FR / EN)
       ========================================================================= */}
       <header className="sticky top-0 z-40 bg-[#FAF7F2]/90 dark:bg-slate-900/80 backdrop-blur-xl border-b border-[#EDE6DC] dark:border-slate-800 transition-all shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-3 sm:gap-4">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4 lg:gap-6">
           {/* Logo signature & Slogan */}
           <Link href="/" className="flex items-center gap-3.5 group shrink-0" aria-label="Accueil ImmoConnect">
-            <div className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25 group-hover:scale-105 group-hover:rotate-1 transition-all duration-300">
+            <div className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25 group-hover:scale-105 group-hover:rotate-1 transition-all duration-300 shrink-0">
               <Home className="size-5.5 stroke-[2.2]" aria-hidden="true" />
             </div>
-            <div className="flex flex-col">
-              <span className="font-sans text-xl font-extrabold tracking-tight text-stone-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+            <div className="flex flex-col shrink-0">
+              <span className="font-sans text-xl font-extrabold tracking-tight text-stone-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors whitespace-nowrap">
                 ImmoConnect
               </span>
-              <span className="text-[11px] text-stone-500 dark:text-slate-400 font-medium tracking-wide">
+              <span className="text-[11px] text-stone-500 dark:text-slate-400 font-medium tracking-wide whitespace-nowrap">
                 {t("nav.brand_tagline")}
               </span>
             </div>
           </Link>
 
           {/* Navigation centrale (Desktop) */}
-          <nav className="hidden md:flex items-center gap-1.5 lg:gap-2">
+          <nav className="hidden md:flex items-center gap-1.5 lg:gap-2.5 shrink-0">
             {/* Bouton raccourci Catalogue */}
             <button
               onClick={scrollToCatalog}
-              className="px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold text-stone-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white hover:bg-stone-100/70 dark:hover:bg-slate-800/70 transition-colors cursor-pointer"
+              className="inline-flex items-center whitespace-nowrap px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold text-stone-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white hover:bg-stone-100/70 dark:hover:bg-slate-800/70 transition-colors cursor-pointer shrink-0"
             >
-              {t("nav.catalog")}
+              <span className="whitespace-nowrap">{t("nav.catalog")}</span>
             </button>
 
             {/* Menu déroulant Fonctionnalités par profil */}
-            <div className="relative" ref={featuresMenuRef}>
+            <div className="relative shrink-0" ref={featuresMenuRef}>
               <button
                 onClick={() => setShowFeaturesMenu((prev) => !prev)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors cursor-pointer ${
+                className={`inline-flex items-center whitespace-nowrap gap-1.5 px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-colors cursor-pointer shrink-0 ${
                   showFeaturesMenu
                     ? "bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400"
                     : "text-stone-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white hover:bg-stone-100/70 dark:hover:bg-slate-800/70"
                 }`}
               >
-                <span>{t("nav.features")}</span>
+                <span className="whitespace-nowrap">{t("nav.features")}</span>
                 <ChevronDown
-                  className={`size-4 transition-transform duration-200 ${
+                  className={`size-4 shrink-0 transition-transform duration-200 ${
                     showFeaturesMenu ? "rotate-180 text-blue-600 dark:text-blue-400" : "text-stone-400 dark:text-slate-500"
                   }`}
                 />
@@ -342,56 +339,59 @@ export default function HomePage() {
             {/* Lien Conditions d'utilisation */}
             <button
               onClick={() => setShowCguModal(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold text-stone-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white hover:bg-stone-100/70 dark:hover:bg-slate-800/70 transition-colors cursor-pointer"
+              className="inline-flex items-center whitespace-nowrap gap-1.5 px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold text-stone-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white hover:bg-stone-100/70 dark:hover:bg-slate-800/70 transition-colors cursor-pointer shrink-0"
             >
-              <FileText className="size-4 text-stone-400 dark:text-slate-400" />
-              <span>{t("nav.terms")}</span>
+              <FileText className="size-4 shrink-0 text-stone-400 dark:text-slate-400" />
+              <span className="whitespace-nowrap">{t("nav.terms")}</span>
             </button>
           </nav>
 
           {/* Actions utilisateurs & Sélecteurs de thème & langue */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Basculeur de thème clair / sombre */}
-            <ThemeToggle />
+            <div className="shrink-0">
+              <ThemeToggle />
+            </div>
 
             {/* Sélecteur de langue discret FR / EN */}
-            <LanguageSwitcher />
+            <div className="shrink-0">
+              <LanguageSwitcher />
+            </div>
 
             {/* Boutons d'accès auth */}
             {currentUser ? (
-              <div className="hidden sm:flex items-center gap-3">
-                <div className="hidden lg:flex flex-col text-right">
-                  <span className="text-xs font-bold text-stone-800 dark:text-slate-200">
+              <div className="hidden sm:flex items-center gap-3 shrink-0">
+                <div className="hidden lg:flex flex-col text-right shrink-0">
+                  <span className="text-xs font-bold text-stone-800 dark:text-slate-200 whitespace-nowrap">
                     {t("nav.hello")}, {currentUser.nom || t("nav.guest")}
                   </span>
-                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold tracking-wider uppercase">
+                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold tracking-wider uppercase whitespace-nowrap">
                     Espace {currentUser.role}
                   </span>
                 </div>
                 <Link
                   href={currentUser.dashboardUrl}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold shadow-sm shadow-blue-600/20 transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
+                  className="inline-flex items-center whitespace-nowrap gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold shadow-sm shadow-blue-600/20 transition-all duration-200 hover:shadow-md hover:scale-[1.02] shrink-0"
                 >
-                  <LayoutDashboard className="size-4" />
-                  <span>{t("nav.my_space")}</span>
+                  <LayoutDashboard className="size-4 shrink-0" />
+                  <span className="whitespace-nowrap">{t("nav.my_space")}</span>
                 </Link>
               </div>
             ) : (
-              <div className="hidden sm:flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2 shrink-0">
                 <Link
                   href="/login"
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-stone-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white hover:bg-stone-100/80 dark:hover:bg-slate-800 transition-colors"
+                  className="inline-flex items-center whitespace-nowrap gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-stone-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white hover:bg-stone-100/80 dark:hover:bg-slate-800 transition-colors shrink-0"
                 >
-                  <LogIn className="size-4 text-stone-500 dark:text-slate-400" />
-                  <span>{t("nav.sign_in")}</span>
+                  <LogIn className="size-4 shrink-0 text-stone-500 dark:text-slate-400" />
+                  <span className="whitespace-nowrap">{t("nav.sign_in")}</span>
                 </Link>
                 <Link
                   href="/inscription"
-                  className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-blue-600/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                  className="inline-flex items-center whitespace-nowrap gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-blue-600/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shrink-0"
                 >
-                  <UserPlus className="size-4" />
-                  <span className="hidden lg:inline">{t("nav.create_account")}</span>
-                  <span className="lg:hidden">{t("nav.sign_up_short")}</span>
+                  <UserPlus className="size-4 shrink-0" />
+                  <span className="whitespace-nowrap">{t("nav.create_account")}</span>
                 </Link>
               </div>
             )}
@@ -400,7 +400,7 @@ export default function HomePage() {
             <button
               onClick={() => setMobileNavOpen((prev) => !prev)}
               aria-label="Menu"
-              className="md:hidden flex size-10 items-center justify-center rounded-xl border border-stone-200 dark:border-slate-800 text-stone-700 dark:text-slate-300 hover:bg-stone-100/80 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="md:hidden flex size-10 items-center justify-center rounded-xl border border-stone-200 dark:border-slate-800 text-stone-700 dark:text-slate-300 hover:bg-stone-100/80 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
             >
               {mobileNavOpen ? <X className="size-5" /> : <Menu className="size-5" />}
             </button>
@@ -494,78 +494,59 @@ export default function HomePage() {
       </header>
 
       {/* =========================================================================
-          2. SECTION D'ACCUEIL & RECHERCHE (UX EMPATHIQUE & CENTRÉE SUR LE FOYER)
+          2. SECTION D'ACCUEIL & RECHERCHE (STYLE ÉPURÉ & PROFESSIONNEL)
       ========================================================================= */}
-      <section className="relative overflow-hidden pt-14 pb-12 px-4 sm:px-6 lg:px-8 border-b border-[#EDE6DC] dark:border-slate-800 bg-gradient-to-b from-blue-50/40 via-[#FAF7F2] to-[#FAF7F2] dark:from-slate-900/60 dark:via-slate-950 dark:to-slate-950">
-        {/* Halos doux en arrière-plan */}
-        <div className="absolute top-8 left-1/2 -translate-x-1/2 w-[760px] h-[360px] bg-gradient-to-r from-blue-200/20 via-indigo-100/25 to-amber-100/20 dark:from-blue-950/30 dark:via-indigo-950/30 dark:to-slate-900/20 blur-3xl -z-10 rounded-full pointer-events-none" />
+      <section className="relative overflow-hidden pt-12 pb-10 px-4 sm:px-6 lg:px-8 border-b border-[#EDE6DC] dark:border-slate-800 bg-gradient-to-b from-blue-50/30 via-[#FAF7F2] to-[#FAF7F2] dark:from-slate-900/50 dark:via-slate-950 dark:to-slate-950">
+        {/* Halo doux en arrière-plan */}
+        <div className="absolute top-8 left-1/2 -translate-x-1/2 w-[760px] h-[360px] bg-gradient-to-r from-blue-100/20 via-slate-100/25 to-amber-50/20 dark:from-blue-950/20 dark:via-slate-900/20 dark:to-slate-900/10 blur-3xl -z-10 rounded-full pointer-events-none" />
 
-        <div className="max-w-4xl mx-auto text-center mb-8 sm:mb-10">
-          {/* Badge doux rassurant */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white dark:bg-slate-900 text-blue-800 dark:text-blue-300 text-xs font-semibold shadow-xs border border-blue-200/80 dark:border-blue-900/50 mb-5 animate-in fade-in duration-500">
-            <Sparkles className="size-3.5 text-blue-600 dark:text-blue-400" />
-            <span>{t("hero.badge")}</span>
-          </div>
-
-          {/* Titre orienté projet de vie */}
+        <div className="max-w-4xl mx-auto text-center mb-8">
+          {/* Titre simple, direct et chaleureux */}
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-stone-900 dark:text-white tracking-tight leading-[1.15]">
             {t("hero.title_start")}{" "}
-            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 dark:from-blue-400 dark:via-indigo-400 dark:to-sky-400 bg-clip-text text-transparent">
+            <span className="text-blue-600 dark:text-blue-400">
               {t("hero.title_highlight")}
-            </span>
+            </span>{" "}
+            {t("hero.title_end")}
           </h1>
 
-          {/* Sous-titre bienveillant */}
+          {/* Sous-titre sobre et direct */}
           <p className="mt-4 text-base sm:text-lg text-stone-600 dark:text-slate-400 max-w-2xl mx-auto font-normal leading-relaxed">
             {t("hero.subtitle")}
           </p>
-
-          {/* Micro-textes rassurants & badges de confiance */}
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-stone-600 dark:text-slate-400 font-medium">
-            <span className="inline-flex items-center gap-1.5 bg-white dark:bg-slate-900 px-3.5 py-1.5 rounded-full border border-[#EDE6DC] dark:border-slate-800 shadow-2xs text-stone-700 dark:text-slate-300">
-              <ShieldCheck className="size-4 text-emerald-600 dark:text-emerald-400" />
-              {t("hero.trust_verified")}
-            </span>
-            <span className="hidden sm:inline text-stone-300 dark:text-slate-700">•</span>
-            <span className="inline-flex items-center gap-1.5 bg-white dark:bg-slate-900 px-3.5 py-1.5 rounded-full border border-[#EDE6DC] dark:border-slate-800 shadow-2xs text-stone-700 dark:text-slate-300">
-              <CalendarCheck className="size-4 text-blue-600 dark:text-blue-400" />
-              {t("hero.trust_realtime")}
-            </span>
-            <span className="hidden sm:inline text-stone-300 dark:text-slate-700">•</span>
-            <span className="inline-flex items-center gap-1.5 bg-white dark:bg-slate-900 px-3.5 py-1.5 rounded-full border border-[#EDE6DC] dark:border-slate-800 shadow-2xs text-stone-700 dark:text-slate-300">
-              <Smile className="size-4 text-amber-600 dark:text-amber-400" />
-              {t("hero.trust_support")}
-            </span>
-          </div>
         </div>
 
         {/* =========================================================================
-            BARRE DE RECHERCHE INTUITIVE & FILTRES DYNAMIQUES
+            BARRE DE RECHERCHE INTUITIVE & ÉPURÉE
         ========================================================================= */}
-        <div className="max-w-4xl mx-auto bg-white dark:bg-slate-900 rounded-[2rem] shadow-[0_20px_50px_-15px_rgba(37,99,235,0.06)] dark:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.5)] border border-[#EDE6DC] dark:border-slate-800 p-3 sm:p-5 transition-all">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-center">
+        <div className="max-w-4xl mx-auto bg-white dark:bg-slate-900 rounded-[2rem] shadow-[0_20px_50px_-15px_rgba(37,99,235,0.06)] dark:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.5)] border border-[#EDE6DC] dark:border-slate-800 p-3 sm:p-4 transition-all">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
             {/* Champ de recherche texte */}
-            <div className="md:col-span-5 relative">
+            <div className="md:col-span-4 relative">
               <Search className="size-4 absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 dark:text-slate-500" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") scrollToCatalog()
+                }}
                 placeholder={t("search.placeholder")}
                 className="w-full pl-11 pr-9 py-3 bg-[#FAF7F2] dark:bg-slate-950 hover:bg-white dark:hover:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 rounded-2xl border border-stone-200/90 dark:border-slate-800 text-sm text-stone-900 dark:text-slate-100 placeholder:text-stone-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-3 focus:ring-blue-500/20 focus:border-blue-600 transition-all font-medium"
               />
               {searchTerm && (
                 <button
+                  type="button"
                   onClick={() => setSearchTerm("")}
                   title={t("search.clear_search")}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 dark:text-slate-500 hover:text-stone-700 dark:hover:text-slate-200 transition-colors"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 dark:text-slate-500 hover:text-stone-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
                 >
                   <X className="size-4" />
                 </button>
               )}
             </div>
 
-            {/* Sélecteur Mode de vie (Location vs Achat) */}
+            {/* Sélecteur Mode de transaction (Location & Vente) */}
             <div className="md:col-span-3">
               <select
                 value={modeFilter}
@@ -578,7 +559,7 @@ export default function HomePage() {
               </select>
             </div>
 
-            {/* Sélecteur Type de lieu */}
+            {/* Sélecteur Type de bien */}
             <div className="md:col-span-3">
               <select
                 value={typeFilter}
@@ -593,49 +574,50 @@ export default function HomePage() {
               </select>
             </div>
 
-            {/* Réinitialisation rapide */}
-            <div className="md:col-span-1 flex justify-center">
+            {/* Bouton d'action Rechercher & réinitialisation discrète */}
+            <div className="md:col-span-2 flex items-center gap-1.5">
               <button
-                onClick={resetFilters}
-                title={t("search.reset_title")}
-                disabled={!hasActiveFilters}
-                className={`p-3 rounded-2xl border transition-all duration-200 flex items-center justify-center w-full md:w-auto ${
-                  hasActiveFilters
-                    ? "bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-900/60 hover:bg-blue-100 dark:hover:bg-blue-900/60"
-                    : "bg-[#FAF7F2] dark:bg-slate-950 text-stone-300 dark:text-slate-700 border-stone-200 dark:border-slate-800 cursor-not-allowed"
-                }`}
+                type="button"
+                onClick={scrollToCatalog}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-md shadow-blue-600/20 hover:shadow-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] cursor-pointer whitespace-nowrap"
               >
-                <RefreshCw className="size-4" />
+                <Search className="size-4 shrink-0" />
+                <span>{t("search.btn_search", "Rechercher")}</span>
               </button>
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  title={t("search.reset_title", "Réinitialiser les critères")}
+                  className="p-3 rounded-2xl border border-stone-200/90 dark:border-slate-800 bg-[#FAF7F2] dark:bg-slate-950 text-stone-400 dark:text-slate-500 hover:text-stone-700 dark:hover:text-slate-200 hover:bg-stone-100 dark:hover:bg-slate-900 transition-all cursor-pointer shrink-0"
+                >
+                  <RefreshCw className="size-4" />
+                </button>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Pilules de filtres thématiques & Compteur rassurant */}
-        <div className="max-w-4xl mx-auto mt-5 flex flex-wrap items-center justify-between gap-3 text-xs">
+        {/* Filtres rapides sobres & Compteur de biens disponibles */}
+        <div className="max-w-4xl mx-auto mt-4 sm:mt-5 flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-stone-500 dark:text-slate-400 font-semibold mr-1 flex items-center gap-1.5">
-              <Compass className="size-3.5 text-blue-600 dark:text-blue-400" />
-              {t("search.want_to")}
-            </span>
             {[
-              { id: "TOUS", label: t("search.pill_all"), icon: Sparkles },
-              { id: "LOCATION", label: t("search.pill_rent"), icon: Key },
-              { id: "VENTE", label: t("search.pill_buy"), icon: Home },
+              { id: "TOUS", label: t("search.pill_all") },
+              { id: "LOCATION", label: t("search.pill_rent") },
+              { id: "VENTE", label: t("search.pill_buy") },
             ].map((m) => {
-              const Icon = m.icon
               const active = modeFilter === m.id
               return (
                 <button
                   key={m.id}
+                  type="button"
                   onClick={() => setModeFilter(m.id)}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-semibold transition-all duration-200 cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-semibold transition-all duration-200 cursor-pointer ${
                     active
                       ? "bg-blue-600 text-white shadow-sm shadow-blue-600/20"
                       : "bg-white dark:bg-slate-900 text-stone-600 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-400 hover:bg-stone-100/80 dark:hover:bg-slate-800 border border-stone-200/80 dark:border-slate-800"
                   }`}
                 >
-                  <Icon className={`size-3.5 ${active ? "text-blue-200" : "text-stone-400 dark:text-slate-500"}`} />
                   <span>{m.label}</span>
                 </button>
               )
@@ -649,7 +631,7 @@ export default function HomePage() {
                 {t("search.discovering")}
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 text-stone-700 dark:text-slate-300 bg-white dark:bg-slate-900 px-3.5 py-1 rounded-full border border-[#EDE6DC] dark:border-slate-800 shadow-2xs">
+              <span className="inline-flex items-center gap-1.5 text-stone-700 dark:text-slate-300 bg-white dark:bg-slate-900 px-3.5 py-1.5 rounded-full border border-[#EDE6DC] dark:border-slate-800 shadow-2xs">
                 <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
                 <strong>{filteredBiens.length}</strong>{" "}
                 {filteredBiens.length > 1 ? t("search.available_plural") : t("search.available_singular")}

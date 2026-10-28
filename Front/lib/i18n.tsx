@@ -177,11 +177,11 @@ export function LanguageSwitcher({ className = "", variant = "default" }: Langua
         onClick={() => setIsOpen((prev) => !prev)}
         type="button"
         title="Changer de langue / Change language"
-        className={`flex items-center gap-1.5 transition-all cursor-pointer ${buttonStyle}`}
+        className={`flex items-center whitespace-nowrap shrink-0 gap-1.5 transition-all cursor-pointer ${buttonStyle}`}
       >
-        <span className="text-sm leading-none">{current.flag}</span>
-        <span className="tracking-wide uppercase font-bold text-[11px]">{current.short}</span>
-        <ChevronDown className={`size-3 opacity-60 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+        <span className="text-sm leading-none shrink-0">{current.flag}</span>
+        <span className="tracking-wide uppercase font-bold text-[11px] whitespace-nowrap">{current.short}</span>
+        <ChevronDown className={`size-3 shrink-0 opacity-60 transition-transform ${isOpen ? "rotate-180" : ""}`} />
       </button>
 
       {isOpen && (

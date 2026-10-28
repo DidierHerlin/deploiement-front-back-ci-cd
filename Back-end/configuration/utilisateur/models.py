@@ -8,18 +8,12 @@ from django.db import models
 
 # FONCTION POUR LE CHEMIN DE LA PHOTO
 def photo_profil_upload_path(instance, filename):
-    """
-    Génère un chemin personnalisé pour les photos de profil.
-    """
     ext = filename.split(".")[-1]
     filename = f"photo_{instance.pk}.{ext}"
     return os.path.join("profils", f"utilisateur_{instance.pk}", filename)
 
 # Gestion utilisateurs
 class UtilisateurManager(BaseUserManager):
-    """
-    Manager personnalisé permettant l'authentification par email
-    """
     ROLES_AUTO_ACTIFS = ["LOCATAIRE", "ADMIN"]
 
     def create_user(self, email, password=None, **extra_fields):
