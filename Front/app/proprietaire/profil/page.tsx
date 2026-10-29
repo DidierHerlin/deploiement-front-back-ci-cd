@@ -14,7 +14,7 @@ export default function ProprietaireProfilPage() {
       <div className="w-full max-w-4xl mb-6 flex justify-start">
         <button
           onClick={() => router.back()}
-          className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900 bg-white/50 px-4 py-2 rounded-lg backdrop-blur-sm transition cursor-pointer"
+          className="flex items-center text-sm font-medium bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 px-4 py-2 rounded-xl transition-colors cursor-pointer shadow-sm"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           {t("profile.back_to_dashboard", "Retour au tableau de bord")}

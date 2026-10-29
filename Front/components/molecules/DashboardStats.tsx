@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react';
-import { CircleDollarSign, CalendarDays, WalletCards, FileText, Loader2, AlertCircle } from 'lucide-react';
+import { CircleDollarSign, CalendarDays, WalletCards, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { Contrat, Paiement } from '@/lib/api';
 import { StatCard } from "@/components/molecules/locataire_StatCard";
 import { useTranslation } from '@/lib/i18n';
@@ -41,12 +41,12 @@ export function DashboardStats({ paiements, contratActif, loading, error }: Dash
   }
 
   // 1. Loyer mensuel
-  const loyerMensuel = contratActif ? formatMontant(contratActif.loyer) : 'N/A';
+  const loyerMensuel = contratActif ? formatMontant(contratActif.loyer) : '—';
   
   // 2. Prochaine échéance
   const paiementsEnAttente = paiements.filter(p => p.statut === 'EN_ATTENTE' || p.statut === 'EN_RETARD');
-  let prochaineEcheanceDate = lang === 'en' ? 'None' : 'Aucune';
-  let prochaineEcheanceDetail = lang === 'en' ? 'No future due date' : 'Aucune échéance future';
+  let prochaineEcheanceDate = '—';
+  let prochaineEcheanceDetail = lang === 'en' ? 'Nothing due right now' : 'Rien à régler pour le moment';
   
   if (paiementsEnAttente.length > 0) {
     paiementsEnAttente.sort((a, b) => new Date(a.date_echeance).getTime() - new Date(b.date_echeance).getTime());
@@ -83,12 +83,19 @@ export function DashboardStats({ paiements, contratActif, loading, error }: Dash
   const depotGarantie = contratActif && contratActif.depot_garantie ? parseFloat(contratActif.depot_garantie) : 0;
   const totalVerse = totalLoyersVerses + (isNaN(depotGarantie) ? 0 : depotGarantie);
   
-  let detailVerse = lang === 'en' ? `${paiementsPayes.length} rents paid` : `${paiementsPayes.length} loyers réglés`;
+  let detailVerse = '';
+  if (paiementsPayes.length === 0) {
+    detailVerse = lang === 'en' ? 'No rent paid' : 'Aucun loyer réglé';
+  } else if (paiementsPayes.length === 1) {
+    detailVerse = lang === 'en' ? '1 rent paid' : '1 loyer réglé';
+  } else {
+    detailVerse = lang === 'en' ? `${paiementsPayes.length} rents paid` : `${paiementsPayes.length} loyers réglés`;
+  }
   if (depotGarantie > 0) {
     detailVerse += ` (+ ${lang === 'en' ? 'Deposit' : 'Dépôt'} ${formatMontant(depotGarantie)})`;
   }
 
-  // 4. Retards
+  // 4. Statut des paiements (Retards)
   let retardsRG15Count = 0;
   const today = new Date();
   today.setHours(0,0,0,0);
@@ -109,7 +116,7 @@ export function DashboardStats({ paiements, contratActif, loading, error }: Dash
         icon={CircleDollarSign} 
         label={t('dashboard.locataire.monthly_rent', 'Loyer mensuel')} 
         value={loyerMensuel} 
-        detail={contratActif ? (lang === 'en' ? 'From active lease' : 'Selon contrat actif') : (lang === 'en' ? 'No active lease' : 'Aucun contrat')} 
+        detail={contratActif ? (lang === 'en' ? 'From active lease' : 'Selon contrat actif') : (lang === 'en' ? 'No active lease' : 'Aucun bail actif')} 
         tone="blue" 
       />
       <StatCard 
@@ -127,11 +134,11 @@ export function DashboardStats({ paiements, contratActif, loading, error }: Dash
         tone="green" 
       />
       <StatCard 
-        icon={FileText} 
-        label={t('dashboard.locataire.overdue', 'Retards')} 
-        value={retardsRG15Count.toString()} 
+        icon={retardsRG15Count > 0 ? AlertCircle : CheckCircle2} 
+        label={t('dashboard.locataire.payment_status', 'Statut des paiements')} 
+        value={retardsRG15Count === 0 ? (lang === 'en' ? 'Up to date' : 'À jour') : retardsRG15Count.toString()} 
         detail={retardsRG15Count > 0 ? t('dashboard.locataire.overdue_detected', 'Paiements en retard') : t('dashboard.locataire.no_overdue', 'Aucun retard constaté')} 
-        tone={retardsRG15Count > 0 ? "orange" : "purple"} 
+        tone={retardsRG15Count > 0 ? "orange" : "green"} 
       />
     </section>
   );

@@ -169,25 +169,25 @@ export default function Navbar({
               </button>
               
               {notificationsOpen && (
-                <div className="notification-popover" style={{ position: 'absolute', top: '100%', right: 0, width: 320, background: 'white', borderRadius: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.1)', zIndex: 50, overflow: 'hidden', border: '1px solid var(--border)', marginTop: 8 }}>
-                  <div className="popover-head" style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
-                    <strong style={{ fontSize: 14, color: 'var(--foreground)' }}>{t("dashboard.topbar.notifications", "Alertes")}</strong>
-                    <span style={{ fontSize: 12, color: 'var(--muted-foreground)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <div className="notification-popover bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl overflow-hidden" style={{ position: 'absolute', top: '100%', right: 0, width: 320, zIndex: 50, marginTop: 8, textAlign: 'left' }}>
+                  <div className="popover-head px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60 flex justify-between items-center">
+                    <strong className="text-sm font-bold text-slate-900 dark:text-slate-100">{t("dashboard.topbar.notifications", "Alertes")}</strong>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
                       <CheckCheck size={14} /> {notifications.length} {t("dashboard.topbar.total_alerts", "au total")}
                     </span>
                   </div>
                   <div style={{ maxHeight: 380, overflowY: 'auto' }}>
                     {notifications.length === 0 ? (
-                      <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--muted-foreground)', fontSize: 13 }}>{t("dashboard.topbar.no_alerts", "Aucune nouvelle")}</div>
+                      <div className="p-6 text-center text-slate-500 dark:text-slate-400 text-xs">{t("dashboard.topbar.no_alerts", "Aucune nouvelle")}</div>
                     ) : (
                       notifications.map(n => (
-                        <div key={n.id} style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', background: n.lu ? 'white' : '#f0f9ff' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-                            <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--foreground)', margin: 0 }}>{n.titre}</p>
-                            {!n.lu && <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary)', flexShrink: 0, marginTop: 4 }} />}
+                        <div key={n.id} className={`p-3 border-b border-slate-100 dark:border-slate-800 transition-colors ${n.lu ? 'bg-white dark:bg-slate-900' : 'bg-blue-50/40 dark:bg-blue-950/20'}`}>
+                          <div className="flex justify-between items-start mb-1">
+                            <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 m-0">{n.titre}</p>
+                            {!n.lu && <div className="w-1.5 h-1.5 rounded-full bg-blue-600 flex-shrink-0 mt-1" />}
                           </div>
-                          <p style={{ fontSize: 12, color: 'var(--muted-foreground)', margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.4 }}>{n.message}</p>
-                          <small style={{ fontSize: 11, color: '#94a3b8', display: 'block', marginTop: 6 }}>{new Date(n.date_creation).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</small>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 m-0 line-clamp-2 leading-relaxed">{n.message}</p>
+                          <small className="text-[11px] text-slate-400 dark:text-slate-500 block mt-1.5">{new Date(n.date_creation).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</small>
                         </div>
                       ))
                     )}
@@ -195,9 +195,10 @@ export default function Navbar({
                 </div>
               )}
             </div>
-            <div className="top-user">
+            <div className="top-user flex items-center gap-2">
               <div className="user-avatar">{userInitials}</div>
-              <ChevronDown size={15} />
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{userName}</span>
+              <ChevronDown size={15} className="text-slate-400 dark:text-slate-500" />
             </div>
           </div>
         </header>

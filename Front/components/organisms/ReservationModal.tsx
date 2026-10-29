@@ -36,26 +36,34 @@ export default function ReservationModal({ bien, onClose, onSuccess }: Reservati
   }
 
   return (
-    <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div className="panel" style={{ maxWidth: 520, width: '100%', maxHeight: '90vh', overflow: 'auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+    <div className="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="panel bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 w-full max-w-[520px] max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-5">
           <div>
-            <p className="section-kicker">{t('locataire_pages.biens.reserve_kicker', 'RÉSERVATION')}</p>
-            <h2 style={{ fontSize: 18, fontWeight: 700 }}>{t('locataire_pages.biens.reserve_title', 'Réserver ce bien')}</h2>
+            <p className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
+              {t('locataire_pages.biens.reserve_kicker', 'RÉSERVATION')}
+            </p>
+            <h2 className="text-slate-900 dark:text-white text-lg font-bold">
+              {t('locataire_pages.biens.reserve_title', 'Réserver ce bien')}
+            </h2>
           </div>
-          <button onClick={onClose} aria-label={t('common.close', 'Fermer')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted-foreground)' }}>
+          <button 
+            onClick={onClose} 
+            aria-label={t('common.close', 'Fermer')} 
+            className="cursor-pointer text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 p-1.5 rounded-lg transition-colors"
+          >
             <X size={20} />
           </button>
         </div>
 
         {/* Résumé du bien */}
-        <div style={{ background: 'var(--muted)', borderRadius: 8, padding: 16, marginBottom: 20 }}>
-          <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>{bien.titre}</h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, fontSize: 13, color: 'var(--muted-foreground)' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={14} /> {bien.adresse}</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Tag size={14} /> {bien.type}</span>
+        <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800 rounded-xl p-4 mb-5">
+          <h3 className="text-slate-900 dark:text-slate-100 font-semibold text-sm mb-2">{bien.titre}</h3>
+          <div className="flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
+            <span className="flex items-center gap-1.5"><MapPin size={14} className="text-slate-400" /> {bien.adresse}</span>
+            <span className="flex items-center gap-1.5"><Tag size={14} className="text-slate-400" /> {bien.type}</span>
           </div>
-          <div style={{ marginTop: 8, fontSize: 16, fontWeight: 700, color: 'var(--primary)' }}>
+          <div className="mt-2.5 text-base font-bold text-blue-600 dark:text-blue-400">
             {bien.mode_transaction === 'LOCATION'
               ? `${Number(bien.loyer_mensuel || 0).toLocaleString()} Ar / ${t('card.per_month', 'mois')}`
               : `${Number(bien.prix || 0).toLocaleString()} Ar`
@@ -64,23 +72,23 @@ export default function ReservationModal({ bien, onClose, onSuccess }: Reservati
         </div>
 
         {/* Type de réservation */}
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 13, fontWeight: 500, display: 'block', marginBottom: 6 }}>
+        <div className="mb-4">
+          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">
             {t('locataire_pages.biens.reserve_type_label', 'Type de réservation')}
           </label>
-          <div style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--muted)', fontSize: 13, color: 'var(--muted-foreground)' }}>
+          <div className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 text-sm">
             {typeReservation === 'LOCATION'
               ? t('locataire_pages.biens.type_location', 'Location')
               : t('locataire_pages.biens.type_achat', 'Achat')}
           </div>
-          <p style={{ fontSize: 11, color: 'var(--muted-foreground)', marginTop: 4 }}>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {t('locataire_pages.biens.type_desc', 'Déterminé automatiquement selon le mode de transaction du bien.')}
           </p>
         </div>
 
         {/* Commentaire */}
-        <div style={{ marginBottom: 20 }}>
-          <label style={{ fontSize: 13, fontWeight: 500, display: 'block', marginBottom: 6 }}>
+        <div className="mb-5">
+          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">
             {t('locataire_pages.biens.comment_label', 'Commentaire (optionnel)')}
           </label>
           <textarea
@@ -88,27 +96,27 @@ export default function ReservationModal({ bien, onClose, onSuccess }: Reservati
             onChange={(e) => setCommentaire(e.target.value)}
             placeholder={t('locataire_pages.biens.comment_placeholder', 'Décrivez vos besoins, posez vos questions...')}
             rows={4}
-            style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', resize: 'vertical', fontSize: 13 }}
+            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 resize-y"
           />
         </div>
 
         {error && (
-          <div style={{ padding: 12, background: '#fef2f2', color: '#dc2626', borderRadius: 6, marginBottom: 16, fontSize: 13 }}>
+          <div className="p-3 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/20 rounded-lg mb-4 text-xs">
             {error}
           </div>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+        <div className="flex justify-end gap-2.5 pt-2">
           <button
             onClick={onClose}
-            style={{ padding: '8px 16px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', cursor: 'pointer', fontSize: 13 }}
+            className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-colors cursor-pointer"
           >
             {t('common.cancel', 'Annuler')}
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 20px', borderRadius: 6, border: 'none', background: 'var(--primary)', color: 'var(--primary-foreground)', cursor: submitting ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: 13 }}
+            className="flex items-center gap-2 px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Check size={16} />
             {submitting ? t('locataire_pages.biens.sending', 'Envoi...') : t('locataire_pages.biens.confirm_btn', 'Confirmer la réservation')}

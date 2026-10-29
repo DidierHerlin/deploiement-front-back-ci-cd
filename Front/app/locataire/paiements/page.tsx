@@ -107,108 +107,59 @@ export default function PaiementsPage() {
           ) : (
             <>
               {/* Bannière d'incitation si facture du mois à venir disponible */}
-              {facturesEligibles.length > 0 && (
-                <div
-                  style={{
-                    backgroundColor: '#eff6ff',
-                    border: '1px solid #bfdbfe',
-                    borderRadius: '12px',
-                    padding: '1.25rem 1.5rem',
-                    marginBottom: '1.5rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '1rem',
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                    <div
-                      style={{
-                        width: '42px',
-                        height: '42px',
-                        borderRadius: '10px',
-                        backgroundColor: '#dbeafe',
-                        color: '#2563eb',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                      }}
+              {facturesEligibles.length > 0 && (() => {
+                const invoice = facturesEligibles[0];
+                const period = invoice.date_echeance 
+                  ? new Date(invoice.date_echeance).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR', { month: 'long', year: 'numeric' }) 
+                  : (lang === 'en' ? 'this month' : 'ce mois');
+                const amount = parseFloat((invoice.montant_attendu || invoice.montant || 0) as string).toLocaleString('fr-FR');
+                const descText = lang === 'en'
+                  ? `Your priority due rent for ${period} (${amount} Ar) can be paid immediately via MVola, Orange Money, or Airtel Money.`
+                  : `Votre échéance prioritaire pour ${period} (${amount} Ar) est prête à être réglée exclusivement par MVola, Orange Money ou Airtel Money.`;
+
+                return (
+                  <div className="bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/50 rounded-2xl p-4 sm:p-5 mb-6 flex items-center justify-between gap-4 flex-wrap">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-11 h-11 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
+                        <Smartphone size={22} />
+                      </div>
+                      <div>
+                        <h3 className="m-0 mb-1 text-sm sm:text-base font-bold text-blue-950 dark:text-blue-100">
+                          {t('locataire_pages.paiements.eligible_title', 'Facture en attente prête pour règlement Mobile Money')}
+                        </h3>
+                        <p className="m-0 text-xs sm:text-sm text-blue-700 dark:text-blue-300">
+                          {descText}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleOpenDemande(invoice)}
+                      className="primary-button bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold text-xs sm:text-sm inline-flex items-center gap-2 cursor-pointer shadow-md shadow-blue-600/20 border-0"
                     >
-                      <Smartphone size={22} />
-                    </div>
-                    <div>
-                      <h3 style={{ margin: '0 0 4px', fontSize: '1rem', fontWeight: 700, color: '#1e3a8a' }}>
-                        {t('locataire_pages.paiements.eligible_title', 'Facture en attente prête pour règlement Mobile Money')}
-                      </h3>
-                      <p style={{ margin: 0, fontSize: '0.86rem', color: '#3b82f6' }}>
-                        {t('locataire_pages.paiements.eligible_desc', 'Votre échéance prioritaire pour {period} ({amount} Ar) est prête à être réglée exclusivement par MVola, Orange Money ou Airtel Money.', {
-                          period: facturesEligibles[0].date_echeance ? new Date(facturesEligibles[0].date_echeance).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR', { month: 'long', year: 'numeric' }) : (lang === 'en' ? 'this month' : 'ce mois'),
-                          amount: parseFloat((facturesEligibles[0].montant_attendu || facturesEligibles[0].montant || 0) as string).toLocaleString('fr-FR'),
-                        })}
-                      </p>
-                    </div>
+                      <Smartphone size={16} /> {t('locataire_pages.paiements.request_payment_btn', 'Demander le paiement Mobile Money')}
+                    </button>
                   </div>
-                  <button
-                    onClick={() => handleOpenDemande(facturesEligibles[0])}
-                    className="primary-button"
-                    style={{
-                      backgroundColor: '#2563eb',
-                      color: 'white',
-                      padding: '10px 18px',
-                      borderRadius: '8px',
-                      fontWeight: 650,
-                      fontSize: '0.85rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      cursor: 'pointer',
-                      border: 'none',
-                    }}
-                  >
-                    <Smartphone size={16} /> {t('locataire_pages.paiements.request_payment_btn', 'Demander le paiement Mobile Money')}
-                  </button>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Onglets de navigation */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  borderBottom: '1px solid #e2e8f0',
-                  marginBottom: '1.5rem',
-                }}
-              >
+              <div className="flex items-center gap-3 mb-6 flex-wrap">
                 <button
                   onClick={() => setActiveTab('factures')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '12px 18px',
-                    border: 'none',
-                    background: 'transparent',
-                    cursor: 'pointer',
-                    fontSize: '0.9rem',
-                    fontWeight: activeTab === 'factures' ? 700 : 500,
-                    color: activeTab === 'factures' ? '#2563eb' : '#64748b',
-                    borderBottom: activeTab === 'factures' ? '2px solid #2563eb' : '2px solid transparent',
-                    marginBottom: '-1px',
-                  }}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+                    activeTab === 'factures'
+                      ? 'bg-blue-600 text-white shadow-sm border border-blue-600'
+                      : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800'
+                  }`}
                 >
-                  <Receipt size={17} /> {t('locataire_pages.paiements.tab_invoices', 'Factures & Échéances')}
+                  <Receipt size={16} />
+                  <span>{t('locataire_pages.paiements.tab_invoices', 'Factures & Échéances')}</span>
                   <span
-                    style={{
-                      fontSize: '0.75rem',
-                      backgroundColor: activeTab === 'factures' ? '#dbeafe' : '#f1f5f9',
-                      color: activeTab === 'factures' ? '#1d4ed8' : '#64748b',
-                      padding: '2px 8px',
-                      borderRadius: '10px',
-                      fontWeight: 600,
-                    }}
+                    className={`text-xs px-2 py-0.5 rounded-full font-bold ${
+                      activeTab === 'factures'
+                        ? 'bg-blue-500/30 text-white'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                    }`}
                   >
                     {paiementsNonResilies.length}
                   </span>
@@ -216,33 +167,25 @@ export default function PaiementsPage() {
 
                 <button
                   onClick={() => setActiveTab('demandes')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '12px 18px',
-                    border: 'none',
-                    background: 'transparent',
-                    cursor: 'pointer',
-                    fontSize: '0.9rem',
-                    fontWeight: activeTab === 'demandes' ? 700 : 500,
-                    color: activeTab === 'demandes' ? '#2563eb' : '#64748b',
-                    borderBottom: activeTab === 'demandes' ? '2px solid #2563eb' : '2px solid transparent',
-                    marginBottom: '-1px',
-                  }}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+                    activeTab === 'demandes'
+                      ? 'bg-blue-600 text-white shadow-sm border border-blue-600'
+                      : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800'
+                  }`}
                 >
-                  <Smartphone size={17} /> {t('locataire_pages.paiements.tab_requests', 'Mes demandes Mobile Money')}
+                  <Smartphone size={16} />
+                  <span>{t('locataire_pages.paiements.tab_requests', 'Mes demandes Mobile Money')}</span>
                   <span
-                    style={{
-                      fontSize: '0.75rem',
-                      backgroundColor: pendingDemandesCount > 0 ? '#fef3c7' : activeTab === 'demandes' ? '#dbeafe' : '#f1f5f9',
-                      color: pendingDemandesCount > 0 ? '#b45309' : activeTab === 'demandes' ? '#1d4ed8' : '#64748b',
-                      padding: '2px 8px',
-                      borderRadius: '10px',
-                      fontWeight: 600,
-                    }}
+                    className={`text-xs px-2 py-0.5 rounded-full font-bold ${
+                      pendingDemandesCount > 0
+                        ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'
+                        : activeTab === 'demandes'
+                        ? 'bg-blue-500/30 text-white'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                    }`}
                   >
-                    {demandes.length} {pendingDemandesCount > 0 && t('locataire_pages.paiements.pending_count', '({count} en attente)', { count: pendingDemandesCount })}
+                    {demandes.length}
+                    {pendingDemandesCount > 0 && ` (${pendingDemandesCount} en attente)`}
                   </span>
                 </button>
               </div>

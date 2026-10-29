@@ -9,6 +9,7 @@ import { PasswordInput } from "@/components/atoms/password-input"
 import { toast } from "sonner"
 import { getApiUrl } from "@/lib/config"
 import { useTranslation, LanguageSwitcher } from "@/lib/i18n"
+import { ThemeToggle } from "@/components/molecules/ThemeToggle"
 
 // Redirection par défaut après connexion, si aucun ?redirect= n'est fourni par le middleware.
 function redirectionParRole(role: string) {
@@ -190,7 +191,10 @@ export function LoginForm() {
             <span>{t("auth.login.back_to_home", "Retour à l'accueil")}</span>
           </Link>
 
-          <LanguageSwitcher />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <LanguageSwitcher />
+          </div>
         </div>
 
         {/* Douces lumières en arrière-plan */}
@@ -261,16 +265,6 @@ export function LoginForm() {
               {t("auth.login.sign_up", "S'inscrire")}
             </Link>
           </p>
-
-          <div className="mt-6 pt-6 border-t border-slate-200/80 dark:border-slate-800 text-center">
-            <Link
-              href="/"
-              className="inline-flex items-center justify-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 transition-colors hover:text-primary dark:hover:text-blue-400 cursor-pointer"
-            >
-              <ArrowLeft className="size-3.5" aria-hidden="true" />
-              <span>{t("auth.login.back_to_home", "Retour à l'accueil")}</span>
-            </Link>
-          </div>
 
         </div>
       </section>

@@ -24,6 +24,14 @@ const nextConfig = {
         source: '/connexion',
         destination: '/login',
       },
+      {
+        source: '/espace-locataire/:path*',
+        destination: '/locataire/:path*',
+      },
+      {
+        source: '/espace-proprietaire/:path*',
+        destination: '/proprietaire/:path*',
+      },
     ]
   },
   async headers() {

@@ -26,67 +26,86 @@ export function ContratDetails({ contrat, onClose }: ContratDetailsProps) {
   };
 
   return (
-    <div className="modal-backdrop" role="presentation">
-      <section className="modal profile-modal" role="dialog" aria-modal="true" aria-labelledby="details-title" style={{ maxWidth: '600px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }}>
-        
-        <div style={{ padding: '26px 26px 15px', position: 'relative', borderBottom: '1px solid #f0f1f4', flexShrink: 0 }}>
-          <button className="modal-close" onClick={onClose} aria-label={t('common.close', 'Fermer')} style={{ top: '26px', right: '26px' }}>
+    <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" role="presentation">
+      <section 
+        className="modal profile-modal bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-[600px] max-h-[90vh] flex flex-col p-0 overflow-hidden" 
+        role="dialog" 
+        aria-modal="true" 
+        aria-labelledby="details-title"
+      >
+        {/* Header */}
+        <div className="p-6 pb-4 relative border-b border-slate-100 dark:border-slate-800 flex-shrink-0 bg-slate-50/60 dark:bg-slate-950/40">
+          <button 
+            className="modal-close cursor-pointer dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 rounded-lg p-1.5 transition-colors absolute top-5 right-5 text-slate-400 hover:text-slate-600" 
+            onClick={onClose} 
+            aria-label={t('common.close', 'Fermer')}
+          >
             <X size={18} />
           </button>
-          <div className="modal-icon">
+          <div className="modal-icon dark:bg-slate-800 dark:text-blue-400">
             <FileText size={20} />
           </div>
-          <h2 id="details-title" style={{ marginBottom: 0 }}>
+          <h2 id="details-title" className="text-slate-900 dark:text-slate-100 font-bold text-lg mb-0 mt-3">
             {t('locataire_pages.contrat.details_title', 'Détails du contrat #{id}', { id: contrat.id })}
           </h2>
         </div>
         
-        <div style={{ padding: '20px 26px', overflowY: 'auto', flex: 1 }}>
-          <h3 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FileText size={16}/> {t('locataire_pages.contrat.contract_info', 'Informations contractuelles')}
-          </h3>
-          <div className="profile-fields" style={{ gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-            <div><span>{t('locataire_pages.contrat.ref', 'Référence')}</span><strong>#{contrat.id}</strong></div>
-            <div><span>{t('locataire_pages.contrat.type', 'Type')}</span><strong>{isLocation ? t('types.location', 'Location') : t('types.sale', 'Achat')}</strong></div>
-            <div><span>{t('locataire_pages.contrat.status', 'Statut')}</span><ContratStatusBadge statut={contrat.statut} /></div>
-            <div><span>{t('locataire_pages.contrat.start_date', 'Date de début')}</span><strong>{formatDate(contrat.date_debut)}</strong></div>
-            {isLocation && <div><span>{t('locataire_pages.contrat.end_date', 'Date de fin')}</span><strong>{formatDate(contrat.date_fin)}</strong></div>}
+        {/* Body */}
+        <div className="p-6 py-4 overflow-y-auto flex-1 space-y-5">
+          <div>
+            <h3 className="text-xs uppercase font-semibold text-slate-500 dark:text-slate-400 tracking-wider mb-2 flex items-center gap-2">
+              <FileText size={15}/> {t('locataire_pages.contrat.contract_info', 'Informations contractuelles')}
+            </h3>
+            <div className="profile-fields grid grid-cols-2 gap-4">
+              <div><span className="text-slate-500 dark:text-slate-400 text-xs block mb-1">{t('locataire_pages.contrat.ref', 'Référence')}</span><strong className="text-slate-900 dark:text-slate-100 font-semibold text-sm">#{contrat.id}</strong></div>
+              <div><span className="text-slate-500 dark:text-slate-400 text-xs block mb-1">{t('locataire_pages.contrat.type', 'Type')}</span><strong className="text-slate-900 dark:text-slate-100 font-semibold text-sm">{isLocation ? t('types.location', 'Location') : t('types.sale', 'Achat')}</strong></div>
+              <div><span className="text-slate-500 dark:text-slate-400 text-xs block mb-1">{t('locataire_pages.contrat.status', 'Statut')}</span><ContratStatusBadge statut={contrat.statut} /></div>
+              <div><span className="text-slate-500 dark:text-slate-400 text-xs block mb-1">{t('locataire_pages.contrat.start_date', 'Date de début')}</span><strong className="text-slate-900 dark:text-slate-100 font-semibold text-sm">{formatDate(contrat.date_debut)}</strong></div>
+              {isLocation && <div><span className="text-slate-500 dark:text-slate-400 text-xs block mb-1">{t('locataire_pages.contrat.end_date', 'Date de fin')}</span><strong className="text-slate-900 dark:text-slate-100 font-semibold text-sm">{formatDate(contrat.date_fin)}</strong></div>}
+            </div>
           </div>
 
-          <h3 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Building2 size={16}/> {t('locataire_pages.contrat.property_concerned', 'Bien concerné')}
-          </h3>
-          <div className="profile-fields" style={{ gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-            <div style={{ gridColumn: 'span 2' }}><span>{t('locataire_pages.contrat.property_title', 'Titre')}</span><strong>{contrat.bien_titre}</strong></div>
-            <div><span>{t('locataire_pages.contrat.property_type', 'Type')}</span><strong>{contrat.bien_type}</strong></div>
-            <div><span>{t('locataire_pages.contrat.property_address', 'Adresse')}</span><strong>Selon dossier du bien</strong></div>
+          <div>
+            <h3 className="text-xs uppercase font-semibold text-slate-500 dark:text-slate-400 tracking-wider mb-2 flex items-center gap-2">
+              <Building2 size={15}/> {t('locataire_pages.contrat.property_concerned', 'Bien concerné')}
+            </h3>
+            <div className="profile-fields grid grid-cols-2 gap-4">
+              <div className="col-span-2"><span className="text-slate-500 dark:text-slate-400 text-xs block mb-1">{t('locataire_pages.contrat.property_title', 'Titre')}</span><strong className="text-slate-900 dark:text-slate-100 font-semibold text-sm">{contrat.bien_titre}</strong></div>
+              <div><span className="text-slate-500 dark:text-slate-400 text-xs block mb-1">{t('locataire_pages.contrat.property_type', 'Type')}</span><strong className="text-slate-900 dark:text-slate-100 font-semibold text-sm">{contrat.bien_type}</strong></div>
+              <div><span className="text-slate-500 dark:text-slate-400 text-xs block mb-1">{t('locataire_pages.contrat.property_address', 'Adresse')}</span><strong className="text-slate-900 dark:text-slate-100 font-semibold text-sm">Selon dossier du bien</strong></div>
+            </div>
           </div>
 
-          <h3 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <CircleDollarSign size={16}/> {t('locataire_pages.contrat.financial_info', 'Informations financières')}
-          </h3>
-          <div className="profile-fields" style={{ gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-            {isLocation ? (
-              <>
-                <div><span>{t('locataire_pages.contrat.card_rent', 'Loyer mensuel')}</span><strong>{formatMontant(contrat.loyer)}</strong></div>
-                <div><span>{t('locataire_pages.contrat.card_deposit', 'Dépôt de garantie')}</span><strong>{formatMontant(contrat.depot_garantie)}</strong></div>
-              </>
-            ) : (
-              <div><span>Prix de vente</span><strong>{formatMontant(contrat.prix)}</strong></div>
-            )}
+          <div>
+            <h3 className="text-xs uppercase font-semibold text-slate-500 dark:text-slate-400 tracking-wider mb-2 flex items-center gap-2">
+              <CircleDollarSign size={15}/> {t('locataire_pages.contrat.financial_info', 'Informations financières')}
+            </h3>
+            <div className="profile-fields grid grid-cols-2 gap-4">
+              {isLocation ? (
+                <>
+                  <div><span className="text-slate-500 dark:text-slate-400 text-xs block mb-1">{t('locataire_pages.contrat.card_rent', 'Loyer mensuel')}</span><strong className="text-slate-900 dark:text-slate-100 font-semibold text-sm">{formatMontant(contrat.loyer)}</strong></div>
+                  <div><span className="text-slate-500 dark:text-slate-400 text-xs block mb-1">{t('locataire_pages.contrat.card_deposit', 'Dépôt de garantie')}</span><strong className="text-slate-900 dark:text-slate-100 font-semibold text-sm">{formatMontant(contrat.depot_garantie)}</strong></div>
+                </>
+              ) : (
+                <div><span className="text-slate-500 dark:text-slate-400 text-xs block mb-1">Prix de vente</span><strong className="text-slate-900 dark:text-slate-100 font-semibold text-sm">{formatMontant(contrat.prix)}</strong></div>
+              )}
+            </div>
           </div>
 
-          <h3 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <UserRound size={16}/> {t('locataire_pages.contrat.parties_concerned', 'Parties concernées')}
-          </h3>
-          <div className="profile-fields" style={{ gridTemplateColumns: '1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-            <div><span>{t('locataire_pages.contrat.tenant', 'Locataire')}</span><strong>{contrat.locataire_prenoms} {contrat.locataire_nom}</strong></div>
+          <div>
+            <h3 className="text-xs uppercase font-semibold text-slate-500 dark:text-slate-400 tracking-wider mb-2 flex items-center gap-2">
+              <UserRound size={15}/> {t('locataire_pages.contrat.parties_concerned', 'Parties concernées')}
+            </h3>
+            <div className="profile-fields grid grid-cols-1 gap-4">
+              <div><span className="text-slate-500 dark:text-slate-400 text-xs block mb-1">{t('locataire_pages.contrat.tenant', 'Locataire')}</span><strong className="text-slate-900 dark:text-slate-100 font-semibold text-sm">{contrat.locataire_prenoms} {contrat.locataire_nom}</strong></div>
+            </div>
           </div>
         </div>
         
-        <div className="modal-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 26px 26px', borderTop: '1px solid #f0f1f4', flexShrink: 0, marginTop: 0 }}>
+        {/* Footer Actions */}
+        <div className="p-4 px-6 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center flex-shrink-0 bg-slate-50/60 dark:bg-slate-950/40">
           <ContratDownloadButton contratId={contrat.id} typeContrat={contrat.type_contrat} />
-          <button className="primary-button" onClick={onClose}>{t('common.close', 'Fermer')}</button>
+          <button className="primary-button cursor-pointer" onClick={onClose}>{t('common.close', 'Fermer')}</button>
         </div>
       </section>
     </div>

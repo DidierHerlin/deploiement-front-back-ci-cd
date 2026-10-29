@@ -46,9 +46,9 @@ export default function ProfilView() {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden max-w-4xl w-full">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden max-w-4xl w-full">
       <div className="p-6 sm:p-8">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white border-b pb-4 dark:border-gray-700">
+        <h2 className="text-2xl font-bold mb-6 text-slate-900 dark:text-white border-b pb-4 border-slate-100 dark:border-slate-800">
           {t("profile.personal_info", "Informations Personnelles")}
         </h2>
         {profil && (

@@ -18,7 +18,7 @@ export function PaiementStatusBadge({ statut, contratStatut }: PaiementStatusBad
       label = 'Payé'
       break
     case 'EN_ATTENTE':
-      colorClass = 'text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 border-amber-200 dark:border-amber-800/60'
+      colorClass = 'text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/15 border-amber-200 dark:border-amber-500/30'
       label = 'En attente'
       break
     case 'PARTIEL':

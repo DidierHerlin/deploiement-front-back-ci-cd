@@ -72,7 +72,9 @@ urlpatterns = [
     # Mot de passe oublie
     path("mot-de-passe/demande/", RequestPasswordResetView.as_view(), name="mdp-demande"),
     path("mot-de-passe/verifier-code/", VerifyResetCodeView.as_view(), name="mdp-verifier-code"),
+    path("mot-de-passe/verifier/", VerifyResetCodeView.as_view(), name="mdp-verifier"),
     path("mot-de-passe/reinitialiser/", ResetPasswordView.as_view(), name="mdp-reinitialiser"),
+    path("mot-de-passe/confirmer/", ResetPasswordView.as_view(), name="mdp-confirmer"),
 
     # Tableaux de bord et reporting
     path("reporting/stats/", ReportingStatsView.as_view(), name="reporting-stats"),

@@ -102,11 +102,11 @@ export function PaiementList({ paiements: initialPaiements, contrats = [], onUpd
 
   return (
     <>
-      <section className="panel">
+      <section className="panel bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
       <div className="panel-header">
         <div>
-          <h2>{t("proprietaire_pages.paiements.list_title", "Historique des paiements")}</h2>
-          <p>{t("proprietaire_pages.paiements.list_sub", "Suivez l'état de vos loyers et téléchargez vos quittances ")}</p>
+          <h2 className="text-slate-900 dark:text-white font-bold text-base m-0">{t("proprietaire_pages.paiements.list_title", "Historique des paiements")}</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">{t("proprietaire_pages.paiements.list_sub", "Suivez l'état de vos loyers et téléchargez vos quittances ")}</p>
         </div>
       </div>
       
@@ -119,14 +119,14 @@ export function PaiementList({ paiements: initialPaiements, contrats = [], onUpd
           <div className="table-wrap">
             <table>
               <thead>
-                <tr>
-                  <th>{t("admin.paiements.col_due_date", "DATE D'ÉCHÉANCE")}</th>
-                  <th>{t("admin.paiements.col_property", "BIEN CONCERNÉ")}</th>
-                  <th>{t("admin.paiements.col_amount", "MONTANT ATTENDU")}</th>
-                  <th>{t("admin.paiements.col_paid_amount", "MONTANT VERSÉ")}</th>
-                  <th>{t("admin.paiements.col_status", "STATUT")}</th>
-                  <th>{t("dashboard.nav.receipts", "QUITTANCE")}</th>
-                  {(isAgent || isLocataire) && <th>{t("admin.paiements.col_actions", "ACTION")}</th>}
+                <tr className="border-b border-slate-100 dark:border-slate-800">
+                  <th className="text-xs uppercase text-slate-400 font-semibold py-3 px-3 text-left">{t("admin.paiements.col_due_date", "ÉCHÉANCE")}</th>
+                  <th className="text-xs uppercase text-slate-400 font-semibold py-3 px-3 text-left">{t("admin.paiements.col_property", "BIEN")}</th>
+                  <th className="text-xs uppercase text-slate-400 font-semibold py-3 px-3 text-left">{t("admin.paiements.col_amount", "MONTANT")}</th>
+                  <th className="text-xs uppercase text-slate-400 font-semibold py-3 px-3 text-left">{t("admin.paiements.col_paid_amount", "VERSÉ")}</th>
+                  <th className="text-xs uppercase text-slate-400 font-semibold py-3 px-3 text-left">{t("admin.paiements.col_status", "STATUT")}</th>
+                  <th className="text-xs uppercase text-slate-400 font-semibold py-3 px-3 text-left">{t("dashboard.nav.receipts", "QUITTANCES")}</th>
+                  {(isAgent || isLocataire) && <th className="text-xs uppercase text-slate-400 font-semibold py-3 px-3 text-left">{t("admin.paiements.col_actions", "ACTIONS")}</th>}
                 </tr>
               </thead>
               <tbody>
@@ -141,24 +141,24 @@ export function PaiementList({ paiements: initialPaiements, contrats = [], onUpd
                   const montantAttendu = isValide ? loyerContrat : paiement.montant_attendu;
 
                   return (
-                    <tr key={paiement.id}>
-                      <td>
-                        <strong>
+                    <tr key={paiement.id} className="border-b border-slate-100 dark:border-slate-800/80 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                      <td className="py-3 px-3">
+                        <strong className="text-slate-900 dark:text-white font-medium text-xs sm:text-sm">
                           {paiement.date_echeance ? new Date(paiement.date_echeance).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : '-'}
                         </strong>
                         <br/>
-                        <small style={{ color: '#9aa3b0' }}>
+                        <small className="text-slate-400 dark:text-slate-500 text-[11px]">
                           {t("dashboard.common.due_on", "Prévu le")} {paiement.date_echeance ? new Date(paiement.date_echeance).toLocaleDateString('fr-FR') : '-'}
                         </small>
                       </td>
-                      <td>{paiement.bien_titre || '-'}</td>
-                      <td>{montantAttendu ? `${parseFloat(montantAttendu as string).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} Ar` : '-'}</td>
-                      <td>
+                      <td className="py-3 px-3 text-slate-800 dark:text-slate-200 text-xs sm:text-sm">{paiement.bien_titre || '-'}</td>
+                      <td className="py-3 px-3 text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-medium">{montantAttendu ? `${parseFloat(montantAttendu as string).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} Ar` : '-'}</td>
+                      <td className="py-3 px-3 text-xs sm:text-sm">
                         {montantVerse ? (
-                          <strong>{parseFloat(montantVerse as string).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} Ar</strong>
-                        ) : '-'}
+                          <strong className="text-slate-900 dark:text-white font-semibold">{parseFloat(montantVerse as string).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} Ar</strong>
+                        ) : <span className="text-slate-400 dark:text-slate-500">-</span>}
                       </td>
-                      <td>
+                      <td className="py-3 px-3">
                         <PaiementStatusBadge 
                           statut={paiement.statut} 
                         />
@@ -188,24 +188,23 @@ export function PaiementList({ paiements: initialPaiements, contrats = [], onUpd
                           </div>
                         )}
                       </td>
-                      <td>
+                      <td className="py-3 px-3">
                         {isValide ? (
-                          <button className="download-button outline-button" onClick={() => handleDownloadQuittance(paiement.id)}>
+                          <button className="download-button outline-button dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700 px-2.5 py-1 text-xs inline-flex items-center gap-1.5 rounded-lg whitespace-nowrap cursor-pointer transition-colors" onClick={() => handleDownloadQuittance(paiement.id)}>
                             <ArrowDownToLine size={14} /> {t("locataire_pages.quittances.download_btn", "Voir la quittance")}
                           </button>
                         ) : (
-                          <span style={{ fontSize: '10px', color: '#a0a8b5', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span className="text-slate-400 dark:text-slate-500 text-[11px] inline-flex items-center gap-1.5 whitespace-nowrap">
                             <FileText size={12} /> {t("locataire_pages.quittances.unavailable", "Quittance non disponible")}
                           </span>
                         )}
                       </td>
                       {(isAgent || isLocataire) && (
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <td className="py-3 px-3">
+                          <div className="flex items-center gap-2 whitespace-nowrap">
                             <button 
                               onClick={() => setSelectedPaiement(paiement)} 
-                              className="outline-button" 
-                              style={{ padding: "6px 12px", fontSize: "12px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                              className="outline-button dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700 px-3 py-1.5 text-xs inline-flex items-center gap-1.5 rounded-lg whitespace-nowrap cursor-pointer transition-colors"
                               title={t("forms.view_invoice", "Consulter les détails de la facture")}
                             >
                               <Eye size={14} /> {t("forms.view", "Visualiser")}
@@ -263,21 +262,10 @@ export function PaiementList({ paiements: initialPaiements, contrats = [], onUpd
                             {isLocataire && paiement.est_eligible_demande && onDemanderPaiement && (
                               <button
                                 onClick={() => onDemanderPaiement(paiement)}
-                                className="primary-button"
-                                style={{
-                                  padding: "6px 12px",
-                                  fontSize: "12px",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "6px",
-                                  backgroundColor: "#4f46e5",
-                                  color: "#ffffff",
-                                  borderRadius: "6px",
-                                  boxShadow: "none",
-                                }}
+                                className="primary-button bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-xs inline-flex items-center gap-1.5 rounded-lg whitespace-nowrap font-semibold cursor-pointer shadow-none transition-colors"
                                 title={t("locataire_pages.paiements.pay_hint", "Demander le règlement de cette facture par Mobile Money")}
                               >
-                                <Smartphone size={14} /> {t("locataire_pages.paiements.pay_button", "Payer (Mobile Money)")}
+                                <Smartphone size={14} /> {t("locataire_pages.paiements.pay_button", "Payer mon loyer en ligne")}
                               </button>
                             )}
 

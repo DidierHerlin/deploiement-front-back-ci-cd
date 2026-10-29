@@ -114,63 +114,19 @@ export function DemandePaiementModal({
   }
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 9999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'rgba(15, 23, 42, 0.65)',
-        backdropFilter: 'blur(4px)',
-        padding: '1rem',
-      }}
-    >
-      <div
-        style={{
-          background: 'white',
-          borderRadius: '16px',
-          width: '100%',
-          maxWidth: '560px',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          maxHeight: '92vh',
-        }}
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="w-full max-w-[560px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header Modal */}
-        <div
-          style={{
-            padding: '1.25rem 1.5rem',
-            borderBottom: '1px solid #e2e8f0',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div
-              style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '10px',
-                backgroundColor: '#e0e7ff',
-                color: '#4338ca',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
+        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/50 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
               <Smartphone size={22} />
             </div>
             <div>
-              <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: '#0f172a' }}>
+              <h2 className="m-0 text-base sm:text-lg font-bold text-slate-900 dark:text-white">
                 {t('locataire_pages.paiements.modal_title', 'Demande de paiement Mobile Money')}
               </h2>
-              <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>
+              <p className="m-0 text-xs text-slate-500 dark:text-slate-400">
                 {t('locataire_pages.paiements.modal_subtitle', 'Règlement sécurisé de votre facture du mois à venir')}
               </p>
             </div>
@@ -178,128 +134,76 @@ export function DemandePaiementModal({
           <button
             onClick={handleResetAndClose}
             aria-label={t('common.close', 'Fermer')}
-            style={{
-              border: 'none',
-              background: 'transparent',
-              cursor: 'pointer',
-              color: '#94a3b8',
-              padding: '6px',
-              borderRadius: '8px',
-            }}
+            className="cursor-pointer text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 p-1.5 rounded-lg transition-colors"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Content Body */}
-        <div style={{ padding: '1.5rem', overflowY: 'auto' }}>
+        <div className="p-6 overflow-y-auto">
           {successDemande ? (
             /* Confirmation Step */
-            <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-              <div
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '50%',
-                  backgroundColor: '#dcfce7',
-                  color: '#15803d',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 1.25rem',
-                }}
-              >
+            <div className="text-center py-2">
+              <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 size={36} />
               </div>
-              <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.5rem' }}>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
                 {t('locataire_pages.paiements.success_title', 'Demande transmise avec succès !')}
               </h3>
-              <p style={{ fontSize: '0.9rem', color: '#64748b', maxWidth: '420px', margin: '0 auto 1.5rem' }}>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-5 leading-relaxed">
                 {t('locataire_pages.paiements.success_desc', 'Votre demande de paiement a bien été enregistrée dans la base de données. Elle est actuellement en attente de validation par le gestionnaire.')}
               </p>
 
-              <div
-                style={{
-                  background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '12px',
-                  padding: '1.25rem',
-                  textAlign: 'left',
-                  marginBottom: '1.5rem',
-                  fontSize: '0.88rem',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ color: '#64748b' }}>Numéro de demande :</span>
-                  <strong>#{successDemande.id}</strong>
+              <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-left mb-5 text-xs sm:text-sm space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 dark:text-slate-400">Numéro de demande :</span>
+                  <strong className="text-slate-900 dark:text-slate-100">#{successDemande.id}</strong>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ color: '#64748b' }}>Bien concerné :</span>
-                  <strong>{successDemande.bien_titre}</strong>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 dark:text-slate-400">Bien concerné :</span>
+                  <strong className="text-slate-900 dark:text-slate-100">{successDemande.bien_titre}</strong>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ color: '#64748b' }}>Mois d'échéance :</span>
-                  <strong>{successDemande.mois_echeance_facture}</strong>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 dark:text-slate-400">Mois d'échéance :</span>
+                  <strong className="text-slate-900 dark:text-slate-100">{successDemande.mois_echeance_facture}</strong>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ color: '#64748b' }}>Moyen de paiement :</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 dark:text-slate-400">Moyen de paiement :</span>
                   <span
-                    style={{
-                      fontWeight: 600,
-                      color:
-                        successDemande.moyen_paiement === 'MVOLA'
-                          ? '#059669'
-                          : successDemande.moyen_paiement === 'ORANGE_MONEY'
-                          ? '#ea580c'
-                          : '#dc2626',
-                    }}
+                    className={`font-semibold ${
+                      successDemande.moyen_paiement === 'MVOLA'
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : successDemande.moyen_paiement === 'ORANGE_MONEY'
+                        ? 'text-orange-600 dark:text-orange-400'
+                        : 'text-red-600 dark:text-red-400'
+                    }`}
                   >
                     {successDemande.moyen_paiement}
                   </span>
                 </div>
                 {successDemande.telephone && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ color: '#64748b' }}>Téléphone :</span>
-                    <strong>{successDemande.telephone}</strong>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 dark:text-slate-400">Téléphone :</span>
+                    <strong className="text-slate-900 dark:text-slate-100">{successDemande.telephone}</strong>
                   </div>
                 )}
                 {successDemande.reference && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ color: '#64748b' }}>Référence transaction :</span>
-                    <strong>{successDemande.reference}</strong>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 dark:text-slate-400">Référence transaction :</span>
+                    <strong className="text-slate-900 dark:text-slate-100">{successDemande.reference}</strong>
                   </div>
                 )}
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    paddingTop: '8px',
-                    borderTop: '1px dashed #cbd5e1',
-                  }}
-                >
-                  <span style={{ color: '#64748b' }}>Montant :</span>
-                  <strong style={{ fontSize: '1.05rem', color: '#16a34a' }}>
+                <div className="flex justify-between items-center pt-2 border-t border-dashed border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Montant :</span>
+                  <strong className="text-base text-emerald-600 dark:text-emerald-400 font-bold">
                     {parseFloat(successDemande.montant).toLocaleString('fr-FR')} Ar
                   </strong>
                 </div>
               </div>
 
-              <div
-                style={{
-                  background: '#eff6ff',
-                  border: '1px solid #bfdbfe',
-                  borderRadius: '10px',
-                  padding: '12px 16px',
-                  marginBottom: '1.5rem',
-                  fontSize: '0.82rem',
-                  color: '#1e40af',
-                  textAlign: 'left',
-                  display: 'flex',
-                  gap: '10px',
-                  alignItems: 'flex-start',
-                }}
-              >
-                <ShieldCheck size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+              <div className="bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/70 dark:border-blue-900/50 rounded-xl p-3.5 mb-5 text-xs text-blue-800 dark:text-blue-300 text-left flex gap-2.5 items-start">
+                <ShieldCheck size={18} className="flex-shrink-0 mt-0.5 text-blue-600 dark:text-blue-400" />
                 <span>
                   <strong>Note importante :</strong> Conformément aux règles de gestion, votre facture reste au statut "En attente" jusqu'à la validation définitive de la transaction par l'agence.
                 </span>
@@ -307,60 +211,30 @@ export function DemandePaiementModal({
 
               <button
                 onClick={handleResetAndClose}
-                style={{
-                  width: '100%',
-                  background: '#4f46e5',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '10px',
-                  padding: '12px',
-                  fontWeight: 600,
-                  fontSize: '0.95rem',
-                  cursor: 'pointer',
-                }}
+                className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition-colors cursor-pointer"
               >
                 {t('common.close', 'Fermer')}
               </button>
             </div>
           ) : (
             /* Form Step */
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className="space-y-4">
               {/* Règle métier explicite */}
-              <div
-                style={{
-                  backgroundColor: '#f0fdf4',
-                  border: '1px solid #bbf7d0',
-                  borderRadius: '10px',
-                  padding: '12px',
-                  marginBottom: '1.25rem',
-                  display: 'flex',
-                  gap: '10px',
-                  fontSize: '0.82rem',
-                  color: '#166534',
-                }}
-              >
-                <ShieldCheck size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+              <div className="bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-900/40 rounded-xl p-3 text-xs text-emerald-800 dark:text-emerald-300 flex gap-2.5 items-start">
+                <ShieldCheck size={18} className="flex-shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
                 <div>
                   <strong>Règle de facturation :</strong> Le règlement des factures s'effectue dans l'<strong>ordre chronologique</strong>. La facture impayée la plus ancienne doit être réglée en priorité. Modes acceptés : exclusivement Mobile Money.
                 </div>
               </div>
 
               {/* Sélection / Résumé de la Facture */}
-              <div style={{ marginBottom: '1.25rem' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   {t('locataire_pages.paiements.select_invoice', 'Facture mensuelle à régler')}
                 </label>
                 {facturesEligibles.length > 1 ? (
                   <select
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      borderRadius: '8px',
-                      border: '1px solid #cbd5e1',
-                      fontSize: '0.9rem',
-                      outline: 'none',
-                      backgroundColor: '#f8fafc',
-                    }}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-blue-500"
                     value={selectedFacture?.id || ''}
                     onChange={(e) => {
                       const found = facturesEligibles.find((f) => f.id === parseInt(e.target.value))
@@ -375,94 +249,59 @@ export function DemandePaiementModal({
                     ))}
                   </select>
                 ) : selectedFacture ? (
-                  <div
-                    style={{
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '10px',
-                      padding: '12px 16px',
-                      backgroundColor: '#f8fafc',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontWeight: 600, color: '#0f172a', fontSize: '0.95rem' }}>
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 bg-slate-50 dark:bg-slate-950">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-slate-900 dark:text-white text-sm">
                         {selectedFacture.bien_titre}
                       </span>
-                      <span
-                        style={{
-                          fontSize: '0.75rem',
-                          padding: '3px 8px',
-                          borderRadius: '12px',
-                          backgroundColor: '#e0e7ff',
-                          color: '#4338ca',
-                          fontWeight: 600,
-                        }}
-                      >
+                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-semibold">
                         Échéance prioritaire autorisée
                       </span>
                     </div>
-                    <div style={{ display: 'flex', gap: '16px', marginTop: '6px', fontSize: '0.82rem', color: '#64748b' }}>
+                    <div className="flex gap-4 mt-1.5 text-xs text-slate-500 dark:text-slate-400">
                       <span>
-                        Échéance : <strong>{selectedFacture.date_echeance ? new Date(selectedFacture.date_echeance).toLocaleDateString('fr-FR') : '-'}</strong>
+                        Échéance : <strong className="text-slate-700 dark:text-slate-300">{selectedFacture.date_echeance ? new Date(selectedFacture.date_echeance).toLocaleDateString('fr-FR') : '-'}</strong>
                       </span>
                       <span>
-                        Période : <strong>{selectedFacture.message_mois || 'Mois à venir'}</strong>
+                        Période : <strong className="text-slate-700 dark:text-slate-300">{selectedFacture.message_mois || 'Mois à venir'}</strong>
                       </span>
                     </div>
                   </div>
                 ) : (
-                  <div style={{ padding: '12px', backgroundColor: '#fff1f2', color: '#be123c', borderRadius: '8px', fontSize: '0.85rem' }}>
+                  <div className="p-3 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/20 rounded-lg text-xs">
                     Aucune facture éligible pour le mois à venir n'a été trouvée.
                   </div>
                 )}
               </div>
 
               {/* Montant réel à payer */}
-              <div
-                style={{
-                  background: 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%)',
-                  border: '1px solid #c7d2fe',
-                  borderRadius: '12px',
-                  padding: '14px 18px',
-                  marginBottom: '1.25rem',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
+              <div className="bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-900/50 rounded-xl p-3.5 sm:p-4 flex justify-between items-center">
                 <div>
-                  <span style={{ fontSize: '0.8rem', color: '#4338ca', fontWeight: 600, textTransform: 'uppercase' }}>
+                  <span className="text-[11px] text-indigo-700 dark:text-indigo-300 font-bold uppercase tracking-wider block">
                     Montant exact de la facture
                   </span>
-                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#6366f1' }}>
+                  <p className="m-0 text-xs text-indigo-600/80 dark:text-indigo-400/80">
                     Conforme au loyer contractuel
                   </p>
                 </div>
-                <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#3730a3' }}>
+                <div className="text-lg sm:text-xl font-extrabold text-indigo-900 dark:text-indigo-200">
                   {montantFormatted} Ar
                 </div>
               </div>
 
               {/* Sélection Opérateur Mobile Money (EXCLUSIVEMENT) */}
-              <div style={{ marginBottom: '1.25rem' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   {t('locataire_pages.paiements.select_operator', 'Moyen de paiement (Exclusivement Mobile Money)')}
                 </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                <div className="grid grid-cols-3 gap-2.5">
                   {/* MVOLA */}
                   <label
-                    style={{
-                      border: `2px solid ${moyenPaiement === 'MVOLA' ? '#10b981' : '#e2e8f0'}`,
-                      backgroundColor: moyenPaiement === 'MVOLA' ? '#f0fdf4' : 'white',
-                      borderRadius: '10px',
-                      padding: '12px 8px',
-                      textAlign: 'center',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '4px',
-                    }}
+                    className={`rounded-xl p-3 text-center cursor-pointer transition-all flex flex-col items-center gap-1 border-2 ${
+                      moyenPaiement === 'MVOLA'
+                        ? 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-800'
+                    }`}
                   >
                     <input
                       type="radio"
@@ -470,43 +309,22 @@ export function DemandePaiementModal({
                       value="MVOLA"
                       checked={moyenPaiement === 'MVOLA'}
                       onChange={() => setMoyenPaiement('MVOLA')}
-                      style={{ position: 'absolute', opacity: 0 }}
+                      className="sr-only"
                     />
-                    <div
-                      style={{
-                        width: '26px',
-                        height: '26px',
-                        borderRadius: '50%',
-                        backgroundColor: '#10b981',
-                        color: 'white',
-                        fontWeight: 800,
-                        fontSize: '0.75rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
+                    <div className="w-7 h-7 rounded-full bg-emerald-500 text-white font-extrabold text-xs flex items-center justify-center">
                       M
                     </div>
-                    <strong style={{ fontSize: '0.85rem', color: '#0f172a' }}>Mvola</strong>
-                    <small style={{ fontSize: '0.7rem', color: '#64748b' }}>Telma</small>
+                    <strong className="text-xs text-slate-900 dark:text-white">Mvola</strong>
+                    <small className="text-[10px] text-slate-500 dark:text-slate-400">Telma</small>
                   </label>
 
                   {/* ORANGE MONEY */}
                   <label
-                    style={{
-                      border: `2px solid ${moyenPaiement === 'ORANGE_MONEY' ? '#f97316' : '#e2e8f0'}`,
-                      backgroundColor: moyenPaiement === 'ORANGE_MONEY' ? '#fff7ed' : 'white',
-                      borderRadius: '10px',
-                      padding: '12px 8px',
-                      textAlign: 'center',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '4px',
-                    }}
+                    className={`rounded-xl p-3 text-center cursor-pointer transition-all flex flex-col items-center gap-1 border-2 ${
+                      moyenPaiement === 'ORANGE_MONEY'
+                        ? 'border-orange-500 bg-orange-50/70 dark:bg-orange-950/40'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-800'
+                    }`}
                   >
                     <input
                       type="radio"
@@ -514,43 +332,22 @@ export function DemandePaiementModal({
                       value="ORANGE_MONEY"
                       checked={moyenPaiement === 'ORANGE_MONEY'}
                       onChange={() => setMoyenPaiement('ORANGE_MONEY')}
-                      style={{ position: 'absolute', opacity: 0 }}
+                      className="sr-only"
                     />
-                    <div
-                      style={{
-                        width: '26px',
-                        height: '26px',
-                        borderRadius: '50%',
-                        backgroundColor: '#f97316',
-                        color: 'white',
-                        fontWeight: 800,
-                        fontSize: '0.75rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
+                    <div className="w-7 h-7 rounded-full bg-orange-500 text-white font-extrabold text-xs flex items-center justify-center">
                       O
                     </div>
-                    <strong style={{ fontSize: '0.85rem', color: '#0f172a' }}>Orange Money</strong>
-                    <small style={{ fontSize: '0.7rem', color: '#64748b' }}>Orange</small>
+                    <strong className="text-xs text-slate-900 dark:text-white">Orange Money</strong>
+                    <small className="text-[10px] text-slate-500 dark:text-slate-400">Orange</small>
                   </label>
 
                   {/* AIRTEL MONEY */}
                   <label
-                    style={{
-                      border: `2px solid ${moyenPaiement === 'AIRTEL_MONEY' ? '#ef4444' : '#e2e8f0'}`,
-                      backgroundColor: moyenPaiement === 'AIRTEL_MONEY' ? '#fef2f2' : 'white',
-                      borderRadius: '10px',
-                      padding: '12px 8px',
-                      textAlign: 'center',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '4px',
-                    }}
+                    className={`rounded-xl p-3 text-center cursor-pointer transition-all flex flex-col items-center gap-1 border-2 ${
+                      moyenPaiement === 'AIRTEL_MONEY'
+                        ? 'border-red-500 bg-red-50/70 dark:bg-red-950/40'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-800'
+                    }`}
                   >
                     <input
                       type="radio"
@@ -558,33 +355,20 @@ export function DemandePaiementModal({
                       value="AIRTEL_MONEY"
                       checked={moyenPaiement === 'AIRTEL_MONEY'}
                       onChange={() => setMoyenPaiement('AIRTEL_MONEY')}
-                      style={{ position: 'absolute', opacity: 0 }}
+                      className="sr-only"
                     />
-                    <div
-                      style={{
-                        width: '26px',
-                        height: '26px',
-                        borderRadius: '50%',
-                        backgroundColor: '#ef4444',
-                        color: 'white',
-                        fontWeight: 800,
-                        fontSize: '0.75rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
+                    <div className="w-7 h-7 rounded-full bg-red-500 text-white font-extrabold text-xs flex items-center justify-center">
                       A
                     </div>
-                    <strong style={{ fontSize: '0.85rem', color: '#0f172a' }}>Airtel Money</strong>
-                    <small style={{ fontSize: '0.7rem', color: '#64748b' }}>Airtel</small>
+                    <strong className="text-xs text-slate-900 dark:text-white">Airtel Money</strong>
+                    <small className="text-[10px] text-slate-500 dark:text-slate-400">Airtel</small>
                   </label>
                 </div>
               </div>
 
               {/* Champ Téléphone */}
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   {t('locataire_pages.paiements.phone_label', 'Numéro de téléphone')} {moyenPaiement === 'MVOLA' ? 'Telma' : moyenPaiement === 'ORANGE_MONEY' ? 'Orange' : 'Airtel'} *
                 </label>
                 <input
@@ -593,96 +377,44 @@ export function DemandePaiementModal({
                   placeholder={t('locataire_pages.paiements.phone_placeholder', 'Ex : 034 00 000 00')}
                   value={telephone}
                   onChange={(e) => setTelephone(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: '8px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '0.9rem',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                  }}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
 
               {/* Champ Référence de transaction */}
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
-                  {t('locataire_pages.paiements.ref_label', 'Référence ou ID de transaction Mobile Money')} <span style={{ color: '#94a3b8', fontWeight: 400 }}>(recommandé)</span>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  {t('locataire_pages.paiements.ref_label', 'Référence ou ID de transaction Mobile Money')} <span className="text-slate-400 font-normal">(recommandé)</span>
                 </label>
                 <input
                   type="text"
                   placeholder={t('locataire_pages.paiements.ref_placeholder', 'Ex : MV-12345678 ou code SMS de confirmation')}
                   value={reference}
                   onChange={(e) => setReference(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: '8px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '0.9rem',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                  }}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
 
               {error && (
-                <div
-                  style={{
-                    backgroundColor: '#fef2f2',
-                    border: '1px solid #fecaca',
-                    color: '#b91c1c',
-                    padding: '10px 12px',
-                    borderRadius: '8px',
-                    fontSize: '0.82rem',
-                    marginBottom: '1rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}
-                >
-                  <AlertCircle size={16} style={{ flexShrink: 0 }} />
+                <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 p-3 rounded-lg text-xs flex items-center gap-2">
+                  <AlertCircle size={16} className="flex-shrink-0" />
                   <span>{error}</span>
                 </div>
               )}
 
-              {/* Bouton de validation */}
-              <div style={{ display: 'flex', gap: '10px' }}>
+              {/* Boutons d'action */}
+              <div className="flex gap-2.5 pt-2">
                 <button
                   type="button"
                   onClick={handleResetAndClose}
-                  style={{
-                    flex: 1,
-                    padding: '12px',
-                    borderRadius: '10px',
-                    border: '1px solid #cbd5e1',
-                    background: 'white',
-                    color: '#475569',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
+                  className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-semibold text-sm transition-colors cursor-pointer"
                 >
                   {t('common.cancel', 'Annuler')}
                 </button>
                 <button
                   type="submit"
                   disabled={loading || !selectedFacture}
-                  style={{
-                    flex: 2,
-                    padding: '12px',
-                    borderRadius: '10px',
-                    border: 'none',
-                    background: loading || !selectedFacture ? '#94a3b8' : '#4f46e5',
-                    color: 'white',
-                    fontWeight: 700,
-                    cursor: loading || !selectedFacture ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.25)',
-                  }}
+                  className="flex-[2] py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send size={16} />
                   {loading ? t('forms.saving', 'Traitement en cours...') : t('locataire_pages.paiements.submit_btn', 'Envoyer la demande de paiement')}

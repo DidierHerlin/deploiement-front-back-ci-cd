@@ -71,7 +71,7 @@ export function PaiementsPage() {
             <select 
               value={filterStatut} 
               onChange={(e) => setFilterStatut(e.target.value)}
-              className="border border-gray-200 rounded-lg p-2 text-xs outline-none focus:border-blue-600 bg-white"
+              className="border border-slate-200 dark:border-slate-800 rounded-lg p-2 text-xs outline-none focus:border-blue-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 cursor-pointer"
             >
               <option value="">{t("proprietaire_pages.paiements.filter_status", "Tous les statuts")}</option>
               {uniqueStatuts.map(s => <option key={s} value={s}>{formatStatut(s)}</option>)}

@@ -373,6 +373,16 @@ class PasswordResetTests(APITestCase):
         url = reverse('mdp-verifier-code')
         response = self.client.post(url, {"email": "testreset@t.com", "code": "123456"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data.get("valid"))
+
+    def test_verify_code_alias_valid(self):
+        self.user.reset_token = "123456"
+        self.user.reset_token_expiration = timezone.now() + timedelta(minutes=15)
+        self.user.save()
+        url = reverse('mdp-verifier')
+        response = self.client.post(url, {"email": "testreset@t.com", "code": "123456"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data.get("valid"))
 
     def test_verify_code_invalid(self):
         self.user.reset_token = "123456"

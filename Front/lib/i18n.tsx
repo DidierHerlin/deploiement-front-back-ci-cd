@@ -12,7 +12,7 @@ type Messages = typeof frMessages
 interface LanguageContextType {
   lang: Language
   setLang: (lang: Language) => void
-  t: (path: string, paramsOrFallback?: Record<string, string | number> | string, fallback?: string) => string
+  t: (path: string, paramsOrFallback?: Record<string, string | number> | string, fallback?: string | Record<string, string | number>) => string
   messages: Messages
 }
 
@@ -41,9 +41,10 @@ export function getInitialLanguage(): Language {
 const LanguageContext = createContext<LanguageContextType>({
   lang: "fr",
   setLang: () => {},
-  t: (path: string, paramsOrFallback?: Record<string, string | number> | string, fallback?: string) => {
+  t: (path: string, paramsOrFallback?: Record<string, string | number> | string, fallback?: string | Record<string, string | number>) => {
     if (typeof paramsOrFallback === "string") return paramsOrFallback
-    return fallback || path
+    if (typeof fallback === "string") return fallback
+    return path
   },
   messages: frMessages,
 })
@@ -76,15 +77,21 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const t = (
     path: string,
     paramsOrFallback?: Record<string, string | number> | string,
-    fallback?: string
+    fallback?: string | Record<string, string | number>
   ): string => {
-    let resolvedFallback = fallback
+    let resolvedFallback = typeof fallback === "string" ? fallback : undefined
     let params: Record<string, string | number> | undefined
 
     if (typeof paramsOrFallback === "string") {
       resolvedFallback = paramsOrFallback
+      if (typeof fallback === "object" && fallback !== null) {
+        params = fallback as Record<string, string | number>
+      }
     } else if (typeof paramsOrFallback === "object" && paramsOrFallback !== null) {
       params = paramsOrFallback
+      if (typeof fallback === "string") {
+        resolvedFallback = fallback
+      }
     }
 
     const resolveKey = (dict: any, p: string): any => {

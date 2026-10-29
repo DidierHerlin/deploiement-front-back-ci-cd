@@ -104,4 +104,18 @@ describe('SignupForm Multi-Step', () => {
     expect(screen.getByRole('button', { name: /Créer mon compte/i })).toBeDefined()
     expect(screen.getByRole('button', { name: /Précédent/i })).toBeDefined()
   })
+
+  it('ne duplique pas le lien "Retour à l\'accueil" en bas de la carte du formulaire', () => {
+    render(<SignupForm />)
+
+    const signinLink = screen.getByRole('link', { name: /Se connecter/i })
+    expect(signinLink).toBeDefined()
+
+    const card = signinLink.closest('.relative.z-10')
+    const linksInCard = card ? card.querySelectorAll('a') : []
+    const homeLinksInCard = Array.from(linksInCard).filter((a) =>
+      a.textContent?.includes("Retour à l'accueil")
+    )
+    expect(homeLinksInCard.length).toBe(0)
+  })
 })

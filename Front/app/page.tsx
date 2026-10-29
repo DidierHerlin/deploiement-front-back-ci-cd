@@ -31,7 +31,6 @@ import {
   Menu,
   FileText,
   Building,
-  HelpCircle,
 } from "lucide-react"
 
 import {
@@ -230,9 +229,7 @@ export default function HomePage() {
               <span className="font-sans text-xl font-extrabold tracking-tight text-stone-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors whitespace-nowrap">
                 ImmoConnect
               </span>
-              <span className="text-[11px] text-stone-500 dark:text-slate-400 font-medium tracking-wide whitespace-nowrap">
-                {t("nav.brand_tagline")}
-              </span>
+           
             </div>
           </Link>
 
@@ -266,26 +263,17 @@ export default function HomePage() {
 
               {/* Panneau déroulant Méga-menu Fonctionnalités */}
               {showFeaturesMenu && (
-                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[480px] bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-stone-300/40 dark:shadow-black/60 border border-[#EDE6DC] dark:border-slate-800 p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-stone-400 dark:text-slate-500 px-3 pb-2 border-b border-stone-100 dark:border-slate-800">
-                    {t("features_menu.title")}
-                  </div>
-
-                  <div className="grid gap-2.5 mt-2.5">
+                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[440px] max-w-[92vw] bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-stone-300/40 dark:shadow-black/60 border border-[#EDE6DC] dark:border-slate-800 p-3 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="grid gap-1.5">
                     {/* Profil Locataire */}
-                    <div className="flex items-start gap-3 p-3 rounded-2xl hover:bg-blue-50/60 dark:hover:bg-slate-800/60 transition-colors border border-transparent hover:border-blue-100 dark:hover:border-slate-700 group cursor-pointer">
-                      <div className="flex size-10 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                        <Key className="size-5" />
+                    <div className="flex items-start gap-3 p-2.5 rounded-2xl hover:bg-blue-50/60 dark:hover:bg-slate-800/60 transition-colors border border-transparent hover:border-blue-100 dark:hover:border-slate-700 group cursor-pointer">
+                      <div className="flex size-9 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                        <Key className="size-4" />
                       </div>
                       <div>
-                        <div className="flex items-center gap-1.5">
-                          <h4 className="text-xs font-bold text-stone-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                            {t("features_menu.tenant_title")}
-                          </h4>
-                          <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-slate-300 border border-transparent dark:border-slate-700">
-                            {t("features_menu.tenant_badge")}
-                          </span>
-                        </div>
+                        <h4 className="text-xs font-bold text-stone-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                          {t("features_menu.tenant_title")}
+                        </h4>
                         <p className="text-[11px] text-stone-500 dark:text-slate-400 mt-0.5 leading-snug">
                           {t("features_menu.tenant_desc")}
                         </p>
@@ -293,39 +281,29 @@ export default function HomePage() {
                     </div>
 
                     {/* Profil Propriétaire */}
-                    <div className="flex items-start gap-3 p-3 rounded-2xl hover:bg-amber-50/60 dark:hover:bg-slate-800/60 transition-colors border border-transparent hover:border-amber-100 dark:hover:border-slate-700 group cursor-pointer">
-                      <div className="flex size-10 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400 items-center justify-center shrink-0 group-hover:bg-amber-600 group-hover:text-white transition-colors">
-                        <Building className="size-5" />
+                    <div className="flex items-start gap-3 p-2.5 rounded-2xl hover:bg-amber-50/60 dark:hover:bg-slate-800/60 transition-colors border border-transparent hover:border-amber-100 dark:hover:border-slate-700 group cursor-pointer">
+                      <div className="flex size-9 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400 items-center justify-center shrink-0 group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                        <Building className="size-4" />
                       </div>
                       <div>
-                        <div className="flex items-center gap-1.5">
-                          <h4 className="text-xs font-bold text-stone-900 dark:text-white group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
-                            {t("features_menu.owner_title")}
-                          </h4>
-                          <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-amber-50 dark:bg-slate-800 text-amber-700 dark:text-slate-300 border border-transparent dark:border-slate-700">
-                            {t("features_menu.owner_badge")}
-                          </span>
-                        </div>
+                        <h4 className="text-xs font-bold text-stone-900 dark:text-white group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
+                          {t("features_menu.owner_title")}
+                        </h4>
                         <p className="text-[11px] text-stone-500 dark:text-slate-400 mt-0.5 leading-snug">
                           {t("features_menu.owner_desc")}
                         </p>
                       </div>
                     </div>
 
-                    {/* Profil Admin & Agent */}
-                    <div className="flex items-start gap-3 p-3 rounded-2xl hover:bg-indigo-50/60 dark:hover:bg-slate-800/60 transition-colors border border-transparent hover:border-indigo-100 dark:hover:border-slate-700 group cursor-pointer">
-                      <div className="flex size-10 rounded-xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 items-center justify-center shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                        <ShieldCheck className="size-5" />
+                    {/* Profil Agences & Gestionnaires */}
+                    <div className="flex items-start gap-3 p-2.5 rounded-2xl hover:bg-indigo-50/60 dark:hover:bg-slate-800/60 transition-colors border border-transparent hover:border-indigo-100 dark:hover:border-slate-700 group cursor-pointer">
+                      <div className="flex size-9 rounded-xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 items-center justify-center shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                        <ShieldCheck className="size-4" />
                       </div>
                       <div>
-                        <div className="flex items-center gap-1.5">
-                          <h4 className="text-xs font-bold text-stone-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                            {t("features_menu.admin_title")}
-                          </h4>
-                          <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-indigo-50 dark:bg-slate-800 text-indigo-600 dark:text-slate-300 border border-transparent dark:border-slate-700">
-                            {t("features_menu.admin_badge")}
-                          </span>
-                        </div>
+                        <h4 className="text-xs font-bold text-stone-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                          {t("features_menu.admin_title")}
+                        </h4>
                         <p className="text-[11px] text-stone-500 dark:text-slate-400 mt-0.5 leading-snug">
                           {t("features_menu.admin_desc")}
                         </p>
@@ -339,9 +317,8 @@ export default function HomePage() {
             {/* Lien Conditions d'utilisation */}
             <button
               onClick={() => setShowCguModal(true)}
-              className="inline-flex items-center whitespace-nowrap gap-1.5 px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold text-stone-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white hover:bg-stone-100/70 dark:hover:bg-slate-800/70 transition-colors cursor-pointer shrink-0"
+              className="inline-flex items-center whitespace-nowrap px-3 py-2 rounded-xl text-xs lg:text-sm font-semibold text-stone-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white hover:bg-stone-100/70 dark:hover:bg-slate-800/70 transition-colors cursor-pointer shrink-0"
             >
-              <FileText className="size-4 shrink-0 text-stone-400 dark:text-slate-400" />
               <span className="whitespace-nowrap">{t("nav.terms")}</span>
             </button>
           </nav>
@@ -429,9 +406,8 @@ export default function HomePage() {
                   setMobileNavOpen(false)
                   setShowCguModal(true)
                 }}
-                className="w-full flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-stone-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-900 transition-colors cursor-pointer"
+                className="w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-semibold text-stone-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-900 transition-colors cursor-pointer"
               >
-                <FileText className="size-4 text-stone-400 dark:text-slate-500" />
                 <span>{t("nav.terms")}</span>
               </button>
             </div>
@@ -496,13 +472,13 @@ export default function HomePage() {
       {/* =========================================================================
           2. SECTION D'ACCUEIL & RECHERCHE (STYLE ÉPURÉ & PROFESSIONNEL)
       ========================================================================= */}
-      <section className="relative overflow-hidden pt-12 pb-10 px-4 sm:px-6 lg:px-8 border-b border-[#EDE6DC] dark:border-slate-800 bg-gradient-to-b from-blue-50/30 via-[#FAF7F2] to-[#FAF7F2] dark:from-slate-900/50 dark:via-slate-950 dark:to-slate-950">
+      <section className="relative overflow-hidden py-10 sm:py-12 px-4 sm:px-6 lg:px-8 border-b border-[#EDE6DC] dark:border-slate-800 bg-gradient-to-b from-blue-50/30 via-[#FAF7F2] to-[#FAF7F2] dark:from-slate-900/50 dark:via-slate-950 dark:to-slate-950">
         {/* Halo doux en arrière-plan */}
         <div className="absolute top-8 left-1/2 -translate-x-1/2 w-[760px] h-[360px] bg-gradient-to-r from-blue-100/20 via-slate-100/25 to-amber-50/20 dark:from-blue-950/20 dark:via-slate-900/20 dark:to-slate-900/10 blur-3xl -z-10 rounded-full pointer-events-none" />
 
-        <div className="max-w-4xl mx-auto text-center mb-8">
+        <div className="w-full max-w-4xl mx-auto text-center mb-8">
           {/* Titre simple, direct et chaleureux */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-stone-900 dark:text-white tracking-tight leading-[1.15]">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-stone-900 dark:text-white tracking-tight leading-[1.2]">
             {t("hero.title_start")}{" "}
             <span className="text-blue-600 dark:text-blue-400">
               {t("hero.title_highlight")}
@@ -511,7 +487,7 @@ export default function HomePage() {
           </h1>
 
           {/* Sous-titre sobre et direct */}
-          <p className="mt-4 text-base sm:text-lg text-stone-600 dark:text-slate-400 max-w-2xl mx-auto font-normal leading-relaxed">
+          <p className="mt-3.5 text-sm sm:text-base md:text-lg text-stone-600 dark:text-slate-400 max-w-2xl mx-auto font-normal leading-relaxed">
             {t("hero.subtitle")}
           </p>
         </div>
@@ -519,7 +495,7 @@ export default function HomePage() {
         {/* =========================================================================
             BARRE DE RECHERCHE INTUITIVE & ÉPURÉE
         ========================================================================= */}
-        <div className="max-w-4xl mx-auto bg-white dark:bg-slate-900 rounded-[2rem] shadow-[0_20px_50px_-15px_rgba(37,99,235,0.06)] dark:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.5)] border border-[#EDE6DC] dark:border-slate-800 p-3 sm:p-4 transition-all">
+        <div className="w-full max-w-4xl mx-auto bg-white dark:bg-slate-900 rounded-[2rem] shadow-[0_20px_50px_-15px_rgba(37,99,235,0.06)] dark:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.5)] border border-[#EDE6DC] dark:border-slate-800 p-3 sm:p-4 transition-all">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
             {/* Champ de recherche texte */}
             <div className="md:col-span-4 relative">
@@ -599,7 +575,7 @@ export default function HomePage() {
         </div>
 
         {/* Filtres rapides sobres & Compteur de biens disponibles */}
-        <div className="max-w-4xl mx-auto mt-4 sm:mt-5 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="w-full max-w-4xl mx-auto mt-4 sm:mt-5 flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex flex-wrap items-center gap-2">
             {[
               { id: "TOUS", label: t("search.pill_all") },
@@ -644,7 +620,7 @@ export default function HomePage() {
       {/* =========================================================================
           3. GRILLE DE BIENS : CARTES ÉLÉGANTES SUR FOND LUMINEUX
       ========================================================================= */}
-      <main id="catalogue-biens" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main id="catalogue-biens" className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
         {/* Notification en cas d'erreur réseau */}
         {error && (
           <div className="mb-10 p-6 rounded-3xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 text-blue-950 dark:text-blue-200 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
@@ -669,14 +645,14 @@ export default function HomePage() {
 
         {/* État de chargement élégant (Skeletons doux) */}
         {loading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((idx) => (
               <div
                 key={idx}
                 className="bg-white dark:bg-slate-900 rounded-3xl border border-[#EDE6DC] dark:border-slate-800 overflow-hidden shadow-xs animate-pulse"
               >
-                <div className="h-60 bg-stone-200/60 dark:bg-slate-800" />
-                <div className="p-6 space-y-3.5">
+                <div className="h-52 sm:h-56 bg-stone-200/60 dark:bg-slate-800" />
+                <div className="p-5 sm:p-6 space-y-3">
                   <div className="h-4 bg-stone-200/70 dark:bg-slate-800 rounded-full w-1/3" />
                   <div className="h-5 bg-stone-200/70 dark:bg-slate-800 rounded-full w-4/5" />
                   <div className="h-3 bg-stone-200/70 dark:bg-slate-800 rounded-full w-2/3" />
@@ -718,7 +694,7 @@ export default function HomePage() {
             GRILLE DES CARTES DE BIENS (PROPERTY CARDS ÉLÉGANTES ET PURS BLANCS)
         ========================================================================= */}
         {!loading && !error && filteredBiens.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredBiens.map((bien) => {
               const photoUrl = getPhotoBienUrl(bien)
               const isLocation = bien.mode_transaction === "LOCATION"
@@ -733,7 +709,7 @@ export default function HomePage() {
                   className="group bg-white dark:bg-slate-900 rounded-3xl border border-[#EDE6DC] dark:border-slate-800 overflow-hidden shadow-[0_4px_20px_-6px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_20px_-6px_rgba(0,0,0,0.4)] hover:shadow-[0_20px_40px_-10px_rgba(37,99,235,0.12)] dark:hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.6)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col cursor-pointer hover:border-blue-200 dark:hover:border-slate-700"
                 >
                   {/* Photo & Badges d'ambiance */}
-                  <div className="relative h-60 bg-stone-100 dark:bg-slate-800 overflow-hidden rounded-t-3xl">
+                  <div className="relative h-52 sm:h-56 bg-stone-100 dark:bg-slate-800 overflow-hidden rounded-t-3xl">
                     {photoUrl ? (
                       <img
                         src={photoUrl}
@@ -789,7 +765,7 @@ export default function HomePage() {
                   </div>
 
                   {/* Corps de la carte */}
-                  <div className="p-6 flex-1 flex flex-col">
+                  <div className="p-5 sm:p-6 flex-1 flex flex-col">
                     {/* Type de bien & Réf */}
                     <div className="flex items-center justify-between gap-2 mb-2">
                       <span className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-0.5 rounded-lg border border-blue-200/60 dark:border-blue-900/60">
@@ -802,18 +778,18 @@ export default function HomePage() {
                     </div>
 
                     {/* Titre chaleureux */}
-                    <h3 className="text-lg font-bold text-stone-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1 mb-1.5">
+                    <h3 className="text-base sm:text-lg font-bold text-stone-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1 mb-1">
                       {bien.titre}
                     </h3>
 
                     {/* Adresse avec icône douce */}
-                    <p className="text-xs text-stone-500 dark:text-slate-400 flex items-center gap-1.5 mb-4 line-clamp-1">
+                    <p className="text-xs text-stone-500 dark:text-slate-400 flex items-center gap-1.5 mb-3.5 line-clamp-1">
                       <MapPin className="size-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
                       <span>{bien.adresse}</span>
                     </p>
 
                     {/* Caractéristiques (Surface & Pièces) */}
-                    <div className="grid grid-cols-2 gap-2.5 py-3 px-3.5 bg-[#FAF7F2] dark:bg-slate-950/70 rounded-2xl mb-5 text-xs text-stone-600 dark:text-slate-400 border border-[#EDE6DC]/70 dark:border-slate-800">
+                    <div className="grid grid-cols-2 gap-2 py-2.5 px-3 bg-[#FAF7F2] dark:bg-slate-950/70 rounded-2xl mb-4 text-xs text-stone-600 dark:text-slate-400 border border-[#EDE6DC]/70 dark:border-slate-800">
                       <div className="flex items-center gap-2">
                         <Maximize2 className="size-4 text-stone-400 dark:text-slate-500" />
                         <span>
@@ -835,12 +811,12 @@ export default function HomePage() {
                     </div>
 
                     {/* Ligne Prix + Action bouton bleu élégant */}
-                    <div className="mt-auto pt-4 border-t border-[#EDE6DC] dark:border-slate-800 flex items-center justify-between gap-2">
+                    <div className="mt-auto pt-3.5 border-t border-[#EDE6DC] dark:border-slate-800 flex items-center justify-between gap-2">
                       <div>
                         <span className="block text-[11px] text-stone-400 dark:text-slate-500 font-medium">
                           {isLocation ? t("card.monthly_rent") : t("card.sale_price")}
                         </span>
-                        <div className="text-lg font-black text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
+                        <div className="text-base sm:text-lg font-extrabold text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
                           {formattedPrice}
                         </div>
                       </div>
@@ -850,7 +826,7 @@ export default function HomePage() {
                           e.stopPropagation()
                           openBienDetail(bien)
                         }}
-                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all duration-200 shadow-xs hover:shadow-md cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all duration-200 shadow-xs hover:shadow-md cursor-pointer"
                       >
                         <span>{t("card.discover")}</span>
                         <ArrowUpRight className="size-3.5" />
@@ -867,8 +843,8 @@ export default function HomePage() {
       {/* =========================================================================
           4. BANNIÈRE D'ACCOMPAGNEMENT HUMAIN
       ========================================================================= */}
-      <section className="bg-gradient-to-r from-blue-50 via-indigo-50/60 to-amber-50/50 dark:from-slate-900 dark:via-slate-900/80 dark:to-slate-900 border-t border-b border-[#EDE6DC] dark:border-slate-800 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+      <section className="bg-gradient-to-r from-blue-50 via-indigo-50/60 to-amber-50/50 dark:from-slate-900 dark:via-slate-900/80 dark:to-slate-900 border-t border-b border-[#EDE6DC] dark:border-slate-800 py-10 sm:py-12 px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
           <div className="space-y-1.5">
             <h3 className="text-xl font-bold text-stone-900 dark:text-white">
               {t("banner.title")}
@@ -1054,7 +1030,7 @@ export default function HomePage() {
       )}
 
       {/* =========================================================================
-          6. MODAL CONDITIONS GÉNÉRALES D'UTILISATION (CGU)
+          6. MODAL CONDITIONS D'UTILISATION (RÉSUMÉ CLAIR, HUMAIN ET RASSURANT)
       ========================================================================= */}
       {showCguModal && (
         <div className="fixed inset-0 z-50 bg-stone-950/60 dark:bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
@@ -1063,7 +1039,7 @@ export default function HomePage() {
             <div className="px-6 sm:px-8 pt-6 pb-4 border-b border-stone-100 dark:border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex size-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 items-center justify-center">
-                  <FileText className="size-5" />
+                  <ShieldCheck className="size-5" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-stone-900 dark:text-white">
@@ -1077,58 +1053,77 @@ export default function HomePage() {
               <button
                 onClick={() => setShowCguModal(false)}
                 className="size-9 rounded-full bg-stone-100 dark:bg-slate-800 hover:bg-stone-200 dark:hover:bg-slate-700 text-stone-600 dark:text-slate-300 flex items-center justify-center transition-colors cursor-pointer"
+                aria-label="Fermer"
               >
                 <X className="size-5" />
               </button>
             </div>
 
-            {/* Contenu textuel CGU */}
-            <div className="p-6 sm:p-8 space-y-5 text-xs text-stone-600 dark:text-slate-300 max-h-[60vh] overflow-y-auto leading-relaxed">
-              <section className="space-y-1.5">
-                <h4 className="font-bold text-sm text-stone-900 dark:text-white flex items-center gap-2">
-                  <ShieldCheck className="size-4 text-emerald-600 dark:text-emerald-400" />
-                  {t("cgu.sec1_title")}
-                </h4>
-                <p>
-                  {t("cgu.sec1_text")}
-                </p>
-              </section>
+            {/* Contenu textuel CGU : 4 points clairs, humains et rassurants */}
+            <div className="p-6 sm:p-8 space-y-3.5 max-h-[62vh] overflow-y-auto">
+              {/* Point 1 : Transparence des annonces */}
+              <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-stone-50/80 dark:bg-slate-800/50 border border-stone-100 dark:border-slate-800">
+                <div className="flex size-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 items-center justify-center shrink-0 mt-0.5">
+                  <CheckCircle2 className="size-4" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-bold text-xs sm:text-sm text-stone-900 dark:text-white">
+                    {t("cgu.sec1_title")}
+                  </h4>
+                  <p className="text-xs text-stone-600 dark:text-slate-300 leading-relaxed">
+                    {t("cgu.sec1_text")}
+                  </p>
+                </div>
+              </div>
 
-              <section className="space-y-1.5">
-                <h4 className="font-bold text-sm text-stone-900 dark:text-white flex items-center gap-2">
-                  <Key className="size-4 text-blue-600 dark:text-blue-400" />
-                  {t("cgu.sec2_title")}
-                </h4>
-                <ul className="list-disc pl-5 space-y-1 text-stone-600 dark:text-slate-300">
-                  <li><strong>{t("features_menu.tenant_title")} :</strong> {t("cgu.sec2_tenant")}</li>
-                  <li><strong>{t("features_menu.owner_title")} :</strong> {t("cgu.sec2_owner")}</li>
-                  <li><strong>{t("features_menu.admin_title")} :</strong> {t("cgu.sec2_admin")}</li>
-                </ul>
-              </section>
+              {/* Point 2 : Réservation et baux sécurisés */}
+              <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-stone-50/80 dark:bg-slate-800/50 border border-stone-100 dark:border-slate-800">
+                <div className="flex size-9 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 items-center justify-center shrink-0 mt-0.5">
+                  <Key className="size-4" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-bold text-xs sm:text-sm text-stone-900 dark:text-white">
+                    {t("cgu.sec2_title")}
+                  </h4>
+                  <p className="text-xs text-stone-600 dark:text-slate-300 leading-relaxed">
+                    {t("cgu.sec2_text")}
+                  </p>
+                </div>
+              </div>
 
-              <section className="space-y-1.5">
-                <h4 className="font-bold text-sm text-stone-900 dark:text-white flex items-center gap-2">
-                  <CheckCircle2 className="size-4 text-indigo-600 dark:text-indigo-400" />
-                  {t("cgu.sec3_title")}
-                </h4>
-                <p>
-                  {t("cgu.sec3_text")}
-                </p>
-              </section>
+              {/* Point 3 : Suivi des paiements et quittances */}
+              <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-stone-50/80 dark:bg-slate-800/50 border border-stone-100 dark:border-slate-800">
+                <div className="flex size-9 rounded-xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 items-center justify-center shrink-0 mt-0.5">
+                  <FileText className="size-4" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-bold text-xs sm:text-sm text-stone-900 dark:text-white">
+                    {t("cgu.sec3_title")}
+                  </h4>
+                  <p className="text-xs text-stone-600 dark:text-slate-300 leading-relaxed">
+                    {t("cgu.sec3_text")}
+                  </p>
+                </div>
+              </div>
 
-              <section className="space-y-1.5">
-                <h4 className="font-bold text-sm text-stone-900 dark:text-white flex items-center gap-2">
-                  <HelpCircle className="size-4 text-amber-600 dark:text-amber-400" />
-                  {t("cgu.sec4_title")}
-                </h4>
-                <p>
-                  {t("cgu.sec4_text")}
-                </p>
-              </section>
+              {/* Point 4 : Protection de vos données personnelles */}
+              <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-stone-50/80 dark:bg-slate-800/50 border border-stone-100 dark:border-slate-800">
+                <div className="flex size-9 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400 items-center justify-center shrink-0 mt-0.5">
+                  <ShieldCheck className="size-4" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-bold text-xs sm:text-sm text-stone-900 dark:text-white">
+                    {t("cgu.sec4_title")}
+                  </h4>
+                  <p className="text-xs text-stone-600 dark:text-slate-300 leading-relaxed">
+                    {t("cgu.sec4_text")}
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Footer modal CGU */}
-            <div className="px-6 sm:px-8 py-4 bg-stone-50 dark:bg-slate-950/60 border-t border-stone-100 dark:border-slate-800 flex justify-end">
+            <div className="px-6 sm:px-8 py-4 bg-stone-50/60 dark:bg-slate-950/60 border-t border-stone-100 dark:border-slate-800 flex justify-end">
               <button
                 onClick={() => setShowCguModal(false)}
                 className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition-colors cursor-pointer"
@@ -1144,7 +1139,7 @@ export default function HomePage() {
           7. FOOTER CHALEUREUX & HARMONIEUX
       ========================================================================= */}
       <footer className="mt-auto bg-white dark:bg-slate-900 border-t border-[#EDE6DC] dark:border-slate-800 py-10 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 text-xs text-stone-500 dark:text-slate-400">
+        <div className="w-full max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 text-xs text-stone-500 dark:text-slate-400">
           <div className="flex items-center gap-3">
             <div className="size-7 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-xs">
               <Home className="size-4" />

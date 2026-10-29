@@ -61,11 +61,11 @@ describe("i18n System", () => {
     act(() => {
       result.current.setLang("fr")
     })
-    expect(result.current.t("search.want_to", { test: "123" })).toBe("Envie de :")
+    expect(result.current.t("search.want_to", { test: "123" })).toBe("Filtres :")
 
     act(() => {
       result.current.setLang("en")
     })
-    expect(result.current.t("search.want_to", { test: "123" })).toBe("Looking to :")
+    expect(result.current.t("search.want_to", { test: "123" })).toBe("Filters :")
   })
 })

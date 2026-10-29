@@ -128,67 +128,76 @@ export default function MesReservationsPage() {
 
       {/* Modal détail */}
       {selected && (
-        <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div className="panel" style={{ maxWidth: 560, width: '100%', maxHeight: '90vh', overflow: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700 }}>
+        <div className="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="panel bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 w-full max-w-[560px] max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-5">
+              <h2 className="text-slate-900 dark:text-white font-bold text-lg m-0">
                 {t('locataire_pages.reservations.detail_title', 'Détail de la réservation')}
               </h2>
-              <button onClick={() => setSelected(null)} aria-label={t('common.close', 'Fermer')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}>✕</button>
+              <button 
+                onClick={() => setSelected(null)} 
+                aria-label={t('common.close', 'Fermer')} 
+                className="cursor-pointer text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 p-1.5 rounded-lg transition-colors border-0 bg-transparent text-base"
+              >
+                ✕
+              </button>
             </div>
 
-            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            <div className="flex gap-2 mb-4">
               <TypeBadge type={selected.type_reservation} t={t} />
               <StatutBadge statut={selected.statut} t={t} />
             </div>
 
-            <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted-foreground)', marginBottom: 8 }}>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
               {t('locataire_pages.reservations.property_info', 'Information sur le bien')}
             </h4>
-            <div style={{ background: 'var(--muted)', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 13 }}>
-              <p><strong>{selected.bien_titre}</strong></p>
-              <p>{selected.bien_type} • {selected.bien_adresse}</p>
-              {selected.bien_surface && <p>{t('locataire_pages.reservations.surface', 'Surface')} : {selected.bien_surface} m²</p>}
-              {selected.bien_nombre_pieces && <p>{t('locataire_pages.reservations.rooms', 'Pièces')} : {selected.bien_nombre_pieces}</p>}
-              {selected.bien_loyer_mensuel && <p>{t('locataire_pages.reservations.rent', 'Loyer')} : {Number(selected.bien_loyer_mensuel).toLocaleString()} Ar{t('card.per_month', 'mois')}</p>}
-              {selected.bien_prix && <p>{t('locataire_pages.reservations.price', 'Prix')} : {Number(selected.bien_prix).toLocaleString()} Ar</p>}
+            <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800 rounded-xl p-3.5 mb-4 text-xs sm:text-sm text-slate-700 dark:text-slate-300 space-y-1">
+              <p className="m-0"><strong className="text-slate-900 dark:text-white font-semibold">{selected.bien_titre}</strong></p>
+              <p className="m-0 text-slate-500 dark:text-slate-400">{selected.bien_type} • {selected.bien_adresse}</p>
+              {selected.bien_surface && <p className="m-0">{t('locataire_pages.reservations.surface', 'Surface')} : {selected.bien_surface} m²</p>}
+              {selected.bien_nombre_pieces && <p className="m-0">{t('locataire_pages.reservations.rooms', 'Pièces')} : {selected.bien_nombre_pieces}</p>}
+              {selected.bien_loyer_mensuel && <p className="m-0 font-medium text-blue-600 dark:text-blue-400">{t('locataire_pages.reservations.rent', 'Loyer')} : {Number(selected.bien_loyer_mensuel).toLocaleString()} Ar / {t('card.per_month', 'mois')}</p>}
+              {selected.bien_prix && <p className="m-0 font-medium text-blue-600 dark:text-blue-400">{t('locataire_pages.reservations.price', 'Prix')} : {Number(selected.bien_prix).toLocaleString()} Ar</p>}
             </div>
 
             {selected.commentaire && (
               <>
-                <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted-foreground)', marginBottom: 8 }}>
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                   {t('locataire_pages.reservations.your_comment', ' Votre commentaire')}
                 </h4>
-                <div style={{ background: 'var(--muted)', borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 13 }}>
+                <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800 rounded-xl p-3.5 mb-4 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
                   {selected.commentaire}
                 </div>
               </>
             )}
 
-            <p style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>
+            <p className="text-xs text-slate-500 dark:text-slate-400 m-0">
               {t('locataire_pages.reservations.submitted_on', 'Soumise le')} {new Date(selected.date_creation).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </p>
 
             {selected.statut === 'TRAITEE' && selected.reponse_admin && (
-              <div style={{ marginTop: 16, padding: 12, background: '#f0fdf4', borderRadius: 6, borderLeft: '3px solid #22c55e' }}>
-                <p style={{ fontSize: 12, fontWeight: 600, color: '#166534', marginBottom: 4 }}>
-                  ✅ {t('locataire_pages.reservations.admin_response', "Réponse de l'administration")}
+              <div className="mt-4 p-3 bg-emerald-50 dark:bg-emerald-950/30 border-l-4 border-emerald-500 rounded-lg text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm">
+                <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300 mb-1">
+                   {t('locataire_pages.reservations.admin_response', "Réponse de l'administration")}
                 </p>
-                <p style={{ fontSize: 13, color: '#15803d' }}>{selected.reponse_admin}</p>
+                <p className="m-0">{selected.reponse_admin}</p>
               </div>
             )}
 
             {selected.contrat && (
               <a
                 href={`/locataire/contrat`}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 16, padding: '8px 16px', borderRadius: 6, background: 'var(--primary)', color: 'var(--primary-foreground)', textDecoration: 'none', fontSize: 13, fontWeight: 600 }}
+                className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white no-underline text-xs sm:text-sm font-semibold transition-colors"
               >
                 <FileText size={14} /> {t('locataire_pages.reservations.see_contract', 'Voir mon contrat')}
               </a>
             )}
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
-              <button onClick={() => setSelected(null)} style={{ padding: '8px 16px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', cursor: 'pointer', fontSize: 13 }}>
+            <div className="flex justify-end mt-5 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <button 
+                onClick={() => setSelected(null)} 
+                className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-sm font-medium transition-colors cursor-pointer"
+              >
                 {t('common.close', 'Fermer')}
               </button>
             </div>

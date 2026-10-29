@@ -71,6 +71,7 @@ export function ThemeToggle({ className = "", variant = "default" }: ThemeToggle
         onClick={() => setIsOpen((prev) => !prev)}
         type="button"
         title="Mode d'affichage (Thème) / Display Theme"
+        aria-label="Mode d'affichage (Thème)"
         className="flex items-center whitespace-nowrap shrink-0 gap-1.5 px-2.5 py-1.5 rounded-xl border border-stone-200/90 dark:border-slate-700/80 bg-white/90 dark:bg-slate-800/90 text-stone-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-200 text-xs font-semibold shadow-2xs hover:bg-stone-50 dark:hover:bg-slate-700/60 transition-all cursor-pointer"
       >
         <CurrentIcon className="size-3.5 shrink-0 text-blue-600 dark:text-blue-400" />

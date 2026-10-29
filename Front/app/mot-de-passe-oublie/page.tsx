@@ -8,8 +8,27 @@ import { VerifyCodeForm } from "@/components/organisms/verify-code-form"
 import { ResetPasswordForm } from "@/components/organisms/reset-password-form"
 import { getApiUrl } from "@/lib/config"
 import { useTranslation, LanguageSwitcher } from "@/lib/i18n"
+import { ThemeToggle } from "@/components/molecules/ThemeToggle"
 
 type Etape = "email" | "code" | "nouveau-mdp" | "succes"
+
+async function parseApiResponse(response: Response) {
+  const contentType = response.headers.get("content-type") || ""
+  if (!contentType.includes("application/json")) {
+    if (response.status === 404) {
+      throw new Error("Service indisponible ou adresse introuvable (Erreur 404).")
+    }
+    if (response.status >= 500) {
+      throw new Error("Erreur serveur temporaire. Veuillez réessayer dans un instant (Erreur 500).")
+    }
+    throw new Error(`Réponse inattendue du serveur (${response.status}).`)
+  }
+  try {
+    return await response.json()
+  } catch {
+    throw new Error("Impossible de lire les données retournées par le serveur.")
+  }
+}
 
 export default function ForgotPasswordPage() {
   const { t } = useTranslation()
@@ -33,9 +52,9 @@ export default function ForgotPasswordPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       })
-      const data = await response.json()
+      const data = await parseApiResponse(response)
 
-      if (!response.ok || !data.success) {
+      if (!response.ok || data.success === false) {
         throw new Error(data.error ?? data.details?.email?.[0] ?? "Impossible d'envoyer le code.")
       }
 
@@ -54,15 +73,25 @@ export default function ForgotPasswordPage() {
     setIsLoading(true)
 
     try {
-      const response = await fetch(`${getApiUrl()}/mot-de-passe/verifier/`, {
+      let response = await fetch(`${getApiUrl()}/mot-de-passe/verifier-code/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, code }),
       })
-      const data = await response.json()
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.error ?? "Code invalide ou expiré.")
+      // Fallback vers l'alias /mot-de-passe/verifier/ en cas de 404
+      if (response.status === 404) {
+        response = await fetch(`${getApiUrl()}/mot-de-passe/verifier/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, code }),
+        })
+      }
+
+      const data = await parseApiResponse(response)
+
+      if (!response.ok || data.success === false || data.valid === false) {
+        throw new Error(data.error ?? data.message ?? "Code invalide ou expiré.")
       }
 
       setEtape("nouveau-mdp")
@@ -91,15 +120,25 @@ export default function ForgotPasswordPage() {
     setIsLoading(true)
 
     try {
-      const response = await fetch(`${getApiUrl()}/mot-de-passe/reinitialiser/`, {
+      let response = await fetch(`${getApiUrl()}/mot-de-passe/reinitialiser/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code, new_password: newPassword }),
+        body: JSON.stringify({ email, code, new_password: newPassword, password: newPassword }),
       })
-      const data = await response.json()
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.error ?? "Impossible de réinitialiser le mot de passe.")
+      // Fallback vers l'alias /mot-de-passe/confirmer/ en cas de 404
+      if (response.status === 404) {
+        response = await fetch(`${getApiUrl()}/mot-de-passe/confirmer/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, code, new_password: newPassword, password: newPassword }),
+        })
+      }
+
+      const data = await parseApiResponse(response)
+
+      if (!response.ok || data.success === false) {
+        throw new Error(data.error ?? data.details?.new_password?.[0] ?? "Impossible de réinitialiser le mot de passe.")
       }
 
       setEtape("succes")
@@ -111,7 +150,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <main className="flex min-h-screen text-foreground relative">
+    <main className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-foreground relative">
       {/* Côté gauche : Panneau Image */}
       <section className="relative hidden w-full flex-col justify-between p-12 text-white lg:flex lg:w-1/2 overflow-hidden">
         {/* Image et Overlay */}
@@ -169,47 +208,50 @@ export default function ForgotPasswordPage() {
       </section>
 
       {/* Côté droit : Formulaire */}
-      <section className="relative flex w-full flex-col items-center justify-center bg-slate-50/50 p-8 sm:p-12 lg:w-1/2 min-h-screen">
+      <section className="relative flex w-full flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 p-8 sm:p-12 lg:w-1/2 min-h-screen">
         {/* Barre d'action supérieure : Bouton de retour à l'accueil et sélecteur de langue */}
         <div className="absolute top-6 left-6 right-6 z-20 flex items-center justify-between">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200/80 bg-white/90 px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-700 shadow-sm backdrop-blur-md transition-all hover:bg-white hover:text-primary hover:border-primary/40 hover:shadow-md active:scale-95 cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-sm backdrop-blur-md transition-all hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700 active:scale-95 cursor-pointer"
             aria-label={t("auth.back_to_home", "Retour à l'accueil")}
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
             <span>{t("auth.back_to_home", "Retour à l'accueil")}</span>
           </Link>
 
-          <LanguageSwitcher />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <LanguageSwitcher />
+          </div>
         </div>
 
         {/* Douces lumières en arrière-plan */}
-        <div className="pointer-events-none absolute left-0 top-0 h-full w-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-60" aria-hidden="true" />
-        <div className="pointer-events-none absolute bottom-0 right-0 h-full w-full bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent opacity-60" aria-hidden="true" />
+        <div className="pointer-events-none absolute left-0 top-0 h-full w-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent opacity-60" aria-hidden="true" />
+        <div className="pointer-events-none absolute bottom-0 right-0 h-full w-full bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-blue-500/5 via-transparent to-transparent opacity-60" aria-hidden="true" />
 
-        <div className="relative z-10 w-full max-w-[460px] rounded-[2rem] border border-white/60 bg-white/80 p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] backdrop-blur-xl sm:p-12">
+        <div className="relative z-10 w-full max-w-[460px] rounded-[2rem] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 shadow-2xl backdrop-blur-xl sm:p-12">
           
           <div className="mb-8 flex items-center justify-center gap-3 lg:hidden" aria-label="Retour à la connexion">
             <span className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg"><LockKeyhole className="size-5" aria-hidden="true" /></span>
-            <span className="font-sans text-xl font-semibold tracking-tight">Immo<span className="text-primary">Connect</span></span>
+            <span className="font-sans text-xl font-semibold tracking-tight text-slate-900 dark:text-white">Immo<span className="text-primary">Connect</span></span>
           </div>
 
           {/* ─── Étape succès ─── */}
           {etape === "succes" && (
             <div className="text-center">
-              <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-[1.25rem] bg-accent/20 text-accent shadow-inner">
+              <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-[1.25rem] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-inner">
                 <CheckCircle2 className="size-7" aria-hidden="true" />
               </div>
-              <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                 {t("auth.forgot_password.title_step4", "Mot de passe modifié")}
               </h1>
-              <p role="status" className="mt-3 text-sm leading-6 text-muted-foreground">
+              <p role="status" className="mt-3 text-sm leading-6 text-slate-500 dark:text-slate-400">
                 {t("auth.forgot_password.subtitle_step4", "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter.")}
               </p>
               <Link
                 href="/login"
-                className="group mt-8 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[0_8px_16px_-4px_rgba(var(--primary),0.3)] transition-all hover:-translate-y-[1px] hover:shadow-[0_12px_20px_-4px_rgba(var(--primary),0.4)] active:translate-y-0 active:shadow-none"
+                className="group mt-8 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-md transition-all hover:bg-primary/90 active:scale-95"
               >
                 {t("auth.login.submit_btn", "Se connecter")}
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
@@ -254,12 +296,9 @@ export default function ForgotPasswordPage() {
             />
           )}
 
-          <div className="mt-8 flex flex-col items-center gap-3">
-            <Link href="/login" className="flex items-center gap-2 text-sm font-semibold text-muted-foreground transition hover:text-foreground">
+          <div className="mt-8 flex justify-center">
+            <Link href="/login" className="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400 transition-colors hover:text-slate-900 dark:hover:text-white">
               <ArrowLeft className="size-4" aria-hidden="true" /> {t("auth.forgot_password.btn_back_login", "Retour à la connexion")}
-            </Link>
-            <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground/80 transition hover:text-primary">
-              <ArrowLeft className="size-3" aria-hidden="true" /> {t("auth.back_to_home", "Retour à l'accueil")}
             </Link>
           </div>
         </div>

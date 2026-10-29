@@ -145,7 +145,6 @@ class ContratListSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # ✅ Filtrage des biens disponibles uniquement en création
         # (aucune modification apportée, principe inchangé)
         if not self.instance:
             self.fields['bien'].queryset = Bien.objects.filter(

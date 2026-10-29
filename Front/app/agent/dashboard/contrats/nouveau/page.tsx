@@ -139,7 +139,6 @@ export default function NouveauContratPage() {
         setForm((f) => ({
           ...f,
           type_contrat: "LOCATION",
-          // ✅ Pré-remplissage automatique du loyer depuis le bien
           loyer: formaterMontant(detail.loyer_mensuel),
           // Dépôt de garantie = 2× loyer (valeur par défaut métier)
           depot_garantie: formaterMontant(String(loyer * 2)),
@@ -151,7 +150,6 @@ export default function NouveauContratPage() {
           type_contrat: "ACHAT",
           loyer: "",
           depot_garantie: "",
-          // ✅ Pré-remplissage automatique du prix depuis le bien
           prix: formaterMontant(detail.prix),
         }))
       }

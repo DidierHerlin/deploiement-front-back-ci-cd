@@ -62,16 +62,22 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
     email = serializers.EmailField()
     code = serializers.CharField(max_length=6)
-    new_password = serializers.CharField(min_length=8, write_only=True)
-
-    def validate_new_password(self, value):
-        try:
-            validate_password(value)
-        except DjangoValidationError as e:
-            raise serializers.ValidationError(list(e.messages))
-        return value
+    new_password = serializers.CharField(min_length=8, write_only=True, required=False)
+    password = serializers.CharField(min_length=8, write_only=True, required=False)
 
     def validate(self, attrs):
+        # Supporte indifféremment 'new_password' ou 'password'
+        new_pwd = attrs.get("new_password") or attrs.get("password")
+        if not new_pwd:
+            raise serializers.ValidationError({"new_password": "Le mot de passe doit contenir au moins 8 caractères."})
+
+        try:
+            validate_password(new_pwd)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError({"new_password": list(e.messages)})
+
+        attrs["new_password"] = new_pwd
+
         try:
             user = Utilisateur.objects.get(email__iexact=attrs["email"])
         except Utilisateur.DoesNotExist:

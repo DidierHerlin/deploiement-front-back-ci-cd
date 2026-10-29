@@ -18,8 +18,8 @@ export function BienList({ biens, onEdit, onRefresh }: BienListProps) {
 
   if (biens.length === 0) {
     return (
-      <div className="text-center p-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-        <p className="text-gray-500 mb-2">{t("proprietaire_pages.biens.empty", "Vous n'avez pas encore de biens.")}</p>
+      <div className="text-center p-12 bg-slate-50 dark:bg-slate-950/40 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+        <p className="text-slate-500 dark:text-slate-400 mb-2">{t("proprietaire_pages.biens.empty", "Vous n'avez pas encore de biens.")}</p>
       </div>
     )
   }

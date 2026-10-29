@@ -27,19 +27,19 @@ export function ResetPasswordForm({
   return (
     <>
       <div className="mb-8 text-center">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-          {t("auth.forgot_password.instruction_step3", "Étape 3 / 3")}
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-blue-600 dark:text-blue-400">
+          {t("auth.forgot_password.instruction_step3", "ÉTAPE 3 SUR 3 • NOUVEAU MOT DE PASSE")}
         </p>
-        <h1 className="bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-3xl font-semibold tracking-tight text-transparent">
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
           {t("auth.forgot_password.title_step3", "Nouveau mot de passe")}
         </h1>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+        <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
           {t("auth.forgot_password.subtitle_step3", "Choisissez un nouveau mot de passe sécurisé.")}
         </p>
       </div>
       <form onSubmit={onSubmit} className="space-y-5">
         <div className="space-y-2">
-          <label htmlFor="new-password" className="text-sm font-medium text-foreground">
+          <label htmlFor="new-password" className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 block">
             {t("auth.forgot_password.new_password_label", "Nouveau mot de passe")}
           </label>
           <div className="relative">
@@ -54,7 +54,7 @@ export function ResetPasswordForm({
           </div>
         </div>
         <div className="space-y-2">
-          <label htmlFor="confirm-new-password" className="text-sm font-medium text-foreground">
+          <label htmlFor="confirm-new-password" className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 block">
             {t("auth.forgot_password.confirm_password_label", "Confirmer le mot de passe")}
           </label>
           <div className="relative">
@@ -68,7 +68,7 @@ export function ResetPasswordForm({
             />
           </div>
         </div>
-        {error && <p role="alert" className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive backdrop-blur-sm">{error}</p>}
+        {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20 px-4 py-3 text-sm">{error}</p>}
         <button
           type="submit"
           disabled={isLoading}

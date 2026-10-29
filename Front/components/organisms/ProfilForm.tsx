@@ -147,7 +147,7 @@ export default function ProfilForm({ initialData, onUpdate }: ProfilFormProps) {
         
         {/* Colonne Photo de profil */}
         <div className="flex flex-col items-center space-y-4 md:w-1/3">
-          <div className="relative group w-32 h-32 rounded-full overflow-hidden border-4 border-gray-100 dark:border-gray-700 bg-gray-200 dark:bg-gray-800 shadow-sm flex items-center justify-center">
+          <div className="relative group w-32 h-32 rounded-full overflow-hidden border-4 border-slate-100 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 shadow-sm flex items-center justify-center">
             {photoPreview ? (
               <img 
                 src={resolveMediaUrl(photoPreview) ?? ""} 
@@ -155,7 +155,7 @@ export default function ProfilForm({ initialData, onUpdate }: ProfilFormProps) {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <span className="text-4xl text-gray-400 dark:text-gray-500 font-semibold">
+              <span className="text-4xl text-slate-400 dark:text-slate-500 font-semibold">
                 {formData.prenoms.charAt(0)}{formData.nom.charAt(0)}
               </span>
             )}
@@ -173,13 +173,13 @@ export default function ProfilForm({ initialData, onUpdate }: ProfilFormProps) {
             />
           </div>
           <div className="text-center">
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {t("profile.role", "Rôle :")}{" "}
-              <span className="uppercase text-blue-600 dark:text-blue-400">
+              <span className="uppercase font-semibold text-blue-600 dark:text-blue-400">
                 {t(`dashboard.roles.${initialData.role}`, initialData.role)}
               </span>
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               {t("profile.member_since", "Membre depuis le")}{" "}
               {new Date(initialData.date_creation).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR')}
             </p>
@@ -190,25 +190,25 @@ export default function ProfilForm({ initialData, onUpdate }: ProfilFormProps) {
         <div className="flex-1 space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("profile.first_name", "Prénoms")}</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("profile.first_name", "Prénoms")}</label>
               <input
                 type="text"
                 name="prenoms"
                 value={formData.prenoms}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                 required
               />
             </div>
             
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("profile.last_name", "Nom")}</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("profile.last_name", "Nom")}</label>
               <input
                 type="text"
                 name="nom"
                 value={formData.nom}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                 required
               />
             </div>
@@ -216,51 +216,53 @@ export default function ProfilForm({ initialData, onUpdate }: ProfilFormProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("profile.email", "Email")}</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("profile.email", "Email")}</label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                 required
               />
             </div>
             
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("profile.phone", "Téléphone")}</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("profile.phone", "Téléphone")}</label>
               <input
                 type="tel"
                 name="telephone"
                 value={formData.telephone}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
               />
             </div>
           </div>
 
-          <div className="pt-4 border-t border-gray-100 dark:border-gray-700 mt-6">
-            <h3 className="text-lg font-medium text-gray-800 dark:text-white mb-4">
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 mt-6">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-4">
               {t("profile.change_password_optional", "Changer de mot de passe (optionnel)")}
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("profile.current_password", "Mot de passe actuel")}</label>
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("profile.current_password", "Mot de passe actuel")}</label>
                 <PasswordInput
                   name="current_password"
                   value={formData.current_password}
                   onChange={handleChange}
+                  className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
                 />
               </div>
               
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("profile.new_password", "Nouveau mot de passe")}</label>
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("profile.new_password", "Nouveau mot de passe")}</label>
                 <PasswordInput
                   name="new_password"
                   value={formData.new_password}
                   onChange={handleChange}
                   minLength={8}
+                  className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
                 />
               </div>
             </div>
@@ -268,11 +270,11 @@ export default function ProfilForm({ initialData, onUpdate }: ProfilFormProps) {
         </div>
       </div>
 
-      <div className="pt-6 border-t border-gray-100 dark:border-gray-700 flex justify-end">
+      <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end">
         <button
           type="submit"
           disabled={loading}
-          className="flex items-center px-6 py-2.5 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:ring-4 focus:ring-blue-500/50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+          className="flex items-center px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-sm focus:ring-4 focus:ring-blue-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
           {loading ? (
             <div className="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

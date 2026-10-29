@@ -75,7 +75,7 @@ export function PaiementStats({ paiements, user, userId, stats }: PaiementStatsP
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
       
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-xs transition-colors">
+      <div className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-xs transition-colors">
         <p className="m-0 text-sm font-medium text-slate-500 dark:text-slate-400">Total des paiements</p>
         <p className="mt-2.5 mb-0 text-2xl font-bold text-slate-900 dark:text-white">{total}</p>
         <div className="mt-2.5 flex flex-wrap gap-2.5 text-xs font-semibold">
@@ -85,12 +85,12 @@ export function PaiementStats({ paiements, user, userId, stats }: PaiementStatsP
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-xs transition-colors">
+      <div className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-xs transition-colors">
         <p className="m-0 text-sm font-medium text-slate-500 dark:text-slate-400">Montant total encaissé</p>
         <p className="mt-2.5 mb-0 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatMontant(totalEncaisse)}</p>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-xs transition-colors">
+      <div className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-xs transition-colors">
         <p className="m-0 text-sm font-medium text-slate-500 dark:text-slate-400">Montant restant à payer</p>
         <p className="mt-2.5 mb-0 text-2xl font-bold text-rose-600 dark:text-rose-400">{formatMontant(montantRestant)}</p>
         <p className="mt-1 mb-0 text-xs text-slate-500 dark:text-slate-400">(Inclut les retards et paiements partiels)</p>

@@ -27,7 +27,12 @@ class RequestPasswordResetView(ApiResponseMixin, APIView):
         serializer = PasswordResetRequestSerializer(data=request.data)
 
         if not serializer.is_valid():
-            return self.error_response("Email invalide", details=serializer.errors)
+            error_msg = "Email invalide"
+            if "email" in serializer.errors and serializer.errors["email"]:
+                error_msg = str(serializer.errors["email"][0])
+            elif "non_field_errors" in serializer.errors and serializer.errors["non_field_errors"]:
+                error_msg = str(serializer.errors["non_field_errors"][0])
+            return self.error_response(error_msg, details=serializer.errors)
 
         try:
             serializer.save()
@@ -55,12 +60,19 @@ class VerifyResetCodeView(ApiResponseMixin, APIView):
         serializer = PasswordResetCodeVerificationSerializer(data=request.data)
 
         if not serializer.is_valid():
+            error_msg = "Code invalide ou expiré."
+            if "non_field_errors" in serializer.errors and serializer.errors["non_field_errors"]:
+                error_msg = str(serializer.errors["non_field_errors"][0])
+            elif "code" in serializer.errors and serializer.errors["code"]:
+                error_msg = str(serializer.errors["code"][0])
+            elif "email" in serializer.errors and serializer.errors["email"]:
+                error_msg = str(serializer.errors["email"][0])
             return self.error_response(
-                "Code ou email invalide",
+                error_msg,
                 details=serializer.errors,
             )
 
-        return self.success_response("Code valide")
+        return self.success_response("Code vérifié", valid=True)
 
 
 class ResetPasswordView(ApiResponseMixin, APIView):
@@ -73,7 +85,18 @@ class ResetPasswordView(ApiResponseMixin, APIView):
         serializer = PasswordResetConfirmSerializer(data=request.data)
 
         if not serializer.is_valid():
-            return self.error_response("Données invalides", details=serializer.errors)
+            error_msg = "Données invalides"
+            if "non_field_errors" in serializer.errors and serializer.errors["non_field_errors"]:
+                error_msg = str(serializer.errors["non_field_errors"][0])
+            elif "new_password" in serializer.errors and serializer.errors["new_password"]:
+                error_msg = str(serializer.errors["new_password"][0])
+            elif "password" in serializer.errors and serializer.errors["password"]:
+                error_msg = str(serializer.errors["password"][0])
+            elif "code" in serializer.errors and serializer.errors["code"]:
+                error_msg = str(serializer.errors["code"][0])
+            elif "email" in serializer.errors and serializer.errors["email"]:
+                error_msg = str(serializer.errors["email"][0])
+            return self.error_response(error_msg, details=serializer.errors)
 
         serializer.save()
 

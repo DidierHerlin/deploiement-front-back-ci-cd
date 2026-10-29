@@ -1,5 +1,262 @@
 @theme inline { --color-background: var(--background); --color-foreground: var(--foreground); --color-primary: var(--primary); --color-primary-foreground: var(--primary-foreground); --color-border: var(--border); --color-muted-foreground: var(--muted-foreground); --font-sans: var(--font-inter), 'Inter', ui-sans-serif, system-ui, sans-serif; }
 :root { color-scheme: light; --background: #f7f8fa; --foreground: #17202b; --primary: #2563eb; --primary-foreground: #fff; --border: #e7eaf0; --muted-foreground: #7b8494; --card: #fff; --navy: #17202b; --green: #159570; --orange: #d97706; --red: #dc5a62; }
+.dark {
+  color-scheme: dark;
+  --background: #0b1120;
+  --foreground: #f1f5f9;
+  --card: #131c2e;
+  --border: #223049;
+  --muted-foreground: #94a3b8;
+  --navy: #f8fafc;
+}
+.dark .prop-app-shell {
+  background: #090e1a;
+}
+.dark .prop-sidebar,
+.dark .prop-topbar {
+  background: #0f172a;
+  border-color: #1e293b;
+}
+.dark .stat-card,
+.dark .panel {
+  background: #131c2e;
+  border-color: #223049;
+}
+.dark .panel h2 {
+  color: #f8fafc;
+}
+.dark .panel-header p {
+  color: #94a3b8;
+}
+.dark .breadcrumbs strong {
+  color: #f1f5f9;
+}
+.dark .breadcrumbs span,
+.dark .breadcrumbs svg {
+  color: #64748b;
+}
+.dark .search-box {
+  color: #64748b;
+}
+.dark .search-box input {
+  color: #f1f5f9;
+}
+.dark .main-nav button,
+.dark .sidebar-bottom>button,
+.dark .main-nav a,
+.dark .sidebar-bottom>a {
+  color: #94a3b8;
+}
+.dark .main-nav button:hover,
+.dark .sidebar-bottom>button:hover,
+.dark .main-nav a:hover,
+.dark .sidebar-bottom>a:hover {
+  background: #1e293b;
+  color: #f8fafc;
+}
+.dark .main-nav .active {
+  background: #1e3a8a33;
+  color: #60a5fa;
+}
+.dark .workspace,
+.dark .account {
+  border-color: #1e293b;
+}
+.dark .workspace strong,
+.dark .account strong {
+  color: #f8fafc;
+}
+.dark .workspace small,
+.dark .account small {
+  color: #94a3b8;
+}
+.dark .owner-banner {
+  background: rgba(15, 23, 42, 0.8) !important;
+  border-color: #1e293b !important;
+}
+.dark .owner-banner strong {
+  color: #f1f5f9;
+}
+.dark .owner-banner p {
+  color: #94a3b8;
+}
+.dark .owner-banner .banner-icon {
+  background: #1e293b;
+  color: #60a5fa;
+}
+.dark .stat-card {
+  background: #131c2e;
+  border-color: #223049;
+}
+.dark .stat-copy strong {
+  color: #f8fafc;
+}
+.dark .stat-copy p {
+  color: #94a3b8;
+}
+.dark .stat-copy span {
+  color: #64748b;
+}
+.dark .stat-icon.blue {
+  background: rgba(37, 99, 235, 0.18);
+  color: #60a5fa;
+}
+.dark .stat-icon.green {
+  background: rgba(16, 185, 129, 0.18);
+  color: #34d399;
+}
+.dark .stat-icon.orange {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+}
+.dark .stat-icon.red {
+  background: rgba(239, 68, 68, 0.18);
+  color: #f87171;
+}
+.dark .deadline {
+  border-bottom-color: #1e293b;
+}
+.dark .deadline strong {
+  color: #f8fafc;
+}
+.dark .deadline p {
+  color: #94a3b8;
+}
+.dark .date-block {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.dark .date-block strong {
+  color: #34d399;
+}
+.dark .date-block span {
+  color: #6ee7b7;
+}
+.dark .date-block.amber {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+.dark .date-block.rose {
+  background: rgba(244, 63, 94, 0.15);
+  color: #f43f5e;
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+.dark table {
+  color: #cbd5e1;
+}
+.dark th {
+  color: #94a3b8;
+}
+.dark td {
+  border-top-color: #1e293b;
+}
+.dark .tenant span {
+  background: #1e293b;
+  color: #60a5fa;
+}
+.dark .tenant strong,
+.dark td>strong {
+  color: #f1f5f9;
+}
+.dark .status.paid {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.dark .status.late,
+.dark .status.pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+.dark .property-info strong {
+  color: #f8fafc;
+}
+.dark .property-info span {
+  color: #94a3b8;
+}
+.dark .property-meta strong {
+  color: #f8fafc;
+}
+.dark .notification-card {
+  background: #0f172a;
+  border-color: #1e293b;
+}
+.dark .notification-card strong {
+  color: #f8fafc;
+}
+.dark .notification-card p {
+  color: #94a3b8;
+}
+.dark .notification-card small {
+  color: #64748b;
+}
+.dark .notification-card .notification-icon.blue {
+  background: #1e293b;
+  color: #60a5fa;
+}
+.dark .outline-button,
+.dark .select-button {
+  background: #0f172a;
+  border-color: #1e293b;
+  color: #cbd5e1;
+}
+.dark .outline-button:hover,
+.dark .select-button:hover {
+  background: #1e293b;
+  color: #f8fafc;
+}
+.dark .more-button {
+  color: #94a3b8;
+}
+.dark .more-button:hover {
+  color: #f8fafc;
+}
+.dark .welcome-row h1 {
+  color: #f8fafc;
+}
+.dark .welcome-row h1 span {
+  color: #cbd5e1;
+}
+.dark .subtitle {
+  color: #94a3b8;
+}
+.dark .top-user span {
+  color: #e2e8f0;
+}
+.dark .modal-backdrop {
+  background: rgba(0, 0, 0, 0.7);
+}
+.dark .modal {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  color: #f1f5f9;
+}
+.dark .modal h2 {
+  color: #f8fafc;
+}
+.dark .modal p {
+  color: #94a3b8;
+}
+.dark .modal label {
+  color: #cbd5e1;
+}
+.dark .modal input,
+.dark .modal select,
+.dark .modal textarea {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
+}
+.dark .modal input:focus,
+.dark .modal select:focus,
+.dark .modal textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--background); color: var(--foreground); font-family: var(--font-inter), 'Inter', ui-sans-serif, system-ui, sans-serif; }
 button, input { font: inherit; } button { cursor: pointer; }
