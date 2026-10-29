@@ -821,6 +821,7 @@ class ReportingStatsTests(APITestCase):
             cls.paiement.statut = "PAYE"
             cls.paiement.montant_paye = 1000
             cls.paiement.save(update_fields=["statut", "montant_paye"])
+        cls.total_paiements = Paiement.objects.filter(contrat=cls.contrat).count()
 
     def setUp(self):
         patcher = patch("paiement.utils.pisa.pisaDocument", side_effect=_fast_pisa)
@@ -835,7 +836,7 @@ class ReportingStatsTests(APITestCase):
         self.assertEqual(response.data['biens']['total'], 2)
         self.assertEqual(response.data['contrats']['actifs'], 1)
         self.assertEqual(response.data['paiements']['payes'], 1)
-        self.assertEqual(response.data['paiements']['total'], 12)
+        self.assertEqual(response.data['paiements']['total'], self.total_paiements)
         self.assertIn('total_users', response.data['users'])
 
     def test_stats_proprietaire(self):
@@ -844,7 +845,7 @@ class ReportingStatsTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['biens']['total'], 2)
         self.assertEqual(response.data['contrats']['total'], 1)
-        self.assertEqual(response.data['paiements']['total'], 12)
+        self.assertEqual(response.data['paiements']['total'], self.total_paiements)
 
     def test_stats_locataire(self):
         self.client.force_authenticate(user=self.loc_user)
@@ -852,7 +853,7 @@ class ReportingStatsTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['biens']['total'], 1)
         self.assertEqual(response.data['contrats']['total'], 1)
-        self.assertEqual(response.data['paiements']['total'], 12)
+        self.assertEqual(response.data['paiements']['total'], self.total_paiements)
         self.assertEqual(response.data['users'], {})
 
     def test_unauthenticated(self):
