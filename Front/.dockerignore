@@ -1,5 +1,10 @@
 node_modules
-npm-debug.log
-README.md
 .next
 .git
+.github
+*.md
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+.env*.local
+.vscode

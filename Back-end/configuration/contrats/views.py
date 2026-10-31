@@ -20,22 +20,10 @@ from django.http import HttpResponse
 from .utils import generate_contrat_pdf
 
 class ContratViewSet(viewsets.ModelViewSet):
-    """
-    CRUD complet sur les contrats (location et achat), avec actions
-    métier dédiées :
-
-        GET  /contrats/bien_info/?bien_id=<id>   Infos d'un bien DISPONIBLE
-        POST /contrats/{id}/resilier/            Location ACTIF -> RESILIE
-        POST /contrats/{id}/terminer/            Location ACTIF -> TERMINE
-        POST /contrats/{id}/finaliser_vente/     Achat ACTIF -> VENDU
-        GET  /contrats/echeances/                Liste des échéances à venir (J-5)
-    """
 
     @action(detail=True, methods=["get"])
     def telecharger(self, request: Request, pk: int | None = None) -> HttpResponse | Response:
-        """
-        Endpoint telecharger PDF (RG-10 et sécurité garanties par get_queryset)
-        """
+
         contrat = self.get_object()  # Vérifie automatiquement que le contrat est accessible
 
         if contrat.type_contrat != Contrat.TypeContrat.LOCATION:
@@ -175,11 +163,7 @@ class ContratViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"], url_path="echeances")
     def echeances_a_venir(self, request):
-        """
-        Retourne les échéances à venir (non payées) pour les contrats de location
-        de l'utilisateur connecté, dans la fenêtre J-5 (5 jours avant l'échéance).
-        Accessible selon le rôle (ADMIN, AGENT, LOCATAIRE, PROPRIETAIRE).
-        """
+
         user = request.user
 
         # RcupǸrer les contrats avec select_related pour Ǹviter les N+1 sur les relations
