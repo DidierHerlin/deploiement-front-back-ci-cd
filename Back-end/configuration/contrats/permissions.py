@@ -1,18 +1,3 @@
-"""Permissions du module Contrat.
-
-Matrice de droits appliquée :
-
-    Rôle                      | Lecture | Écriture (create/update/delete)
-    ---------------------------|---------|----------------------------------
-    ADMIN / AGENT              | Oui     | Oui
-    PROPRIETAIRE / LOCATAIRE   | Oui     | Non
-
-Note : cette permission ne restreint pas QUELS contrats un utilisateur peut
-lire (elle autorise la lecture à tout authentifié) — si une restriction de
-visibilité par rôle est nécessaire (ex : un PROPRIETAIRE ne voit que ses
-propres contrats), elle doit être appliquée dans le get_queryset() de la vue,
-comme pour bien.permissions.PeutGererBien.
-"""
 
 from typing import Any
 
