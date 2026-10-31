@@ -31,7 +31,7 @@ jobs:
   # 0. DÉTECTION DES MODIFICATIONS (Change Detection / Path Filtering)
   # ═══════════════════════════════════════════════════════════════════════════
   detect-changes:
-    name: Détection des modifications
+    name: Détection des modifications du projet
     runs-on: ubuntu-latest
     outputs:
       backend_py: ${{ steps.resolve.outputs.backend_py }}
@@ -146,10 +146,10 @@ jobs:
           fi
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # 1. BRANCHE BACKEND (Indépendante du Frontend)
+  # 1. BRANCHE BACKEND (Tests, Qualité, Conteneurisation & Déploiement)
   # ═══════════════════════════════════════════════════════════════════════════
   backend-tests:
-    name: Backend - Tests & Couverture
+    name: Tests et couverture de code du backend
     needs: detect-changes
     if: needs.detect-changes.outputs.backend_py == 'true'
     runs-on: ubuntu-latest
@@ -230,7 +230,7 @@ jobs:
           retention-days: 1
 
   backend-quality:
-    name: Backend - SonarQube
+    name: Analyse de qualité de code SonarQube
     needs: [detect-changes, backend-tests]
     if: needs.detect-changes.outputs.backend_py == 'true'
     runs-on: ubuntu-latest
@@ -278,9 +278,9 @@ jobs:
             -Dsonar.sourceEncoding=UTF-8
 
   backend-docker:
-    name: Backend - Build & Push Docker
-    needs: [detect-changes, backend-tests]
-    if: always() && needs.detect-changes.outputs.backend_docker == 'true' && (needs.backend-tests.result == 'success' || needs.backend-tests.result == 'skipped')
+    name: Construction et publication Docker du backend
+    needs: [detect-changes, backend-tests, backend-quality]
+    if: needs.detect-changes.outputs.backend_docker == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -310,7 +310,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=backend
 
   deploy-backend:
-    name: Backend - Déploiement AWS (RDS & K3s)
+    name: Déploiement du backend sur AWS (RDS & K3s)
     needs: [detect-changes, backend-quality, backend-docker]
     if: always() && needs.detect-changes.outputs.backend_deploy == 'true' && (needs.backend-docker.result == 'success' || needs.backend-docker.result == 'skipped') && (needs.backend-quality.result == 'success' || needs.backend-quality.result == 'skipped') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     concurrency:
@@ -370,7 +370,7 @@ jobs:
   # 2. BRANCHE FRONTEND (100% Indépendante, sans attente du Backend)
   # ═══════════════════════════════════════════════════════════════════════════
   frontend-build:
-    name: Frontend - Build Next.js
+    name: Construction Next.js du frontend
     needs: detect-changes
     if: needs.detect-changes.outputs.frontend_code == 'true'
     runs-on: ubuntu-latest
@@ -408,7 +408,7 @@ jobs:
         run: pnpm run build
 
   frontend-docker:
-    name: Frontend - Build & Push Docker
+    name: Construction et publication Docker du frontend
     needs: [detect-changes, frontend-build]
     if: needs.detect-changes.outputs.frontend_code == 'true'
     runs-on: ubuntu-latest
@@ -454,7 +454,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=frontend
 
   deploy-frontend:
-    name: Frontend - Déploiement AWS (K3s)
+    name: Déploiement du frontend sur AWS (K3s)
     needs: [detect-changes, frontend-docker]
     if: always() && needs.detect-changes.outputs.frontend_deploy == 'true' && (needs.frontend-docker.result == 'success' || needs.frontend-docker.result == 'skipped') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     concurrency:
