@@ -6,7 +6,8 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable pnpm
+# Pinne pnpm@9 (stable, pas de breaking changes v10) pour éviter les surprises de corepack
+RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 
 # ═══════════════════════════════════════════════════════════════════════════
 # 2. Étape des dépendances (deps) avec cache store pnpm isolé
@@ -21,13 +22,9 @@ COPY package.json pnpm-lock.yaml* yarn.lock* package-lock.json* .npmrc* ./
 RUN echo "only-built-dependencies[]=core-js" >> .npmrc
 
 # Installation avec cache pnpm Buildx
-# onlyBuiltDependencies: [core-js] est déclaré dans pnpm-lock.yaml (settings) et package.json (pnpm)
+# --ignore-scripts : pnpm v9+ bloque les scripts postinstall par sécurité ; core-js n'en a pas besoin en Docker
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile; \
-    elif [ -f yarn.lock ]; then yarn --frozen-lockfile; \
-    elif [ -f package-lock.json ]; then npm ci; \
-    else pnpm install; \
-    fi
+    pnpm install --frozen-lockfile --ignore-scripts
 
 # ═══════════════════════════════════════════════════════════════════════════
 # 3. Étape de construction (builder) avec cache de compilation Next.js
