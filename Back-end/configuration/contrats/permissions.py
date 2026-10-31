@@ -12,7 +12,6 @@ ROLES_GESTION_CONTRAT = {Utilisateur.Role.ADMIN, Utilisateur.Role.AGENT}
 
 
 class ContratPermission(permissions.BasePermission):
-    """Lecture ouverte à tout utilisateur authentifié ; écriture réservée à ADMIN/AGENT."""
 
     def has_permission(self, request: Request, view: APIView) -> bool:
         if not (request.user and request.user.is_authenticated):
