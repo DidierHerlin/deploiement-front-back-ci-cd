@@ -41,12 +41,9 @@ ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 # Utilise le cache de compilation Next.js (.next/cache) pour accélérer les builds successifs
+# pnpm exec next build : contourne toute logique workspace pnpm (évite "packages field missing")
 RUN --mount=type=cache,id=next,target=/app/.next/cache \
-    if [ -f pnpm-lock.yaml ]; then pnpm run build; \
-    elif [ -f yarn.lock ]; then yarn run build; \
-    elif [ -f package-lock.json ]; then npm run build; \
-    else pnpm run build; \
-    fi
+    pnpm exec next build
 
 # ═══════════════════════════════════════════════════════════════════════════
 # 4. Étape d'exécution minimale (runner)

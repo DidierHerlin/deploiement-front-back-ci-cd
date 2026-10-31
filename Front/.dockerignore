@@ -8,3 +8,5 @@ yarn-error.log
 pnpm-debug.log
 .env*.local
 .vscode
+# Exclure le fichier workspace Renovate (non valide comme pnpm-workspace et cause ERR packages field missing)
+pnpm-workspace.yaml
