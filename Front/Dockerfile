@@ -15,14 +15,17 @@ FROM base AS deps
 WORKDIR /app
 
 # Copie uniquement les manifests de dépendances pour maximiser le cache de couche
-COPY package.json pnpm-lock.yaml* yarn.lock* package-lock.json* ./
+COPY package.json pnpm-lock.yaml* yarn.lock* package-lock.json* .npmrc* ./
 
-# Installation avec cache pnpm Buildx et autorisation explicite des scripts de build (core-js)
+# Autorise explicitement l'exécution des scripts de build pour core-js dans .npmrc
+RUN echo "only-built-dependencies[]=core-js" >> .npmrc
+
+# Installation avec cache pnpm Buildx
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile --config.only-built-dependencies='["core-js"]'; \
+    if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile; \
     elif [ -f yarn.lock ]; then yarn --frozen-lockfile; \
     elif [ -f package-lock.json ]; then npm ci; \
-    else pnpm install --config.only-built-dependencies='["core-js"]'; \
+    else pnpm install; \
     fi
 
 # ═══════════════════════════════════════════════════════════════════════════
