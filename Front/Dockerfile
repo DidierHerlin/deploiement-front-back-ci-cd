@@ -6,8 +6,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable pnpm && \
-    pnpm config set --global only-built-dependencies '["core-js"]'
+RUN corepack enable pnpm
 
 # ═══════════════════════════════════════════════════════════════════════════
 # 2. Étape des dépendances (deps) avec cache store pnpm isolé
@@ -20,11 +19,10 @@ COPY package.json pnpm-lock.yaml* yarn.lock* package-lock.json* ./
 
 # Installation avec cache pnpm Buildx et autorisation explicite des scripts de build (core-js)
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm config set --global only-built-dependencies '["core-js"]' && \
-    if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile; \
+    if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile --config.only-built-dependencies='["core-js"]'; \
     elif [ -f yarn.lock ]; then yarn --frozen-lockfile; \
     elif [ -f package-lock.json ]; then npm ci; \
-    else pnpm install; \
+    else pnpm install --config.only-built-dependencies='["core-js"]'; \
     fi
 
 # ═══════════════════════════════════════════════════════════════════════════
