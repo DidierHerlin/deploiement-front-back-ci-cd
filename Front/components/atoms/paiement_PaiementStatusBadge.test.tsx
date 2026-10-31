@@ -44,4 +44,16 @@ describe('PaiementStatusBadge - Affichage du statut des paiements', () => {
     rerender(<PaiementStatusBadge statut="PARTIEL" contratStatut="ACTIF" />)
     expect(screen.getByText('Partiel')).toBeDefined()
   })
+
+  it('affiche le badge distinctif "À vérifier (Mobile Money)" lorsque isMobileMoneyPending est vrai', () => {
+    render(<PaiementStatusBadge statut="EN_ATTENTE" isMobileMoneyPending={true} />)
+    expect(screen.getByText('À vérifier (Mobile Money)')).toBeDefined()
+    expect(screen.queryByText('En attente')).toBeNull()
+  })
+
+  it('affiche "Payé" même si isMobileMoneyPending est fourni si le statut est déjà PAYE', () => {
+    render(<PaiementStatusBadge statut="PAYE" isMobileMoneyPending={true} />)
+    expect(screen.getByText('Payé')).toBeDefined()
+    expect(screen.queryByText('À vérifier (Mobile Money)')).toBeNull()
+  })
 })

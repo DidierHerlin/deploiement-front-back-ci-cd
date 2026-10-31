@@ -2,6 +2,7 @@ import { X, CreditCard, Download, AlertTriangle, Smartphone, CheckCircle2, XCirc
 import { Paiement, downloadQuittance } from '@/lib/api'
 import { PaiementStatusBadge } from "@/components/atoms/paiement_PaiementStatusBadge"
 import { useTranslation } from '@/lib/i18n'
+import { isMobileMoneyPending, getModeDisplayLabel } from '@/lib/mobile-money'
 
 type PaiementDetailsProps = {
   paiement: Paiement
@@ -15,8 +16,7 @@ export function PaiementDetails({ paiement, onClose, onValiderDemande, onRefuser
   const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('fr-FR') : '-'
   const formatMontant = (m: string | null) => m ? Number(m).toLocaleString('fr-FR') + ' Ar' : '-'
 
-  const isMobileMoneyPending = paiement.statut === 'EN_ATTENTE' &&
-    (['MVOLA', 'ORANGE_MONEY', 'AIRTEL_MONEY'].includes(paiement.mode_paiement || '') || !!paiement.demande_en_cours)
+  const isPendingMM = isMobileMoneyPending(paiement)
 
   return (
     <div className="modal-backdrop" role="presentation">
@@ -28,7 +28,7 @@ export function PaiementDetails({ paiement, onClose, onValiderDemande, onRefuser
           <h2 style={{ marginBottom: '5px' }}>{t("admin.paiements.details_title", "Détails du paiement")} #{paiement.id}</h2>
           <p style={{ marginBottom: '20px', color: '#64748b' }}>{t("admin.contrats.created_on", "Créé le")} {formatDate(paiement.date_creation)}</p>
 
-          {isMobileMoneyPending && (
+          {isPendingMM && (
             <div style={{ padding: '14px 18px', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '8px', color: '#065f46', marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -36,7 +36,7 @@ export function PaiementDetails({ paiement, onClose, onValiderDemande, onRefuser
                   <div>
                     <strong style={{ fontSize: '14px', color: '#065f46' }}>{t("admin.paiements.mobile_money_pending_banner_title", "Demande de paiement Mobile Money en attente de validation")}</strong>
                     <div style={{ fontSize: '12px', color: '#047857', marginTop: '2px' }}>
-                      {t("admin.paiements.operator_label", "Opérateur")} : <strong>{paiement.demande_en_cours?.moyen_paiement || paiement.mode_paiement}</strong> • {t("admin.paiements.ref_prefix", "Réf")} : <strong style={{ fontFamily: 'monospace' }}>{paiement.demande_en_cours?.reference || paiement.reference || '-'}</strong> • {t("profile.phone", "Tél")} : <strong>{paiement.demande_en_cours?.telephone || '-'}</strong>
+                      {t("admin.paiements.operator_label", "Opérateur")} : <strong>{getModeDisplayLabel(paiement.demande_en_cours?.moyen_paiement || paiement.mode_paiement)}</strong> • {t("admin.paiements.ref_prefix", "Réf")} : <strong style={{ fontFamily: 'monospace' }}>{paiement.demande_en_cours?.reference || paiement.reference || '-'}</strong> • {t("profile.phone", "Tél")} : <strong>{paiement.demande_en_cours?.telephone || '-'}</strong>
                     </div>
                   </div>
                 </div>
@@ -79,10 +79,10 @@ export function PaiementDetails({ paiement, onClose, onValiderDemande, onRefuser
             <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
               <h3 style={{ fontSize: '14px', marginBottom: '15px', color: '#334155', borderBottom: '1px solid #cbd5e1', paddingBottom: '5px' }}>{t("admin.paiements.general_info", "Informations générales")}</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div><small style={{ color: '#64748b' }}>{t("admin.paiements.col_status", "Statut")}</small><div><PaiementStatusBadge statut={paiement.statut} contratStatut={paiement.contrat_statut || (typeof paiement.contrat === 'object' && paiement.contrat !== null ? (paiement.contrat as any).statut : undefined)} /></div></div>
+                <div><small style={{ color: '#64748b' }}>{t("admin.paiements.col_status", "Statut")}</small><div><PaiementStatusBadge statut={paiement.statut} contratStatut={paiement.contrat_statut || (typeof paiement.contrat === 'object' && paiement.contrat !== null ? (paiement.contrat as any).statut : undefined)} isMobileMoneyPending={isPendingMM} /></div></div>
                 <div><small style={{ color: '#64748b' }}>{t("admin.paiements.due_num", "Échéance N°")}</small><div style={{ fontWeight: 500 }}>{paiement.num_echeance || '-'}</div></div>
                 <div><small style={{ color: '#64748b' }}>{t("admin.contrats.col_period", "Période")}</small><div style={{ fontWeight: 500 }}>{paiement.message_mois || '-'}</div></div>
-                <div><small style={{ color: '#64748b' }}>{t("admin.paiements.col_mode", "Mode de paiement")}</small><div style={{ fontWeight: 500 }}>{(paiement.demande_en_cours ? paiement.demande_en_cours.moyen_paiement : paiement.mode_paiement) || '-'}</div></div>
+                <div><small style={{ color: '#64748b' }}>{t("admin.paiements.col_mode", "Mode de paiement")}</small><div style={{ fontWeight: 500 }}>{getModeDisplayLabel((paiement.demande_en_cours ? paiement.demande_en_cours.moyen_paiement : paiement.mode_paiement))}</div></div>
                 <div><small style={{ color: '#64748b' }}>{t("admin.paiements.ref_prefix", "Référence")}</small><div style={{ fontWeight: 500 }}>{(paiement.demande_en_cours ? paiement.demande_en_cours.reference : paiement.reference) || '-'}</div></div>
               </div>
             </div>

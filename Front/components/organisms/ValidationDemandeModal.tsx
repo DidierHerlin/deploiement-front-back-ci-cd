@@ -2,8 +2,15 @@
 
 import { useState } from 'react'
 import { X, CheckCircle2, XCircle, Smartphone, AlertCircle, Loader2 } from 'lucide-react'
-import { Paiement, validerDemandePaiement, refuserDemandePaiement, validerPaiement, refuserPaiement } from '@/lib/api'
+import {
+  Paiement,
+  validerDemandePaiement,
+  refuserDemandePaiement,
+  validerPaiement,
+  refuserPaiement,
+} from '@/lib/api'
 import { useTranslation } from '@/lib/i18n'
+import { getOperatorBadgeStyles, getMobileMoneyOperator } from '@/lib/mobile-money'
 
 interface ValidationDemandeModalProps {
   paiement: Paiement | null
@@ -29,29 +36,25 @@ export function ValidationDemandeModal({
   if (!isOpen || !paiement) return null
 
   const demande = paiement.demande_en_cours
-  const mode = paiement.mode_paiement || demande?.moyen_paiement || 'MVOLA'
-  const telephone = demande?.telephone || 'Non renseigné'
-  const reference = paiement.reference || demande?.reference || 'Non renseignée'
+  const rawMode = demande?.moyen_paiement || paiement.mode_paiement || 'MVOLA'
+  const mode = getMobileMoneyOperator(rawMode) || rawMode
+  const telephone =
+    demande?.telephone ||
+    (paiement as any).telephone ||
+    (paiement as any).locataire_telephone ||
+    'Non renseigné'
+  const reference =
+    demande?.reference ||
+    paiement.reference ||
+    'Non renseignée'
+
   const montant = parseFloat(
     paiement.montant_paye && parseFloat(paiement.montant_paye) > 0
       ? paiement.montant_paye
       : (paiement.montant_attendu || paiement.montant || '0')
   )
 
-  const getOperatorBadge = (op: string) => {
-    switch (op) {
-      case 'MVOLA':
-        return { label: 'MVola (Telma)', bg: '#fef08a', color: '#854d0e', border: '#facc15' }
-      case 'ORANGE_MONEY':
-        return { label: 'Orange Money', bg: '#ffedd5', color: '#c2410c', border: '#fdba74' }
-      case 'AIRTEL_MONEY':
-        return { label: 'Airtel Money', bg: '#fee2e2', color: '#b91c1c', border: '#fca5a5' }
-      default:
-        return { label: op, bg: '#e0e7ff', color: '#3730a3', border: '#c7d2fe' }
-    }
-  }
-
-  const opBadge = getOperatorBadge(mode)
+  const opStyles = getOperatorBadgeStyles(mode)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -61,18 +64,39 @@ export function ValidationDemandeModal({
     try {
       if (action === 'valider') {
         if (demande?.id) {
-          await validerDemandePaiement(demande.id)
+          try {
+            await validerDemandePaiement(demande.id)
+          } catch {
+            await validerPaiement(
+              paiement.id,
+              mode,
+              reference !== 'Non renseignée' ? reference : undefined
+            )
+          }
         } else {
-          await validerPaiement(paiement.id, mode, reference !== 'Non renseignée' ? reference : undefined)
+          await validerPaiement(
+            paiement.id,
+            mode,
+            reference !== 'Non renseignée' ? reference : undefined
+          )
         }
       } else {
         if (!motifRefus.trim()) {
-          setError('Veuillez préciser le motif du refus (ex: référence invalide, paiement non reçu).')
+          setError(
+            t(
+              'admin.paiements.error_motif_required',
+              'Veuillez préciser le motif du refus (ex: référence invalide, paiement non reçu).'
+            )
+          )
           setLoading(false)
           return
         }
         if (demande?.id) {
-          await refuserDemandePaiement(demande.id, motifRefus.trim())
+          try {
+            await refuserDemandePaiement(demande.id, motifRefus.trim())
+          } catch {
+            await refuserPaiement(paiement.id)
+          }
         } else {
           await refuserPaiement(paiement.id)
         }
@@ -90,278 +114,198 @@ export function ValidationDemandeModal({
   return (
     <div className="modal-backdrop" role="presentation" style={{ zIndex: 1100 }}>
       <section
-        className="modal"
+        className="modal bg-white dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xl w-[90vw] max-w-[540px] relative"
         role="dialog"
         aria-modal="true"
-        style={{
-          width: '90vw',
-          maxWidth: '540px',
-          padding: '24px',
-          borderRadius: '16px',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)',
-        }}
       >
         <button
-          className="modal-close"
+          className="modal-close text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-200"
           onClick={onClose}
           disabled={loading}
           aria-label={t('common.close', 'Fermer')}
-          style={{ top: '16px', right: '16px' }}
+          style={{ top: '16px', right: '16px', position: 'absolute' }}
         >
           <X size={20} />
         </button>
 
         {/* En-tête */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+        <div className="flex items-center gap-3 mb-4">
           <div
-            style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '10px',
-              backgroundColor: action === 'valider' ? '#ecfdf5' : '#fef2f2',
-              color: action === 'valider' ? '#059669' : '#dc2626',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
+            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+              action === 'valider'
+                ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400'
+                : 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400'
+            }`}
           >
             {action === 'valider' ? <CheckCircle2 size={24} /> : <XCircle size={24} />}
           </div>
           <div>
-            <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: '#0f172a' }}>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white m-0">
               {action === 'valider'
                 ? t('admin.paiements.valider_mobile_title', 'Valider le paiement Mobile Money')
                 : t('admin.paiements.refuser_mobile_title', 'Refuser la demande de paiement')}
             </h2>
-            <p style={{ margin: '2px 0 0', fontSize: '13px', color: '#64748b' }}>
+            <p className="m-0 mt-0.5 text-xs text-slate-500 dark:text-slate-400">
               Échéance #{paiement.id} • {paiement.message_mois || t('common.monthly_invoice', 'Facture mensuelle')}
             </p>
           </div>
         </div>
 
         {/* Bascule action Valider / Refuser */}
-        <div
-          style={{
-            display: 'flex',
-            backgroundColor: '#f1f5f9',
-            padding: '4px',
-            borderRadius: '8px',
-            marginBottom: '18px',
-            gap: '4px',
-          }}
-        >
+        <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl mb-4 gap-1">
           <button
             type="button"
-            onClick={() => { setAction('valider'); setError(null); }}
-            disabled={loading}
-            style={{
-              flex: 1,
-              padding: '8px 12px',
-              fontSize: '13px',
-              fontWeight: 600,
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              backgroundColor: action === 'valider' ? '#ffffff' : 'transparent',
-              color: action === 'valider' ? '#059669' : '#64748b',
-              boxShadow: action === 'valider' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-              transition: 'all 0.15s ease',
+            onClick={() => {
+              setAction('valider')
+              setError(null)
             }}
+            disabled={loading}
+            className={`flex-1 py-2 px-3 text-xs font-semibold rounded-lg border-0 cursor-pointer transition-all ${
+              action === 'valider'
+                ? 'bg-white text-emerald-600 shadow-sm dark:bg-slate-900 dark:text-emerald-400'
+                : 'bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+            }`}
           >
             {t('admin.paiements.btn_valider_paiement', '✓ Valider le paiement')}
           </button>
           <button
             type="button"
-            onClick={() => { setAction('refuser'); setError(null); }}
-            disabled={loading}
-            style={{
-              flex: 1,
-              padding: '8px 12px',
-              fontSize: '13px',
-              fontWeight: 600,
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-              backgroundColor: action === 'refuser' ? '#ffffff' : 'transparent',
-              color: action === 'refuser' ? '#dc2626' : '#64748b',
-              boxShadow: action === 'refuser' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-              transition: 'all 0.15s ease',
+            onClick={() => {
+              setAction('refuser')
+              setError(null)
             }}
+            disabled={loading}
+            className={`flex-1 py-2 px-3 text-xs font-semibold rounded-lg border-0 cursor-pointer transition-all ${
+              action === 'refuser'
+                ? 'bg-white text-rose-600 shadow-sm dark:bg-slate-900 dark:text-rose-400'
+                : 'bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+            }`}
           >
             {t('admin.paiements.btn_refuser_demande', '✕ Refuser la demande')}
           </button>
         </div>
 
         {/* Détails de la transaction */}
-        <div
-          style={{
-            backgroundColor: '#f8fafc',
-            border: '1px solid #e2e8f0',
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '18px',
-          }}
-        >
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '13px' }}>
+        <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 rounded-xl p-4 mb-4">
+          <div className="grid grid-cols-2 gap-3 text-xs">
             <div>
-              <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>
+              <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold tracking-wider">
                 {t('admin.paiements.col_tenant', 'Locataire')}
               </span>
-              <div style={{ fontWeight: 600, color: '#1e293b' }}>{paiement.locataire_nom || 'Non renseigné'}</div>
+              <div className="font-semibold text-slate-800 dark:text-slate-100 mt-0.5">
+                {paiement.locataire_nom || 'Non renseigné'}
+              </div>
             </div>
             <div>
-              <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>
+              <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold tracking-wider">
                 {t('admin.paiements.col_property', 'Bien')}
               </span>
-              <div style={{ fontWeight: 600, color: '#1e293b' }}>{paiement.bien_titre || 'Non renseigné'}</div>
+              <div className="font-semibold text-slate-800 dark:text-slate-100 mt-0.5">
+                {paiement.bien_titre || 'Non renseigné'}
+              </div>
             </div>
             <div>
-              <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>
+              <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold tracking-wider">
                 {t('admin.paiements.montant_a_valider', 'Montant à valider')}
               </span>
-              <div style={{ fontWeight: 700, fontSize: '15px', color: '#0f172a' }}>
+              <div className="font-bold text-sm text-slate-900 dark:text-white mt-0.5">
                 {montant.toLocaleString('fr-FR')} Ar
               </div>
             </div>
             <div>
-              <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>
+              <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold tracking-wider">
                 {t('admin.paiements.col_mode', 'Opérateur')}
               </span>
-              <div style={{ marginTop: '2px' }}>
+              <div className="mt-1">
                 <span
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    padding: '2px 8px',
-                    borderRadius: '4px',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    backgroundColor: opBadge.bg,
-                    color: opBadge.color,
-                    border: `1px solid ${opBadge.border}`,
-                  }}
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold border ${opStyles.containerClass}`}
                 >
-                  <Smartphone size={11} /> {opBadge.label}
+                  <Smartphone size={11} className={opStyles.iconColorClass} />
+                  {opStyles.label}
                 </span>
               </div>
             </div>
             <div>
-              <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>
+              <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold tracking-wider">
                 {t('admin.paiements.num_mobile_money', 'Numéro Mobile Money')}
               </span>
-              <div style={{ fontWeight: 600, color: '#1e293b', fontFamily: 'monospace' }}>{telephone}</div>
+              <div className="font-semibold text-slate-800 dark:text-slate-100 font-mono mt-0.5">
+                {telephone}
+              </div>
             </div>
             <div>
-              <span style={{ color: '#64748b', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600 }}>
+              <span className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold tracking-wider">
                 {t('admin.paiements.ref_transaction', 'Référence transaction')}
               </span>
-              <div style={{ fontWeight: 700, color: '#047857', fontFamily: 'monospace' }}>{reference}</div>
+              <div className="font-bold text-emerald-700 dark:text-emerald-400 font-mono mt-0.5 break-all">
+                {reference}
+              </div>
             </div>
           </div>
         </div>
 
         {error && (
-          <div
-            style={{
-              padding: '10px 14px',
-              backgroundColor: '#fef2f2',
-              border: '1px solid #fecaca',
-              borderRadius: '8px',
-              color: '#b91c1c',
-              fontSize: '13px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              marginBottom: '16px',
-            }}
-          >
-            <AlertCircle size={16} />
+          <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 rounded-lg text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2 mb-4">
+            <AlertCircle size={16} className="shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
           {action === 'valider' ? (
-            <div
-              style={{
-                backgroundColor: '#f0fdf4',
-                border: '1px solid #bbf7d0',
-                borderRadius: '8px',
-                padding: '12px 14px',
-                color: '#166534',
-                fontSize: '12px',
-                marginBottom: '18px',
-                lineHeight: '1.5',
-              }}
-            >
-              <strong>Impact de la validation :</strong> {t('admin.paiements.validation_impact', 'La facture sera marquée comme PAYÉE, la quittance officielle en PDF sera immédiatement générée, et le locataire sera notifié.')}
+            <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-lg p-3 text-emerald-800 dark:text-emerald-300 text-xs mb-4 leading-relaxed">
+              <strong>Impact de la validation :</strong>{' '}
+              {t(
+                'admin.paiements.validation_impact',
+                'La facture sera marquée comme PAYÉE, la quittance officielle en PDF sera immédiatement générée, et le locataire sera notifié.'
+              )}
             </div>
           ) : (
-            <div style={{ marginBottom: '18px' }}>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  color: '#334155',
-                  marginBottom: '6px',
-                }}
-              >
-                {t('admin.paiements.motif_refus_label', 'Motif du refus')} <span style={{ color: '#dc2626' }}>*</span>
+            <div className="mb-4">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                {t('admin.paiements.motif_refus_label', 'Motif du refus')}{' '}
+                <span className="text-rose-600">*</span>
               </label>
               <textarea
                 value={motifRefus}
                 onChange={(e) => setMotifRefus(e.target.value)}
-                placeholder={t('admin.paiements.motif_refus_placeholder', 'Ex : Référence transaction introuvable, montant reçu incomplet sur le compte MVola...')}
+                placeholder={t(
+                  'admin.paiements.motif_refus_placeholder',
+                  'Ex : Référence transaction introuvable, montant reçu incomplet sur le compte MVola...'
+                )}
                 rows={3}
                 required
                 disabled={loading}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  fontSize: '13px',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '8px',
-                  outline: 'none',
-                  resize: 'vertical',
-                }}
+                className="w-full p-2.5 text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
-              <span style={{ fontSize: '11px', color: '#64748b' }}>
-                {t('admin.paiements.refus_subtext', 'Le locataire sera informé du motif et pourra renouveler sa demande.')}
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block">
+                {t(
+                  'admin.paiements.refus_subtext',
+                  'Le locataire sera informé du motif et pourra renouveler sa demande.'
+                )}
               </span>
             </div>
           )}
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+          <div className="flex justify-end gap-2.5">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="outline-button"
-              style={{ padding: '8px 16px', fontSize: '13px', borderRadius: '8px' }}
+              className="px-4 py-2 text-xs font-semibold rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
             >
               {t('common.cancel', 'Annuler')}
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="primary-button"
-              style={{
-                padding: '8px 18px',
-                fontSize: '13px',
-                borderRadius: '8px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                backgroundColor: action === 'valider' ? '#059669' : '#dc2626',
-                color: '#ffffff',
-                border: 'none',
-                fontWeight: 600,
-                cursor: loading ? 'not-allowed' : 'pointer',
-              }}
+              className={`px-4 py-2 text-xs font-semibold rounded-lg text-white border-0 cursor-pointer inline-flex items-center gap-1.5 transition-colors ${
+                action === 'valider'
+                  ? 'bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500'
+                  : 'bg-rose-600 hover:bg-rose-700 dark:bg-rose-600 dark:hover:bg-rose-500'
+              } ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
-              {loading && <Loader2 size={16} className="animate-spin" />}
+              {loading && <Loader2 size={14} className="animate-spin" />}
               {action === 'valider'
                 ? t('admin.paiements.confirm_valider', 'Confirmer la validation')
                 : t('admin.paiements.confirm_refuser', 'Confirmer le refus')}

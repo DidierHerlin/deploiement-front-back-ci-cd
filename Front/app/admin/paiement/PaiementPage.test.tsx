@@ -10,6 +10,7 @@ vi.mock('@/lib/api', async (importOriginal) => {
     ...actual,
     getPaiements: vi.fn(),
     getContrats: vi.fn(),
+    getDemandesPaiement: vi.fn(),
     downloadQuittance: vi.fn(),
   }
 })
@@ -128,12 +129,47 @@ describe('Admin PaiementPage - Masquage et bascule vers l’autre tableau des fa
       part_proprietaire: null,
       commission_agent: null,
     },
+    {
+      id: 30,
+      contrat: 1,
+      num_echeance: 3,
+      date_echeance: '2026-04-05',
+      date_paiement_prevue: '2026-04-05',
+      date_paiement: null,
+      date_versement_partiel: null,
+      montant_attendu: '500000.00',
+      montant: '500000.00',
+      montant_paye: '0.00',
+      montant_restant: '500000.00',
+      mode_paiement: 'AIRTEL_MONEY',
+      reference: 'TX-AIRTEL-1234',
+      statut: 'EN_ATTENTE',
+      est_partiel: false,
+      date_creation: '2026-01-01',
+      locataire_nom: 'Alice Martin',
+      bien_titre: 'Appartement Actif',
+      loyer_contrat: '500000.00',
+      est_en_retard: false,
+      message_mois: 'avril 2026',
+      part_proprietaire: null,
+      commission_agent: null,
+      demande_en_cours: {
+        id: 99,
+        statut: 'EN_ATTENTE',
+        moyen_paiement: 'AIRTEL_MONEY',
+        date_demande: '2026-04-01T10:00:00Z',
+        montant: '500000.00',
+        telephone: '0331234567',
+        reference: 'TX-AIRTEL-1234',
+      },
+    },
   ]
 
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(api.getPaiements).mockResolvedValue(mockPaiements)
     vi.mocked(api.getContrats).mockResolvedValue(mockContrats)
+    vi.mocked(api.getDemandesPaiement).mockResolvedValue([])
   })
 
   it('ne doit pas afficher dans le tableau principal les paiements dont le contrat est résilié', async () => {
@@ -216,5 +252,78 @@ describe('Admin PaiementPage - Masquage et bascule vers l’autre tableau des fa
     expect(screen.getByText('#10')).toBeDefined()
     expect(screen.queryByText('#15')).toBeNull()
     expect(screen.queryByText('#24')).toBeNull()
+  })
+
+  it('affiche l’onglet dédié "📱 Demandes Mobile Money" avec compteur dynamique et les badges distinctifs', async () => {
+    render(<PaiementPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('#30')).toBeDefined()
+    })
+
+    // L'onglet doit afficher 1 demande en attente
+    const mmTab = screen.getByRole('button', { name: /Demandes Mobile Money/i })
+    expect(mmTab).toBeDefined()
+    expect(mmTab.textContent).toContain('1')
+
+    // Dans le tableau, le paiement #30 a le badge "À vérifier (Mobile Money)"
+    expect(screen.getByText('À vérifier (Mobile Money)')).toBeDefined()
+
+    // Dans la colonne MODE, l'opérateur "Airtel Money" et la référence sont affichés
+    expect(screen.getAllByText('Airtel Money').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText('TX-AIRTEL-1234')).toBeDefined()
+    expect(screen.getByText('0331234567')).toBeDefined()
+
+    // Le bouton d'action rapide "Valider" doit être présent pour #30
+    const validerBtn = screen.getByRole('button', { name: /^Valider$/i })
+    expect(validerBtn).toBeDefined()
+  })
+
+  it('permet de basculer vers l’onglet dédié "📱 Demandes Mobile Money" et d’ouvrir la modale de validation', async () => {
+    render(<PaiementPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('#30')).toBeDefined()
+    })
+
+    // Clic sur l'onglet Mobile Money
+    const mmTab = screen.getByRole('button', { name: /Demandes Mobile Money/i })
+    fireEvent.click(mmTab)
+
+    // Vérifier l'apparition de la bannière dédiée
+    expect(screen.getByText(/Demandes Mobile Money à valider/i)).toBeDefined()
+    expect(screen.getByText('#30')).toBeDefined()
+    // Le paiement non Mobile Money #10 ne doit pas être affiché dans cet onglet
+    expect(screen.queryByText('#10')).toBeNull()
+
+    // Clic sur le bouton d'action rapide "Valider"
+    const validerBtn = screen.getByRole('button', { name: /^Valider$/i })
+    fireEvent.click(validerBtn)
+
+    // La modale de validation doit s'ouvrir avec les données pré-remplies
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeDefined()
+      expect(screen.getByText(/Valider le paiement Mobile Money/i)).toBeDefined()
+      expect(screen.getAllByText('Alice Martin').length).toBeGreaterThanOrEqual(2)
+      expect(screen.getAllByText('TX-AIRTEL-1234').length).toBeGreaterThanOrEqual(2)
+      expect(screen.getAllByText('0331234567').length).toBeGreaterThanOrEqual(2)
+    })
+  })
+
+  it('permet d’activer le filtre rapide "Mobile Money à valider"', async () => {
+    render(<PaiementPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('#30')).toBeDefined()
+    })
+
+    // Clic sur le bouton filtre rapide dans la barre d'outils
+    const filterBtn = screen.getByRole('button', { name: /Mobile Money à valider/i })
+    fireEvent.click(filterBtn)
+
+    // Seul le paiement #30 doit être affiché
+    expect(screen.getByText('#30')).toBeDefined()
+    expect(screen.queryByText('#10')).toBeNull()
+    expect(screen.queryByText('#15')).toBeNull()
   })
 })

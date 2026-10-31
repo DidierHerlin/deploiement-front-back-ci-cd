@@ -138,8 +138,10 @@ jobs:
       - name: Vérifier la configuration Django
         run: python manage.py check
 
-      - name: Lancer les tests Django
-        run: python manage.py test
+      - name: Lancer les tests Django et couverture
+        run: |
+          set -e
+          coverage run manage.py test
 
       - name: Sauvegarder le rapport de couverture
         uses: actions/upload-artifact@v4

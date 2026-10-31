@@ -43,7 +43,7 @@ export function PaiementFilters({
             const next = !onlyMobileMoneyPending;
             setOnlyMobileMoneyPending(next);
             if (next) {
-              setStatutFilter('EN_ATTENTE');
+              setStatutFilter('Tous');
               setModeFilter('Tous');
             }
           }}
@@ -60,8 +60,8 @@ export function PaiementFilters({
             <span
               className={
                 onlyMobileMoneyPending
-                  ? "bg-white/25 text-white rounded-full px-1.5 py-0.2 text-[11px] font-bold"
-                  : "bg-emerald-600 dark:bg-emerald-500 text-white rounded-full px-1.5 py-0.2 text-[11px] font-bold"
+                  ? "bg-white/25 text-white rounded-full px-1.5 py-0.2 text-[11px] font-bold min-w-4 text-center"
+                  : "bg-emerald-600 dark:bg-emerald-500 text-white rounded-full px-1.5 py-0.2 text-[11px] font-bold min-w-4 text-center"
               }
             >
               {mobileMoneyPendingCount}

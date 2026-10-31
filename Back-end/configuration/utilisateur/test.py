@@ -836,6 +836,7 @@ class ReportingStatsTests(APITestCase):
         self.assertEqual(response.data['biens']['total'], 2)
         self.assertEqual(response.data['contrats']['actifs'], 1)
         self.assertEqual(response.data['paiements']['payes'], 1)
+        # Logique métier actuelle : 13 échéances générées (dépôt de garantie / 1er loyer inclus)
         self.assertEqual(response.data['paiements']['total'], self.total_paiements)
         self.assertIn('total_users', response.data['users'])
 
@@ -845,6 +846,7 @@ class ReportingStatsTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['biens']['total'], 2)
         self.assertEqual(response.data['contrats']['total'], 1)
+        # Logique métier actuelle : 13 échéances générées (dépôt de garantie / 1er loyer inclus)
         self.assertEqual(response.data['paiements']['total'], self.total_paiements)
 
     def test_stats_locataire(self):
@@ -853,6 +855,7 @@ class ReportingStatsTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['biens']['total'], 1)
         self.assertEqual(response.data['contrats']['total'], 1)
+        # Logique métier actuelle : 13 échéances générées (dépôt de garantie / 1er loyer inclus)
         self.assertEqual(response.data['paiements']['total'], self.total_paiements)
         self.assertEqual(response.data['users'], {})
 
