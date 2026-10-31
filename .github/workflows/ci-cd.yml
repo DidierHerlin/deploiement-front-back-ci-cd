@@ -3,8 +3,10 @@ name: CI/CD
 on:
   push:
     branches: [main]
+    paths-ignore: ['**.md', 'docs/**', '.gitignore']
   pull_request:
     branches: [main]
+    paths-ignore: ['**.md', 'docs/**', '.gitignore']
   workflow_dispatch:
     inputs:
       component:
@@ -17,6 +19,10 @@ on:
           - backend
           - frontend
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 permissions:
   contents: read
 
@@ -28,28 +34,37 @@ jobs:
     name: Détection des modifications
     runs-on: ubuntu-latest
     outputs:
-      backend: ${{ steps.resolve.outputs.backend }}
-      frontend: ${{ steps.resolve.outputs.frontend }}
+      backend_py: ${{ steps.resolve.outputs.backend_py }}
+      backend_docker: ${{ steps.resolve.outputs.backend_docker }}
+      backend_deploy: ${{ steps.resolve.outputs.backend_deploy }}
+      django_test_targets: ${{ steps.resolve.outputs.django_test_targets }}
+      frontend_code: ${{ steps.resolve.outputs.frontend_code }}
+      frontend_deploy: ${{ steps.resolve.outputs.frontend_deploy }}
     steps:
       - name: Checkout du code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 2
 
       - name: Filtrage par chemins modifiés
         uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
-            backend:
+            backend_py:
+              - 'Back-end/**/*.py'
+              - 'Back-end/**/requirements.txt'
+            backend_docker:
               - 'Back-end/**'
+            backend_k8s:
               - 'k8s/backend.yaml'
               - 'k8s/deploy-backend.sh'
               - 'k8s/k3s-secret.yaml'
               - 'k8s/namespace.yaml'
               - 'k8s/hpa.yaml'
-            frontend:
+            frontend_code:
               - 'Front/**'
+            frontend_k8s:
               - 'k8s/frontend.yaml'
               - 'k8s/deploy-frontend.sh'
 
@@ -58,18 +73,76 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             if [ "${{ inputs.component }}" = "backend" ]; then
-              echo "backend=true" >> "$GITHUB_OUTPUT"
-              echo "frontend=false" >> "$GITHUB_OUTPUT"
+              echo "backend_py=true" >> "$GITHUB_OUTPUT"
+              echo "backend_docker=true" >> "$GITHUB_OUTPUT"
+              echo "backend_deploy=true" >> "$GITHUB_OUTPUT"
+              echo "frontend_code=false" >> "$GITHUB_OUTPUT"
+              echo "frontend_deploy=false" >> "$GITHUB_OUTPUT"
             elif [ "${{ inputs.component }}" = "frontend" ]; then
-              echo "backend=false" >> "$GITHUB_OUTPUT"
-              echo "frontend=true" >> "$GITHUB_OUTPUT"
+              echo "backend_py=false" >> "$GITHUB_OUTPUT"
+              echo "backend_docker=false" >> "$GITHUB_OUTPUT"
+              echo "backend_deploy=false" >> "$GITHUB_OUTPUT"
+              echo "frontend_code=true" >> "$GITHUB_OUTPUT"
+              echo "frontend_deploy=true" >> "$GITHUB_OUTPUT"
             else
-              echo "backend=true" >> "$GITHUB_OUTPUT"
-              echo "frontend=true" >> "$GITHUB_OUTPUT"
+              echo "backend_py=true" >> "$GITHUB_OUTPUT"
+              echo "backend_docker=true" >> "$GITHUB_OUTPUT"
+              echo "backend_deploy=true" >> "$GITHUB_OUTPUT"
+              echo "frontend_code=true" >> "$GITHUB_OUTPUT"
+              echo "frontend_deploy=true" >> "$GITHUB_OUTPUT"
             fi
+            echo "django_test_targets=" >> "$GITHUB_OUTPUT"
           else
-            echo "backend=${{ steps.filter.outputs.backend }}" >> "$GITHUB_OUTPUT"
-            echo "frontend=${{ steps.filter.outputs.frontend }}" >> "$GITHUB_OUTPUT"
+            B_PY="${{ steps.filter.outputs.backend_py }}"
+            B_DOCKER="${{ steps.filter.outputs.backend_docker }}"
+            B_K8S="${{ steps.filter.outputs.backend_k8s }}"
+            F_CODE="${{ steps.filter.outputs.frontend_code }}"
+            F_K8S="${{ steps.filter.outputs.frontend_k8s }}"
+
+            echo "backend_py=${B_PY}" >> "$GITHUB_OUTPUT"
+            echo "backend_docker=${B_DOCKER}" >> "$GITHUB_OUTPUT"
+
+            if [ "$B_DOCKER" = "true" ] || [ "$B_K8S" = "true" ]; then
+              echo "backend_deploy=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "backend_deploy=false" >> "$GITHUB_OUTPUT"
+            fi
+
+            echo "frontend_code=${F_CODE}" >> "$GITHUB_OUTPUT"
+
+            if [ "$F_CODE" = "true" ] || [ "$F_K8S" = "true" ]; then
+              echo "frontend_deploy=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "frontend_deploy=false" >> "$GITHUB_OUTPUT"
+            fi
+
+            # Détermination ciblée des tests Django
+            if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+              echo "django_test_targets=" >> "$GITHUB_OUTPUT"
+            else
+              CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD -- Back-end/ 2>/dev/null || true)
+              CRITICAL_TOUCHED=false
+              if echo "$CHANGED_FILES" | grep -qE "requirements\.txt|settings\.py|manage\.py|test_runner\.py|utilisateur/|contrats/|paiement/|bien/"; then
+                CRITICAL_TOUCHED=true
+              fi
+
+              if [ "$CRITICAL_TOUCHED" = "true" ] || [ -z "$CHANGED_FILES" ]; then
+                echo "django_test_targets=" >> "$GITHUB_OUTPUT"
+              else
+                TARGETS=()
+                for APP in Status Transaction TypeBien notifications reservation; do
+                  if echo "$CHANGED_FILES" | grep -qE "Back-end/configuration/${APP}/"; then
+                    TARGETS+=("$APP")
+                  fi
+                done
+
+                if [ ${#TARGETS[@]} -gt 0 ]; then
+                  echo "django_test_targets=${TARGETS[*]}" >> "$GITHUB_OUTPUT"
+                else
+                  echo "django_test_targets=" >> "$GITHUB_OUTPUT"
+                fi
+              fi
+            fi
           fi
 
   # ═══════════════════════════════════════════════════════════════════════════
@@ -78,7 +151,7 @@ jobs:
   backend-tests:
     name: Backend - Tests & Couverture
     needs: detect-changes
-    if: needs.detect-changes.outputs.backend == 'true'
+    if: needs.detect-changes.outputs.backend_py == 'true'
     runs-on: ubuntu-latest
 
     services:
@@ -92,8 +165,8 @@ jobs:
           - 5432:5432
         options: >-
           --health-cmd="pg_isready -U postgres -d gestion_immobilier_back_end"
-          --health-interval=10s
-          --health-timeout=5s
+          --health-interval=5s
+          --health-timeout=3s
           --health-retries=5
           --tmpfs /var/lib/postgresql/data:rw
 
@@ -128,6 +201,7 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
+          cache-dependency-path: './Back-end/configuration/requirements.txt'
 
       - name: Installer les dépendances
         run: |
@@ -140,19 +214,25 @@ jobs:
 
       - name: Lancer les tests Django et couverture
         run: |
-          set -e
-          coverage run manage.py test
+          TARGETS="${{ needs.detect-changes.outputs.django_test_targets }}"
+          if [ -n "$TARGETS" ]; then
+            python manage.py test $TARGETS --noinput
+          else
+            python manage.py test --noinput
+          fi
 
       - name: Sauvegarder le rapport de couverture
+        if: hashFiles('Back-end/configuration/coverage.xml') != ''
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: Back-end/configuration/coverage.xml
+          retention-days: 1
 
   backend-quality:
     name: Backend - SonarQube
     needs: [detect-changes, backend-tests]
-    if: needs.detect-changes.outputs.backend == 'true'
+    if: needs.detect-changes.outputs.backend_py == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -161,8 +241,16 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Cache SonarQube
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar-${{ hashFiles('Back-end/configuration/requirements.txt') }}
+          restore-keys: ${{ runner.os }}-sonar-
+
       - name: Récupérer le rapport de couverture
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: coverage-report
           path: Back-end/configuration/
@@ -178,6 +266,7 @@ jobs:
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+            -Dsonar.scm.revision=${{ github.sha }}
             -Dsonar.sources=.
             -Dsonar.tests=.
             -Dsonar.test.inclusions=**/test_*.py,**/tests.py,**/test.py,**/tests_*.py,test_reporting.py
@@ -190,8 +279,8 @@ jobs:
 
   backend-docker:
     name: Backend - Build & Push Docker
-    needs: [detect-changes, backend-tests, backend-quality]
-    if: needs.detect-changes.outputs.backend == 'true'
+    needs: [detect-changes, backend-tests]
+    if: always() && needs.detect-changes.outputs.backend_docker == 'true' && (needs.backend-tests.result == 'success' || needs.backend-tests.result == 'skipped')
     runs-on: ubuntu-latest
 
     steps:
@@ -217,13 +306,13 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/immobilier-drf:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/immobilier-drf:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
 
   deploy-backend:
     name: Backend - Déploiement AWS (RDS & K3s)
-    needs: [detect-changes, backend-docker]
-    if: needs.detect-changes.outputs.backend == 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    needs: [detect-changes, backend-quality, backend-docker]
+    if: always() && needs.detect-changes.outputs.backend_deploy == 'true' && (needs.backend-docker.result == 'success' || needs.backend-docker.result == 'skipped') && (needs.backend-quality.result == 'success' || needs.backend-quality.result == 'skipped') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     concurrency:
       group: aws-ec2-deployment
       cancel-in-progress: false
@@ -267,7 +356,7 @@ jobs:
           AWS_EC2_IP: ${{ steps.resolve_ip.outputs.ec2_ip }}
           ENABLE_HPA: ${{ secrets.ENABLE_HPA }}
           GIT_SHA: ${{ github.sha }}
-          DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/immobilier-drf:${{ github.sha }}
+          DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/immobilier-drf:${{ needs.backend-docker.result == 'success' && github.sha || 'latest' }}
           EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
           EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
         with:
@@ -283,7 +372,7 @@ jobs:
   frontend-build:
     name: Frontend - Build Next.js
     needs: detect-changes
-    if: needs.detect-changes.outputs.frontend == 'true'
+    if: needs.detect-changes.outputs.frontend_code == 'true'
     runs-on: ubuntu-latest
 
     defaults:
@@ -304,6 +393,14 @@ jobs:
           cache: 'pnpm'
           cache-dependency-path: './Front/pnpm-lock.yaml'
 
+      - name: Cache Next.js
+        uses: actions/cache@v4
+        with:
+          path: ./Front/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('./Front/pnpm-lock.yaml') }}-${{ hashFiles('./Front/**/*.ts', './Front/**/*.tsx') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('./Front/pnpm-lock.yaml') }}-
+
       - name: Installer les dépendances
         run: pnpm install --frozen-lockfile
 
@@ -313,7 +410,7 @@ jobs:
   frontend-docker:
     name: Frontend - Build & Push Docker
     needs: [detect-changes, frontend-build]
-    if: needs.detect-changes.outputs.frontend == 'true'
+    if: needs.detect-changes.outputs.frontend_code == 'true'
     runs-on: ubuntu-latest
     outputs:
       ec2_ip: ${{ steps.resolve_ip.outputs.ec2_ip }}
@@ -353,13 +450,13 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:${{ github.sha }}
           build-args: |
             NEXT_PUBLIC_API_URL=http://${{ steps.resolve_ip.outputs.ec2_ip }}:8000/api
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
 
   deploy-frontend:
     name: Frontend - Déploiement AWS (K3s)
     needs: [detect-changes, frontend-docker]
-    if: needs.detect-changes.outputs.frontend == 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    if: always() && needs.detect-changes.outputs.frontend_deploy == 'true' && (needs.frontend-docker.result == 'success' || needs.frontend-docker.result == 'skipped') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     concurrency:
       group: aws-ec2-deployment
       cancel-in-progress: false
@@ -396,7 +493,7 @@ jobs:
         env:
           AWS_EC2_IP: ${{ steps.resolve_ip.outputs.ec2_ip }}
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:${{ github.sha }}
+          DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:${{ needs.frontend-docker.result == 'success' && github.sha || 'latest' }}
         with:
           host: ${{ steps.resolve_ip.outputs.ec2_ip }}
           username: ubuntu

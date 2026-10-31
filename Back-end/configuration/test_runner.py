@@ -14,7 +14,7 @@ class CoverageRunner(DiscoverRunner):
       3. Arrete la couverture, genere les rapports (console + XML)
       4. Retourne un code d'echec si :
            - des tests ont echoue  (nombre_echecs > 0)
-           - OU la couverture est < 80%
+           - OU la couverture est < 80% (lors de l'execution complete)
       5. Retourne explicitement sys.exit(0) si la couverture >= 80% et 0 echec
     """
 
@@ -93,8 +93,9 @@ class CoverageRunner(DiscoverRunner):
             self.cov.stop()
         self.cov.save()
 
-        # Affiche le rapport de couverture
-        coverage_ok = self._report_coverage()
+        # Affiche le rapport de couverture (le seuil de 80% s'applique si la suite complète est exécutée)
+        is_targeted = bool(test_labels)
+        coverage_ok = self._report_coverage(enforce_threshold=not is_targeted)
 
         # Echec si des tests ont echoue OU si la couverture est insuffisante
         if failures or not coverage_ok:
@@ -103,7 +104,7 @@ class CoverageRunner(DiscoverRunner):
         # Succes : seuil >= 80% et tous les tests passent
         sys.exit(0)
 
-    def _report_coverage(self):
+    def _report_coverage(self, enforce_threshold=True):
         """
         Affiche le rapport de couverture dans la console,
         genere le fichier XML pour SonarQube,
@@ -121,6 +122,10 @@ class CoverageRunner(DiscoverRunner):
 
         print(f"\nCouverture totale : {coverage_percentage:.2f}%")
         print(f"Seuil requis      : {self.COVERAGE_THRESHOLD}%")
+
+        if not enforce_threshold:
+            print("\nTests cibles executes : validation du seuil global de 80% ignoree pour cette execution partielle.")
+            return True
 
         if coverage_percentage < self.COVERAGE_THRESHOLD:
             print(
