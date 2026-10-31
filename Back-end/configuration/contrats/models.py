@@ -212,7 +212,7 @@ class Contrat(models.Model):
         if self.date_debut is not None:
             self.date_paiement = self.date_debut + relativedelta(months=1)
 
-    # Génération des échéances de paiement pour les contrats de location
+    # Génération des échéances de paiement pour les contrats de location ok
     def get_echeances_a_venir(self, date_reference=None, paiements_payes=None):
         from django.utils import timezone
         from paiement.models import Paiement
