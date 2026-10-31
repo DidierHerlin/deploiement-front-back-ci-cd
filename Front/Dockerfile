@@ -20,12 +20,12 @@ COPY package.json pnpm-lock.yaml* yarn.lock* package-lock.json* .npmrc* ./
 # Autorise explicitement l'exécution des scripts de build pour core-js dans .npmrc
 RUN echo "only-built-dependencies[]=core-js" >> .npmrc
 
-# Installation avec cache pnpm Buildx
+# Installation avec cache pnpm Buildx (--unsafe-perm=true autorise core-js et les scripts postinstall)
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile; \
+    if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile --unsafe-perm=true; \
     elif [ -f yarn.lock ]; then yarn --frozen-lockfile; \
     elif [ -f package-lock.json ]; then npm ci; \
-    else pnpm install; \
+    else pnpm install --unsafe-perm=true; \
     fi
 
 # ═══════════════════════════════════════════════════════════════════════════
