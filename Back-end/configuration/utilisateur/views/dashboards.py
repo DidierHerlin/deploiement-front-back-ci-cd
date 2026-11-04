@@ -17,11 +17,7 @@ from utilisateur.models import Locataire, Proprietaire, Utilisateur
 
 
 class AdminDashboardView(APIView):
-    """
-    Tableau de bord de l'administrateur.
-    Fournit les statistiques consolidees sur l'ensemble du parc immobilier :
-    biens, contrats, flux de paiements, utilisateurs et evenements recents.
-    """
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
