@@ -336,7 +336,20 @@ jobs:
           tags: immobilier-drf:scan
           cache-from: type=gha,scope=backend
 
-      - name: Run Trivy vulnerability scanner
+      # --- Scan 1 : sortie JSON (pour le résumé personnalisé) ---
+      - name: Run Trivy scan (JSON)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: immobilier-drf:scan
+          format: json
+          output: trivy-backend-results.json
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          vuln-type: os,library
+          exit-code: '0'
+
+      # --- Scan 2 : sortie SARIF (pour GitHub Security tab) ---
+      - name: Run Trivy scan (SARIF)
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: immobilier-drf:scan
@@ -345,8 +358,52 @@ jobs:
           severity: CRITICAL,HIGH
           ignore-unfixed: true
           vuln-type: os,library
-          exit-code: '0'   # Ne bloque pas le pipeline — ajuster à '1' pour bloquer sur CRITICAL
+          exit-code: '0'
 
+      # --- Résumé affiché dans l'onglet "Summary" du job GitHub Actions ---
+      - name: Afficher le résultat du scan dans le Job Summary
+        if: always()
+        run: |
+          echo "## 🛡️ Résultat du scan de sécurité — Image Backend (Trivy)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image scannée :** \`immobilier-drf:scan\`  " >> $GITHUB_STEP_SUMMARY
+          echo "**Sévérités analysées :** \`CRITICAL\`, \`HIGH\`  " >> $GITHUB_STEP_SUMMARY
+          echo "**Vulnérabilités sans correctif :** ignorées  " >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          CRITICAL=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="CRITICAL")] | length' trivy-backend-results.json 2>/dev/null || echo 0)
+          HIGH=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="HIGH")] | length' trivy-backend-results.json 2>/dev/null || echo 0)
+          TOTAL=$((CRITICAL + HIGH))
+
+          echo "### 📊 Résumé" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Sévérité | Nombre de CVE |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔴 CRITICAL | $CRITICAL |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🟠 HIGH     | $HIGH |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Total** | **$TOTAL** |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "$TOTAL" -eq 0 ]; then
+            echo "### ✅ Aucune vulnérabilité CRITICAL ou HIGH détectée — image sûre !" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ⚠️ Vulnérabilités détectées — détail des CVE" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Package | CVE | Sévérité | Version installée | Version corrigée |" >> $GITHUB_STEP_SUMMARY
+            echo "|---------|-----|----------|-------------------|-----------------|" >> $GITHUB_STEP_SUMMARY
+            jq -r '
+              .Results[]? |
+              .Vulnerabilities[]? |
+              select(.Severity=="CRITICAL" or .Severity=="HIGH") |
+              "| \(.PkgName) | [\(.VulnerabilityID)](https://avd.aquasec.com/nvd/\(.VulnerabilityID | ascii_downcase)) | \(if .Severity=="CRITICAL" then "🔴 CRITICAL" else "🟠 HIGH" end) | \(.InstalledVersion) | \(.FixedVersion // "—") |"
+            ' trivy-backend-results.json >> $GITHUB_STEP_SUMMARY 2>/dev/null || true
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "> 🔍 Rapport complet disponible dans l'onglet **Security → Code scanning alerts** du dépôt." >> $GITHUB_STEP_SUMMARY
+
+      # --- Upload SARIF vers GitHub Security tab ---
       - name: Upload Trivy SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         if: always()
@@ -354,15 +411,14 @@ jobs:
           sarif_file: trivy-backend-results.sarif
           category: trivy-backend
 
-      - name: Run Trivy (table summary in logs)
-        uses: aquasecurity/trivy-action@v0.36.0
+      # --- Upload rapport JSON comme artefact téléchargeable ---
+      - name: Upload rapport JSON Trivy (artefact)
+        uses: actions/upload-artifact@v4
+        if: always()
         with:
-          image-ref: immobilier-drf:scan
-          format: table
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
-          vuln-type: os,library
-          exit-code: '0'
+          name: trivy-backend-report-${{ github.sha }}
+          path: trivy-backend-results.json
+          retention-days: 30
 
   deploy-backend:
     name: Deploy Backend
