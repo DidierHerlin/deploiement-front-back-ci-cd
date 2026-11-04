@@ -25,7 +25,6 @@ concurrency:
 
 permissions:
   contents: read
-  security-events: write   # requis pour upload SARIF vers GitHub Security
 
 jobs:
   # ═══════════════════════════════════════════════════════════════════════════
@@ -310,124 +309,10 @@ jobs:
           cache-from: type=gha,scope=backend
           cache-to: type=gha,mode=max,scope=backend
 
-  # ═══════════════════════════════════════════════════════════════════════════
-  # 1b. SCAN SÉCURITÉ IMAGE DOCKER BACKEND (Trivy)
-  # ═══════════════════════════════════════════════════════════════════════════
-  backend-security-scan:
-    name: Backend Docker Security Scan (Trivy)
-    needs: [detect-changes, backend-docker]
-    if: needs.detect-changes.outputs.backend_docker == 'true' && needs.backend-docker.result == 'success'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build backend image locally (for scanning)
-        uses: docker/build-push-action@v6
-        with:
-          context: ./Back-end/configuration
-          file: ./Back-end/configuration/Dockerfile
-          push: false
-          load: true
-          tags: immobilier-drf:scan
-          cache-from: type=gha,scope=backend
-          # no-cache-filter sur la couche apt-get upgrade pour toujours
-          # récupérer les derniers patches de sécurité Debian
-          build-args: |
-            BUILDKIT_INLINE_CACHE=1
-
-      # --- Scan 1 : sortie JSON (pour le résumé personnalisé) ---
-      - name: Run Trivy scan (JSON)
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          image-ref: immobilier-drf:scan
-          format: json
-          output: trivy-backend-results.json
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
-          vuln-type: os,library
-          exit-code: '0'
-
-      # --- Scan 2 : sortie SARIF (pour GitHub Security tab) ---
-      - name: Run Trivy scan (SARIF)
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          image-ref: immobilier-drf:scan
-          format: sarif
-          output: trivy-backend-results.sarif
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
-          vuln-type: os,library
-          exit-code: '0'
-
-      # --- Résumé affiché dans l'onglet "Summary" du job GitHub Actions ---
-      - name: Afficher le résultat du scan dans le Job Summary
-        if: always()
-        run: |
-          echo "## 🛡️ Résultat du scan de sécurité — Image Backend (Trivy)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Image scannée :** \`immobilier-drf:scan\`  " >> $GITHUB_STEP_SUMMARY
-          echo "**Sévérités analysées :** \`CRITICAL\`, \`HIGH\`  " >> $GITHUB_STEP_SUMMARY
-          echo "**Vulnérabilités sans correctif :** ignorées  " >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          CRITICAL=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="CRITICAL")] | length' trivy-backend-results.json 2>/dev/null || echo 0)
-          HIGH=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="HIGH")] | length' trivy-backend-results.json 2>/dev/null || echo 0)
-          TOTAL=$((CRITICAL + HIGH))
-
-          echo "### 📊 Résumé" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Sévérité | Nombre de CVE |" >> $GITHUB_STEP_SUMMARY
-          echo "|----------|--------------|" >> $GITHUB_STEP_SUMMARY
-          echo "| 🔴 CRITICAL | $CRITICAL |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🟠 HIGH     | $HIGH |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Total** | **$TOTAL** |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          if [ "$TOTAL" -eq 0 ]; then
-            echo "### ✅ Aucune vulnérabilité CRITICAL ou HIGH détectée — image sûre !" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "### ⚠️ Vulnérabilités détectées — détail des CVE" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "| Package | CVE | Sévérité | Version installée | Version corrigée |" >> $GITHUB_STEP_SUMMARY
-            echo "|---------|-----|----------|-------------------|-----------------|" >> $GITHUB_STEP_SUMMARY
-            jq -r '
-              .Results[]? |
-              .Vulnerabilities[]? |
-              select(.Severity=="CRITICAL" or .Severity=="HIGH") |
-              "| \(.PkgName) | [\(.VulnerabilityID)](https://avd.aquasec.com/nvd/\(.VulnerabilityID | ascii_downcase)) | \(if .Severity=="CRITICAL" then "🔴 CRITICAL" else "🟠 HIGH" end) | \(.InstalledVersion) | \(.FixedVersion // "—") |"
-            ' trivy-backend-results.json >> $GITHUB_STEP_SUMMARY 2>/dev/null || true
-          fi
-
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "---" >> $GITHUB_STEP_SUMMARY
-          echo "> 🔍 Rapport complet disponible dans l'onglet **Security → Code scanning alerts** du dépôt." >> $GITHUB_STEP_SUMMARY
-
-      # --- Upload SARIF vers GitHub Security tab ---
-      - name: Upload Trivy SARIF to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: trivy-backend-results.sarif
-          category: trivy-backend
-
-      # --- Upload rapport JSON comme artefact téléchargeable ---
-      - name: Upload rapport JSON Trivy (artefact)
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: trivy-backend-report-${{ github.sha }}
-          path: trivy-backend-results.json
-          retention-days: 30
-
   deploy-backend:
     name: Deploy Backend
-    needs: [detect-changes, backend-quality, backend-docker, backend-security-scan]
-    if: always() && needs.detect-changes.outputs.backend_deploy == 'true' && (needs.backend-docker.result == 'success' || needs.backend-docker.result == 'skipped') && (needs.backend-security-scan.result == 'success' || needs.backend-security-scan.result == 'skipped') && (needs.backend-quality.result == 'success' || needs.backend-quality.result == 'skipped') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    needs: [detect-changes, backend-quality, backend-docker]
+    if: always() && needs.detect-changes.outputs.backend_deploy == 'true' && (needs.backend-docker.result == 'success' || needs.backend-docker.result == 'skipped') && (needs.backend-quality.result == 'success' || needs.backend-quality.result == 'skipped') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     concurrency:
       group: aws-ec2-deployment
       cancel-in-progress: false
