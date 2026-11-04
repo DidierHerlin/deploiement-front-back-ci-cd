@@ -335,6 +335,10 @@ jobs:
           load: true
           tags: immobilier-drf:scan
           cache-from: type=gha,scope=backend
+          # no-cache-filter sur la couche apt-get upgrade pour toujours
+          # récupérer les derniers patches de sécurité Debian
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
 
       # --- Scan 1 : sortie JSON (pour le résumé personnalisé) ---
       - name: Run Trivy scan (JSON)
