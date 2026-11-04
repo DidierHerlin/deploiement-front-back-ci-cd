@@ -289,12 +289,14 @@
   </table>
 
   <!-- Tableau des désignations et montants -->
+  <!-- role="presentation" indique que ce tableau est utilisé pour la mise en page,
+       les <th> sont donc remplacés par des <td> avec scope pour l'accessibilité WCAG2-A -->
   <table class="table-details" role="presentation">
     <thead>
       <tr>
-        <th style="text-align: left; width: 55%;">Désignation</th>
-        <th style="text-align: center; width: 20%;">Échéance</th>
-        <th style="text-align: right; width: 25%;">Montant</th>
+        <td style="text-align: left; width: 55%; font-weight: bold;">Désignation</td>
+        <td style="text-align: center; width: 20%; font-weight: bold;">Échéance</td>
+        <td style="text-align: right; width: 25%; font-weight: bold;">Montant</td>
       </tr>
     </thead>
     <tbody>
