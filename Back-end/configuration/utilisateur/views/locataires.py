@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 # Gestion du profil locataire
 
 class LocataireDetailView(ApiResponseMixin, APIView):
-    """Détails et modification de la fiche locataire"""
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk=None):
