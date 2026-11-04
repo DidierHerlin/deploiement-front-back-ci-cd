@@ -50,7 +50,6 @@ class RequestPasswordResetView(ApiResponseMixin, APIView):
 
 
 class VerifyResetCodeView(ApiResponseMixin, APIView):
-    """Étape 2 : Vérification du code"""
     permission_classes = [AllowAny]
     authentication_classes = []
     throttle_classes = [PasswordResetRateThrottle]
@@ -75,7 +74,6 @@ class VerifyResetCodeView(ApiResponseMixin, APIView):
 
 
 class ResetPasswordView(ApiResponseMixin, APIView):
-    """Étape 3 : Réinitialisation finale du mot de passe"""
     permission_classes = [AllowAny]
     authentication_classes = []
     throttle_classes = [PasswordResetRateThrottle]
