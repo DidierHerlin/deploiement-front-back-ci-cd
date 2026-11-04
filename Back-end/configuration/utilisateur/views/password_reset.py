@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 # Reinitialisation du mot de passe
 
 class RequestPasswordResetView(ApiResponseMixin, APIView):
-    """Étape 1 : Demande de réinitialisation - Envoie un code par email"""
     permission_classes = [AllowAny]
     authentication_classes = []
     throttle_classes = [PasswordResetRateThrottle]

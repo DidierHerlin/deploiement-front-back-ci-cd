@@ -12,12 +12,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Couche isolée pour les dépendances Python avec cache pip BuildKit
-# --only-binary :all: empêche l'exécution de scripts setup.py arbitraires (sécurité SonarQube)
+# --only-binary :all: : seules les wheels pré-compilées sont installées,
+# aucun script setup.py arbitraire ne peut s'exécuter (CWE-78 / SonarQube Security Hotspot résolu)
+# Les dépendances de compilation nécessaires (gcc, libpq-dev) sont installées au-dessus via apt.
 COPY requirements.txt ./
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --upgrade pip && \
-    pip install --only-binary :all: -r requirements.txt gunicorn || \
-    pip install -r requirements.txt gunicorn
+    pip install --only-binary :all: -r requirements.txt gunicorn
 
 # Copie du code applicatif après les dépendances pour maximiser l'effet du cache Docker
 COPY . .
