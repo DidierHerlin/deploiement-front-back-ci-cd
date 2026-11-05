@@ -804,6 +804,7 @@ class DemandePaiementTests(PaiementTestBase):
         # Facture appartenant à un autre locataire
         self.bien_other = _make_bien(self.prop, titre="Bien Autre Locataire")
         self.contrat_other = _make_contrat(self.bien_other, self.other_loc)
+        Paiement.objects.filter(contrat=self.contrat_other).delete()
         self.facture_other = Paiement.objects.create(
             contrat=self.contrat_other,
             date_echeance=self.date_mois_a_venir,
