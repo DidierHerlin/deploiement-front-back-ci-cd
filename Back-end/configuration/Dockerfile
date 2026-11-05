@@ -13,12 +13,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Couche isolée pour les dépendances Python avec cache pip BuildKit
 # --only-binary :all: : seules les wheels pré-compilées sont installées,
-# aucun script setup.py arbitraire ne peut s'exécuter (CWE-78 / SonarQube Security Hotspot résolu)
-# Les dépendances de compilation nécessaires (gcc, libpq-dev) sont installées au-dessus via apt.
+# aucun script setup.py arbitraire ne peut s'exécuter (CWE-78 / SonarQube S6586 résolu)
+# Versions verrouillées strictement (==) pour garantir la reproductibilité et la sécurité (SonarQube S6587 résolu)
 COPY requirements.txt ./
+RUN pip install --no-cache-dir --only-binary :all: \
+    "pip==25.0.1" \
+    "setuptools==79.0.1" \
+    "wheel==0.46.3" \
+    "jaraco.context==6.1.0"
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --upgrade pip && \
-    pip install --only-binary :all: -r requirements.txt gunicorn
+    pip install --only-binary :all: -r requirements.txt "gunicorn==23.0.0"
 
 # Copie du code applicatif après les dépendances pour maximiser l'effet du cache Docker
 COPY . .

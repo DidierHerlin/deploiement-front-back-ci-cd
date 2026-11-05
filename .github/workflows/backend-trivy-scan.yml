@@ -48,6 +48,7 @@ jobs:
         with:
           image-ref: 'backend-immobilier:latest'
           scan-type: 'image'
+          scanners: 'vuln'
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
           ignore-unfixed: true
@@ -69,6 +70,7 @@ jobs:
         with:
           image-ref: 'backend-immobilier:latest'
           scan-type: 'image'
+          scanners: 'vuln'
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
           ignore-unfixed: true
