@@ -44,7 +44,7 @@ jobs:
 
       # Étape 1 : Analyse Trivy avec export SARIF (pour l'onglet Security de GitHub)
       - name: "Run Trivy scanner (SARIF report generation)"
-        uses: aquasecurity/trivy-action@0.29.0
+        uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'backend-immobilier:latest'
           scan-type: 'image'
@@ -65,7 +65,7 @@ jobs:
 
       # Étape 3 : Affichage du tableau dans les logs et Porte de Sécurité bloquante (Shift-Left)
       - name: "Run Trivy scanner (Console Table & Security Gate)"
-        uses: aquasecurity/trivy-action@0.29.0
+        uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'backend-immobilier:latest'
           scan-type: 'image'
