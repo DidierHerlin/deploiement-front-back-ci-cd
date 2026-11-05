@@ -22,7 +22,7 @@ RUN pip install --no-cache-dir --only-binary :all: \
     wheel==0.46.3 \
     jaraco.context==6.1.0
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --only-binary :all: -r requirements.txt
+    pip install --require-hashes --only-binary :all: -r requirements.txt
 
 # Copie du code applicatif après les dépendances pour maximiser l'effet du cache Docker
 COPY . .

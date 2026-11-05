@@ -107,3 +107,20 @@ Si vous travaillez directement sur votre machine sans Docker :
    cd Front
    npm run dev
    ```
+
+---
+
+## 5. Gestion sécurisée des dépendances Python (DevSecOps / SonarQube)
+
+Le backend utilise un fichier `requirements.in` contenant uniquement les dépendances directes. Celui-ci est compilé vers un fichier `requirements.txt` verrouillé avec hachages cryptographiques SHA-256 (`--generate-hashes` et `--only-binary :all:`) pour garantir l'intégrité des paquets et la conformité SonarQube (`docker:S6586` et `docker:S6587`) :
+
+```bash
+# Se positionner dans le dossier backend
+cd Back-end/configuration
+
+# Régénérer le lock avec uv pour l'architecture cible de l'image (Linux Python 3.11) :
+uv pip compile --generate-hashes --only-binary :all: --python-platform linux --python-version 3.11 requirements.in -o requirements.txt
+
+# Alternative avec pip-tools (au sein d'un conteneur ou environnement Linux 3.11) :
+pip-compile --generate-hashes requirements.in -o requirements.txt
+```

@@ -1,0 +1,35 @@
+# ==============================================================================
+# Gestion Immobilière - Dépendances directes du Backend (Django REST Framework)
+# Fichier source pour générer requirements.txt verrouillé (hashes sha256)
+# Régénération : uv pip compile --generate-hashes --universal requirements.in -o requirements.txt
+# ==============================================================================
+
+# Framework Web & API REST
+Django>=5.2.17
+djangorestframework>=3.18.2
+djangorestframework-simplejwt>=5.5.0
+django-cors-headers>=4.7.0
+django-filter>=25.0
+drf-spectacular>=0.28.0
+
+# Base de données PostgreSQL & Configuration
+psycopg2-binary>=2.9.10
+dj-database-url>=3.0.0
+python-decouple>=3.8
+python-dotenv>=1.0.0
+
+# Sécurité & Hash de mot de passe
+bcrypt>=4.2.0
+
+# Génération de documents PDF (Quittances, Contrats) & Images
+xhtml2pdf>=0.2.18
+pillow>=13.0.0
+pypdf>=6.21.4
+reportlab>=5.0.0
+python-dateutil>=2.9.0
+
+# Serveur WSGI de Production
+gunicorn>=23.0.0
+
+# Outils de tests et couverture de code
+coverage>=7.6.0
