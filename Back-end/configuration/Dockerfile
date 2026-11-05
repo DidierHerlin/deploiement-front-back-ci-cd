@@ -17,12 +17,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Versions verrouillées strictement (==) pour garantir la reproductibilité et la sécurité (SonarQube S6587 résolu)
 COPY requirements.txt ./
 RUN pip install --no-cache-dir --only-binary :all: \
-    "pip==25.0.1" \
-    "setuptools==79.0.1" \
-    "wheel==0.46.3" \
-    "jaraco.context==6.1.0"
+    pip==25.0.1 \
+    setuptools==79.0.1 \
+    wheel==0.46.3 \
+    jaraco.context==6.1.0
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --only-binary :all: -r requirements.txt "gunicorn==23.0.0"
+    pip install --only-binary :all: -r requirements.txt
 
 # Copie du code applicatif après les dépendances pour maximiser l'effet du cache Docker
 COPY . .
