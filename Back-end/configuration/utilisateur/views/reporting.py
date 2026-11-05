@@ -15,11 +15,6 @@ from utilisateur.models import Locataire, Proprietaire, Utilisateur
 
 
 class ReportingStatsView(APIView):
-    """
-    Vue des statistiques globales et reporting d'activite.
-    Fournit les metriques agregees selon le role de l'utilisateur connecte
-    (administrateur, agent, proprietaire ou locataire).
-    """
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
