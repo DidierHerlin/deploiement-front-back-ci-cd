@@ -8,6 +8,5 @@ class AuthAnonRateThrottle(AnonRateThrottle):
 
 
 class PasswordResetRateThrottle(AnonRateThrottle):
-    """Limitation de debit pour la reinitialisation de mot de passe."""
 
     scope = "password_reset"
