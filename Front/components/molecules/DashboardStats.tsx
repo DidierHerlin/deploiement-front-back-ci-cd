@@ -5,6 +5,7 @@ import { CircleDollarSign, CalendarDays, WalletCards, CheckCircle2, AlertCircle,
 import { Contrat, Paiement } from '@/lib/api';
 import { StatCard } from "@/components/molecules/locataire_StatCard";
 import { useTranslation } from '@/lib/i18n';
+import { formatMontantAr } from '@/lib/utils';
 
 interface DashboardStatsProps {
   paiements: Paiement[];
@@ -16,9 +17,7 @@ interface DashboardStatsProps {
 export function DashboardStats({ paiements, contratActif, loading, error }: DashboardStatsProps) {
   const { t, lang } = useTranslation();
 
-  const formatMontant = (montant: any) => {
-    return montant ? `${parseFloat(montant).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} Ar` : '0 Ar';
-  };
+  const formatMontant = (montant: any) => formatMontantAr(montant);
 
   if (loading) {
     return (

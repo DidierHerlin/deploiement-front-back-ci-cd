@@ -6,9 +6,10 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 from rest_framework.request import Request
 from rest_framework.views import APIView
 
+from common.permissions import ROLES_GESTION
 from utilisateur.models import Utilisateur
 
-ROLES_GESTION_COMPLETE = {Utilisateur.Role.ADMIN, Utilisateur.Role.AGENT}
+ROLES_GESTION_COMPLETE = ROLES_GESTION
 
 ROLES_GESTION_PARTIELLE = {Utilisateur.Role.PROPRIETAIRE}
 

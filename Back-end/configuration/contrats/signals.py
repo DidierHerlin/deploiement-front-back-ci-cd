@@ -11,14 +11,6 @@ from .models import Contrat
 logger = logging.getLogger(__name__)
 
 
-def _appliquer_statut_si_change(bien: Bien, nouveau_statut: str, message: str, *args) -> None:
-    if bien.statut == nouveau_statut:
-        return
-    bien.statut = nouveau_statut
-    bien.save(update_fields=["statut"])
-    logger.info(message, *args)
-
-
 def mettre_a_jour_statut_bien(bien: Bien) -> None:
     if bien.statut == Bien.StatutBien.VENDU:
         return
@@ -35,9 +27,7 @@ def mettre_a_jour_statut_bien(bien: Bien) -> None:
     else:
         nouveau_statut = bien.statut
 
-    _appliquer_statut_si_change(
-        bien, nouveau_statut, "Bien #%s -> %s (mise à jour après contrat)", bien.pk, nouveau_statut
-    )
+    bien.changer_statut(nouveau_statut, motif="mise à jour après contrat")
 
 
 @receiver(post_save, sender=Contrat)
@@ -50,17 +40,13 @@ def synchroniser_bien_apres_sauvegarde_contrat(sender, instance: Contrat, **kwar
         if instance.statut == Contrat.StatutContrat.ACTIF:
             # Tant qu'aucun paiement n'est validé, le bien doit rester RESERVE.
             # Il passera en LOUE lors du premier paiement.
-            _appliquer_statut_si_change(
-                bien, Bien.StatutBien.RESERVE, "Bien #%s -> RESERVE (contrat actif #%s)", bien.pk, instance.pk
-            )
+            bien.changer_statut(Bien.StatutBien.RESERVE, motif=f"contrat actif #{instance.pk}")
         elif instance.statut in (Contrat.StatutContrat.RESILIE, Contrat.StatutContrat.TERMINE):
             mettre_a_jour_statut_bien(bien)
 
     elif instance.type_contrat == Contrat.TypeContrat.ACHAT:
         if instance.statut == Contrat.StatutContrat.VENDU:
-            _appliquer_statut_si_change(
-                bien, Bien.StatutBien.VENDU, "Bien #%s -> VENDU (vente finalisée #%s)", bien.pk, instance.pk
-            )
+            bien.changer_statut(Bien.StatutBien.VENDU, motif=f"vente finalisée #{instance.pk}")
 
 
 @receiver(post_delete, sender=Contrat)

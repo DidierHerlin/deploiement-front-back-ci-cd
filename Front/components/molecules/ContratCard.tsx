@@ -2,6 +2,7 @@
 
 import { Contrat } from '@/lib/api'
 import { FileText, Calendar, User, Building2, Eye } from 'lucide-react'
+import { formatMontantAr, formatDateFR } from '@/lib/utils'
 
 interface ContratCardProps {
   contrat: Contrat
@@ -28,11 +29,6 @@ export function ContratCard({ contrat }: ContratCardProps) {
       'BUREAU': 'Bureau'
     }
     return types[type] || type
-  }
-
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return '...'
-    return new Date(dateStr).toLocaleDateString('fr-FR')
   }
 
   return (
@@ -77,7 +73,7 @@ export function ContratCard({ contrat }: ContratCardProps) {
           <Calendar size={16} className="text-gray-400 flex-shrink-0 mt-0.5" />
           <div>
             <span className="block text-xs text-gray-500">Début</span>
-            <strong className="text-[#17202b]">{formatDate(contrat.date_debut)}</strong>
+            <strong className="text-[#17202b]">{formatDateFR(contrat.date_debut)}</strong>
           </div>
         </div>
 
@@ -86,7 +82,7 @@ export function ContratCard({ contrat }: ContratCardProps) {
             <Calendar size={16} className="text-gray-400 flex-shrink-0 mt-0.5" />
             <div>
               <span className="block text-xs text-gray-500">Fin</span>
-              <strong className="text-[#17202b]">{formatDate(contrat.date_fin)}</strong>
+              <strong className="text-[#17202b]">{formatDateFR(contrat.date_fin)}</strong>
             </div>
           </div>
         )}
@@ -95,9 +91,9 @@ export function ContratCard({ contrat }: ContratCardProps) {
       <div className="border-t border-gray-100 p-4 flex items-center justify-between bg-gray-50/50 mt-auto">
         <div className="font-bold text-[#17202b] text-base">
           {contrat.type_contrat === 'LOCATION' && contrat.loyer ? (
-            <>{parseFloat(contrat.loyer).toLocaleString('fr-FR')} Ar <span className="text-xs font-normal text-gray-500">/ mois</span></>
+            <>{formatMontantAr(contrat.loyer)} <span className="text-xs font-normal text-gray-500">/ mois</span></>
           ) : contrat.prix ? (
-            <>{parseFloat(contrat.prix).toLocaleString('fr-FR')} Ar</>
+            <>{formatMontantAr(contrat.prix)}</>
           ) : (
             <span className="text-sm text-gray-400">Montant non défini</span>
           )}

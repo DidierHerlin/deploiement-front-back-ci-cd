@@ -4,6 +4,7 @@ import React from 'react';
 import { CalendarDays, CheckCircle2 } from 'lucide-react';
 import { Paiement, Contrat } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
+import { formatMontantAr } from '@/lib/utils';
 
 interface DashboardProchaineEcheanceCardProps {
   paiements: Paiement[];
@@ -36,9 +37,7 @@ export function DashboardProchaineEcheanceCard({ paiements, contratActif }: Dash
   const monthYear = echeance.toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR', { month: 'long', year: 'numeric' }).toUpperCase();
   const day = echeance.toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR', { day: '2-digit' });
   
-  const formatMontant = (montant: any) => {
-    return montant ? `${parseFloat(montant).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} Ar` : '0 Ar';
-  };
+  const formatMontant = (montant: any) => formatMontantAr(montant);
 
   const montantEffectif = contratActif ? contratActif.loyer : prochaine.montant_attendu;
 

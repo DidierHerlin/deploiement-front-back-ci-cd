@@ -6,6 +6,7 @@ import { Paiement, fetchBlob } from '@/lib/api'
 import { WalletCards, Calendar, User, FileText, Maximize2 } from 'lucide-react'
 import { FactureModal } from "@/components/organisms/FactureModal"
 import { AgentActions } from "@/components/organisms/AgentActions"
+import { formatMontantAr, formatDateFR } from '@/lib/utils'
 
 interface PaiementCardProps {
   paiement: Paiement
@@ -108,7 +109,7 @@ export function PaiementCard({ paiement: initialPaiement, onUpdate }: PaiementCa
           <Calendar size={16} className="text-gray-400 flex-shrink-0 mt-0.5" />
           <div>
             <span className="block text-xs text-gray-500">Paiement prévu</span>
-            <strong className="text-[#17202b]">{formatDate(paiement.date_paiement_prevue)}</strong>
+            <strong className="text-[#17202b]">{formatDateFR(paiement.date_paiement_prevue)}</strong>
           </div>
         </div>
 
@@ -116,7 +117,7 @@ export function PaiementCard({ paiement: initialPaiement, onUpdate }: PaiementCa
           <Calendar size={16} className="text-gray-400 flex-shrink-0 mt-0.5" />
           <div>
             <span className="block text-xs text-gray-500">Échéance</span>
-            <strong className="text-[#17202b]">{formatDate(paiement.date_echeance)}</strong>
+            <strong className="text-[#17202b]">{formatDateFR(paiement.date_echeance)}</strong>
           </div>
         </div>
 
@@ -125,7 +126,7 @@ export function PaiementCard({ paiement: initialPaiement, onUpdate }: PaiementCa
             <Calendar size={16} className="text-green-600 flex-shrink-0 mt-0.5" />
             <div>
               <span className="block text-xs text-gray-500">Payé le</span>
-              <strong className="text-[#17202b]">{formatDate(paiement.date_paiement)}</strong>
+              <strong className="text-[#17202b]">{formatDateFR(paiement.date_paiement)}</strong>
             </div>
           </div>
         )}
@@ -138,11 +139,11 @@ export function PaiementCard({ paiement: initialPaiement, onUpdate }: PaiementCa
             <div>
               <div className="text-xs text-gray-500 mb-0.5">Montant</div>
               <div className="font-bold text-[#17202b] text-lg">
-                {displayAmount.toLocaleString('fr-FR')} Ar
+                {formatMontantAr(displayAmount)}
               </div>
               {paiement.est_partiel && (
                 <div className="text-xs text-orange-600 font-medium mt-0.5">
-                  Reste à payer : {parseFloat(paiement.montant_restant || '0').toLocaleString('fr-FR')} Ar
+                  Reste à payer : {formatMontantAr(paiement.montant_restant)}
                 </div>
               )}
             </div>
@@ -168,7 +169,7 @@ export function PaiementCard({ paiement: initialPaiement, onUpdate }: PaiementCa
             <div className="p-4 space-y-4">
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-600 font-medium">{paiement.num_echeance === 1 ? 'Loyer + Dépôt de garantie' : 'Loyer mensuel brut'}</span>
-                <span className="font-bold text-[#17202b]">{baseAmount.toLocaleString('fr-FR')} Ar</span>
+                <span className="font-bold text-[#17202b]">{formatMontantAr(baseAmount)}</span>
               </div>
               
               <div className="border-t border-dashed border-gray-200 my-2"></div>
@@ -179,7 +180,7 @@ export function PaiementCard({ paiement: initialPaiement, onUpdate }: PaiementCa
                     Part propriétaire 
                     <span className="text-[10px] font-bold bg-green-50 text-green-700 px-1.5 py-0.5 rounded">90%</span>
                   </span>
-                  <span className="font-medium text-gray-700">{Number(paiement.part_proprietaire).toLocaleString('fr-FR')} Ar</span>
+                  <span className="font-medium text-gray-700">{formatMontantAr(paiement.part_proprietaire)}</span>
                 </div>
                 
                 <div className="flex justify-between items-center text-sm">
@@ -187,7 +188,7 @@ export function PaiementCard({ paiement: initialPaiement, onUpdate }: PaiementCa
                     Frais d'agence 
                     <span className="text-[10px] font-bold bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded">10%</span>
                   </span>
-                  <span className="font-medium text-gray-700">{Number(paiement.commission_agent).toLocaleString('fr-FR')} Ar</span>
+                  <span className="font-medium text-gray-700">{formatMontantAr(paiement.commission_agent)}</span>
                 </div>
               </div>
             </div>
@@ -199,11 +200,11 @@ export function PaiementCard({ paiement: initialPaiement, onUpdate }: PaiementCa
               </span>
               <div className="text-right">
                 <span className="text-lg font-bold text-indigo-700 block">
-                  {displayAmount.toLocaleString('fr-FR')} Ar
+                  {formatMontantAr(displayAmount)}
                 </span>
                 {paiement.est_partiel && (
                   <span className="text-[10px] text-orange-600 font-medium block mt-0.5">
-                    Reste : {parseFloat(paiement.montant_restant || '0').toLocaleString('fr-FR')} Ar
+                    Reste : {formatMontantAr(paiement.montant_restant)}
                   </span>
                 )}
               </div>

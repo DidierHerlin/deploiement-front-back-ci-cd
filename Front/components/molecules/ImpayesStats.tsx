@@ -2,6 +2,7 @@ import React from 'react';
 import { ArrowRight, AlertTriangle } from 'lucide-react';
 import { AgentDashboardData } from '../../app/agent/dashboard/hooks/useAgentDashboard';
 import Link from 'next/link';
+import { formatMontantAr } from '@/lib/utils';
 
 export function ImpayesStats({ data }: { data: AgentDashboardData }) {
   const { impayes } = data;
@@ -23,7 +24,7 @@ export function ImpayesStats({ data }: { data: AgentDashboardData }) {
       
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginTop: 'auto' }}>
         <div style={{ padding: '12px', border: '1px solid #eef0f4', borderRadius: '8px', textAlign: 'center' }}>
-          <strong style={{ display: 'block', fontSize: '18px', color: 'var(--red)' }}>{impayesTotal.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} Ar</strong>
+          <strong style={{ display: 'block', fontSize: '18px', color: 'var(--red)' }}>{formatMontantAr(impayesTotal)}</strong>
           <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Montant cumulé</span>
         </div>
         <div style={{ padding: '12px', border: '1px solid #eef0f4', borderRadius: '8px', textAlign: 'center' }}>

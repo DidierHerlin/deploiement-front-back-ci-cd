@@ -1,44 +1,24 @@
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
+
+from common.tests import (
+    BaseReferentielModelTestsMixin,
+    BaseReferentielSerializerTestsMixin,
+)
 from .models import Transaction
 from .serializers import TransactionSerializer
 
 
-class TransactionModelTests(TestCase):
-    def test_str(self):
-        t = Transaction.objects.create(nomTransaction="Location")
-        self.assertEqual(str(t), "Location")
-
-    def test_strip_espaces(self):
-        t = Transaction.objects.create(nomTransaction="  Vente  ")
-        self.assertEqual(t.nomTransaction, "Vente")
+class TransactionModelTests(BaseReferentielModelTestsMixin, TestCase):
+    model_class = Transaction
+    field_name = "nomTransaction"
 
 
-class TransactionSerializerTests(TestCase):
-    def test_valide(self):
-        serializer = TransactionSerializer(data={"nomTransaction": "Location"})
-        self.assertTrue(serializer.is_valid())
-
-    def test_vide_invalide(self):
-        serializer = TransactionSerializer(data={"nomTransaction": "   "})
-        self.assertFalse(serializer.is_valid())
-        self.assertIn("nomTransaction", serializer.errors)
-
-    def test_court_invalide(self):
-        serializer = TransactionSerializer(data={"nomTransaction": "A"})
-        self.assertFalse(serializer.is_valid())
-        self.assertIn("nomTransaction", serializer.errors)
-
-    def test_doublon_invalide(self):
-        Transaction.objects.create(nomTransaction="Vente")
-        serializer = TransactionSerializer(data={"nomTransaction": "vente"})
-        self.assertFalse(serializer.is_valid())
-
-    def test_mise_a_jour_meme_instance(self):
-        t = Transaction.objects.create(nomTransaction="Bail commercial")
-        serializer = TransactionSerializer(instance=t, data={"nomTransaction": "Bail commercial"})
-        self.assertTrue(serializer.is_valid())
+class TransactionSerializerTests(BaseReferentielSerializerTestsMixin, TestCase):
+    serializer_class = TransactionSerializer
+    model_class = Transaction
+    field_name = "nomTransaction"
 
 
 class TransactionAPITests(APITestCase):
@@ -70,16 +50,16 @@ class TransactionAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_update(self):
-        response = self.client.put(f"{self.url}{self.item.id}/", {"nomTransaction": "Location meublée"}, format="json")
+        response = self.client.put(f"{self.url}{self.item.id}/", {"nomTransaction": "Bail commercial"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.item.refresh_from_db()
-        self.assertEqual(self.item.nomTransaction, "Location meublée")
+        self.assertEqual(self.item.nomTransaction, "Bail commercial")
 
     def test_partial_update(self):
-        response = self.client.patch(f"{self.url}{self.item.id}/", {"nomTransaction": "Location saisonnière"}, format="json")
+        response = self.client.patch(f"{self.url}{self.item.id}/", {"nomTransaction": "Viager"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.item.refresh_from_db()
-        self.assertEqual(self.item.nomTransaction, "Location saisonnière")
+        self.assertEqual(self.item.nomTransaction, "Viager")
 
     def test_delete(self):
         response = self.client.delete(f"{self.url}{self.item.id}/")

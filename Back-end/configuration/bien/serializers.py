@@ -43,43 +43,6 @@ class BienSerializer(serializers.ModelSerializer):
             ]
         return data
 
-    def validate_surface(self, value: float) -> float:
-        try:
-            validators.validate_surface(value)
-        except DjangoValidationError as exc:
-            raise serializers.ValidationError(exc.messages[0]) from exc
-        return value
-
-    def validate_nombre_pieces(self, value: int | None) -> int | None:
-        try:
-            validators.validate_nombre_pieces(value)
-        except DjangoValidationError as exc:
-            raise serializers.ValidationError(exc.messages[0]) from exc
-        return value
-
-    def validate_loyer_mensuel(self, value: Decimal | None) -> Decimal | None:
-        try:
-            validators.validate_loyer_mensuel(value)
-        except DjangoValidationError as exc:
-            raise serializers.ValidationError(exc.messages[0]) from exc
-        return value
-
-    def validate_prix(self, value: Decimal | None) -> Decimal | None:
-        try:
-            _valider_prix_positif(value)
-        except DjangoValidationError as exc:
-            raise serializers.ValidationError(exc.messages[0]) from exc
-        return value
-
-    def validate_photos(self, value: list | None) -> list | None:
-        try:
-            validators.validate_photos(value)
-        except DjangoValidationError as exc:
-            raise serializers.ValidationError(
-                "Le champ 'photos' doit Ãªtre une liste d'URLs (chaÃ®nes)."
-            ) from exc
-        return value
-
     def validate_statut(self, value: str) -> str:
         request = self.context.get("request")
         est_admin = bool(request and getattr(request.user, "role", None) == Utilisateur.Role.ADMIN)

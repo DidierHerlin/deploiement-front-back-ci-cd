@@ -13,120 +13,8 @@ export function invalidateCache() {
 }
 
 
-export interface Proprietaire {
-  id: number
-  user: {
-    id: number
-    email: string
-    nom: string
-    prenoms: string
-    telephone?: string
-    is_active?: boolean
-  }
-  iban?: string
-  contact?: string
-}
-
-export interface Bien {
-  id: number
-  titre: string
-  type: string
-  mode_transaction: "LOCATION" | "VENTE"
-  adresse: string
-  surface: number
-  nombre_pieces: number | null
-  loyer_mensuel: string | null
-  prix: string | null
-  statut: "DISPONIBLE" | "LOUE" | "VENDU" | "EN_TRAVAUX"
-  photos: string[]
-  proprietaire: {
-    id: number
-    user: { id: number; email: string; nom: string; prenoms: string }
-  }
-}
-
-export interface BienListItem {
-  id: number
-  titre: string
-  type: string
-  mode_transaction: "LOCATION" | "VENTE"
-  adresse: string
-  surface?: number | null
-  nombre_pieces?: number | null
-  loyer_mensuel: string | null
-  prix: string | null
-  statut: string
-  photos?: string[] | null
-  proprietaire: { id: number; user: { id?: number; nom: string; prenoms: string } }
-}
-
-export interface Locataire {
-  id: number
-  user: { id: number; email: string; nom: string; prenoms: string; telephone?: string; is_active?: boolean }
-}
-
-export interface Contrat {
-  id: number
-  bien: number
-  bien_titre?: string
-  bien_type?: string
-  locataire: number
-  locataire_nom?: string
-  locataire_prenoms?: string
-  type_contrat: "LOCATION" | "ACHAT"
-  type_paiement_achat: "TOTALITE" | "PARTIEL" | null
-  date_debut: string | null
-  date_fin: string | null
-  date_paiement: string | null
-  loyer: string | null
-  depot_garantie: string | null
-  prix: string | null
-  statut: string
-  document_pdf: string | null
-  date_creation: string
-}
-
-
-export interface Paiement {
-  id: number
-  contrat: number | { id: number; statut?: string; [key: string]: any }
-  contrat_statut?: string
-  locataire_user_id?: number
-  locataire_id?: number
-  num_echeance: number
-  date_echeance: string
-  date_paiement_prevue: string | null
-  date_paiement: string | null
-  date_versement_partiel: string | null
-  montant_attendu: string | null
-  montant: string | null
-  montant_paye: string | null
-  montant_restant: string | null
-  mode_paiement: string | null
-  reference: string | null
-  statut: string
-  est_partiel: boolean
-  date_creation: string
-  locataire_nom: string
-  bien_titre: string
-  loyer_contrat: string
-  est_en_retard: boolean
-  message_mois: string
-  part_proprietaire: number | null
-  commission_agent: number | null
-  est_mois_a_venir?: boolean
-  a_echeance_anterieure_impayee?: boolean
-  est_eligible_demande?: boolean
-  demande_en_cours?: {
-    id: number
-    statut: string
-    moyen_paiement: string
-    date_demande: string
-    montant: string
-    telephone?: string | null
-    reference?: string | null
-  } | null
-}
+export * from "../types"
+export { fetchAPI, fetchAPI as apiFetch }
 
 export interface Notification {
   id: number;
@@ -139,18 +27,6 @@ export interface Notification {
   date_creation: string;
   lu: boolean;
   email_envoye: boolean;
-}
-
-export interface CreerContratPayload {
-  bien: number
-  locataire: number
-  type_contrat: "LOCATION" | "ACHAT"
-  type_paiement_achat?: "TOTALITE" | "PARTIEL" | null
-  date_debut?: string | null
-  date_fin?: string | null
-  loyer?: string | null
-  depot_garantie?: string | null
-  prix?: string | null
 }
 
 export interface ReservationData {
@@ -176,61 +52,6 @@ export interface ReservationData {
   bien_mode_transaction?: string
   bien_statut?: string
   bien_nombre_pieces?: number | null
-}
-
-
-export interface DemandePaiement {
-  id: number
-  locataire: number
-  locataire_nom: string
-  locataire_email: string
-  facture: number
-  bien_titre: string
-  date_echeance_facture: string
-  mois_echeance_facture: string
-  statut_facture: string
-  montant: string
-  date_demande: string
-  moyen_paiement: "MVOLA" | "ORANGE_MONEY" | "AIRTEL_MONEY"
-  statut: "EN_ATTENTE" | "VALIDE" | "REFUSE" | "ANNULE"
-  statut_display?: string
-  telephone: string | null
-  reference: string | null
-  date_traitement: string | null
-  motif_refus: string | null
-}
-
-export interface CreerDemandePaiementPayload {
-  facture: number
-  montant?: number | string
-  moyen_paiement: "MVOLA" | "ORANGE_MONEY" | "AIRTEL_MONEY"
-  telephone?: string
-  reference?: string
-}
-
-export interface UserProfil {
-  id: number
-  email: string
-  nom: string
-  prenoms: string
-  role: string
-  is_active: boolean
-  date_creation: string
-  photo_url: string | null
-  photo_profil?: string | null
-  telephone?: string | null
-}
-
-// Création contrat
-
-export interface BienInfo {
-  loyer_mensuel: string | null
-  prix: string | null
-  mode_transaction: "LOCATION" | "VENTE"
-  type: string
-  surface: number
-  adresse: string
-  titre: string
 }
 
 
@@ -782,7 +603,7 @@ export const demandePaiementApi = {
 }
 
 export async function downloadQuittance(id: number, reference: string = "quittance"): Promise<void> {
-  const token = localStorage.getItem("token")
+  const token = getAccessToken()
   const headers: Record<string, string> = {}
   if (token) {
     headers["Authorization"] = `Bearer ${token}`
@@ -1043,4 +864,51 @@ export async function getReportingStats(): Promise<any> {
   const res = await fetchAPI<any>('/reporting/stats/');
   return res;
 }
+
+export async function demanderCodeMdp(email: string): Promise<any> {
+  return await fetchAPI<any>("/mot-de-passe/demande/", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  })
+}
+
+export async function verifierCodeMdp(email: string, code: string): Promise<any> {
+  try {
+    return await fetchAPI<any>("/mot-de-passe/verifier-code/", {
+      method: "POST",
+      body: JSON.stringify({ email, code }),
+    })
+  } catch (err: any) {
+    if (err?.message?.includes("404")) {
+      return await fetchAPI<any>("/mot-de-passe/verifier/", {
+        method: "POST",
+        body: JSON.stringify({ email, code }),
+      })
+    }
+    throw err
+  }
+}
+
+export async function reinitialiserMdp(payload: {
+  email: string
+  code: string
+  nouveau_mot_de_passe: string
+  confirmation_mot_de_passe: string
+}): Promise<any> {
+  try {
+    return await fetchAPI<any>("/mot-de-passe/reinitialiser/", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    })
+  } catch (err: any) {
+    if (err?.message?.includes("404")) {
+      return await fetchAPI<any>("/mot-de-passe/confirmer/", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      })
+    }
+    throw err
+  }
+}
+
 

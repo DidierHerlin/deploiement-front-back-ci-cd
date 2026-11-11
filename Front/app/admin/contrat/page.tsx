@@ -13,7 +13,7 @@ import { useTranslation } from '@/lib/i18n'
 import { ContratTable } from "@/components/organisms/ContratTable"
 import { ContratSearch } from "@/components/organisms/ContratSearch"
 import { ContratFilters } from "@/components/organisms/ContratFilters"
-import { ContratForm } from "@/components/organisms/contrat_ContratForm"
+import { ContratForm } from "@/components/organisms/ContratForm"
 import { ContratModal } from "@/components/organisms/ContratModal"
 import { ActionContratModal } from "@/components/organisms/ActionContratModal"
 

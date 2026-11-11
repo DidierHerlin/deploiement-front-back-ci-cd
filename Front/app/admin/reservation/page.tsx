@@ -6,6 +6,7 @@ import { Eye, Send, FileText, CalendarCheck, X, Search } from 'lucide-react'
 import { getReservations, repondreReservation, ReservationData } from '@/lib/api'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from '@/lib/i18n'
+import { formatMontantAr } from '@/lib/utils'
 
 function StatutBadge({ statut }: { statut: string }) {
   const { t } = useTranslation()
@@ -293,13 +294,13 @@ export default function AdminReservationsPage() {
               {selected.bien_loyer_mensuel && (
                 <p className="text-slate-900 dark:text-white font-semibold m-0">
                   <span className="text-slate-500 dark:text-slate-400 font-normal">{t("forms.monthly_rent", "Loyer")} : </span>
-                  {Number(selected.bien_loyer_mensuel).toLocaleString('fr-FR')} Ar / {t("card.per_month", "mois")}
+                  {formatMontantAr(selected.bien_loyer_mensuel)} / {t("card.per_month", "mois")}
                 </p>
               )}
               {selected.bien_prix && (
                 <p className="text-slate-900 dark:text-white font-semibold m-0">
                   <span className="text-slate-500 dark:text-slate-400 font-normal">{t("forms.sale_price", "Prix")} : </span>
-                  {Number(selected.bien_prix).toLocaleString('fr-FR')} Ar
+                  {formatMontantAr(selected.bien_prix)}
                 </p>
               )}
             </div>

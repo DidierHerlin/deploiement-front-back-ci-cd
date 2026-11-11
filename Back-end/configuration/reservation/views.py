@@ -9,6 +9,8 @@ from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from common.mixins import RoleScopedQuerySetMixin
+from common.utils import defer_bien_photos
 from notifications.models import Notification
 from utilisateur.models import Utilisateur
 
@@ -23,21 +25,18 @@ from .serializers import (
 logger = logging.getLogger(__name__)
 
 
-class ReservationViewSet(viewsets.ModelViewSet):
-    """
-    CRUD sur les réservations, avec action métier dédiée :
+class ReservationViewSet(RoleScopedQuerySetMixin, viewsets.ModelViewSet):
+    owner_field = None
+    tenant_field = "locataire__user"
 
-        POST /reservations/              Créer une réservation (LOCATAIRE)
-        GET  /reservations/              Lister les réservations
-        GET  /reservations/{id}/         Détail d'une réservation
-        POST /reservations/{id}/repondre/ Répondre à une réservation (ADMIN/AGENT)
-    """
-
-    queryset = Reservation.objects.select_related(
-        "bien", "bien__proprietaire__user",
-        "locataire", "locataire__user",
-        "contrat",
-    ).defer("bien__photos")
+    queryset = defer_bien_photos(
+        Reservation.objects.select_related(
+            "bien", "bien__proprietaire__user",
+            "locataire", "locataire__user",
+            "contrat",
+        ),
+        "bien"
+    )
     permission_classes = [permissions.IsAuthenticated, ReservationPermission]
     filterset_fields = ["statut", "type_reservation", "bien", "locataire"]
     ordering_fields = ["date_creation", "statut"]
@@ -49,16 +48,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
         return ReservationSerializer
 
     def get_queryset(self):
-        user = self.request.user
-        queryset = super().get_queryset()
-
-        if user.role in (Utilisateur.Role.ADMIN, Utilisateur.Role.AGENT):
-            return queryset
-
-        if user.role == Utilisateur.Role.LOCATAIRE:
-            return queryset.filter(locataire__user=user)
-
-        return queryset.none()
+        return self.filter_by_user_role(super().get_queryset())
 
     def perform_create(self, serializer):
         """Associe automatiquement le locataire connecté à la réservation."""

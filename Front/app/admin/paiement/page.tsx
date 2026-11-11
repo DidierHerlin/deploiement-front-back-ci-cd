@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { FileX, ArrowLeft, Receipt } from 'lucide-react'
 import { getPaiements, getContrats, getDemandesPaiement, Paiement, Contrat } from '@/lib/api'
 import { useTranslation } from '@/lib/i18n'
-import { PaiementStats } from "@/components/molecules/paiement_PaiementStats"
+import { PaiementStats } from "@/components/molecules/PaiementStats"
 import { PaiementSearch } from "@/components/organisms/PaiementSearch"
 import { PaiementFilters } from "@/components/organisms/PaiementFilters"
 import { PaiementTable } from "@/components/organisms/PaiementTable"

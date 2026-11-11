@@ -1,66 +1,35 @@
-# api/permissions.py
-"""
-Classes de permission DRF centralisées.
-
-Remplace les contrôles `if request.user.role not in ROLES_GESTIONNAIRES: ...`
-dispersés dans views.py par des permission_classes réutilisables et testables.
-"""
-
+"""Classes de permission DRF pour le module utilisateur."""
 from rest_framework.permissions import BasePermission, SAFE_METHODS
+from common.permissions import ROLES_GESTION, EstGestionnaire
+from .models import Utilisateur
 
 
 class EstAdmin(BasePermission):
-    """RG-01 : seul l'administrateur gère certaines actions sensibles
-    (activation de compte, suppression définitive, etc.)."""
+    """RG-01 : seul l'administrateur gère certaines actions sensibles."""
 
     def has_permission(self, request, view):
         return bool(
             request.user
             and request.user.is_authenticated
-            and request.user.role == "ADMIN"
-        )
-
-
-class EstGestionnaire(BasePermission):
-    """Agent immobilier ou Administrateur — équivalent de ROLES_GESTIONNAIRES
-    utilisé pour la gestion quotidienne des fiches Propriétaire/Locataire."""
-
-    def has_permission(self, request, view):
-        return bool(
-            request.user
-            and request.user.is_authenticated
-            and request.user.role in ("AGENT", "ADMIN")
+            and request.user.role == Utilisateur.Role.ADMIN
         )
 
 
 class EstProprietaireDuCompte(BasePermission):
-    """
-    Un utilisateur ne peut modifier que son propre compte (sauf l'admin).
-
-    À utiliser uniquement sur des vues dont l'objet consulté (`obj`)
-    EST directement une instance de Utilisateur — par exemple GetProfileView.
-    """
+    """Un utilisateur ne peut modifier que son propre compte (sauf l'admin)."""
 
     def has_object_permission(self, request, view, obj):
-        if request.user.role == "ADMIN":
+        if request.user.role == Utilisateur.Role.ADMIN:
             return True
         return obj == request.user
 
 
 class EstProprietaireDuProfil(BasePermission):
-    """
-    CORRECTION : variante de EstProprietaireDuCompte pour les objets
-    Proprietaire / Locataire (qui NE SONT PAS directement des Utilisateur,
-    mais qui possèdent un attribut `.user`).
-
-    À utiliser sur ProprietaireDetailView / LocataireDetailView, où
-    `obj == request.user` échouerait toujours (obj est un Proprietaire
-    ou un Locataire, jamais égal à l'instance Utilisateur connectée).
-    """
+    """Variante pour les objets Propriétaire / Locataire possédant un attribut `.user`."""
 
     def has_object_permission(self, request, view, obj):
-        if request.user.role == "ADMIN":
+        if request.user.role == Utilisateur.Role.ADMIN:
             return True
-        if request.method in SAFE_METHODS and request.user.role in ("AGENT", "ADMIN"):
+        if request.method in SAFE_METHODS and request.user.role in ROLES_GESTION:
             return True
-        return obj.user == request.user
+        return getattr(obj, "user", None) == request.user

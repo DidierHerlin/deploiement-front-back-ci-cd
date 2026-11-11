@@ -1,43 +1,9 @@
 import { getApiUrl } from "@/lib/config"
 import { getAccessToken, isTokenValid } from "@/lib/auth"
 import { resolveMediaUrl } from "@/lib/api"
+import type { BienType, ModeTransaction, StatutBien, Bien, BienFilters } from "@/types"
 
-export type BienType = "APPARTEMENT" | "MAISON" | "LOCAL_COMMERCIAL" | "TERRAIN"
-export type ModeTransaction = "LOCATION" | "VENTE"
-export type StatutBien = "DISPONIBLE" | "LOUE" | "VENDU" | "EN_TRAVAUX" | "RESERVE"
-
-export interface Bien {
-  id: number
-  titre: string
-  type: BienType | string
-  mode_transaction: ModeTransaction
-  adresse: string
-  surface: number
-  nombre_pieces: number | null
-  loyer_mensuel: string | null
-  prix: string | null
-  statut: StatutBien | string
-  photos: string[]
-  photo_cover?: string | null
-  proprietaire?: {
-    id: number
-    nom?: string
-    prenoms?: string
-    email?: string
-    user?: {
-      id?: number
-      nom?: string
-      prenoms?: string
-      email?: string
-    }
-  } | null
-}
-
-export interface BienFilters {
-  search?: string
-  type?: string
-  mode_transaction?: string
-}
+export type { BienType, ModeTransaction, StatutBien, Bien, BienFilters }
 
 /**
  * Récupère les biens disponibles depuis l'API backend de manière sécurisée et typée.

@@ -150,3 +150,20 @@ class Bien(models.Model):
     @property
     def est_vendu(self) -> bool:
         return self.statut == self.StatutBien.VENDU
+
+    def changer_statut(self, nouveau_statut: str, motif: str = "") -> bool:
+        """
+        Met à jour de manière sécurisée et centralisée le statut du bien.
+        Retourne True si le statut a été modifié, False sinon.
+        """
+        if self.statut == nouveau_statut:
+            return False
+        ancien = self.statut
+        self.statut = nouveau_statut
+        self.save(update_fields=["statut"])
+        import logging
+        logging.getLogger(__name__).info(
+            "Bien #%s : statut passé de %s à %s%s",
+            self.pk, ancien, nouveau_statut, f" ({motif})" if motif else ""
+        )
+        return True

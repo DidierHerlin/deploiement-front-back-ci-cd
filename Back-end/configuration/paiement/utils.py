@@ -7,14 +7,7 @@ from .models import Paiement
 logger = logging.getLogger(__name__)
 
 
-def formater_montant_ar(montant):
-    if montant is None:
-        return "0"
-    try:
-        valeur = int(float(montant))
-        return f"{valeur:,}".replace(",", " ")
-    except (ValueError, TypeError):
-        return str(montant)
+from common.utils import formater_montant_ar, render_to_pdf
 
 
 def generate_quittance_pdf(paiement):

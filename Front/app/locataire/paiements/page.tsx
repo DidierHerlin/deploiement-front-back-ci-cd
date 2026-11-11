@@ -11,8 +11,9 @@ import { LocataireTopbar } from "@/components/organisms/LocataireTopbar"
 import { ProfileModal } from "@/components/organisms/ProfileModal"
 
 import { PaiementHeader } from "@/components/organisms/PaiementHeader"
-import { PaiementStats } from "@/components/molecules/paiement_PaiementStats"
-import { PaiementList } from "@/components/organisms/paiements_PaiementList"
+import { PaiementStats } from "@/components/molecules/PaiementStats"
+import { PaiementList } from "@/components/organisms/PaiementList"
+import { formatMontantAr } from "@/lib/utils"
 import { NotificationList } from "@/components/organisms/NotificationList"
 import { DemandePaiementModal } from "@/components/organisms/DemandePaiementModal"
 import { DemandesPaiementList } from "@/components/organisms/DemandesPaiementList"
@@ -112,10 +113,10 @@ export default function PaiementsPage() {
                 const period = invoice.date_echeance 
                   ? new Date(invoice.date_echeance).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR', { month: 'long', year: 'numeric' }) 
                   : (lang === 'en' ? 'this month' : 'ce mois');
-                const amount = parseFloat((invoice.montant_attendu || invoice.montant || 0) as string).toLocaleString('fr-FR');
+                const amountText = formatMontantAr(invoice.montant_attendu || invoice.montant || 0);
                 const descText = lang === 'en'
-                  ? `Your priority due rent for ${period} (${amount} Ar) can be paid immediately via MVola, Orange Money, or Airtel Money.`
-                  : `Votre échéance prioritaire pour ${period} (${amount} Ar) est prête à être réglée exclusivement par MVola, Orange Money ou Airtel Money.`;
+                  ? `Your priority due rent for ${period} (${amountText}) can be paid immediately via MVola, Orange Money, or Airtel Money.`
+                  : `Votre échéance prioritaire pour ${period} (${amountText}) est prête à être réglée exclusivement par MVola, Orange Money ou Airtel Money.`;
 
                 return (
                   <div className="bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/50 rounded-2xl p-4 sm:p-5 mb-6 flex items-center justify-between gap-4 flex-wrap">

@@ -7,6 +7,7 @@ import { AgentActions } from "@/components/organisms/AgentActions"
 import { FactureModal } from "@/components/organisms/FactureModal"
 import { ValidationDemandeModal } from "@/components/organisms/ValidationDemandeModal"
 import { Pagination } from "@/components/molecules/pagination"
+import { formatMontantAr, formatDateFR } from "@/lib/utils"
 
 interface PriorityPaiementsProps {
   paiements: Paiement[]
@@ -123,16 +124,16 @@ export function PriorityPaiements({ paiements, onUpdate }: PriorityPaiementsProp
                       )}
                     </td>
                     <td>
-                      <div style={{ fontWeight: 600, color: 'var(--navy)' }}>{new Date(p.date_echeance).toLocaleDateString('fr-FR')}</div>
+                      <div style={{ fontWeight: 600, color: 'var(--navy)' }}>{formatDateFR(p.date_echeance)}</div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 5 }}>
                         <Clock size={12} style={{ color: 'var(--muted-foreground)' }} /> {getDaysInfo(p.date_echeance)}
                       </div>
                     </td>
                     <td className="num" style={{ fontWeight: 700, color: 'var(--navy)' }}>
-                      {baseAmount.toLocaleString('fr-FR')} Ar
+                      {formatMontantAr(baseAmount)}
                     </td>
                     <td className="num" style={{ fontWeight: 800, color: 'var(--primary)' }}>
-                      {Number(p.commission_agent || 0).toLocaleString('fr-FR')} Ar
+                      {formatMontantAr(p.commission_agent || 0)}
                     </td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>

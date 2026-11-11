@@ -1,44 +1,24 @@
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
+
+from common.tests import (
+    BaseReferentielModelTestsMixin,
+    BaseReferentielSerializerTestsMixin,
+)
 from .models import Status
 from .serializers import StatusSerializer
 
 
-class StatusModelTests(TestCase):
-    def test_str(self):
-        s = Status.objects.create(typeStatus="Disponible")
-        self.assertEqual(str(s), "Disponible")
-
-    def test_strip_espaces(self):
-        s = Status.objects.create(typeStatus="  Loué  ")
-        self.assertEqual(s.typeStatus, "Loué")
+class StatusModelTests(BaseReferentielModelTestsMixin, TestCase):
+    model_class = Status
+    field_name = "typeStatus"
 
 
-class StatusSerializerTests(TestCase):
-    def test_valide(self):
-        serializer = StatusSerializer(data={"typeStatus": "Disponible"})
-        self.assertTrue(serializer.is_valid())
-
-    def test_vide_invalide(self):
-        serializer = StatusSerializer(data={"typeStatus": "   "})
-        self.assertFalse(serializer.is_valid())
-        self.assertIn("typeStatus", serializer.errors)
-
-    def test_court_invalide(self):
-        serializer = StatusSerializer(data={"typeStatus": "A"})
-        self.assertFalse(serializer.is_valid())
-        self.assertIn("typeStatus", serializer.errors)
-
-    def test_doublon_invalide(self):
-        Status.objects.create(typeStatus="Vendu")
-        serializer = StatusSerializer(data={"typeStatus": "vendu"})
-        self.assertFalse(serializer.is_valid())
-
-    def test_mise_a_jour_meme_instance(self):
-        s = Status.objects.create(typeStatus="En attente")
-        serializer = StatusSerializer(instance=s, data={"typeStatus": "En attente"})
-        self.assertTrue(serializer.is_valid())
+class StatusSerializerTests(BaseReferentielSerializerTestsMixin, TestCase):
+    serializer_class = StatusSerializer
+    model_class = Status
+    field_name = "typeStatus"
 
 
 class StatusAPITests(APITestCase):

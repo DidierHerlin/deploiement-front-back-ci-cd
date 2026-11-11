@@ -1,7 +1,10 @@
 from django.db import models
+from common.models import BaseReferentielModel
 
 
-class Transaction(models.Model):
+class Transaction(BaseReferentielModel):
+    name_field = "nomTransaction"
+
     nomTransaction = models.CharField(
         max_length=100,
         unique=True,
@@ -12,11 +15,3 @@ class Transaction(models.Model):
         verbose_name = "Transaction"
         verbose_name_plural = "Transactions"
         ordering = ["nomTransaction"]
-
-    def __str__(self):
-        return self.nomTransaction
-
-    def save(self, *args, **kwargs):
-        if self.nomTransaction:
-            self.nomTransaction = self.nomTransaction.strip()
-        super().save(*args, **kwargs)

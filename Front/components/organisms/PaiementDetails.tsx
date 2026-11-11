@@ -1,8 +1,9 @@
 import { X, CreditCard, Download, AlertTriangle, Smartphone, CheckCircle2, XCircle } from 'lucide-react'
 import { Paiement, downloadQuittance } from '@/lib/api'
-import { PaiementStatusBadge } from "@/components/atoms/paiement_PaiementStatusBadge"
+import { PaiementStatusBadge } from "@/components/atoms/PaiementStatusBadge"
 import { useTranslation } from '@/lib/i18n'
 import { isMobileMoneyPending, getModeDisplayLabel } from '@/lib/mobile-money'
+import { formatMontantAr, formatDateFR } from '@/lib/utils'
 
 type PaiementDetailsProps = {
   paiement: Paiement
@@ -13,8 +14,8 @@ type PaiementDetailsProps = {
 
 export function PaiementDetails({ paiement, onClose, onValiderDemande, onRefuserDemande }: PaiementDetailsProps) {
   const { t } = useTranslation()
-  const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('fr-FR') : '-'
-  const formatMontant = (m: string | null) => m ? Number(m).toLocaleString('fr-FR') + ' Ar' : '-'
+  const formatDate = (d: string | null) => formatDateFR(d)
+  const formatMontant = (m: string | null) => m ? formatMontantAr(m) : '-'
 
   const isPendingMM = isMobileMoneyPending(paiement)
 

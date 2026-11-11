@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react"
 import { useRouter } from "next/navigation"
 import { getContrat, getBienDetail, getLocataireDetail, Contrat, Bien, Locataire } from "@/lib/api"
 import { ArrowLeft, Calendar, FileText, Home, User, Edit } from "lucide-react"
+import { formatMontantAr, formatDateFR } from "@/lib/utils"
 
 export default function ContratDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
@@ -90,10 +91,10 @@ export default function ContratDetailPage({ params }: { params: Promise<{ id: st
             <div>
               <div className="agent-detail-label"><Calendar size={15} /> Dates importantes</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13.5 }}>
-                <span><b>Créé le :</b> {new Date(contrat.date_creation).toLocaleDateString('fr-FR')}</span>
-                <span><b>Début :</b> {contrat.date_debut ? new Date(contrat.date_debut).toLocaleDateString('fr-FR') : '—'}</span>
+                <span><b>Créé le :</b> {formatDateFR(contrat.date_creation)}</span>
+                <span><b>Début :</b> {contrat.date_debut ? formatDateFR(contrat.date_debut) : '—'}</span>
                 {isLocation && (
-                  <span><b>Fin :</b> {contrat.date_fin ? new Date(contrat.date_fin).toLocaleDateString('fr-FR') : 'Indéterminée'}</span>
+                  <span><b>Fin :</b> {contrat.date_fin ? formatDateFR(contrat.date_fin) : 'Indéterminée'}</span>
                 )}
                 {contrat.date_paiement && (
                   <span><b>Date de paiement :</b> le {contrat.date_paiement} du mois</span>
@@ -109,17 +110,17 @@ export default function ContratDetailPage({ params }: { params: Promise<{ id: st
                 <>
                   <div className="agent-money-row">
                     <span>Loyer mensuel</span>
-                    <strong>{contrat.loyer ? `${Number(contrat.loyer).toLocaleString('fr-FR')} Ar` : 'N/A'}</strong>
+                    <strong>{contrat.loyer ? formatMontantAr(contrat.loyer) : 'N/A'}</strong>
                   </div>
                   <div className="agent-money-row">
                     <span>Dépôt de garantie</span>
-                    <strong>{contrat.depot_garantie ? `${Number(contrat.depot_garantie).toLocaleString('fr-FR')} Ar` : 'N/A'}</strong>
+                    <strong>{contrat.depot_garantie ? formatMontantAr(contrat.depot_garantie) : 'N/A'}</strong>
                   </div>
                 </>
               ) : (
                 <div className="agent-money-row">
                   <span>Prix de vente</span>
-                  <strong>{contrat.prix ? `${Number(contrat.prix).toLocaleString('fr-FR')} Ar` : 'N/A'}</strong>
+                  <strong>{contrat.prix ? formatMontantAr(contrat.prix) : 'N/A'}</strong>
                 </div>
               )}
             </div>

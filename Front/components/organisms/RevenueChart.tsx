@@ -1,6 +1,7 @@
 'use client'
 import { ArrowUpRight, ArrowDownRight, MoreHorizontal } from 'lucide-react'
 import { AgentDashboardData } from '../../app/agent/dashboard/hooks/useAgentDashboard';
+import { formatMontantAr } from '@/lib/utils';
 
 export default function RevenueChart({ data }: { data: AgentDashboardData }) {
   const { revenus } = data;
@@ -17,7 +18,7 @@ export default function RevenueChart({ data }: { data: AgentDashboardData }) {
         <button className="more-button" aria-label="Plus d'options"><MoreHorizontal size={19} /></button>
       </div>
       <div className="revenue-head">
-        <strong>{revCurrent.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} Ar</strong>
+        <strong>{formatMontantAr(revCurrent)}</strong>
         {revLast > 0 && (
           <span className={isPositive ? "positive" : "negative"} style={{ color: isPositive ? 'var(--green)' : 'var(--red)' }}>
             {isPositive ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />} 

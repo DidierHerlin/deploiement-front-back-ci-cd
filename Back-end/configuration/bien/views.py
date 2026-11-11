@@ -9,6 +9,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from common.mixins import RoleScopedQuerySetMixin
 from utilisateur.models import Utilisateur, Proprietaire
 from .models import Bien
 from .permissions import PeutGererBien
@@ -17,7 +18,9 @@ from .serializers import BienListSerializer, BienSerializer
 logger = logging.getLogger(__name__)
 
 
-class BienViewSet(viewsets.ModelViewSet):
+class BienViewSet(RoleScopedQuerySetMixin, viewsets.ModelViewSet):
+    owner_field = "proprietaire__user"
+    tenant_field = None
     permission_classes = [IsAuthenticated, PeutGererBien]
     serializer_class = BienSerializer
     queryset = Bien.objects.select_related("proprietaire__user")

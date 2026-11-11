@@ -1,7 +1,10 @@
 from django.db import models
+from common.models import BaseReferentielModel
 
 
-class Status(models.Model):
+class Status(BaseReferentielModel):
+    name_field = "typeStatus"
+
     typeStatus = models.CharField(
         max_length=100,
         unique=True,
@@ -12,11 +15,3 @@ class Status(models.Model):
         verbose_name = "Statut"
         verbose_name_plural = "Statuts"
         ordering = ["typeStatus"]
-
-    def __str__(self):
-        return self.typeStatus
-
-    def save(self, *args, **kwargs):
-        if self.typeStatus:
-            self.typeStatus = self.typeStatus.strip()
-        super().save(*args, **kwargs)

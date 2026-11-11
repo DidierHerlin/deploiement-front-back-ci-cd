@@ -122,36 +122,6 @@ class Reservation(models.Model):
             self._notifier_admin_et_agent()
 
     def _notifier_admin_et_agent(self) -> None:
-        """Crée une notification pour chaque ADMIN et AGENT."""
-        from django.conf import settings as django_settings
-        from notifications.models import Notification
+        """Crée une notification pour chaque ADMIN et AGENT via NotificationService."""
         from notifications.services import NotificationService
-        from utilisateur.models import Utilisateur
-
-        nom_locataire = self.locataire.user.get_full_name()
-        titre_bien = self.bien.titre
-        message = (
-            f"Nouvelle réservation soumise par {nom_locataire} "
-            f"pour le bien « {titre_bien} » "
-            f"(type : {self.get_type_reservation_display()})."
-        )
-
-        destinataires = Utilisateur.objects.filter(
-            role__in=[Utilisateur.Role.ADMIN, Utilisateur.Role.AGENT],
-            is_active=True,
-        )
-
-        for user in destinataires:
-            NotificationService.envoyer(
-                utilisateur=user,
-                type_notif=Notification.Type.NOUVELLE_RESERVATION,
-                titre="Nouvelle réservation",
-                message=message,
-                lien=f"/reservations/{self.id}"
-            )
-
-        logger.info(
-            "Notifications de réservation #%s envoyées à %d destinataire(s).",
-            self.pk,
-            len(destinataires),
-        )
+        NotificationService.notifier_nouvelle_reservation(self)

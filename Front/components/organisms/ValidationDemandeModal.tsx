@@ -11,6 +11,7 @@ import {
 } from '@/lib/api'
 import { useTranslation } from '@/lib/i18n'
 import { getOperatorBadgeStyles, getMobileMoneyOperator } from '@/lib/mobile-money'
+import { formatMontantAr } from '@/lib/utils'
 
 interface ValidationDemandeModalProps {
   paiement: Paiement | null
@@ -209,7 +210,7 @@ export function ValidationDemandeModal({
                 {t('admin.paiements.montant_a_valider', 'Montant à valider')}
               </span>
               <div className="font-bold text-sm text-slate-900 dark:text-white mt-0.5">
-                {montant.toLocaleString('fr-FR')} Ar
+                {formatMontantAr(montant)}
               </div>
             </div>
             <div>

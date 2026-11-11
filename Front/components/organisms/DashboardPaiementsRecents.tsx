@@ -3,8 +3,9 @@
 import React from 'react';
 import { ChevronRight, ArrowDownToLine, FileText } from 'lucide-react';
 import { Paiement, Contrat } from '@/lib/api';
-import { PaiementStatusBadge } from "@/components/atoms/paiement_PaiementStatusBadge";
+import { PaiementStatusBadge } from "@/components/atoms/PaiementStatusBadge";
 import { useTranslation } from '@/lib/i18n';
+import { formatMontantAr } from '@/lib/utils';
 
 interface DashboardPaiementsRecentsProps {
   paiements: Paiement[];
@@ -17,9 +18,7 @@ export function DashboardPaiementsRecents({ paiements, contratActif }: Dashboard
   const paiementsPayes = paiements.filter(p => p.statut === 'PAYE' || p.statut === 'VALIDE');
   const recents = paiementsPayes.sort((a, b) => new Date(b.date_echeance).getTime() - new Date(a.date_echeance).getTime()).slice(0, 5);
 
-  const formatMontant = (montant: any) => {
-    return montant ? `${parseFloat(montant).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} Ar` : '0 Ar';
-  };
+  const formatMontant = (montant: any) => formatMontantAr(montant);
 
   const handleDownloadQuittance = async (paiementId: number) => {
     try {

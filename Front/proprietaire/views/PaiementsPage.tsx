@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { WalletCards } from 'lucide-react'
 import { getPaiements, Paiement } from '@/lib/api'
-import { PaiementList } from "@/components/organisms/paiements_PaiementList"
+import { PaiementList } from "@/components/organisms/PaiementList"
 import { useTranslation } from '@/lib/i18n'
 
 export function PaiementsPage() {

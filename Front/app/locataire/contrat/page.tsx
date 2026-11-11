@@ -10,7 +10,7 @@ import { LocataireTopbar } from "@/components/organisms/LocataireTopbar"
 import { ProfileModal } from "@/components/organisms/ProfileModal"
 
 import { ContratHeader } from "@/components/organisms/ContratHeader"
-import { ContratList } from "@/components/organisms/contrat_ContratList"
+import { ContratList } from "@/components/organisms/ContratList"
 import { ContratDetails } from "@/components/organisms/ContratDetails"
 import { useContrats } from './hooks/useContrats'
 

@@ -6,7 +6,7 @@ import { ArrowLeft, CheckCircle2, LockKeyhole, ArrowRight } from "lucide-react"
 import { ForgotPasswordForm } from "@/components/organisms/forgot-password-form"
 import { VerifyCodeForm } from "@/components/organisms/verify-code-form"
 import { ResetPasswordForm } from "@/components/organisms/reset-password-form"
-import { getApiUrl } from "@/lib/config"
+import { demanderCodeMdp, verifierCodeMdp, reinitialiserMdp } from "@/lib/api"
 import { useTranslation, LanguageSwitcher } from "@/lib/i18n"
 import { ThemeToggle } from "@/components/molecules/ThemeToggle"
 
@@ -47,20 +47,13 @@ export default function ForgotPasswordPage() {
     setIsLoading(true)
 
     try {
-      const response = await fetch(`${getApiUrl()}/mot-de-passe/demande/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      })
-      const data = await parseApiResponse(response)
-
-      if (!response.ok || data.success === false) {
+      const data = await demanderCodeMdp(email)
+      if (data && data.success === false) {
         throw new Error(data.error ?? data.details?.email?.[0] ?? "Impossible d'envoyer le code.")
       }
-
       setEtape("code")
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("dashboard.common.error_occurred", "Une erreur est survenue."))
+    } catch (err: any) {
+      setError(err?.message ?? t("dashboard.common.error_occurred", "Une erreur est survenue."))
     } finally {
       setIsLoading(false)
     }
@@ -73,30 +66,13 @@ export default function ForgotPasswordPage() {
     setIsLoading(true)
 
     try {
-      let response = await fetch(`${getApiUrl()}/mot-de-passe/verifier-code/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code }),
-      })
-
-      // Fallback vers l'alias /mot-de-passe/verifier/ en cas de 404
-      if (response.status === 404) {
-        response = await fetch(`${getApiUrl()}/mot-de-passe/verifier/`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, code }),
-        })
-      }
-
-      const data = await parseApiResponse(response)
-
-      if (!response.ok || data.success === false || data.valid === false) {
+      const data = await verifierCodeMdp(email, code)
+      if (data && (data.success === false || data.valid === false)) {
         throw new Error(data.error ?? data.message ?? "Code invalide ou expiré.")
       }
-
       setEtape("nouveau-mdp")
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("dashboard.common.error_occurred", "Une erreur est survenue."))
+    } catch (err: any) {
+      setError(err?.message ?? t("dashboard.common.error_occurred", "Une erreur est survenue."))
     } finally {
       setIsLoading(false)
     }
@@ -120,30 +96,18 @@ export default function ForgotPasswordPage() {
     setIsLoading(true)
 
     try {
-      let response = await fetch(`${getApiUrl()}/mot-de-passe/reinitialiser/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code, new_password: newPassword, password: newPassword }),
+      const data = await reinitialiserMdp({
+        email,
+        code,
+        nouveau_mot_de_passe: newPassword,
+        confirmation_mot_de_passe: confirmPassword,
       })
-
-      // Fallback vers l'alias /mot-de-passe/confirmer/ en cas de 404
-      if (response.status === 404) {
-        response = await fetch(`${getApiUrl()}/mot-de-passe/confirmer/`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, code, new_password: newPassword, password: newPassword }),
-        })
-      }
-
-      const data = await parseApiResponse(response)
-
-      if (!response.ok || data.success === false) {
+      if (data && data.success === false) {
         throw new Error(data.error ?? data.details?.new_password?.[0] ?? "Impossible de réinitialiser le mot de passe.")
       }
-
       setEtape("succes")
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("dashboard.common.error_occurred", "Une erreur est survenue."))
+    } catch (err: any) {
+      setError(err?.message ?? t("dashboard.common.error_occurred", "Une erreur est survenue."))
     } finally {
       setIsLoading(false)
     }

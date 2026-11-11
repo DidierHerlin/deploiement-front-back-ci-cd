@@ -1,7 +1,8 @@
 import { Eye, Edit, Download, Smartphone, CheckCircle2, XCircle } from 'lucide-react'
 import { Paiement, Contrat, downloadQuittance } from '@/lib/api'
-import { PaiementStatusBadge } from "@/components/atoms/paiement_PaiementStatusBadge"
+import { PaiementStatusBadge } from "@/components/atoms/PaiementStatusBadge"
 import { useTranslation } from '@/lib/i18n'
+import { formatMontantAr, formatDateFR } from '@/lib/utils'
 import {
   isMobileMoneyPending,
   isMobileMoneyMode,
@@ -28,14 +29,11 @@ export function PaiementTableRow({
 }: PaiementTableRowProps) {
   const { t } = useTranslation()
 
-  const formatDate = (d: string | null) => {
-    if (!d) return '-'
-    return new Date(d).toLocaleDateString('fr-FR')
-  }
+  const formatDate = (d: string | null) => formatDateFR(d)
 
   const formatMontant = (m: string | null) => {
     if (!m) return '-'
-    return Number(m).toLocaleString('fr-FR') + ' Ar'
+    return formatMontantAr(m)
   }
 
   const directContratStatut = (paiement as any).contrat_statut

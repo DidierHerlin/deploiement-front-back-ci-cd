@@ -9,7 +9,7 @@ import { useTranslation } from '@/lib/i18n'
 import { LocataireSidebar } from "@/components/organisms/LocataireSidebar"
 import { LocataireTopbar } from "@/components/organisms/LocataireTopbar"
 import { ProfileModal } from "@/components/organisms/ProfileModal"
-import BienCard from "@/components/molecules/biens_BienCard"
+import BienCard from "@/components/molecules/BienCard"
 import ReservationModal from "@/components/organisms/ReservationModal"
 
 export default function BiensDisponiblesPage() {

@@ -1,5 +1,10 @@
 from django.db import models
-class TypeBien(models.Model):
+from common.models import BaseReferentielModel
+
+
+class TypeBien(BaseReferentielModel):
+    name_field = "designation"
+
     designation = models.CharField(
         max_length=100,
         unique=True,
@@ -10,11 +15,3 @@ class TypeBien(models.Model):
         verbose_name = "Type de bien"
         verbose_name_plural = "Types de biens"
         ordering = ["designation"]
-
-    def __str__(self):
-        return self.designation
-
-    def save(self, *args, **kwargs):
-        if self.designation:
-            self.designation = self.designation.strip()
-        super().save(*args, **kwargs)

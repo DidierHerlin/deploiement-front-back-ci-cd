@@ -7,16 +7,7 @@ from .models import Contrat
 
 logger = logging.getLogger(__name__)
 
-def formater_montant_ar(montant):
-    if montant is None:
-        return "0"
-    # Formatage de type "300 000" sans décimales
-    try:
-        valeur = int(float(montant))
-        # Utilisation de f-string pour insérer un espace comme séparateur des milliers
-        return f"{valeur:,}".replace(",", " ")
-    except (ValueError, TypeError):
-        return str(montant)
+from common.utils import formater_montant_ar, render_to_pdf
 
 def generate_contrat_pdf(contrat: Contrat) -> bool:
     """

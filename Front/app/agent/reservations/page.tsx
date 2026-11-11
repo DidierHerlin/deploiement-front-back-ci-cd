@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Eye, Send, FileText, CalendarCheck, X, Search, Inbox } from 'lucide-react'
 import { getReservations, repondreReservation, ReservationData } from '@/lib/api'
 import { useRouter } from 'next/navigation'
+import { formatMontantAr } from '@/lib/utils'
 
 function StatutBadge({ statut }: { statut: string }) {
   const cls = statut === 'TRAITEE' ? 'valide' : statut === 'ANNULEE' ? 'annulee' : 'attente'
@@ -175,8 +176,8 @@ export default function AgentReservationsPage() {
               <div style={{ color: 'var(--muted-foreground)' }}>Type : {selected.bien_type} • Adresse : {selected.bien_adresse}</div>
               {selected.bien_surface && <div>Surface : {selected.bien_surface} m²</div>}
               {selected.bien_nombre_pieces && <div>Pièces : {selected.bien_nombre_pieces}</div>}
-              {selected.bien_loyer_mensuel && <div>Loyer : {Number(selected.bien_loyer_mensuel).toLocaleString('fr-FR')} Ar/mois</div>}
-              {selected.bien_prix && <div>Prix : {Number(selected.bien_prix).toLocaleString('fr-FR')} Ar</div>}
+              {selected.bien_loyer_mensuel && <div>Loyer : {formatMontantAr(selected.bien_loyer_mensuel)} / mois</div>}
+              {selected.bien_prix && <div>Prix : {formatMontantAr(selected.bien_prix)}</div>}
             </div>
 
             <h4 className="agent-detail-label">Réservation</h4>

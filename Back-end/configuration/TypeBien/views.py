@@ -1,13 +1,10 @@
-from rest_framework import viewsets, permissions, filters
-from django_filters.rest_framework import DjangoFilterBackend
+from common.views import BaseReferentielViewSet
 from .models import TypeBien
 from .serializers import TypeBienSerializer
 
 
-class TypeBienViewSet(viewsets.ModelViewSet):
+class TypeBienViewSet(BaseReferentielViewSet):
     queryset = TypeBien.objects.all().order_by("id")
     serializer_class = TypeBienSerializer
-    permission_classes = [permissions.AllowAny]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["designation"]
     ordering_fields = ["id", "designation"]

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { getPaiements, Paiement } from '@/lib/api'
-import { PaiementList } from "@/components/organisms/paiements_PaiementList"
+import { PaiementList } from "@/components/organisms/PaiementList"
 import { PriorityPaiements } from "@/components/organisms/PriorityPaiements"
 import { Smartphone } from 'lucide-react'
 

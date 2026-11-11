@@ -11,6 +11,8 @@ from rest_framework.response import Response
 from bien.models import Bien
 from utilisateur.models import Utilisateur
 
+from common.mixins import RoleScopedQuerySetMixin
+from common.utils import defer_bien_photos
 from .models import Contrat
 from .permissions import ContratPermission
 from .serializers import ContratSerializer, EcheanceSerializer
@@ -19,7 +21,9 @@ from .serializers import ContratSerializer, EcheanceSerializer
 from django.http import HttpResponse
 from .utils import generate_contrat_pdf
 
-class ContratViewSet(viewsets.ModelViewSet):
+class ContratViewSet(RoleScopedQuerySetMixin, viewsets.ModelViewSet):
+    owner_field = "bien__proprietaire__user"
+    tenant_field = "locataire__user"
 
     @action(detail=True, methods=["get"])
     def telecharger(self, request: Request, pk: int | None = None) -> HttpResponse | Response:
@@ -39,7 +43,7 @@ class ContratViewSet(viewsets.ModelViewSet):
         response['Content-Disposition'] = f'inline; filename="Contrat_Bail_{nom_locataire}_{nom_bien}.pdf"'
         return response
 
-    queryset = Contrat.objects.select_related("bien", "locataire", "locataire__user").defer("bien__photos")
+    queryset = defer_bien_photos(Contrat.objects.select_related("bien", "locataire", "locataire__user"), "bien")
     serializer_class = ContratSerializer
     permission_classes = [permissions.IsAuthenticated, ContratPermission]
     filterset_fields = ["statut", "type_contrat", "bien", "locataire"]
@@ -54,41 +58,11 @@ class ContratViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         contrat = serializer.save()
-        # Notification logic
         from notifications.services import NotificationService
-        from notifications.models import Notification
-        
-        # Determine users to notify
-        utilisateurs_a_notifier = []
-        if contrat.locataire and contrat.locataire.user:
-            utilisateurs_a_notifier.append(contrat.locataire.user)
-        if contrat.bien and contrat.bien.proprietaire and contrat.bien.proprietaire.user:
-            utilisateurs_a_notifier.append(contrat.bien.proprietaire.user)
-            
-        for u in utilisateurs_a_notifier:
-            NotificationService.envoyer(
-                utilisateur=u,
-                type_notif=Notification.Type.CONTRAT_CREE,
-                titre=f"Nouveau contrat pour {contrat.bien.titre}",
-                message=f"Un nouveau contrat a été créé pour le bien '{contrat.bien.titre}'.",
-                lien=f"/contrats/{contrat.id}",
-                contexte_email={"contrat": contrat, "bien": contrat.bien}
-            )
+        NotificationService.notifier_contrat_cree(contrat)
 
     def get_queryset(self):
-        user = self.request.user
-        queryset = super().get_queryset()
-
-        if user.role in (Utilisateur.Role.ADMIN, Utilisateur.Role.AGENT):
-            return queryset
-        
-        if user.role == Utilisateur.Role.PROPRIETAIRE:
-            return queryset.filter(bien__proprietaire__user=user)
-            
-        if user.role == Utilisateur.Role.LOCATAIRE:
-            return queryset.filter(locataire__user=user)
-
-        return queryset.none()
+        return self.filter_by_user_role(super().get_queryset())
 
     @action(detail=False, methods=["get"], url_path="bien-info")
     def bien_info(self, request: Request) -> Response:
@@ -97,7 +71,7 @@ class ContratViewSet(viewsets.ModelViewSet):
             return Response({"error": "bien_id est requis."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            bien = Bien.objects.defer("photos").get(id=bien_id, statut=Bien.StatutBien.DISPONIBLE)
+            bien = defer_bien_photos(Bien.objects.all()).get(id=bien_id, statut=Bien.StatutBien.DISPONIBLE)
         except (Bien.DoesNotExist, ValueError, TypeError):
             return Response(
                 {"error": "Bien non trouvé ou indisponible."}, status=status.HTTP_404_NOT_FOUND

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { FileText, Download } from 'lucide-react'
 import { getContrats, Contrat } from '@/lib/api'
-import { ContratList } from "@/components/organisms/contrat_ContratList"
+import { ContratList } from "@/components/organisms/ContratList"
 import { useTranslation } from '@/lib/i18n'
 
 export function ContratsPage() {

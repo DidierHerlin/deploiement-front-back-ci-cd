@@ -12,9 +12,8 @@ from rest_framework import permissions
 from rest_framework.request import Request
 from rest_framework.views import APIView
 
+from common.permissions import ROLES_GESTION
 from utilisateur.models import Utilisateur
-
-ROLES_GESTION = {Utilisateur.Role.ADMIN, Utilisateur.Role.AGENT}
 
 
 class ReservationPermission(permissions.BasePermission):

@@ -4,6 +4,7 @@ import React from 'react';
 import { FileText, Download, Loader2, Search } from 'lucide-react';
 import { Paiement, Contrat } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
+import { formatMontantAr } from '@/lib/utils';
 
 interface QuittanceListProps {
   paiements: Paiement[];
@@ -110,7 +111,7 @@ export function QuittanceList({ paiements, contrats, loading }: QuittanceListPro
             // Calcul du montant (Règle : contrat.loyer)
             const c = contrats.find(c => c.id === paiement.contrat);
             const montantEffectif = c ? parseFloat(c.loyer || '0') : parseFloat(paiement.montant_paye || '0');
-            const montantFormat = `${montantEffectif.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} Ar`;
+            const montantFormat = formatMontantAr(montantEffectif);
 
             return (
               <div 

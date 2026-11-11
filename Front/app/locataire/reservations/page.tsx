@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { CalendarCheck, FileText, MessageSquare } from 'lucide-react'
 import { getProfil, getReservations, ReservationData } from '@/lib/api'
 import { useTranslation } from '@/lib/i18n'
+import { formatMontantAr } from '@/lib/utils'
 
 import { LocataireSidebar } from "@/components/organisms/LocataireSidebar"
 import { LocataireTopbar } from "@/components/organisms/LocataireTopbar"
@@ -156,8 +157,8 @@ export default function MesReservationsPage() {
               <p className="m-0 text-slate-500 dark:text-slate-400">{selected.bien_type} • {selected.bien_adresse}</p>
               {selected.bien_surface && <p className="m-0">{t('locataire_pages.reservations.surface', 'Surface')} : {selected.bien_surface} m²</p>}
               {selected.bien_nombre_pieces && <p className="m-0">{t('locataire_pages.reservations.rooms', 'Pièces')} : {selected.bien_nombre_pieces}</p>}
-              {selected.bien_loyer_mensuel && <p className="m-0 font-medium text-blue-600 dark:text-blue-400">{t('locataire_pages.reservations.rent', 'Loyer')} : {Number(selected.bien_loyer_mensuel).toLocaleString()} Ar / {t('card.per_month', 'mois')}</p>}
-              {selected.bien_prix && <p className="m-0 font-medium text-blue-600 dark:text-blue-400">{t('locataire_pages.reservations.price', 'Prix')} : {Number(selected.bien_prix).toLocaleString()} Ar</p>}
+              {selected.bien_loyer_mensuel && <p className="m-0 font-medium text-blue-600 dark:text-blue-400">{t('locataire_pages.reservations.rent', 'Loyer')} : {formatMontantAr(selected.bien_loyer_mensuel)} / {t('card.per_month', 'mois')}</p>}
+              {selected.bien_prix && <p className="m-0 font-medium text-blue-600 dark:text-blue-400">{t('locataire_pages.reservations.price', 'Prix')} : {formatMontantAr(selected.bien_prix)}</p>}
             </div>
 
             {selected.commentaire && (

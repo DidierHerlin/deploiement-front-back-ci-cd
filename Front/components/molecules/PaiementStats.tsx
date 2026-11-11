@@ -1,100 +1,101 @@
-'use client'
+import { Paiement, PaiementStatsData } from '@/lib/api'
 
-import React from 'react';
-import { Paiement } from '@/lib/api';
-import { StatCard } from "@/components/molecules/locataire_StatCard";
-import { CircleDollarSign, CalendarDays, AlertTriangle, CheckCircle2 } from 'lucide-react';
-
-interface PaiementStatsProps {
-  paiements: Paiement[];
+export type PaiementStatsProps = {
+  paiements: Paiement[]
+  user?: { id?: number } | null
+  userId?: number
+  stats?: PaiementStatsData | null
 }
 
-export function PaiementStats({ paiements }: PaiementStatsProps) {
-  // Calculs depuis les données API
-  const paiementsEnAttente = paiements.filter(p => p.statut === 'EN_ATTENTE' || p.statut === 'PARTIEL');
-  const paiementsEnRetard = paiements.filter(p => {
-    // Ne pas compter un paiement déjà payé ou annulé comme un retard actif nécessitant action
-    if (p.statut === 'PAYE' || p.statut === 'VALIDE' || p.statut === 'ANNULE') return false;
-    
-    const echeance = new Date(p.date_echeance);
-    const today = new Date();
-    echeance.setHours(0, 0, 0, 0);
-    today.setHours(0, 0, 0, 0);
-    
-    const diffTime = today.getTime() - echeance.getTime();
-    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-    
-    // RG-15 : Strictement supérieur à 5 jours
-    return diffDays > 5;
-  });
+export function PaiementStats({ paiements, user, userId, stats }: PaiementStatsProps) {
+  // 1. Filtrer les factures en fonction de l'identifiant (id) de l'utilisateur connecté
+  const currentUserId = userId ?? user?.id
+
+  // Filtrage strict : si des factures comportent un locataire_user_id,
+  // seules celles appartenant à l'utilisateur connecté sont conservées.
+  const userPaiements = currentUserId
+    ? paiements.filter(p => p.locataire_user_id === undefined || p.locataire_user_id === currentUserId)
+    : paiements
+
+  const total = stats ? stats.total : userPaiements.length
   
-  // Prochaine échéance
-  const prochaines = [...paiementsEnAttente].sort((a, b) => new Date(a.date_echeance).getTime() - new Date(b.date_echeance).getTime());
-  const prochainPaiement = prochaines.length > 0 ? prochaines[0] : null;
+  // 2. Factures effectivement payées et confirmées :
+  // - Statut confirmé : 'PAYE' ou 'VALIDE'
+  // - Exclure les factures en attente ('EN_ATTENTE')
+  // - Exclure les factures en retard ('EN_RETARD')
+  // - Exclure les factures partiellement payées (est_partiel === true ou statut === 'PARTIEL')
+  // - Exclure les factures annulées ('ANNULE')
+  const facturesPayees = userPaiements.filter(p => {
+    const isPayeOuValide = p.statut === 'PAYE' || p.statut === 'VALIDE'
+    const isPartiel = p.est_partiel === true || p.statut === 'PARTIEL'
+    const isEnRetard = p.statut === 'EN_RETARD'
+    const isEnAttente = p.statut === 'EN_ATTENTE'
+    const isAnnule = p.statut === 'ANNULE'
 
-  const nbEnAttente = paiementsEnAttente.length;
-  const nbEnRetard = paiementsEnRetard.length;
+    return isPayeOuValide && !isPartiel && !isEnRetard && !isEnAttente && !isAnnule
+  })
 
-  // Calcul du montant total versé
-  // Règle: Uniquement paiements PAYE/VALIDE, et on utilise le montant du loyer du contrat
-  const totalPaye = paiements
-    .filter(p => p.statut === 'PAYE' || p.statut === 'VALIDE')
-    .reduce((acc, curr) => {
-      const montantEffectif = parseFloat((curr.loyer_contrat as string) || (curr.montant_attendu as string) || '0') || 0;
-      return acc + montantEffectif;
-    }, 0);
+  // Somme des montants des factures effectivement payées
+  const calculatedTotalEncaisse = facturesPayees.reduce((acc, p) => {
+    const montant = parseFloat(p.montant || '0')
+    if (montant > 0) return acc + montant
 
-  let detailEcheance = "Aucune prochaine échéance";
-  if (prochainPaiement) {
-    const echeanceDate = new Date(prochainPaiement.date_echeance);
-    const today = new Date();
-    echeanceDate.setHours(0, 0, 0, 0);
-    today.setHours(0, 0, 0, 0);
-    
-    const diffTime = echeanceDate.getTime() - today.getTime();
-    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays > 1) {
-      detailEcheance = `Dans ${diffDays} jours`;
-    } else if (diffDays === 1) {
-      detailEcheance = "Dans 1 jour";
-    } else if (diffDays === 0) {
-      detailEcheance = "Aujourd'hui";
-    } else {
-      detailEcheance = `En retard de ${Math.abs(diffDays)} jour${Math.abs(diffDays) > 1 ? 's' : ''}`;
-    }
-  }
+    const montantAttendu = parseFloat(p.montant_attendu || '0')
+    if (montantAttendu > 0) return acc + montantAttendu
+
+    const montantPaye = parseFloat(p.montant_paye || '0')
+    if (montantPaye > 0) return acc + montantPaye
+
+    return acc
+  }, 0)
+
+  // Utilisation de la valeur backend si disponible, sinon calcul local
+  const totalEncaisse = stats?.total_encaisse !== undefined ? stats.total_encaisse : calculatedTotalEncaisse
+
+  // Total attendu / en attente (EN_ATTENTE, EN_RETARD, PARTIEL)
+  const calculatedMontantRestant = userPaiements
+    .filter(p => ['EN_ATTENTE', 'EN_RETARD', 'PARTIEL'].includes(p.statut) || p.est_partiel)
+    .reduce((acc, p) => {
+      const restant = parseFloat(p.montant_restant || '0')
+      if (restant > 0) return acc + restant
+
+      const attendu = parseFloat(p.montant_attendu || p.montant || '0')
+      const paye = parseFloat(p.montant_paye || '0')
+      return acc + Math.max(attendu - paye, 0)
+    }, 0)
+
+  const montantRestant = stats?.montant_restant !== undefined ? stats.montant_restant : calculatedMontantRestant
+
+  const countPaye = stats ? stats.count_paye : facturesPayees.length
+  const countAttente = stats ? stats.count_attente : userPaiements.filter(p => p.statut === 'EN_ATTENTE').length
+  const countRetard = stats ? stats.count_retard : userPaiements.filter(p => p.statut === 'EN_RETARD').length
+
+  const formatMontant = (m: number) => m.toLocaleString('fr-FR', { minimumFractionDigits: 0 }) + ' Ar'
 
   return (
-    <section className="stats-grid">
-      <StatCard 
-        icon={CircleDollarSign} 
-        label="Prochain loyer" 
-        value={prochainPaiement ? `${parseFloat((prochainPaiement.loyer_contrat as string) || (prochainPaiement.montant_attendu as string) || '0').toLocaleString('fr-FR', { maximumFractionDigits: 0 })} Ar` : '-'} 
-        detail={prochainPaiement ? `Contrat: ${prochainPaiement.bien_titre}` : "Aucun loyer en attente"} 
-        tone="blue" 
-      />
-      <StatCard 
-        icon={CalendarDays} 
-        label="Échéance" 
-        value={prochainPaiement ? new Date(prochainPaiement.date_echeance).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : '-'} 
-        detail={detailEcheance} 
-        tone="orange" 
-      />
-      <StatCard 
-        icon={AlertTriangle} 
-        label="Retards" 
-        value={`${nbEnRetard}`} 
-        detail={nbEnRetard > 0 ? "Paiements en retard" : "Aucun retard constaté"} 
-        tone={nbEnRetard > 0 ? "red" : "green"} 
-      />
-      <StatCard 
-        icon={CheckCircle2} 
-        label="Total versé" 
-        value={`${totalPaye.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} Ar`} 
-        detail="Historique complet" 
-        tone="purple" 
-      />
-    </section>
-  );
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
+      
+      <div className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-xs transition-colors">
+        <p className="m-0 text-sm font-medium text-slate-500 dark:text-slate-400">Total des paiements</p>
+        <p className="mt-2.5 mb-0 text-2xl font-bold text-slate-900 dark:text-white">{total}</p>
+        <div className="mt-2.5 flex flex-wrap gap-2.5 text-xs font-semibold">
+          <span className="text-emerald-600 dark:text-emerald-400">{countPaye} payés</span>
+          <span className="text-amber-600 dark:text-amber-400">{countAttente} en attente</span>
+          <span className="text-rose-600 dark:text-rose-400">{countRetard} en retard</span>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-xs transition-colors">
+        <p className="m-0 text-sm font-medium text-slate-500 dark:text-slate-400">Montant total encaissé</p>
+        <p className="mt-2.5 mb-0 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatMontant(totalEncaisse)}</p>
+      </div>
+
+      <div className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-xs transition-colors">
+        <p className="m-0 text-sm font-medium text-slate-500 dark:text-slate-400">Montant restant à payer</p>
+        <p className="mt-2.5 mb-0 text-2xl font-bold text-rose-600 dark:text-rose-400">{formatMontant(montantRestant)}</p>
+        <p className="mt-1 mb-0 text-xs text-slate-500 dark:text-slate-400">(Inclut les retards et paiements partiels)</p>
+      </div>
+      
+    </div>
+  )
 }

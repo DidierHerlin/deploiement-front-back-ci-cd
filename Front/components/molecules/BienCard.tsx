@@ -1,17 +1,19 @@
 'use client'
 
 import { useState } from 'react'
-import { Bien, resolveMediaUrl } from '@/lib/api'
-import { Building2, MapPin, Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Bien, BienListItem, resolveMediaUrl } from '@/lib/api'
+import { Building2, MapPin, Pencil, Trash2, ChevronLeft, ChevronRight, CalendarPlus } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n'
+import { formatMontantAr } from '@/lib/utils'
 
-interface BienCardProps {
-  bien: Bien
-  onEdit: () => void
-  onDelete: () => void
+export interface BienCardProps {
+  bien: Bien | BienListItem | any
+  onEdit?: () => void
+  onDelete?: () => void
+  onReserver?: (bien: any) => void
 }
 
-export function BienCard({ bien, onEdit, onDelete }: BienCardProps) {
+export function BienCard({ bien, onEdit, onDelete, onReserver }: BienCardProps) {
   const { t } = useTranslation()
   const [photoIndex, setPhotoIndex] = useState(0)
 
@@ -152,32 +154,48 @@ export function BienCard({ bien, onEdit, onDelete }: BienCardProps) {
         <div className="border-t border-slate-100 dark:border-slate-800 pt-4 flex items-center justify-between mt-auto">
           <div className="font-bold text-slate-900 dark:text-white text-lg">
             {(bien?.mode_transaction || '') === 'LOCATION' && bien.loyer_mensuel ? (
-              <>{parseFloat(bien.loyer_mensuel).toLocaleString('fr-FR')} Ar <span className="text-xs font-normal text-slate-500 dark:text-slate-400">{t("card.per_month", "/ mois")}</span></>
+              <>{formatMontantAr(bien.loyer_mensuel)} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">{t("card.per_month", "/ mois")}</span></>
             ) : bien.prix ? (
-              <>{parseFloat(bien.prix).toLocaleString('fr-FR')} Ar</>
+              <>{formatMontantAr(bien.prix)}</>
             ) : (
               <span className="text-sm text-slate-400 dark:text-slate-500 font-normal">{t("card.price_on_request", "Prix sur demande")}</span>
             )}
           </div>
           
-          <div className="flex gap-2">
-            <button 
-              onClick={onEdit}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              title={t("forms.edit", "Modifier")}
+          {onReserver ? (
+            <button
+              onClick={() => onReserver(bien)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors cursor-pointer"
             >
-              <Pencil size={15} />
+              <CalendarPlus size={14} />
+              {t('locataire_pages.biens.reserve_btn', 'Réserver')}
             </button>
-            <button 
-              onClick={onDelete}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-red-600 hover:bg-red-50 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              title={t("forms.delete", "Supprimer")}
-            >
-              <Trash2 size={15} />
-            </button>
-          </div>
+          ) : (
+            <div className="flex gap-2">
+              {onEdit && (
+                <button 
+                  onClick={onEdit}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  title={t("forms.edit", "Modifier")}
+                >
+                  <Pencil size={15} />
+                </button>
+              )}
+              {onDelete && (
+                <button 
+                  onClick={onDelete}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-red-600 hover:bg-red-50 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  title={t("forms.delete", "Supprimer")}
+                >
+                  <Trash2 size={15} />
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
   )
 }
+
+export default BienCard

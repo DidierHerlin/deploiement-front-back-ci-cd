@@ -15,6 +15,8 @@ from .serializers import (
 from .permissions import PaiementPermission, DemandePaiementPermission
 from utilisateur.models import Utilisateur
 from contrats.models import Contrat
+from common.mixins import RoleScopedQuerySetMixin
+from common.utils import formater_montant_ar, defer_bien_photos
 from .utils import generate_quittance_pdf   # <-- IMPORTANT
 
 
@@ -24,11 +26,17 @@ class PaiementPagination(PageNumberPagination):
     max_page_size = 1000
 
 
-class PaiementViewSet(viewsets.ModelViewSet):
-    queryset = Paiement.objects.select_related(
-        "contrat__bien__proprietaire__user",
-        "contrat__locataire__user"
-    ).defer("contrat__bien__photos")
+class PaiementViewSet(RoleScopedQuerySetMixin, viewsets.ModelViewSet):
+    owner_field = "contrat__bien__proprietaire__user"
+    tenant_field = "contrat__locataire__user"
+
+    queryset = defer_bien_photos(
+        Paiement.objects.select_related(
+            "contrat__bien__proprietaire__user",
+            "contrat__locataire__user"
+        ),
+        "contrat__bien"
+    )
     serializer_class = PaiementSerializer
     pagination_class = PaiementPagination
     permission_classes = [permissions.IsAuthenticated, PaiementPermission]
@@ -38,38 +46,11 @@ class PaiementViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         paiement = serializer.save()
-        # Notification logic
         from notifications.services import NotificationService
-        from notifications.models import Notification
-        
-        utilisateurs_a_notifier = []
-        if paiement.contrat and paiement.contrat.locataire and paiement.contrat.locataire.user:
-            utilisateurs_a_notifier.append(paiement.contrat.locataire.user)
-            
-        for u in utilisateurs_a_notifier:
-            NotificationService.envoyer(
-                utilisateur=u,
-                type_notif=Notification.Type.AUTRE,
-                titre=f"Nouveau paiement ajouté pour {paiement.contrat.bien.titre}",
-                message=f"Un nouveau paiement de {int(float(paiement.montant_attendu or 0)):,} Ar a été généré.".replace(",", " "),
-                lien=f"/paiements/{paiement.id}",
-                contexte_email={"paiement": paiement}
-            )
+        NotificationService.notifier_paiement_cree(paiement)
 
     def get_queryset(self):
-        user = self.request.user
-        queryset = super().get_queryset()
-
-        if user.role in (Utilisateur.Role.ADMIN, Utilisateur.Role.AGENT):
-            return queryset
-
-        if user.role == Utilisateur.Role.LOCATAIRE:
-            return queryset.filter(contrat__locataire__user=user)
-
-        if user.role == Utilisateur.Role.PROPRIETAIRE:
-            return queryset.filter(contrat__bien__proprietaire__user=user)
-
-        return Paiement.objects.none()
+        return self.filter_by_user_role(super().get_queryset())
 
     @action(detail=True, methods=["post"])
     def valider(self, request, pk=None):
@@ -92,25 +73,8 @@ class PaiementViewSet(viewsets.ModelViewSet):
             for demande in paiement.demandes_paiement.filter(statut=DemandePaiement.StatutDemande.EN_ATTENTE):
                 demande.valider()
             
-        # Notification logic
         from notifications.services import NotificationService
-        from notifications.models import Notification
-        
-        utilisateurs_a_notifier = []
-        if paiement.contrat and paiement.contrat.locataire and paiement.contrat.locataire.user:
-            utilisateurs_a_notifier.append(paiement.contrat.locataire.user)
-        if paiement.contrat and paiement.contrat.bien and paiement.contrat.bien.proprietaire and paiement.contrat.bien.proprietaire.user:
-            utilisateurs_a_notifier.append(paiement.contrat.bien.proprietaire.user)
-            
-        for u in utilisateurs_a_notifier:
-            NotificationService.envoyer(
-                utilisateur=u,
-                type_notif=Notification.Type.PAIEMENT_VALIDE,
-                titre=f"Paiement validé pour le contrat {paiement.contrat.bien.titre}",
-                message=f"Le paiement de {int(float(paiement.montant or 0)):,} Ar pour {paiement.contrat.bien.titre} a été validé.".replace(",", " "),
-                lien=f"/api/paiements/{paiement.id}/quittance/",
-                contexte_email={"paiement": paiement}
-            )
+        NotificationService.notifier_paiement_valide(paiement)
 
         return Response(PaiementSerializer(paiement).data)
 

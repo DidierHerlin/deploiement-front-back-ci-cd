@@ -3,6 +3,7 @@ import { Locataire, Contrat, Paiement } from '@/lib/api'
 import { useState } from 'react'
 import { Pagination } from "@/components/molecules/pagination"
 import { useTranslation } from '@/lib/i18n'
+import { formatMontantAr } from '@/lib/utils'
 
 type LocataireModalProps = {
   locataire: Locataire
@@ -30,7 +31,7 @@ export function LocataireModal({ locataire, contrats, paiements, onClose }: Loca
 
   const formatCurrency = (val: any) => {
     if (!val) return 'N/A'
-    return `${Number(val).toLocaleString('fr-FR')} Ar`
+    return formatMontantAr(val)
   }
 
   return (

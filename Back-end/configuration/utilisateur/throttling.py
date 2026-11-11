@@ -10,3 +10,4 @@ class AuthAnonRateThrottle(AnonRateThrottle):
 class PasswordResetRateThrottle(AnonRateThrottle):
 
     scope = "password_reset"
+

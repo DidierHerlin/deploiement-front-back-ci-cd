@@ -17,164 +17,96 @@ from .mixins import ApiResponseMixin
 logger = logging.getLogger(__name__)
 
 
-# Inscription
+class BaseRegisterView(ApiResponseMixin, APIView):
+    """Vue de base pour l'inscription des utilisateurs."""
+    permission_classes = [AllowAny]
+    authentication_classes = []
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
 
-class LocataireRegisterView(ApiResponseMixin, APIView):
+    serializer_class = None
+    output_serializer_class = None
+    success_message = "Inscription réussie"
+    role_name = "utilisateur"
+
+    def handle_registration(self, request):
+        logger.info(f"Tentative d'inscription {self.role_name}: {request.data.get('email')}")
+        serializer = self.serializer_class(data=request.data, context={"request": request})
+
+        if serializer.is_valid():
+            try:
+                with transaction.atomic():
+                    instance = serializer.save()
+
+                email = getattr(instance, "email", getattr(getattr(instance, "user", None), "email", ""))
+                logger.info(f"{self.role_name.capitalize()} créé avec succès: {email}")
+
+                output_cls = self.output_serializer_class or self.serializer_class
+                return self.success_response(
+                    self.success_message,
+                    data=output_cls(instance, context={"request": request}).data,
+                    status_code=status.HTTP_201_CREATED,
+                )
+
+            except Exception as e:
+                logger.error(f"Erreur lors de la création du {self.role_name}: {str(e)}")
+                return self.error_response(
+                    "Erreur lors de la création du compte",
+                    details=str(e),
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+
+        logger.warning(f"Validation {self.role_name} échouée: {serializer.errors}")
+        return self.error_response("Données invalides", details=serializer.errors)
+
+    def post(self, request, *args, **kwargs):
+        return self.handle_registration(request)
+
+
+class LocataireRegisterView(BaseRegisterView):
+    """Inscription des locataires (activé automatiquement)."""
     serializer_class = LocataireSerializer
-    """
-    Inscription des locataires.
-    RG : un locataire est activé automatiquement (ROLES_AUTO_ACTIFS du manager).
-    """
-    permission_classes = [AllowAny]
-    authentication_classes = []
-    parser_classes = [JSONParser, MultiPartParser, FormParser]
-
-    def post(self, request):
-        logger.info(f"Tentative d'inscription locataire: {request.data.get('email')}")
-
-        serializer = LocataireSerializer(data=request.data, context={"request": request})
-
-        if serializer.is_valid():
-            try:
-                with transaction.atomic():
-                    locataire = serializer.save()
-
-                logger.info(f"Locataire créé avec succès: {locataire.user.email}")
-
-                return self.success_response(
-                    "Inscription réussie",
-                    data=LocataireSerializer(locataire, context={"request": request}).data,
-                    status_code=status.HTTP_201_CREATED,
-                )
-
-            except Exception as e:
-                logger.error(f"Erreur lors de la création du locataire: {str(e)}")
-                return self.error_response(
-                    "Erreur lors de la création du compte",
-                    details=str(e),
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                )
-
-        logger.warning(f"Validation échouée: {serializer.errors}")
-        return self.error_response("Données invalides", details=serializer.errors)
+    role_name = "locataire"
+    success_message = "Inscription réussie"
 
 
-class ProprietaireRegisterView(ApiResponseMixin, APIView):
+class ProprietaireRegisterView(BaseRegisterView):
+    """Inscription des propriétaires (en attente de validation)."""
     serializer_class = ProprietaireSerializer
-    """
-    Inscription des propriétaires.
-    RG : un compte PROPRIETAIRE est créé inactif et doit être validé par un
-    administrateur ou un agent avant de pouvoir se connecter (voir manager).
-    """
-    permission_classes = [AllowAny]
-    authentication_classes = []
-    parser_classes = [JSONParser, MultiPartParser, FormParser]
-
-    def post(self, request):
-        logger.info(f"Tentative d'inscription propriétaire: {request.data.get('email')}")
-
-        serializer = ProprietaireSerializer(data=request.data, context={"request": request})
-
-        if serializer.is_valid():
-            try:
-                with transaction.atomic():
-                    proprietaire = serializer.save()
-
-                logger.info(f"Propriétaire créé (en attente de validation): {proprietaire.user.email}")
-
-                return self.success_response(
-                    "Inscription enregistrée. Votre compte sera activé après validation par un agent.",
-                    data=ProprietaireSerializer(proprietaire, context={"request": request}).data,
-                    status_code=status.HTTP_201_CREATED,
-                )
-
-            except Exception as e:
-                logger.error(f"Erreur lors de la création du propriétaire: {str(e)}")
-                return self.error_response(
-                    "Erreur lors de la création du compte",
-                    details=str(e),
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                )
-
-        logger.warning(f"Validation propriétaire échouée: {serializer.errors}")
-        return self.error_response("Données invalides", details=serializer.errors)
+    role_name = "propriétaire"
+    success_message = "Inscription enregistrée. Votre compte sera activé après validation par un agent."
 
 
-class AgentRegisterView(ApiResponseMixin, APIView):
+class AgentRegisterView(BaseRegisterView):
+    """Inscription des agents immobiliers (en attente de validation admin)."""
     serializer_class = AgentRegisterSerializer
-    """
-    Inscription des agents immobiliers.
-    RG : un compte AGENT est créé inactif et doit être validé par un
-    administrateur avant de pouvoir se connecter.
-    """
-    permission_classes = [AllowAny]
-    authentication_classes = []
-    parser_classes = [JSONParser, MultiPartParser, FormParser]
-
-    def post(self, request):
-        logger.info(f"Tentative d'inscription agent: {request.data.get('email')}")
-
-        serializer = AgentRegisterSerializer(data=request.data, context={"request": request})
-
-        if serializer.is_valid():
-            try:
-                with transaction.atomic():
-                    user = serializer.save()
-
-                logger.info(f"Agent créé (en attente de validation): {user.email}")
-
-                return self.success_response(
-                    "Inscription enregistrée. Votre compte sera activé après validation par un administrateur.",
-                    data=UtilisateurSerializer(user, context={"request": request}).data,
-                    status_code=status.HTTP_201_CREATED,
-                )
-
-            except Exception as e:
-                logger.error(f"Erreur lors de la création de l'agent: {str(e)}")
-                return self.error_response(
-                    "Erreur lors de la création du compte",
-                    details=str(e),
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                )
-
-        logger.warning(f"Validation agent échouée: {serializer.errors}")
-        return self.error_response("Données invalides", details=serializer.errors)
+    output_serializer_class = UtilisateurSerializer
+    role_name = "agent"
+    success_message = "Inscription enregistrée. Votre compte sera activé après validation par un administrateur."
 
 
 class SignUpView(ApiResponseMixin, APIView):
-    """
-    Point d'entrée unifié pour l'inscription : POST /api/auth/signup/
-    Délègue l'enregistrement selon le rôle spécifié dans le corps de la requête :
-    - LOCATAIRE (par défaut) : compte immédiatement actif
-    - PROPRIETAIRE : compte avec IBAN, activé après validation
-    - AGENT : compte avec rôle AGENT, activé après validation
-    """
+    """Point d'entrée unifié pour l'inscription : POST /api/auth/signup/"""
     permission_classes = [AllowAny]
     authentication_classes = []
     parser_classes = [JSONParser, MultiPartParser, FormParser]
+
+    REGISTRATION_HANDLERS = {
+        "LOCATAIRE": LocataireRegisterView,
+        "PROPRIETAIRE": ProprietaireRegisterView,
+        "AGENT": AgentRegisterView,
+    }
 
     def post(self, request, *args, **kwargs):
         role = request.data.get("role", "LOCATAIRE")
         if isinstance(role, str):
             role = role.strip().upper()
 
-        if role == "LOCATAIRE":
-            view = LocataireRegisterView()
-            view.request = request
-            view.format_kwarg = None
-            return view.post(request)
-        elif role == "PROPRIETAIRE":
-            view = ProprietaireRegisterView()
-            view.request = request
-            view.format_kwarg = None
-            return view.post(request)
-        elif role == "AGENT":
-            view = AgentRegisterView()
-            view.request = request
-            view.format_kwarg = None
-            return view.post(request)
-        else:
+        handler_class = self.REGISTRATION_HANDLERS.get(role)
+        if not handler_class:
             return self.error_response(
                 f"Rôle invalide: '{role}'. Les rôles autorisés sont LOCATAIRE, PROPRIETAIRE, AGENT.",
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
+
+        handler = handler_class()
+        return handler.handle_registration(request)

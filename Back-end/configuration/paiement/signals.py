@@ -71,16 +71,12 @@ def mettre_a_jour_statut_bien_apres_paiement(sender, instance: Paiement, **kwarg
             
             # Passer le bien en VENDU
             if bien.statut == Bien.StatutBien.RESERVE:
-                bien.statut = Bien.StatutBien.VENDU
-                bien.save(update_fields=["statut"])
-                logger.info(f"Bien #{bien.pk} passé en VENDU suite au premier paiement du contrat #{contrat.pk}.")
+                bien.changer_statut(Bien.StatutBien.VENDU, motif=f"premier paiement du contrat #{contrat.pk}")
                 
         elif contrat.type_contrat == Contrat.TypeContrat.LOCATION:
             # Passer le bien en LOUE
             if bien.statut == Bien.StatutBien.RESERVE:
-                bien.statut = Bien.StatutBien.LOUE
-                bien.save(update_fields=["statut"])
-                logger.info(f"Bien #{bien.pk} passé en LOUE suite au premier paiement du contrat #{contrat.pk}.")
+                bien.changer_statut(Bien.StatutBien.LOUE, motif=f"premier paiement du contrat #{contrat.pk}")
 
 
 @receiver(post_save, sender=Paiement)

@@ -1,3 +1,5 @@
+export type { Bien, BienListItem, BienType } from "@/types"
+
 export type Property = {
   id: number
   title: string
@@ -13,3 +15,4 @@ export type Property = {
   photos?: string[]
   description?: string
 }
+

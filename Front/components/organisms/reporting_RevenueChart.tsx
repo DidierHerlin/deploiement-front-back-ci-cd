@@ -3,6 +3,7 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import React from 'react';
 import { useTranslation } from '@/lib/i18n';
+import { formatMontantAr } from '@/lib/utils';
 
 interface RevenueChartProps {
   chartData: Array<{ name: string; Revenus: number }>;
@@ -27,7 +28,7 @@ export function RevenueChart({ chartData }: RevenueChartProps) {
               <XAxis dataKey="name" stroke="#94a3b8" />
               <YAxis stroke="#94a3b8" />
               <Tooltip 
-                formatter={(value: number) => `${value.toLocaleString('fr-MG')} Ar`}
+                formatter={(value: number) => formatMontantAr(value)}
                 contentStyle={{ backgroundColor: 'var(--card, #1e293b)', borderColor: 'var(--border, #334155)', borderRadius: '8px' }}
               />
               <Legend />

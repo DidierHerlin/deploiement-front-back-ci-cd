@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Building2, FileText, Loader2, AlertCircle, Home } from 'lucide-react';
 import { Contrat } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
+import { formatMontantAr } from '@/lib/utils';
 
 interface DashboardContratCardProps {
   contrat: Contrat | null;
@@ -85,7 +86,7 @@ export function DashboardContratCard({ contrat, loading, error }: DashboardContr
         <div className="min-w-0 flex-1">
           <strong className="text-slate-900 dark:text-white block text-sm font-semibold truncate">{contrat.bien_titre}</strong>
           <p className="text-slate-500 dark:text-slate-400 text-xs my-0.5">{contrat.bien_type}</p>
-          <span className="text-slate-700 dark:text-slate-300 text-xs font-medium">{t('locataire_pages.contrat.card_rent', 'Loyer mensuel')} : {parseFloat(contrat.loyer || '0').toLocaleString('fr-FR', { maximumFractionDigits: 0 })} Ar</span>
+          <span className="text-slate-700 dark:text-slate-300 text-xs font-medium">{t('locataire_pages.contrat.card_rent', 'Loyer mensuel')} : {formatMontantAr(contrat.loyer)}</span>
         </div>
       </div>
       <div className="contract-details border-b border-slate-100 dark:border-slate-800 py-4 grid grid-cols-2 sm:grid-cols-4 gap-3.5">

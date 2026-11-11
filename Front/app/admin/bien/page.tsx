@@ -11,9 +11,9 @@ import { useTranslation } from '@/lib/i18n'
 import { BienTable } from "@/components/organisms/BienTable"
 import { BienSearch } from "@/components/organisms/BienSearch"
 import { BienFilters } from "@/components/organisms/BienFilters"
-import { BienForm } from "@/components/organisms/bien_BienForm"
+import { BienForm } from "@/components/organisms/BienForm"
 import { BienModal } from "@/components/organisms/BienModal"
-import { DeleteBienModal } from "@/components/organisms/bien_DeleteBienModal"
+import { DeleteBienModal } from "@/components/organisms/DeleteBienModal"
 
 export default function BienPage() {
   const { t } = useTranslation()
