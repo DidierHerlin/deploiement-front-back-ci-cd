@@ -164,7 +164,7 @@
           {{ date_echeance_str }}
         </td>
         <td style="padding: 10px 10px; font-size: 9pt; font-weight: bold; text-align: right; color: #0F172A; border-bottom: 1px solid #E2E8F0; white-space: nowrap;">
-          <nobr>{{ loyer_format }} Ar</nobr>
+          {{ loyer_format }} Ar
         </td>
       </tr>
 
@@ -182,7 +182,7 @@
           {{ date_echeance_str }}
         </td>
         <td style="padding: 10px 10px; font-size: 9pt; font-weight: bold; text-align: right; color: #0F172A; border-bottom: 1px solid #E2E8F0; white-space: nowrap;">
-          <nobr>{{ depot_garantie_format }} Ar</nobr>
+          {{ depot_garantie_format }} Ar
         </td>
       </tr>
       {% endif %}
@@ -209,7 +209,7 @@
           SOUS-TOTAL LOYER
         </td>
         <td style="padding: 5px 10px; font-size: 8.5pt; font-weight: bold; text-align: right; color: #0F172A; border-bottom: 1px solid #E2E8F0; white-space: nowrap;">
-          <nobr>{% if depot_garantie_format %}{{ loyer_format }}{% else %}{{ montant }}{% endif %} Ar</nobr>
+          {% if depot_garantie_format %}{{ loyer_format }}{% else %}{{ montant }}{% endif %} Ar
         </td>
       </tr>
 
@@ -220,7 +220,7 @@
           DÉPÔT DE GARANTIE
         </td>
         <td style="padding: 5px 10px; font-size: 8.5pt; font-weight: bold; text-align: right; color: #0F172A; border-bottom: 1px solid #E2E8F0; white-space: nowrap;">
-          <nobr>{{ depot_garantie_format }} Ar</nobr>
+          {{ depot_garantie_format }} Ar
         </td>
       </tr>
       {% endif %}
@@ -241,7 +241,7 @@
           TOTAL RÉGLÉ
         </td>
         <td style="padding: 7px 10px; font-size: 11pt; font-weight: bold; text-align: right; color: #1E3A8A; background-color: #EFF6FF; border: 1px solid #BFDBFE; border-left: none; white-space: nowrap;">
-          <nobr>{{ montant }} Ar</nobr>
+          {{ montant }} Ar
         </td>
       </tr>
     </tbody>
