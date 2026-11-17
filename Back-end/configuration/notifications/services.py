@@ -7,6 +7,23 @@ from notifications.models import Notification
 
 logger = logging.getLogger(__name__)
 
+def get_public_backend_url():
+    """
+    Retourne l'adresse publique du backend configurée pour l'environnement.
+    Priorité : settings.BACKEND_URL -> os.getenv('BACKEND_URL') -> adaptation de FRONTEND_URL -> fallback.
+    """
+    raw_backend = str(getattr(settings, "BACKEND_URL", "") or os.getenv("BACKEND_URL", "")).split(",")[0].strip().rstrip("/")
+    if not raw_backend:
+        raw_frontend = str(getattr(settings, "FRONTEND_URL", "")).split(",")[0].strip().rstrip("/")
+        if ":3000" in raw_frontend:
+            raw_backend = raw_frontend.replace(":3000", ":8000")
+        elif raw_frontend:
+            raw_backend = f"{raw_frontend}:8000"
+        else:
+            raw_backend = "http://13.53.227.16:8000"
+    return raw_backend
+
+
 class NotificationService:
     
     TEMPLATE_MAP = {
@@ -36,21 +53,91 @@ class NotificationService:
         if not utilisateur.email:
             return notification
             
-        contexte = contexte_email or {}
+        contexte = dict(contexte_email) if contexte_email else {}
+        raw_backend = get_public_backend_url()
+        raw_frontend = str(getattr(settings, "FRONTEND_URL", "http://localhost:3000")).split(",")[0].strip().rstrip("/")
+        
+        # Enrichissement automatique pour les paiements / quittances si non déjà fait
+        quittance_obj = contexte.get("quittance")
+        paiement_obj = contexte.get("paiement")
+        if not paiement_obj and quittance_obj:
+            paiement_obj = getattr(quittance_obj, "paiement", None)
+            if paiement_obj:
+                contexte["paiement"] = paiement_obj
+
+        paiement_id = None
+        if paiement_obj:
+            paiement_id = getattr(paiement_obj, "pk", getattr(paiement_obj, "id", None))
+        elif quittance_obj:
+            paiement_id = getattr(quittance_obj, "paiement_id", None)
+
+        if paiement_obj or quittance_obj:
+            from common.utils import formater_montant_ar
+            from django.utils import timezone
+            if "montant_format" not in contexte and paiement_obj:
+                contexte["montant_format"] = formater_montant_ar(getattr(paiement_obj, "montant", 0) or 0)
+            if "date_paiement_format" not in contexte and paiement_obj:
+                MOIS_FR = {
+                    1: "janvier", 2: "février", 3: "mars", 4: "avril",
+                    5: "mai", 6: "juin", 7: "juillet", 8: "août",
+                    9: "septembre", 10: "octobre", 11: "novembre", 12: "décembre"
+                }
+                d = getattr(paiement_obj, "date_paiement", None) or getattr(paiement_obj, "date_echeance", None) or timezone.now().date()
+                contexte["date_paiement_format"] = f"{d.day} {MOIS_FR.get(d.month, '')} {d.year}".strip()
+            if "contrat_titre" not in contexte and paiement_obj:
+                contrat = getattr(paiement_obj, "contrat", None)
+                bien = getattr(contrat, "bien", None) if contrat else None
+                contexte["contrat_titre"] = getattr(bien, "titre", "Contrat de bail") or "Contrat de bail"
+            if "url_quittance" not in contexte and paiement_id:
+                contexte["url_quittance"] = f"{raw_backend}/api/paiements/{paiement_id}/quittance/"
+
+        nom_dest = ""
+        if utilisateur:
+            if hasattr(utilisateur, "get_full_name"):
+                nom_dest = (utilisateur.get_full_name() or "").strip()
+            if not nom_dest:
+                nom_parts = [getattr(utilisateur, "prenoms", ""), getattr(utilisateur, "nom", "")]
+                nom_dest = " ".join(p for p in nom_parts if p).strip() or getattr(utilisateur, "email", "")
+
         contexte.update({
             "utilisateur": utilisateur,
+            "destinataire_nom": nom_dest,
             "titre": titre,
             "message": message,
             "lien": lien,
             "type_notif": notification.get_type_display(),
-            "frontend_url": getattr(settings, "FRONTEND_URL", "http://localhost:3000")
+            "backend_url": raw_backend,
+            "frontend_url": raw_frontend,
         })
+        if "url_quittance" not in contexte and lien:
+            if lien.startswith("http"):
+                contexte["url_quittance"] = lien
+            else:
+                formatted_lien = lien if lien.endswith("/") else f"{lien}/"
+                contexte["url_quittance"] = f"{raw_backend}{formatted_lien}"
         
         template_name = cls.TEMPLATE_MAP.get(type_notif, cls.DEFAULT_TEMPLATE)
         
         try:
             html_message = render_to_string(template_name, contexte)
-            plain_message = strip_tags(html_message)
+            
+            # Version texte : si template .txt existe, on le rend, sinon strip_tags avec URL sur sa propre ligne
+            text_template = template_name.replace(".html", ".txt")
+            try:
+                from django.template.loader import get_template
+                get_template(text_template)
+                plain_message = render_to_string(text_template, contexte)
+            except Exception:
+                plain_message = strip_tags(html_message)
+                url_val = contexte.get("url_quittance")
+                if url_val and url_val not in plain_message:
+                    if "Télécharger la quittance PDF" in plain_message:
+                        plain_message = plain_message.replace(
+                            "Télécharger la quittance PDF",
+                            f"Télécharger la quittance PDF\n{url_val}"
+                        )
+                    else:
+                        plain_message += f"\n\n{url_val}"
             
             nb_envoyes = send_mail(
                 subject=f"[Gestion Immobilière] {titre}",
@@ -105,23 +192,72 @@ class NotificationService:
             )
 
     @classmethod
-    def notifier_paiement_valide(cls, paiement):
-        """Notifie les parties de la validation d'un paiement."""
+    def notifier_paiement_valide(cls, paiement_ou_quittance):
+        """
+        Notifie les parties de la validation d'un paiement.
+        Accepte soit un objet Paiement, soit un objet Quittance.
+        Si un objet Quittance est fourni, l'identifiant du paiement est récupéré
+        via sa relation avec le paiement (quittance.paiement).
+        """
         from common.utils import formater_montant_ar
+        from django.utils import timezone
+
+        quittance = None
+        if hasattr(paiement_ou_quittance, "paiement") and getattr(paiement_ou_quittance, "paiement", None):
+            quittance = paiement_ou_quittance
+            paiement = paiement_ou_quittance.paiement
+        else:
+            paiement = paiement_ou_quittance
+            quittance = getattr(paiement, "quittance", None)
+
+        paiement_id = getattr(paiement, "pk", getattr(paiement, "id", None))
+        if not paiement_id and quittance:
+            paiement_id = getattr(quittance, "paiement_id", None)
+
+        montant_format = formater_montant_ar(getattr(paiement, "montant", 0) or 0)
+
+        MOIS_FR = {
+            1: "janvier", 2: "février", 3: "mars", 4: "avril",
+            5: "mai", 6: "juin", 7: "juillet", 8: "août",
+            9: "septembre", 10: "octobre", 11: "novembre", 12: "décembre"
+        }
+        date_ref = getattr(paiement, "date_paiement", None) or getattr(paiement, "date_echeance", None) or timezone.now().date()
+        date_paiement_format = f"{date_ref.day} {MOIS_FR.get(date_ref.month, '')} {date_ref.year}".strip()
+
+        contrat = getattr(paiement, "contrat", None)
+        contrat_titre = ""
+        if contrat and getattr(contrat, "bien", None):
+            contrat_titre = getattr(contrat.bien, "titre", "Contrat de bail") or "Contrat de bail"
+        else:
+            contrat_titre = "Contrat de bail"
+
+        raw_backend = get_public_backend_url()
+        lien_quittance = f"/api/paiements/{paiement_id}/quittance/"
+        url_quittance = f"{raw_backend}{lien_quittance}"
+
         destinataires = []
-        if paiement.contrat and paiement.contrat.locataire and paiement.contrat.locataire.user:
-            destinataires.append(paiement.contrat.locataire.user)
-        if paiement.contrat and paiement.contrat.bien and paiement.contrat.bien.proprietaire and paiement.contrat.bien.proprietaire.user:
-            destinataires.append(paiement.contrat.bien.proprietaire.user)
+        if contrat and getattr(contrat, "locataire", None) and getattr(contrat.locataire, "user", None):
+            destinataires.append(contrat.locataire.user)
+        if (contrat and getattr(contrat, "bien", None) and getattr(contrat.bien, "proprietaire", None)
+                and getattr(contrat.bien.proprietaire, "user", None)):
+            destinataires.append(contrat.bien.proprietaire.user)
 
         for u in destinataires:
             cls.envoyer(
                 utilisateur=u,
                 type_notif=Notification.Type.PAIEMENT_VALIDE,
-                titre=f"Paiement validé pour le contrat {paiement.contrat.bien.titre}",
-                message=f"Le paiement de {formater_montant_ar(paiement.montant or 0)} Ar pour {paiement.contrat.bien.titre} a été validé.",
-                lien=f"/api/paiements/{paiement.id}/quittance/",
-                contexte_email={"paiement": paiement}
+                titre=f"Paiement validé pour le contrat {contrat_titre}",
+                message=f"Le paiement de {montant_format} Ar pour {contrat_titre} a été validé.",
+                lien=lien_quittance,
+                contexte_email={
+                    "paiement": paiement,
+                    "quittance": quittance,
+                    "montant_format": montant_format,
+                    "date_paiement_format": date_paiement_format,
+                    "contrat_titre": contrat_titre,
+                    "url_quittance": url_quittance,
+                    "lien_quittance": lien_quittance,
+                }
             )
 
     @classmethod

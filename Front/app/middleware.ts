@@ -9,7 +9,8 @@ export function middleware(request: NextRequest) {
   // Il sert uniquement à éviter un flash de contenu protégé ; la vraie vérification
   // se fait via l'appel à /api/profil/ dans AuthGuard, et de toute façon chaque
   // endpoint Django reste protégé par IsAuthenticated côté serveur.
-  const estMarqueConnecte = request.cookies.get("auth")?.value === "1"
+  const hasAuthHeader = request.headers.has("authorization")
+  const estMarqueConnecte = request.cookies.get("auth")?.value === "1" || hasAuthHeader
 
   if (estPublique(pathname)) {
     // Si l'utilisateur est déjà connecté et tente d'aller sur login/inscription/connexion,

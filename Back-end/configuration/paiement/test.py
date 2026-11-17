@@ -712,7 +712,112 @@ class PaiementQuittanceTests(PaiementTestBase):
         response = self.client.get(f"/api/paiements/{self.paiement.id}/quittance/", HTTP_ORIGIN="http://localhost:3000")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response["Content-Type"], "application/pdf")
-        self.assertIn("inline;", response["Content-Disposition"])
+        self.assertIn("attachment;", response["Content-Disposition"])
+        self.assertIn(f"quittance-{self.paiement.pk}.pdf", response["Content-Disposition"])
+
+    def test_quittance_locataire_access_own_and_blocked_other(self):
+        self.paiement.statut = Paiement.StatutPaiement.PAYE
+        self.paiement.montant_paye = self.paiement.montant
+        self.paiement.save()
+
+        bien2 = _make_bien(self.prop, titre="Autre Bien Quittance")
+        contrat2 = _make_contrat(bien2, self.other_loc)
+        paiement2 = Paiement.objects.filter(contrat=contrat2).first()
+        if not paiement2:
+            paiement2 = _make_paiement(contrat2, delta_months=100)
+        paiement2.statut = Paiement.StatutPaiement.PAYE
+        paiement2.montant_paye = paiement2.montant
+        paiement2.save()
+
+        # 1. Non authentifie -> 401
+        self.client.force_authenticate(user=None)
+        res_unauth = self.client.get(f"/api/paiements/{self.paiement.id}/quittance/")
+        self.assertEqual(res_unauth.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # 2. Locataire 1 telecharge sa propre quittance (Paiement 1) -> 200 OK
+        self.client.force_authenticate(user=self.loc_user)
+        res_loc1_own = self.client.get(f"/api/paiements/{self.paiement.id}/quittance/")
+        self.assertEqual(res_loc1_own.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_loc1_own["Content-Type"], "application/pdf")
+        self.assertIn("attachment;", res_loc1_own["Content-Disposition"])
+        self.assertIn(f"quittance-{self.paiement.pk}.pdf", res_loc1_own["Content-Disposition"])
+
+        # 3. Locataire 1 tente d'acceder a la quittance du Locataire 2 (Paiement 2) -> 404
+        res_loc1_other = self.client.get(f"/api/paiements/{paiement2.id}/quittance/")
+        self.assertEqual(res_loc1_other.status_code, status.HTTP_404_NOT_FOUND)
+
+        # 4. Locataire 2 telecharge sa propre quittance (Paiement 2) -> 200 OK
+        self.client.force_authenticate(user=self.other_loc_user)
+        res_loc2_own = self.client.get(f"/api/paiements/{paiement2.id}/quittance/")
+        self.assertEqual(res_loc2_own.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_loc2_own["Content-Type"], "application/pdf")
+        self.assertIn("attachment;", res_loc2_own["Content-Disposition"])
+        self.assertIn(f"quittance-{paiement2.pk}.pdf", res_loc2_own["Content-Disposition"])
+
+        # 5. Locataire 2 tente d'acceder a la quittance du Locataire 1 (Paiement 1) -> 404
+        res_loc2_other = self.client.get(f"/api/paiements/{self.paiement.id}/quittance/")
+        self.assertEqual(res_loc2_other.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_quittance_download_avec_quittances_aux_identifiants_differents(self):
+        from django.core import mail
+        from paiement.models import Quittance
+        from notifications.services import NotificationService
+
+        # Paiement 1 (self.paiement)
+        self.paiement.statut = Paiement.StatutPaiement.PAYE
+        self.paiement.montant_paye = self.paiement.montant
+        self.paiement.save()
+
+        # Quittance 1 avec id=10 associé au Paiement 1 (self.paiement.id != 10)
+        quittance1 = Quittance(id=10, paiement=self.paiement)
+        self.assertNotEqual(quittance1.id, self.paiement.id)
+
+        # Paiement 2 sur un autre contrat
+        bien2 = _make_bien(self.prop, titre="Studio 42")
+        contrat2 = _make_contrat(bien2, self.other_loc)
+        paiement2 = Paiement.objects.filter(contrat=contrat2).first()
+        if not paiement2:
+            paiement2 = _make_paiement(contrat2, delta_months=100)
+        paiement2.statut = Paiement.StatutPaiement.PAYE
+        paiement2.montant_paye = paiement2.montant
+        paiement2.save()
+
+        # Quittance 2 avec id=99 associé au Paiement 2 (paiement2.id != 99)
+        quittance2 = Quittance(id=99, paiement=paiement2)
+        self.assertNotEqual(quittance2.id, paiement2.id)
+
+        mail.outbox.clear()
+        with self.settings(BACKEND_URL="http://13.53.227.16:8000"):
+            # 1. Envoi depuis Quittance 1
+            NotificationService.notifier_paiement_valide(quittance1)
+            emails_1 = [e for e in mail.outbox if self.loc_user.email in e.to]
+            self.assertEqual(len(emails_1), 1)
+            expected_link_1 = f"http://13.53.227.16:8000/api/paiements/{self.paiement.id}/quittance/"
+            self.assertIn(expected_link_1, emails_1[0].body)
+            self.assertNotIn(f"/api/paiements/{quittance1.id}/quittance/", emails_1[0].body)
+
+            # Vérification téléchargement PDF 1
+            self.client.force_authenticate(user=self.loc_user)
+            resp1 = self.client.get(f"/api/paiements/{self.paiement.id}/quittance/")
+            self.assertEqual(resp1.status_code, status.HTTP_200_OK)
+            self.assertEqual(resp1["Content-Type"], "application/pdf")
+            self.assertIn(f"quittance-{self.paiement.pk}.pdf", resp1["Content-Disposition"])
+
+            # 2. Envoi depuis Quittance 2
+            mail.outbox.clear()
+            NotificationService.notifier_paiement_valide(quittance2)
+            emails_2 = [e for e in mail.outbox if self.other_loc_user.email in e.to]
+            self.assertEqual(len(emails_2), 1)
+            expected_link_2 = f"http://13.53.227.16:8000/api/paiements/{paiement2.id}/quittance/"
+            self.assertIn(expected_link_2, emails_2[0].body)
+            self.assertNotIn(f"/api/paiements/{quittance2.id}/quittance/", emails_2[0].body)
+
+            # Vérification téléchargement PDF 2
+            self.client.force_authenticate(user=self.other_loc_user)
+            resp2 = self.client.get(f"/api/paiements/{paiement2.id}/quittance/")
+            self.assertEqual(resp2.status_code, status.HTTP_200_OK)
+            self.assertEqual(resp2["Content-Type"], "application/pdf")
+            self.assertIn(f"quittance-{paiement2.pk}.pdf", resp2["Content-Disposition"])
 
 
 class PaiementImpayesTests(PaiementTestBase):

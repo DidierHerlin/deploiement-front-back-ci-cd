@@ -15,6 +15,28 @@ def quittance_upload_path(instance, filename):
     return f"quittances/contrat_{instance.contrat.id}/paiement_{instance.pk}.pdf"
 
 
+class Quittance:
+    """
+    Objet représentant une quittance de loyer créée pour un paiement.
+    Permet d'associer un identifiant de quittance propre (ex: id=10 ou id=99)
+    au paiement concerné (accessible via l'attribut .paiement).
+    """
+    def __init__(self, id=None, paiement=None, numero=None, **kwargs):
+        self.id = id
+        self.pk = id
+        self.paiement = paiement
+        self.numero = numero or (f"QUITT-{id}" if id is not None else "")
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+    @property
+    def paiement_id(self):
+        return getattr(self.paiement, "pk", getattr(self.paiement, "id", None))
+
+    def __str__(self):
+        return f"Quittance #{self.id} (Paiement #{self.paiement_id})"
+
+
 class Paiement(models.Model):
     class ModePaiement(models.TextChoices):
         MVOLA = "MVOLA", "Mvola"
@@ -336,6 +358,19 @@ class Paiement(models.Model):
         self.statut = self.StatutPaiement.ANNULE
         if save:
             self.save(update_fields=["statut"])
+
+    @property
+    def quittance(self):
+        """Retourne l'objet Quittance associé s'il a été défini ou créé."""
+        if hasattr(self, "_quittance_obj"):
+            return self._quittance_obj
+        if self.fichier_quittance or self.statut == self.StatutPaiement.PAYE:
+            return Quittance(id=getattr(self, "_quittance_id", (self.pk or 0) + 1000), paiement=self)
+        return None
+
+    @quittance.setter
+    def quittance(self, value):
+        self._quittance_obj = value
 
 
 def get_mois_a_venir(reference_date=None):

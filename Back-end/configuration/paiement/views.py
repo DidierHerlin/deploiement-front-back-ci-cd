@@ -147,7 +147,7 @@ class PaiementViewSet(RoleScopedQuerySetMixin, viewsets.ModelViewSet):
 
             response = HttpResponse(pdf_bytes, content_type="application/pdf")
             response["Content-Disposition"] = (
-                f'inline; filename="quittance_{paiement.pk}.pdf"'
+                f'attachment; filename="quittance-{paiement.pk}.pdf"'
             )
             origin = request.META.get("HTTP_ORIGIN", "")
             if origin:

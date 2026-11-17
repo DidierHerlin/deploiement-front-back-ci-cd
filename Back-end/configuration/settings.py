@@ -204,6 +204,7 @@ _raw_cors_origins = config(
 CORS_ALLOWED_ORIGINS = [origin.rstrip("/") for origin in _raw_cors_origins if origin]
 
 FRONTEND_URL = config("FRONTEND_URL", default="http://localhost:3000,http://localhost:3001")
+BACKEND_URL = config("BACKEND_URL", default="http://13.53.227.16:8000")
 
 _raw_csrf_origins = config(
     "CSRF_TRUSTED_ORIGINS",

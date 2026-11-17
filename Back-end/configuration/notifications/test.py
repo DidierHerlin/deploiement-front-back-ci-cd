@@ -101,6 +101,169 @@ class NotificationServiceTests(TestCase):
         self.assertEqual(Notification.objects.filter(type=Notification.Type.PAIEMENT_VALIDE).count(), 1)
         self.assertGreaterEqual(len(mail.outbox), 1)
 
+    def test_paiement_valide_email_format_rakoto_be(self):
+        rakoto_user = Utilisateur.objects.create_user(
+            email="rakoto.be@test.com", password="pwd", nom="Be", prenoms="Rakoto", role=Utilisateur.Role.LOCATAIRE
+        )
+        locataire = Locataire.objects.create(user=rakoto_user)
+        bien_studio = Bien.objects.create(
+            proprietaire=self.prop,
+            titre="Studio de luxe",
+            adresse="Ivandry",
+            loyer_mensuel=450000,
+            type="APPARTEMENT",
+            mode_transaction="LOCATION",
+            surface=40,
+            nombre_pieces=1,
+        )
+        contrat = Contrat.objects.create(
+            bien=bien_studio,
+            locataire=locataire,
+            type_contrat="LOCATION",
+            loyer=450000,
+            depot_garantie=450000,
+            date_debut=datetime.date(2026, 11, 1),
+            date_fin=datetime.date(2027, 10, 31),
+        )
+        paiement = Paiement.objects.filter(contrat=contrat).first()
+        if not paiement:
+            paiement = Paiement.objects.create(
+                contrat=contrat,
+                num_echeance=1,
+                date_echeance=datetime.date(2026, 11, 17),
+                date_paiement=datetime.date(2026, 11, 17),
+                montant_attendu=450000.00,
+                montant=450000.00,
+                statut=Paiement.StatutPaiement.PAYE,
+            )
+        else:
+            paiement.date_paiement = datetime.date(2026, 11, 17)
+            paiement.statut = Paiement.StatutPaiement.PAYE
+            paiement.save()
+
+        with self.settings(BACKEND_URL="http://13.53.227.16:8000"):
+            NotificationService.notifier_paiement_valide(paiement)
+
+        emails_loc = [e for e in mail.outbox if rakoto_user.email in e.to]
+        self.assertEqual(len(emails_loc), 1)
+        email = emails_loc[0]
+
+        # Vérifications sur le texte brut
+        self.assertIn("Bonjour Rakoto Be,", email.body)
+        self.assertIn("Votre paiement a été validé avec succès.", email.body)
+        self.assertIn("Montant : 450 000 Ar", email.body)
+        self.assertIn("Date du paiement : 17 novembre 2026", email.body)
+        self.assertIn("Contrat concerné : Studio de luxe", email.body)
+        self.assertIn("Télécharger la quittance PDF", email.body)
+        expected_url = f"http://13.53.227.16:8000/api/paiements/{paiement.id}/quittance/"
+        self.assertIn(expected_url, email.body)
+        self.assertIn("Cordialement,\nL’équipe Gestion Immobilière", email.body)
+
+        # Vérifier que le montant n'apparaît qu'une seule fois dans le texte
+        self.assertEqual(email.body.count("450 000 Ar"), 1)
+
+        # Vérifications sur le HTML
+        self.assertTrue(bool(email.alternatives))
+        html_body = email.alternatives[0][0]
+        self.assertIn("Bonjour Rakoto Be,", html_body)
+        self.assertIn("Votre paiement a été validé avec succès.", html_body)
+        self.assertIn("Montant : 450 000 Ar", html_body)
+        self.assertIn("Date du paiement : 17 novembre 2026", html_body)
+        self.assertIn("Contrat concerné : Studio de luxe", html_body)
+        self.assertIn(f'href="{expected_url}"', html_body)
+        self.assertIn("Télécharger la quittance PDF", html_body)
+        self.assertEqual(html_body.count("450 000 Ar"), 1)
+
+    def test_paiement_valide_email_depuis_quittance_identifiants_differents(self):
+        from paiement.models import Quittance
+
+        # Locataire 1
+        user1 = Utilisateur.objects.create_user(
+            email="loc1.diff@test.com", password="pwd", nom="Randria", prenoms="Soa", role=Utilisateur.Role.LOCATAIRE
+        )
+        loc1 = Locataire.objects.create(user=user1)
+        bien1 = Bien.objects.create(
+            proprietaire=self.prop, titre="Bien 3", adresse="Antananarivo", loyer_mensuel=300000,
+            type="APPARTEMENT", mode_transaction="LOCATION", surface=35, nombre_pieces=1
+        )
+        contrat1 = Contrat.objects.create(
+            bien=bien1, locataire=loc1, type_contrat="LOCATION", loyer=300000, depot_garantie=300000,
+            date_debut=datetime.date(2026, 11, 1), date_fin=datetime.date(2027, 10, 31)
+        )
+        paiement1 = Paiement.objects.filter(contrat=contrat1).first()
+        if not paiement1:
+            paiement1 = Paiement.objects.create(
+                contrat=contrat1, num_echeance=1, date_echeance=datetime.date(2026, 11, 17),
+                date_paiement=datetime.date(2026, 11, 17), montant_attendu=300000.00, montant=300000.00,
+                statut=Paiement.StatutPaiement.PAYE
+            )
+        else:
+            paiement1.date_paiement = datetime.date(2026, 11, 17)
+            paiement1.montant = 300000.00
+            paiement1.statut = Paiement.StatutPaiement.PAYE
+            paiement1.save()
+
+        # Quittance 1 avec ID=10 associé au Paiement 1 (id != 10)
+        quittance1 = Quittance(id=10, paiement=paiement1)
+        self.assertNotEqual(quittance1.id, paiement1.id)
+
+        # Locataire 2
+        user2 = Utilisateur.objects.create_user(
+            email="loc2.diff@test.com", password="pwd", nom="Rasoa", prenoms="Fara", role=Utilisateur.Role.LOCATAIRE
+        )
+        loc2 = Locataire.objects.create(user=user2)
+        bien2 = Bien.objects.create(
+            proprietaire=self.prop, titre="Bien 42", adresse="Tamatave", loyer_mensuel=420000,
+            type="APPARTEMENT", mode_transaction="LOCATION", surface=45, nombre_pieces=2
+        )
+        contrat2 = Contrat.objects.create(
+            bien=bien2, locataire=loc2, type_contrat="LOCATION", loyer=420000, depot_garantie=420000,
+            date_debut=datetime.date(2026, 11, 1), date_fin=datetime.date(2027, 10, 31)
+        )
+        paiement2 = Paiement.objects.filter(contrat=contrat2).first()
+        if not paiement2:
+            paiement2 = Paiement.objects.create(
+                contrat=contrat2, num_echeance=1, date_echeance=datetime.date(2026, 11, 17),
+                date_paiement=datetime.date(2026, 11, 17), montant_attendu=420000.00, montant=420000.00,
+                statut=Paiement.StatutPaiement.PAYE
+            )
+        else:
+            paiement2.date_paiement = datetime.date(2026, 11, 17)
+            paiement2.montant = 420000.00
+            paiement2.statut = Paiement.StatutPaiement.PAYE
+            paiement2.save()
+
+        # Quittance 2 avec ID=99 associé au Paiement 2 (id != 99)
+        quittance2 = Quittance(id=99, paiement=paiement2)
+        self.assertNotEqual(quittance2.id, paiement2.id)
+
+        # 1. Envoi depuis l'objet Quittance 1
+        mail.outbox.clear()
+        with self.settings(BACKEND_URL="http://13.53.227.16:8000"):
+            NotificationService.notifier_paiement_valide(quittance1)
+
+        email1 = [e for e in mail.outbox if user1.email in e.to][0]
+        expected_url1 = f"http://13.53.227.16:8000/api/paiements/{paiement1.id}/quittance/"
+        # L'URL doit contenir la clé primaire du paiement concerné (et non l'id de la quittance)
+        self.assertIn(expected_url1, email1.body)
+        self.assertNotIn(f"/api/paiements/{quittance1.id}/quittance/", email1.body)
+        self.assertIn(f'href="{expected_url1}"', email1.alternatives[0][0])
+        self.assertIn("Montant : 300 000 Ar", email1.body)
+        self.assertEqual(email1.body.count("300 000 Ar"), 1)
+
+        # 2. Envoi depuis l'objet Quittance 2
+        mail.outbox.clear()
+        with self.settings(BACKEND_URL="http://13.53.227.16:8000"):
+            NotificationService.notifier_paiement_valide(quittance2)
+
+        email2 = [e for e in mail.outbox if user2.email in e.to][0]
+        expected_url2 = f"http://13.53.227.16:8000/api/paiements/{paiement2.id}/quittance/"
+        self.assertIn(expected_url2, email2.body)
+        self.assertNotIn(f"/api/paiements/{quittance2.id}/quittance/", email2.body)
+        self.assertIn(f'href="{expected_url2}"', email2.alternatives[0][0])
+        self.assertIn("Montant : 420 000 Ar", email2.body)
+        self.assertEqual(email2.body.count("420 000 Ar"), 1)
+
     def test_command_echeance_proche(self):
         today = timezone.now().date()
         date_dans_5j = today + datetime.timedelta(days=5)

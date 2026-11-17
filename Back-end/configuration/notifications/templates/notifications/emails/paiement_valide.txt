@@ -1,0 +1,13 @@
+Bonjour {{ destinataire_nom|default:utilisateur.get_full_name|default:utilisateur.email }},
+
+Votre paiement a été validé avec succès.
+
+Montant : {{ montant_format }} Ar
+Date du paiement : {{ date_paiement_format }}
+Contrat concerné : {{ contrat_titre }}
+
+Télécharger la quittance PDF
+{{ url_quittance }}
+
+Cordialement,
+L’équipe Gestion Immobilière

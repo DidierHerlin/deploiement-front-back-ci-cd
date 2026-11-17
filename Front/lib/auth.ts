@@ -13,6 +13,9 @@ export interface AuthRequestOptions extends RequestInit {
 export function sauvegarderTokens(access: string, refresh: string) {
   localStorage.setItem("access_token", access)
   localStorage.setItem("refresh_token", refresh)
+  if (typeof document !== "undefined") {
+    document.cookie = `access_token=${access}; path=/; max-age=${AUTH_MAX_AGE_SECONDES}; samesite=lax`
+  }
 }
 
 export function getAccessToken(): string | null {
@@ -43,6 +46,9 @@ export function isTokenValid(token: string | null): boolean {
 function supprimerTokens() {
   localStorage.removeItem("access_token")
   localStorage.removeItem("refresh_token")
+  if (typeof document !== "undefined") {
+    document.cookie = `access_token=; path=/; max-age=0`
+  }
 }
 
 //Cookie indicateur pour le middleware SSR 
@@ -87,6 +93,9 @@ export async function rafraichirToken(): Promise<string | null> {
       const data = await response.json()
       if (data.access) {
         localStorage.setItem("access_token", data.access)
+        if (typeof document !== "undefined") {
+          document.cookie = `access_token=${data.access}; path=/; max-age=${AUTH_MAX_AGE_SECONDES}; samesite=lax`
+        }
         if (data.refresh) {
           localStorage.setItem("refresh_token", data.refresh)
         }

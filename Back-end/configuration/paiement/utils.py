@@ -166,3 +166,5 @@ def generate_quittance_pdf(paiement):
     except Exception as e:
         logger.error(f"Erreur lors de la sauvegarde du fichier PDF : {e}")
         raise Exception(f"Erreur de sauvegarde : {e}")
+
+
