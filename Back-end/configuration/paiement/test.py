@@ -821,6 +821,90 @@ class PaiementQuittanceTests(PaiementTestBase):
             self.assertEqual(resp2["Content-Type"], "application/pdf")
             self.assertIn(f"quittance-{paiement2.pk}.pdf", resp2["Content-Disposition"])
 
+    def test_validation_serveur_retry_idempotence_et_anti_doublon(self):
+        """
+        Vérifie la robustesse en environnement serveur (DEBUG=False) :
+        - La validation réussit avec réponse 200 OK
+        - Le statut passe à PAYE
+        - Le PDF de quittance est généré et stocké
+        - L'e-mail contient le montant en Ariary et le lien dynamique
+        - En cas de rejeu / retry (ex: clic répété après coupure ou erreur),
+          la réponse reste 200 OK sans créer de double quittance, double notification ou double email.
+        """
+        from django.core import mail
+        from notifications.models import Notification
+        mail.outbox.clear()
+
+        paiement = Paiement.objects.create(
+            contrat=self.contrat,
+            date_echeance="2026-11-20",
+            montant=450000,
+            montant_attendu=450000,
+            mode_paiement="MVOLA",
+            reference="REF-MVOLA-TEST-5",
+            statut=Paiement.StatutPaiement.EN_ATTENTE,
+        )
+
+        self.client.force_authenticate(user=self.agent_user)
+
+        # 1. Première validation en environnement simulant le serveur
+        with self.settings(DEBUG=False, BACKEND_PUBLIC_URL="https://api.immoconnect.mg"):
+            resp = self.client.post(
+                f"/api/paiements/{paiement.pk}/valider/",
+                {"mode_paiement": "MVOLA", "reference": "REF-MVOLA-TEST-5"},
+                format="json"
+            )
+            self.assertEqual(resp.status_code, status.HTTP_200_OK)
+            self.assertEqual(resp.data["statut"], "PAYE")
+
+        paiement.refresh_from_db()
+        self.assertEqual(paiement.statut, Paiement.StatutPaiement.PAYE)
+        self.assertTrue(bool(paiement.fichier_quittance))
+        self.assertTrue(paiement.fichier_quittance.storage.exists(paiement.fichier_quittance.name))
+
+        # Vérification email et montant en Ariary + lien de quittance
+        self.assertGreaterEqual(len(mail.outbox), 1)
+        email_loc = [e for e in mail.outbox if self.loc_user.email in e.to][0]
+        self.assertIn("450 000 Ar", email_loc.body)
+        expected_url = f"https://api.immoconnect.mg/api/paiements/{paiement.pk}/quittance/"
+        self.assertIn(expected_url, email_loc.body)
+
+        # Vérification notification en DB
+        notifs_count_1 = Notification.objects.filter(
+            utilisateur=self.loc_user,
+            type=Notification.Type.PAIEMENT_VALIDE
+        ).count()
+        self.assertEqual(notifs_count_1, 1)
+
+        # 2. Rejeu / Nouvelle tentative sur ce même paiement déjà validé
+        nb_emails_avant_rejeu = len(mail.outbox)
+        with self.settings(DEBUG=False, BACKEND_PUBLIC_URL="https://api.immoconnect.mg"):
+            retry_resp = self.client.post(
+                f"/api/paiements/{paiement.pk}/valider/",
+                {"mode_paiement": "MVOLA", "reference": "REF-MVOLA-TEST-5"},
+                format="json"
+            )
+            # Doit renvoyer 200 OK de manière idempotente (et non 400 ou 500)
+            self.assertEqual(retry_resp.status_code, status.HTTP_200_OK)
+            self.assertEqual(retry_resp.data["statut"], "PAYE")
+
+        # Vérification anti-doublon : aucun email supplémentaire envoyé
+        self.assertEqual(len(mail.outbox), nb_emails_avant_rejeu)
+
+        # Vérification anti-doublon : aucune ligne de notification dupliquée en DB
+        notifs_count_2 = Notification.objects.filter(
+            utilisateur=self.loc_user,
+            type=Notification.Type.PAIEMENT_VALIDE
+        ).count()
+        self.assertEqual(notifs_count_2, notifs_count_1)
+
+        # 3. Vérification du téléchargement direct de la quittance générée
+        self.client.force_authenticate(user=self.loc_user)
+        quittance_resp = self.client.get(f"/api/paiements/{paiement.pk}/quittance/")
+        self.assertEqual(quittance_resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(quittance_resp["Content-Type"], "application/pdf")
+        self.assertIn(f"quittance-{paiement.pk}.pdf", quittance_resp["Content-Disposition"])
+
 
 class PaiementImpayesTests(PaiementTestBase):
     def test_impayes_as_admin(self):

@@ -26,21 +26,33 @@ def get_public_backend_url(enforce_production=False):
     is_production = enforce_production or (not getattr(settings, "DEBUG", True) and not is_test)
 
     if not raw_url:
-        if is_production:
+        if enforce_production:
             raise ImproperlyConfigured(
                 "Le réglage Django BACKEND_PUBLIC_URL est obligatoire en production et doit être une URL HTTPS absolue."
             )
+        if is_production:
+            logger.error("Le réglage Django BACKEND_PUBLIC_URL est manquant en production.")
+            return ""
         # Valeur par défaut pour l'environnement local de développement / test
         raw_url = "http://localhost:8000"
 
     parsed = urllib.parse.urlparse(raw_url)
 
-    if is_production:
+    if enforce_production:
         if parsed.scheme.lower() != "https" or not parsed.netloc:
             raise ImproperlyConfigured(
                 f"Le réglage BACKEND_PUBLIC_URL doit être une URL HTTPS absolue valide avec un hôte "
                 f"(valeur reçue : '{raw_url}')."
             )
+    elif is_production:
+        if parsed.scheme.lower() != "https":
+            logger.warning(
+                f"BACKEND_PUBLIC_URL ({raw_url}) utilise le protocole HTTP en production. "
+                "Il est fortement recommandé de configurer HTTPS dès la mise en service du nom de domaine et du certificat TLS."
+            )
+        if not parsed.netloc:
+            logger.error(f"BACKEND_PUBLIC_URL invalide sans hôte : '{raw_url}'")
+            return ""
     else:
         if not parsed.scheme or not parsed.netloc:
             raise ImproperlyConfigured(
@@ -66,22 +78,43 @@ class NotificationService:
     def envoyer(cls, utilisateur, type_notif, titre, message, lien=None, contexte_email=None):
         """
         Crée la notification en base et envoie l'email correspondant.
+        Évite le double enregistrement et le double envoi lors d'une tentative ou d'un rejeu.
         """
-        # Création en DB
-        notification = Notification.objects.create(
-            utilisateur=utilisateur,
-            type=type_notif,
-            titre=titre,
-            message=message,
-            lien=lien
-        )
+        # 1. Vérification d'idempotence pour éviter les doublons
+        notification = None
+        if lien and type_notif in (Notification.Type.PAIEMENT_VALIDE, Notification.Type.CONTRAT_CREE):
+            notification = Notification.objects.filter(
+                utilisateur=utilisateur,
+                type=type_notif,
+                lien=lien
+            ).order_by("-date_creation").first()
+
+        # Si déjà créé et email déjà envoyé avec succès, on évite le double envoi
+        if notification and notification.email_envoye:
+            logger.info(f"Notification {type_notif} déjà envoyée à {utilisateur.email} pour {lien}.")
+            return notification
+
+        # Création en DB si aucune notification existante
+        if not notification:
+            notification = Notification.objects.create(
+                utilisateur=utilisateur,
+                type=type_notif,
+                titre=titre,
+                message=message,
+                lien=lien
+            )
         
         # Préparation et envoi de l'email
         if not utilisateur.email:
             return notification
             
         contexte = dict(contexte_email) if contexte_email else {}
-        raw_backend = get_public_backend_url()
+        try:
+            raw_backend = get_public_backend_url()
+        except Exception as e:
+            logger.warning(f"Impossible de déterminer BACKEND_PUBLIC_URL ({e}). Utilisation du chemin relatif.")
+            raw_backend = ""
+
         raw_frontend = str(getattr(settings, "FRONTEND_URL", "http://localhost:3000")).split(",")[0].strip().rstrip("/")
         
         # Enrichissement automatique pour les paiements / quittances si non déjà fait
@@ -116,7 +149,8 @@ class NotificationService:
                 bien = getattr(contrat, "bien", None) if contrat else None
                 contexte["contrat_titre"] = getattr(bien, "titre", "Contrat de bail") or "Contrat de bail"
             if "url_quittance" not in contexte and paiement_id:
-                contexte["url_quittance"] = f"{raw_backend}/api/paiements/{paiement_id}/quittance/"
+                route_quittance = f"/api/paiements/{paiement_id}/quittance/"
+                contexte["url_quittance"] = f"{raw_backend}{route_quittance}" if raw_backend else route_quittance
 
         nom_dest = ""
         if utilisateur:
@@ -139,9 +173,11 @@ class NotificationService:
         if "url_quittance" not in contexte and lien:
             if lien.startswith("http"):
                 contexte["url_quittance"] = lien
-            else:
+            elif raw_backend:
                 formatted_lien = lien if lien.endswith("/") else f"{lien}/"
                 contexte["url_quittance"] = f"{raw_backend}{formatted_lien}"
+            else:
+                contexte["url_quittance"] = lien
         
         template_name = cls.TEMPLATE_MAP.get(type_notif, cls.DEFAULT_TEMPLATE)
         
@@ -258,9 +294,19 @@ class NotificationService:
         else:
             contrat_titre = "Contrat de bail"
 
-        raw_backend = get_public_backend_url()
-        lien_quittance = f"/api/paiements/{paiement_id}/quittance/"
-        url_quittance = f"{raw_backend}{lien_quittance}"
+        try:
+            from django.urls import reverse
+            lien_quittance = reverse("paiement-quittance", args=[paiement_id])
+        except Exception:
+            lien_quittance = f"/api/paiements/{paiement_id}/quittance/"
+
+        try:
+            raw_backend = get_public_backend_url()
+        except Exception as e:
+            logger.warning(f"BACKEND_PUBLIC_URL indisponible: {e}")
+            raw_backend = ""
+
+        url_quittance = f"{raw_backend}{lien_quittance}" if raw_backend else lien_quittance
 
         destinataires = []
         if contrat and getattr(contrat, "locataire", None) and getattr(contrat.locataire, "user", None):
@@ -270,22 +316,25 @@ class NotificationService:
             destinataires.append(contrat.bien.proprietaire.user)
 
         for u in destinataires:
-            cls.envoyer(
-                utilisateur=u,
-                type_notif=Notification.Type.PAIEMENT_VALIDE,
-                titre=f"Paiement validé pour le contrat {contrat_titre}",
-                message=f"Le paiement de {montant_format} Ar pour {contrat_titre} a été validé.",
-                lien=lien_quittance,
-                contexte_email={
-                    "paiement": paiement,
-                    "quittance": quittance,
-                    "montant_format": montant_format,
-                    "date_paiement_format": date_paiement_format,
-                    "contrat_titre": contrat_titre,
-                    "url_quittance": url_quittance,
-                    "lien_quittance": lien_quittance,
-                }
-            )
+            try:
+                cls.envoyer(
+                    utilisateur=u,
+                    type_notif=Notification.Type.PAIEMENT_VALIDE,
+                    titre=f"Paiement validé pour le contrat {contrat_titre}",
+                    message=f"Le paiement de {montant_format} Ar pour {contrat_titre} a été validé.",
+                    lien=lien_quittance,
+                    contexte_email={
+                        "paiement": paiement,
+                        "quittance": quittance,
+                        "montant_format": montant_format,
+                        "date_paiement_format": date_paiement_format,
+                        "contrat_titre": contrat_titre,
+                        "url_quittance": url_quittance,
+                        "lien_quittance": lien_quittance,
+                    }
+                )
+            except Exception as e:
+                logger.error(f"Erreur d'envoi notification de validation à {u}: {e}", exc_info=True)
 
     @classmethod
     def notifier_nouvelle_reservation(cls, reservation):

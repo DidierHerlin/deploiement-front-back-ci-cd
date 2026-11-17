@@ -55,9 +55,26 @@ class PaiementViewSet(RoleScopedQuerySetMixin, viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def valider(self, request, pk=None):
         paiement = self.get_object()
+        
+        # Gestion idempotente en cas de nouvelle tentative / rejeu après échec réseau ou notification
         if paiement.statut == Paiement.StatutPaiement.PAYE:
-            return Response({"error": "Ce paiement est déjà validé."},
-                            status=status.HTTP_400_BAD_REQUEST)
+            # S'assurer que le fichier quittance existe bien sur le serveur
+            if not paiement.fichier_quittance or not paiement.fichier_quittance.name or not paiement.fichier_quittance.storage.exists(paiement.fichier_quittance.name):
+                try:
+                    from .utils import generate_quittance_pdf
+                    generate_quittance_pdf(paiement)
+                    paiement.refresh_from_db()
+                except Exception as e:
+                    logger.error(f"Erreur lors de la génération de quittance lors du rejeu #{paiement.pk}: {e}")
+            
+            # S'assurer que la notification est finalisée (le service gère l'anti-doublon)
+            try:
+                from notifications.services import NotificationService
+                NotificationService.notifier_paiement_valide(paiement)
+            except Exception as e:
+                logger.error(f"Erreur notification lors du rejeu #{paiement.pk}: {e}")
+            
+            return Response(PaiementSerializer(paiement).data, status=status.HTTP_200_OK)
         
         mode = request.data.get("mode_paiement")
         reference = request.data.get("reference")
@@ -73,10 +90,13 @@ class PaiementViewSet(RoleScopedQuerySetMixin, viewsets.ModelViewSet):
             for demande in paiement.demandes_paiement.filter(statut=DemandePaiement.StatutDemande.EN_ATTENTE):
                 demande.valider()
             
-        from notifications.services import NotificationService
-        NotificationService.notifier_paiement_valide(paiement)
+        try:
+            from notifications.services import NotificationService
+            NotificationService.notifier_paiement_valide(paiement)
+        except Exception as e:
+            logger.error(f"Erreur notification post-validation paiement #{paiement.pk}: {e}", exc_info=True)
 
-        return Response(PaiementSerializer(paiement).data)
+        return Response(PaiementSerializer(paiement).data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["post"])
     def refuser(self, request, pk=None):
