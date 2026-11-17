@@ -359,11 +359,12 @@ jobs:
           DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/immobilier-drf:${{ needs.backend-docker.result == 'success' && github.sha || 'latest' }}
           EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
           EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
+          BACKEND_PUBLIC_URL: ${{ secrets.BACKEND_PUBLIC_URL }}
         with:
           host: ${{ steps.resolve_ip.outputs.ec2_ip }}
           username: ubuntu
           key: ${{ secrets.AWS_EC2_SSH_KEY }}
-          envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME, AWS_EC2_IP, ENABLE_HPA, GIT_SHA, DOCKER_IMAGE, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
+          envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME, AWS_EC2_IP, ENABLE_HPA, GIT_SHA, DOCKER_IMAGE, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, BACKEND_PUBLIC_URL
           script: bash /home/ubuntu/k8s/deploy-backend.sh
 
   # ═══════════════════════════════════════════════════════════════════════════

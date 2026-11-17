@@ -141,7 +141,7 @@ class NotificationServiceTests(TestCase):
             paiement.statut = Paiement.StatutPaiement.PAYE
             paiement.save()
 
-        with self.settings(BACKEND_URL="http://13.53.227.16:8000"):
+        with self.settings(BACKEND_PUBLIC_URL="https://api.immoconnect.mg"):
             NotificationService.notifier_paiement_valide(paiement)
 
         emails_loc = [e for e in mail.outbox if rakoto_user.email in e.to]
@@ -155,7 +155,7 @@ class NotificationServiceTests(TestCase):
         self.assertIn("Date du paiement : 17 novembre 2026", email.body)
         self.assertIn("Contrat concerné : Studio de luxe", email.body)
         self.assertIn("Télécharger la quittance PDF", email.body)
-        expected_url = f"http://13.53.227.16:8000/api/paiements/{paiement.id}/quittance/"
+        expected_url = f"https://api.immoconnect.mg/api/paiements/{paiement.pk}/quittance/"
         self.assertIn(expected_url, email.body)
         self.assertIn("Cordialement,\nL’équipe Gestion Immobilière", email.body)
 
@@ -205,7 +205,7 @@ class NotificationServiceTests(TestCase):
 
         # Quittance 1 avec ID=10 associé au Paiement 1 (id != 10)
         quittance1 = Quittance(id=10, paiement=paiement1)
-        self.assertNotEqual(quittance1.id, paiement1.id)
+        self.assertNotEqual(quittance1.id, paiement1.pk)
 
         # Locataire 2
         user2 = Utilisateur.objects.create_user(
@@ -235,15 +235,15 @@ class NotificationServiceTests(TestCase):
 
         # Quittance 2 avec ID=99 associé au Paiement 2 (id != 99)
         quittance2 = Quittance(id=99, paiement=paiement2)
-        self.assertNotEqual(quittance2.id, paiement2.id)
+        self.assertNotEqual(quittance2.id, paiement2.pk)
 
-        # 1. Envoi depuis l'objet Quittance 1
+        # 1. Envoi depuis l'objet Quittance 1 - Test avec URL sans barre oblique finale
         mail.outbox.clear()
-        with self.settings(BACKEND_URL="http://13.53.227.16:8000"):
+        with self.settings(BACKEND_PUBLIC_URL="https://api.immoconnect.mg"):
             NotificationService.notifier_paiement_valide(quittance1)
 
         email1 = [e for e in mail.outbox if user1.email in e.to][0]
-        expected_url1 = f"http://13.53.227.16:8000/api/paiements/{paiement1.id}/quittance/"
+        expected_url1 = f"https://api.immoconnect.mg/api/paiements/{paiement1.pk}/quittance/"
         # L'URL doit contenir la clé primaire du paiement concerné (et non l'id de la quittance)
         self.assertIn(expected_url1, email1.body)
         self.assertNotIn(f"/api/paiements/{quittance1.id}/quittance/", email1.body)
@@ -251,18 +251,49 @@ class NotificationServiceTests(TestCase):
         self.assertIn("Montant : 300 000 Ar", email1.body)
         self.assertEqual(email1.body.count("300 000 Ar"), 1)
 
-        # 2. Envoi depuis l'objet Quittance 2
+        # 2. Envoi depuis l'objet Quittance 2 - Test avec URL avec barre oblique finale
         mail.outbox.clear()
-        with self.settings(BACKEND_URL="http://13.53.227.16:8000"):
+        with self.settings(BACKEND_PUBLIC_URL="https://api.immoconnect.mg/"):
             NotificationService.notifier_paiement_valide(quittance2)
 
         email2 = [e for e in mail.outbox if user2.email in e.to][0]
-        expected_url2 = f"http://13.53.227.16:8000/api/paiements/{paiement2.id}/quittance/"
+        expected_url2 = f"https://api.immoconnect.mg/api/paiements/{paiement2.pk}/quittance/"
+        # L'URL doit se terminer par /api/paiements/{paiement_id}/quittance/ sans double barre oblique
         self.assertIn(expected_url2, email2.body)
+        self.assertNotIn("//api/paiements/", email2.body)
         self.assertNotIn(f"/api/paiements/{quittance2.id}/quittance/", email2.body)
         self.assertIn(f'href="{expected_url2}"', email2.alternatives[0][0])
         self.assertIn("Montant : 420 000 Ar", email2.body)
         self.assertEqual(email2.body.count("420 000 Ar"), 1)
+
+    def test_backend_public_url_production_validation(self):
+        from django.core.exceptions import ImproperlyConfigured
+        from notifications.services import get_public_backend_url
+
+        # En production (DEBUG=False) :
+        # A. URL absente ou vide -> ImproperlyConfigured
+        with self.settings(DEBUG=False, BACKEND_PUBLIC_URL=""):
+            with self.assertRaises(ImproperlyConfigured) as ctx:
+                get_public_backend_url(enforce_production=True)
+            self.assertIn("BACKEND_PUBLIC_URL", str(ctx.exception))
+
+        # B. URL en clair (HTTP) au lieu de HTTPS -> ImproperlyConfigured
+        with self.settings(DEBUG=False, BACKEND_PUBLIC_URL="http://api.immoconnect.mg"):
+            with self.assertRaises(ImproperlyConfigured) as ctx:
+                get_public_backend_url(enforce_production=True)
+            self.assertIn("HTTPS", str(ctx.exception))
+
+        # C. URL invalide sans hôte -> ImproperlyConfigured
+        with self.settings(DEBUG=False, BACKEND_PUBLIC_URL="https://"):
+            with self.assertRaises(ImproperlyConfigured):
+                get_public_backend_url(enforce_production=True)
+
+        # D. URL HTTPS absolue valide (avec et sans slash final)
+        with self.settings(DEBUG=False, BACKEND_PUBLIC_URL="https://api.immoconnect.mg"):
+            self.assertEqual(get_public_backend_url(enforce_production=True), "https://api.immoconnect.mg")
+
+        with self.settings(DEBUG=False, BACKEND_PUBLIC_URL="https://api.immoconnect.mg/"):
+            self.assertEqual(get_public_backend_url(enforce_production=True), "https://api.immoconnect.mg")
 
     def test_command_echeance_proche(self):
         today = timezone.now().date()

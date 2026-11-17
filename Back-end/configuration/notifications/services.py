@@ -1,5 +1,9 @@
 import logging
+import os
+import sys
+import urllib.parse
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
@@ -7,21 +11,44 @@ from notifications.models import Notification
 
 logger = logging.getLogger(__name__)
 
-def get_public_backend_url():
+def get_public_backend_url(enforce_production=False):
     """
-    Retourne l'adresse publique du backend configurée pour l'environnement.
-    Priorité : settings.BACKEND_URL -> os.getenv('BACKEND_URL') -> adaptation de FRONTEND_URL -> fallback.
+    Retourne l'adresse publique du backend à partir du réglage Django BACKEND_PUBLIC_URL
+    (alimenté par la variable d'environnement BACKEND_PUBLIC_URL).
+    Supprime tout repli vers une adresse fixe ou un protocole non sécurisé.
+    En production (DEBUG=False hors tests ou si enforce_production=True), exige une URL HTTPS absolue avec un hôte valide.
     """
-    raw_backend = str(getattr(settings, "BACKEND_URL", "") or os.getenv("BACKEND_URL", "")).split(",")[0].strip().rstrip("/")
-    if not raw_backend:
-        raw_frontend = str(getattr(settings, "FRONTEND_URL", "")).split(",")[0].strip().rstrip("/")
-        if ":3000" in raw_frontend:
-            raw_backend = raw_frontend.replace(":3000", ":8000")
-        elif raw_frontend:
-            raw_backend = f"{raw_frontend}:8000"
-        else:
-            raw_backend = "http://13.53.227.16:8000"
-    return raw_backend
+    raw_url = str(
+        getattr(settings, "BACKEND_PUBLIC_URL", "") or os.getenv("BACKEND_PUBLIC_URL", "")
+    ).strip()
+
+    is_test = "test" in sys.argv or getattr(settings, "IS_TESTING", False)
+    is_production = enforce_production or (not getattr(settings, "DEBUG", True) and not is_test)
+
+    if not raw_url:
+        if is_production:
+            raise ImproperlyConfigured(
+                "Le réglage Django BACKEND_PUBLIC_URL est obligatoire en production et doit être une URL HTTPS absolue."
+            )
+        # Valeur par défaut pour l'environnement local de développement / test
+        raw_url = "http://localhost:8000"
+
+    parsed = urllib.parse.urlparse(raw_url)
+
+    if is_production:
+        if parsed.scheme.lower() != "https" or not parsed.netloc:
+            raise ImproperlyConfigured(
+                f"Le réglage BACKEND_PUBLIC_URL doit être une URL HTTPS absolue valide avec un hôte "
+                f"(valeur reçue : '{raw_url}')."
+            )
+    else:
+        if not parsed.scheme or not parsed.netloc:
+            raise ImproperlyConfigured(
+                f"Le réglage BACKEND_PUBLIC_URL doit être une URL absolue valide avec un hôte "
+                f"(valeur reçue : '{raw_url}')."
+            )
+
+    return raw_url.rstrip("/")
 
 
 class NotificationService:

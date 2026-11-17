@@ -787,34 +787,36 @@ class PaiementQuittanceTests(PaiementTestBase):
         self.assertNotEqual(quittance2.id, paiement2.id)
 
         mail.outbox.clear()
-        with self.settings(BACKEND_URL="http://13.53.227.16:8000"):
-            # 1. Envoi depuis Quittance 1
+        # 1. Envoi depuis Quittance 1 (URL de base sans barre oblique finale)
+        with self.settings(BACKEND_PUBLIC_URL="https://api.immoconnect.mg"):
             NotificationService.notifier_paiement_valide(quittance1)
             emails_1 = [e for e in mail.outbox if self.loc_user.email in e.to]
             self.assertEqual(len(emails_1), 1)
-            expected_link_1 = f"http://13.53.227.16:8000/api/paiements/{self.paiement.id}/quittance/"
+            expected_link_1 = f"https://api.immoconnect.mg/api/paiements/{self.paiement.pk}/quittance/"
             self.assertIn(expected_link_1, emails_1[0].body)
             self.assertNotIn(f"/api/paiements/{quittance1.id}/quittance/", emails_1[0].body)
 
-            # Vérification téléchargement PDF 1
+            # Vérification téléchargement PDF 1 via la route Django
             self.client.force_authenticate(user=self.loc_user)
-            resp1 = self.client.get(f"/api/paiements/{self.paiement.id}/quittance/")
+            resp1 = self.client.get(f"/api/paiements/{self.paiement.pk}/quittance/")
             self.assertEqual(resp1.status_code, status.HTTP_200_OK)
             self.assertEqual(resp1["Content-Type"], "application/pdf")
             self.assertIn(f"quittance-{self.paiement.pk}.pdf", resp1["Content-Disposition"])
 
-            # 2. Envoi depuis Quittance 2
-            mail.outbox.clear()
+        # 2. Envoi depuis Quittance 2 (URL de base avec barre oblique finale)
+        mail.outbox.clear()
+        with self.settings(BACKEND_PUBLIC_URL="https://api.immoconnect.mg/"):
             NotificationService.notifier_paiement_valide(quittance2)
             emails_2 = [e for e in mail.outbox if self.other_loc_user.email in e.to]
             self.assertEqual(len(emails_2), 1)
-            expected_link_2 = f"http://13.53.227.16:8000/api/paiements/{paiement2.id}/quittance/"
+            expected_link_2 = f"https://api.immoconnect.mg/api/paiements/{paiement2.pk}/quittance/"
             self.assertIn(expected_link_2, emails_2[0].body)
+            self.assertNotIn("//api/paiements/", emails_2[0].body)
             self.assertNotIn(f"/api/paiements/{quittance2.id}/quittance/", emails_2[0].body)
 
-            # Vérification téléchargement PDF 2
+            # Vérification téléchargement PDF 2 via la route Django
             self.client.force_authenticate(user=self.other_loc_user)
-            resp2 = self.client.get(f"/api/paiements/{paiement2.id}/quittance/")
+            resp2 = self.client.get(f"/api/paiements/{paiement2.pk}/quittance/")
             self.assertEqual(resp2.status_code, status.HTTP_200_OK)
             self.assertEqual(resp2["Content-Type"], "application/pdf")
             self.assertIn(f"quittance-{paiement2.pk}.pdf", resp2["Content-Disposition"])

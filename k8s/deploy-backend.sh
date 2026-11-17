@@ -17,7 +17,9 @@ sudo k3s kubectl apply -f /home/ubuntu/k8s/namespace.yaml
 # 3. Application des secrets Kubernetes depuis le manifeste k3s-secret.yaml
 echo "[INFO] Application des secrets Kubernetes..."
 which envsubst &>/dev/null || (sudo apt-get update -y && sudo apt-get install -y gettext-base)
+set +x
 envsubst < /home/ubuntu/k8s/k3s-secret.yaml | sudo k3s kubectl apply -f -
+set -x
 
 # 4. Mise à jour de l'image et déploiement backend depuis le dossier k8s
 echo "[INFO] Application du manifeste k8s backend..."
@@ -29,6 +31,14 @@ echo "[INFO] Attente du demarrage (timeout 3 min)..."
 sudo k3s kubectl rollout status deployment/backend -n immobilier --timeout=180s \
   && echo "[OK] Backend deploye avec succes !" \
   || (echo "[ERROR] ERREUR deploiement backend !" && sudo k3s kubectl describe pod -n immobilier -l app=backend && sudo k3s kubectl logs -n immobilier -l app=backend --tail=100 && exit 1)
+
+# 5b. Vérification de la transmission de BACKEND_PUBLIC_URL au conteneur (hors logs)
+echo "[INFO] Verification de la variable BACKEND_PUBLIC_URL dans le conteneur..."
+if sudo k3s kubectl exec -n immobilier deployment/backend -c backend -- sh -c '[ -n "$BACKEND_PUBLIC_URL" ]'; then
+  echo "[OK] BACKEND_PUBLIC_URL est bien transmise et active dans le conteneur Django."
+else
+  echo "[WARN] BACKEND_PUBLIC_URL non detectee dans le conteneur Django."
+fi
 
 # 6. Auto-Scaling (HPA) conditionnel
 if [ "$ENABLE_HPA" = "true" ]; then
