@@ -5,7 +5,6 @@ from .models import Utilisateur
 
 
 class EstAdmin(BasePermission):
-    """RG-01 : seul l'administrateur gère certaines actions sensibles."""
 
     def has_permission(self, request, view):
         return bool(
@@ -14,18 +13,18 @@ class EstAdmin(BasePermission):
             and request.user.role == Utilisateur.Role.ADMIN
         )
 
+#Un utilisateur ne peut modifier que son propre compte.
 
 class EstProprietaireDuCompte(BasePermission):
-    """Un utilisateur ne peut modifier que son propre compte (sauf l'admin)."""
 
     def has_object_permission(self, request, view, obj):
         if request.user.role == Utilisateur.Role.ADMIN:
             return True
         return obj == request.user
 
+#Variante pour les objets Propriétaire / Locataire possédant un attribut.
 
 class EstProprietaireDuProfil(BasePermission):
-    """Variante pour les objets Propriétaire / Locataire possédant un attribut `.user`."""
 
     def has_object_permission(self, request, view, obj):
         if request.user.role == Utilisateur.Role.ADMIN:
