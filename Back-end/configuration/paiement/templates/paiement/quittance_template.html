@@ -6,377 +6,258 @@
   <style>
     @page {
       size: a4 portrait;
-      margin: 1.8cm 1.8cm 1.8cm 1.8cm;
+      margin: 1.0cm 1.4cm 0.8cm 1.4cm;
     }
     body {
       font-family: Helvetica, Arial, sans-serif;
-      font-size: 10pt;
-      line-height: 1.5;
-      color: #1e293b;
-    }
-
-    /* En-tête */
-    .header-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 12px;
-    }
-    .brand-title {
-      font-size: 18pt;
-      font-weight: bold;
-      color: #0f172a;
-      letter-spacing: 0.5px;
-      margin: 0;
-    }
-    .brand-title span {
-      color: #2563eb;
-    }
-    .brand-subtitle {
-      font-size: 8.5pt;
-      color: #64748b;
-      margin-top: 3px;
-    }
-    .receipt-title {
-      font-size: 15pt;
-      font-weight: bold;
-      color: #1e3a8a;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin: 0 0 6px 0;
-    }
-    .badge {
-      display: inline-block;
-      background-color: #eff6ff;
-      color: #1e40af;
-      border: 1px solid #bfdbfe;
-      border-radius: 6px;
-      padding: 3px 10px;
-      font-size: 8.5pt;
-      font-weight: bold;
-    }
-
-    .divider-main {
-      border: 0;
-      border-bottom: 2px solid #2563eb;
-      margin: 14px 0 20px 0;
-    }
-
-    /* Grille des parties (Propriétaire / Locataire) */
-    .parties-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 18px;
-    }
-    .party-card {
-      background-color: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 12px 14px;
-      vertical-align: top;
-    }
-    .party-role {
-      font-size: 8pt;
-      font-weight: bold;
-      color: #2563eb;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      margin-bottom: 5px;
-    }
-    .party-name {
-      font-size: 11pt;
-      font-weight: bold;
-      color: #0f172a;
-      margin-bottom: 3px;
-    }
-    .party-info {
-      font-size: 8.5pt;
-      color: #475569;
-      line-height: 1.45;
-    }
-
-    /* Cadre d'informations de location */
-    .location-box {
-      width: 100%;
-      background-color: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-left: 4px solid #2563eb;
-      border-radius: 6px;
-      margin-bottom: 18px;
-    }
-    .location-td {
-      padding: 12px 14px;
-      vertical-align: top;
-    }
-    .section-eyebrow {
-      font-size: 8pt;
-      font-weight: bold;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 4px;
-    }
-    .location-title {
-      font-size: 10.5pt;
-      font-weight: bold;
-      color: #0f172a;
-      margin-bottom: 2px;
-    }
-    .location-detail {
-      font-size: 8.5pt;
-      color: #475569;
-    }
-
-    /* Tableau des règlements */
-    .table-details {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 18px;
-    }
-    .table-details thead th {
-      background-color: #0f172a;
-      color: #ffffff;
-      padding: 9px 12px;
-      font-size: 8.5pt;
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      border: 1px solid #0f172a;
-    }
-    .table-details tbody td {
-      padding: 11px 12px;
-      font-size: 9.5pt;
-      color: #1e293b;
-      border-bottom: 1px solid #f1f5f9;
-      border-left: 1px solid #f8fafc;
-      border-right: 1px solid #f8fafc;
-    }
-    .row-subtitle {
-      font-size: 8pt;
-      color: #64748b;
-      margin-top: 2px;
-    }
-    .total-row td {
-      background-color: #f8fafc;
-      border-top: 2px solid #cbd5e1;
-      border-bottom: 2px solid #cbd5e1;
-      padding: 12px 14px;
-    }
-    .total-label {
-      font-size: 11pt;
-      font-weight: bold;
-      color: #0f172a;
-      text-align: right;
-    }
-    .total-amount {
-      font-size: 13pt;
-      font-weight: bold;
-      color: #2563eb;
-      text-align: right;
-    }
-
-    /* Encadré confirmation de paiement */
-    .payment-box {
-      width: 100%;
-      background-color: #f0fdf4;
-      border: 1px solid #dcfce7;
-      border-left: 4px solid #10b981;
-      border-radius: 6px;
-      margin-bottom: 20px;
-    }
-    .payment-td {
-      padding: 12px 14px;
-    }
-    .payment-badge {
-      font-size: 8pt;
-      font-weight: bold;
-      color: #15803d;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      margin-bottom: 5px;
-    }
-    .payment-item {
-      font-size: 8.5pt;
-      color: #334155;
-    }
-    .payment-item strong {
-      color: #0f172a;
-    }
-
-    /* Pied de page */
-    .footer {
-      border-top: 1px solid #e2e8f0;
-      padding-top: 12px;
-      margin-top: 20px;
-    }
-    .legal-notice {
-      font-size: 8.5pt;
-      color: #475569;
-      line-height: 1.5;
-      text-align: justify;
-      margin: 0 0 14px 0;
-    }
-    .meta-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    .meta-left {
-      font-size: 8pt;
-      color: #94a3b8;
-      text-align: left;
-    }
-    .meta-right {
-      font-size: 8pt;
-      color: #94a3b8;
-      text-align: right;
+      font-size: 9pt;
+      line-height: 1.35;
+      color: #0F172A;
     }
   </style>
 </head>
 <body>
 
-  <!-- En-tête -->
-  <table class="header-table" role="presentation">
+  <!-- 1. En-tête (Header) plus équilibré -->
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 6px;">
     <tr>
-      <td style="width: 50%; vertical-align: middle;">
-        <h2 class="brand-title">Immo<span>Connect</span></h2>
-        <div class="brand-subtitle">Gestion locative &amp; immobilière numérique</div>
-      </td>
-      <td style="width: 50%; text-align: right; vertical-align: middle;">
-        <h1 class="receipt-title">Quittance de loyer</h1>
-        <div class="badge">N° {{ paiement.id|stringformat:"04d" }} &bull; {{ periode_nom }}</div>
-      </td>
-    </tr>
-  </table>
-
-  <div class="divider-main"></div>
-
-  <!-- Blocs Propriétaire / Locataire -->
-  <table class="parties-table" role="presentation">
-    <tr>
-      <td class="party-card" style="width: 48%;">
-        <div class="party-role">Propriétaire / Bailleur</div>
-        <div class="party-name">{{ proprietaire_nom }}</div>
-        <div class="party-info">
-          Email : {{ proprietaire_email|default:"Non renseigné" }}<br>
-          {% if proprietaire_tel %}Tél : {{ proprietaire_tel }}<br>{% endif %}
+      <td width="55%" valign="top" style="text-align: left;">
+        <div style="font-size: 22pt; font-weight: bold; color: #1E3A8A; line-height: 1.1;">
+          ImmoConnect
+        </div>
+        <div style="font-size: 9.5pt; color: #64748B; margin-top: 4px;">
+          Gestion locative &amp; immobilière numérique
         </div>
       </td>
-      <td style="width: 4%;"></td>
-      <td class="party-card" style="width: 48%;">
-        <div class="party-role">Locataire</div>
-        <div class="party-name">{{ locataire_nom }}</div>
-        <div class="party-info">
-          Email : {{ locataire_email|default:"Non renseigné" }}<br>
-          {% if locataire_tel %}Tél : {{ locataire_tel }}<br>{% endif %}
+      <td width="45%" valign="top" style="text-align: right;">
+        <div style="font-size: 15pt; font-weight: bold; color: #0F172A; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+          QUITTANCE DE LOYER
+        </div>
+        <div style="font-size: 9pt; color: #64748B; line-height: 1.45;">
+          Quittance N° : <strong style="color: #0F172A;">{{ numero }}</strong><br>
+          Date : <strong style="color: #0F172A;">{{ date_encaissement }}</strong><br>
+          Période : <strong style="color: #0F172A;">{{ periode }}</strong>
         </div>
       </td>
     </tr>
   </table>
 
-  <!-- Informations du bail et bien concerné -->
-  <table class="location-box" role="presentation">
+  <!-- Filet horizontal fin -->
+  <div style="border-bottom: 2px solid #E2E8F0; margin-bottom: 12px;"></div>
+
+  <!-- 2. Cartes Bailleur & Locataire côte à côte (3 colonnes : 48% | 4% vide | 48%) -->
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 12px;">
     <tr>
-      <td class="location-td" style="width: 60%;">
-        <div class="section-eyebrow">Bien concerné</div>
-        <div class="location-title">{{ bien_designation }}</div>
-        <div class="location-detail"><strong>Adresse :</strong> {{ adresse_propre }}</div>
+      <td width="48%" valign="top" style="background-color: #F8FAFC; border: 1px solid #E2E8F0; padding: 10px 12px;">
+        <div style="font-size: 8.5pt; font-weight: bold; color: #1E3A8A; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+          PROPRIÉTAIRE / BAILLEUR
+        </div>
+        <div style="font-size: 11pt; font-weight: bold; color: #0F172A; margin-bottom: 3px;">
+          {{ proprietaire_nom }}
+        </div>
+        <div style="font-size: 9.5pt; color: #475569; line-height: 1.45;">
+          <span style="color: #64748B;">Email :</span> {{ proprietaire_email|default:"Non renseigné" }}<br>
+          <span style="color: #64748B;">Téléphone :</span> {{ proprietaire_tel|default:"Non renseigné" }}
+        </div>
       </td>
-      <td class="location-td" style="width: 40%; border-left: 1px solid #f1f5f9;">
-        <div class="section-eyebrow">Dossier de location</div>
-        <div class="location-detail">Contrat : <strong>#{{ contrat.id|stringformat:"04d" }}</strong></div>
-        <div class="location-detail" style="margin-top: 3px;">Période : <strong style="color: #2563eb;">{{ periode_nom }}</strong></div>
+      <td width="4%">&nbsp;</td>
+      <td width="48%" valign="top" style="background-color: #F8FAFC; border: 1px solid #E2E8F0; padding: 10px 12px;">
+        <div style="font-size: 8.5pt; font-weight: bold; color: #1E3A8A; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+          LOCATAIRE
+        </div>
+        <div style="font-size: 11pt; font-weight: bold; color: #0F172A; margin-bottom: 3px;">
+          {{ locataire_nom }}
+        </div>
+        <div style="font-size: 9.5pt; color: #475569; line-height: 1.45;">
+          <span style="color: #64748B;">Email :</span> {{ locataire_email|default:"Non renseigné" }}<br>
+          <span style="color: #64748B;">Téléphone :</span> {{ locataire_tel|default:"Non renseigné" }}
+        </div>
       </td>
     </tr>
   </table>
 
-  <!-- Tableau des désignations et montants -->
-  <!-- role="presentation" indique que ce tableau est utilisé pour la mise en page,
-       les <th> sont donc remplacés par des <td> avec scope pour l'accessibilité WCAG2-A -->
-  <table class="table-details" role="presentation">
+  <!-- 3. Bandeau de statut du règlement apaisé -->
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 12px;">
+    <tr>
+      <td style="background-color: #ECFDF5; border: 1px solid #A7F3D0; padding: 8px 12px;">
+        <div style="font-size: 8.5pt; font-weight: bold; color: #065F46; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
+          RÈGLEMENT ENREGISTRÉ AVEC SUCCÈS
+        </div>
+        <div style="font-size: 9pt; color: #047857; line-height: 1.35;">
+          Cette quittance atteste du règlement intégral du loyer pour la période mentionnée.
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- 4. Tableau des métadonnées du dossier (5 colonnes) -->
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 12px; border: 1px solid #E2E8F0;">
     <thead>
       <tr>
-        <td style="text-align: left; width: 55%; font-weight: bold;">Désignation</td>
-        <td style="text-align: center; width: 20%; font-weight: bold;">Échéance</td>
-        <td style="text-align: right; width: 25%; font-weight: bold;">Montant</td>
+        <th width="13%" style="background-color: #F1F5F9; color: #475569; font-size: 8.5pt; font-weight: bold; text-transform: uppercase; padding: 7px 5px; border-bottom: 1px solid #E2E8F0; text-align: center;">
+          CONTRAT
+        </th>
+        <th width="25%" style="background-color: #F1F5F9; color: #475569; font-size: 8.5pt; font-weight: bold; text-transform: uppercase; padding: 7px 8px; border-bottom: 1px solid #E2E8F0; text-align: left;">
+          BIEN CONCERNÉ
+        </th>
+        <th width="22%" style="background-color: #F1F5F9; color: #475569; font-size: 8.5pt; font-weight: bold; text-transform: uppercase; padding: 7px 8px; border-bottom: 1px solid #E2E8F0; text-align: left;">
+          ADRESSE DU BIEN
+        </th>
+        <th width="20%" style="background-color: #F1F5F9; color: #475569; font-size: 8.5pt; font-weight: bold; text-transform: uppercase; padding: 7px 6px; border-bottom: 1px solid #E2E8F0; text-align: center;">
+          MODE DE RÈGLEMENT
+        </th>
+        <th width="20%" style="background-color: #F1F5F9; color: #475569; font-size: 8.5pt; font-weight: bold; text-transform: uppercase; padding: 7px 6px; border-bottom: 1px solid #E2E8F0; text-align: center;">
+          RÉF. TRANSACTION
+        </th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td>
-          <strong>Loyer mensuel et charges locatives</strong>
-          <div class="row-subtitle">Période d'occupation de {{ periode_nom }}</div>
+        <td style="background-color: #ffffff; padding: 8px 5px; font-size: 8.5pt; text-align: center; font-weight: bold; color: #1E3A8A; border-bottom: 1px solid #E2E8F0;">
+          #{{ contrat_id }}
         </td>
-        <td style="text-align: center; color: #475569;">
-          {{ date_echeance_str }}
+        <td style="background-color: #ffffff; padding: 8px 8px; font-size: 8.5pt; color: #0F172A; border-bottom: 1px solid #E2E8F0;">
+          <strong>{{ bien_titre }}</strong>
         </td>
-        <td style="text-align: right; font-weight: bold; color: #0f172a;">
-          {{ loyer_format }} Ar
+        <td style="background-color: #ffffff; padding: 8px 8px; font-size: 8.5pt; color: #475569; border-bottom: 1px solid #E2E8F0;">
+          {{ bien_adresse }}
         </td>
-      </tr>
-      {% if depot_garantie_format %}
-      <tr>
-        <td>
-          <strong>Dépôt de garantie</strong>
-          <div class="row-subtitle">Caution initiale enregistrée au contrat</div>
+        <td style="background-color: #ffffff; padding: 8px 6px; font-size: 8.5pt; text-align: center; color: #475569; border-bottom: 1px solid #E2E8F0;">
+          {{ mode_paiement }}
         </td>
-        <td style="text-align: center; color: #475569;">
-          {{ date_echeance_str }}
-        </td>
-        <td style="text-align: right; font-weight: bold; color: #0f172a;">
-          {{ depot_garantie_format }} Ar
-        </td>
-      </tr>
-      {% endif %}
-      <tr class="total-row">
-        <td colspan="2" class="total-label">
-          Total réglé
-        </td>
-        <td class="total-amount">
-          {{ montant_format }} Ar
+        <td style="background-color: #ffffff; padding: 8px 6px; font-size: 8.5pt; text-align: center; color: #475569; border-bottom: 1px solid #E2E8F0;">
+          {{ reference_transaction|default:"Non renseignée" }}
         </td>
       </tr>
     </tbody>
   </table>
 
-  <!-- Modalités et accusé de règlement -->
-  <table class="payment-box" role="presentation">
-    <tr>
-      <td class="payment-td">
-        <div class="payment-badge">Règlement enregistré avec succès</div>
-        <table style="width: 100%; border-collapse: collapse;" role="presentation">
-          <tr>
-            <td style="width: 33%;" class="payment-item">
-              Date d'encaissement :<br>
-              <strong>{{ date_paiement_str }}</strong>
-            </td>
-            <td style="width: 33%;" class="payment-item">
-              Mode de règlement :<br>
-              <strong>{{ mode_paiement_display }}</strong>
-            </td>
-            <td style="width: 34%;" class="payment-item">
-              Réf. transaction :<br>
-              <strong>{{ reference }}</strong>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-
-  <!-- Conditions et pied de page officiel -->
-  <div class="footer">
-    <p class="legal-notice">
-      Cette quittance atteste du règlement du loyer pour la période mentionnée ci-dessus. Document généré électroniquement par ImmoConnect, valant reçu officiel conformément aux conditions en vigueur.
-    </p>
-    <table class="meta-table" role="presentation">
+  <!-- 5. Tableau principal de facturation et bloc des totaux détaché -->
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 12px; border: 1px solid #E2E8F0;">
+    <thead>
       <tr>
-        <td class="meta-left">
-          ImmoConnect &bull; Gestion Locative
+        <th width="20%" style="background-color: #F1F5F9; color: #334155; font-size: 8.5pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; padding: 7px 8px; text-align: center; border-bottom: 1px solid #CBD5E1;">
+          PÉRIODE
+        </th>
+        <th width="42%" style="background-color: #F1F5F9; color: #334155; font-size: 8.5pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; padding: 7px 10px; text-align: left; border-bottom: 1px solid #CBD5E1;">
+          DÉSIGNATION
+        </th>
+        <th width="18%" style="background-color: #F1F5F9; color: #334155; font-size: 8.5pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; padding: 7px 8px; text-align: center; border-bottom: 1px solid #CBD5E1;">
+          ÉCHÉANCE
+        </th>
+        <th width="20%" style="background-color: #F1F5F9; color: #334155; font-size: 8.5pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; padding: 7px 10px; text-align: right; border-bottom: 1px solid #CBD5E1; white-space: nowrap;">
+          MONTANT
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Ligne principale : Loyer -->
+      <tr>
+        <td style="padding: 10px 8px; font-size: 8.5pt; text-align: center; color: #475569; border-bottom: 1px solid #E2E8F0;">
+          {{ periode }}
         </td>
-        <td class="meta-right">
-          Généré le {{ date_generation }}
+        <td style="padding: 10px 10px; font-size: 8.5pt; color: #0F172A; border-bottom: 1px solid #E2E8F0;">
+          <strong>Loyer mensuel et charges locatives</strong><br>
+          <span style="font-size: 8pt; color: #64748B;">Période d'occupation de {{ periode }}</span>
+        </td>
+        <td style="padding: 10px 8px; font-size: 8.5pt; text-align: center; color: #475569; border-bottom: 1px solid #E2E8F0;">
+          {{ date_echeance_str }}
+        </td>
+        <td style="padding: 10px 10px; font-size: 9pt; font-weight: bold; text-align: right; color: #0F172A; border-bottom: 1px solid #E2E8F0; white-space: nowrap;">
+          <nobr>{{ loyer_format }} Ar</nobr>
         </td>
       </tr>
-    </table>
+
+      {% if depot_garantie_format %}
+      <!-- Ligne Dépôt de garantie (si premier paiement) -->
+      <tr>
+        <td style="padding: 10px 8px; font-size: 8.5pt; text-align: center; color: #475569; border-bottom: 1px solid #E2E8F0;">
+          {{ periode }}
+        </td>
+        <td style="padding: 10px 10px; font-size: 8.5pt; color: #0F172A; border-bottom: 1px solid #E2E8F0;">
+          <strong>Dépôt de garantie</strong><br>
+          <span style="font-size: 8pt; color: #64748B;">Caution initiale enregistrée au contrat</span>
+        </td>
+        <td style="padding: 10px 8px; font-size: 8.5pt; text-align: center; color: #475569; border-bottom: 1px solid #E2E8F0;">
+          {{ date_echeance_str }}
+        </td>
+        <td style="padding: 10px 10px; font-size: 9pt; font-weight: bold; text-align: right; color: #0F172A; border-bottom: 1px solid #E2E8F0; white-space: nowrap;">
+          <nobr>{{ depot_garantie_format }} Ar</nobr>
+        </td>
+      </tr>
+      {% endif %}
+
+      <!-- Lignes d'espacement pour l'effet feuille de facturation -->
+      {% if not depot_garantie_format %}
+      <tr>
+        <td style="padding: 6px 8px; border-bottom: 1px solid #F1F5F9;">&nbsp;</td>
+        <td style="padding: 6px 10px; border-bottom: 1px solid #F1F5F9;">&nbsp;</td>
+        <td style="padding: 6px 8px; border-bottom: 1px solid #F1F5F9;">&nbsp;</td>
+        <td style="padding: 6px 10px; border-bottom: 1px solid #F1F5F9;">&nbsp;</td>
+      </tr>
+      {% endif %}
+
+      <!-- Ligne d'espacement vide avant les totaux pour détacher le bloc -->
+      <tr>
+        <td colspan="4" style="height: 10px; font-size: 1pt; line-height: 10px; border: none; background-color: #ffffff;">&nbsp;</td>
+      </tr>
+
+      <!-- Ligne Sous-total Loyer -->
+      <tr>
+        <td colspan="2" style="border: none; background-color: #ffffff;"></td>
+        <td style="padding: 5px 8px; font-size: 8.5pt; font-weight: bold; text-align: right; color: #64748B; border-bottom: 1px solid #E2E8F0;">
+          SOUS-TOTAL LOYER
+        </td>
+        <td style="padding: 5px 10px; font-size: 8.5pt; font-weight: bold; text-align: right; color: #0F172A; border-bottom: 1px solid #E2E8F0; white-space: nowrap;">
+          <nobr>{% if depot_garantie_format %}{{ loyer_format }}{% else %}{{ montant }}{% endif %} Ar</nobr>
+        </td>
+      </tr>
+
+      {% if depot_garantie_format %}
+      <tr>
+        <td colspan="2" style="border: none; background-color: #ffffff;"></td>
+        <td style="padding: 5px 8px; font-size: 8.5pt; font-weight: bold; text-align: right; color: #64748B; border-bottom: 1px solid #E2E8F0;">
+          DÉPÔT DE GARANTIE
+        </td>
+        <td style="padding: 5px 10px; font-size: 8.5pt; font-weight: bold; text-align: right; color: #0F172A; border-bottom: 1px solid #E2E8F0; white-space: nowrap;">
+          <nobr>{{ depot_garantie_format }} Ar</nobr>
+        </td>
+      </tr>
+      {% endif %}
+
+      <tr>
+        <td colspan="2" style="border: none; background-color: #ffffff;"></td>
+        <td style="padding: 5px 8px; font-size: 8.5pt; font-weight: bold; text-align: right; color: #64748B; border-bottom: 1px solid #E2E8F0;">
+          CHARGES / FRAIS
+        </td>
+        <td style="padding: 5px 10px; font-size: 8.5pt; text-align: right; color: #64748B; border-bottom: 1px solid #E2E8F0; white-space: nowrap;">
+          Inclus
+        </td>
+      </tr>
+
+      <tr>
+        <td colspan="2" style="border: none; background-color: #ffffff;"></td>
+        <td style="padding: 7px 8px; font-size: 9.5pt; font-weight: bold; text-align: right; color: #1E3A8A; background-color: #EFF6FF; border: 1px solid #BFDBFE; border-right: none;">
+          TOTAL RÉGLÉ
+        </td>
+        <td style="padding: 7px 10px; font-size: 11pt; font-weight: bold; text-align: right; color: #1E3A8A; background-color: #EFF6FF; border: 1px solid #BFDBFE; border-left: none; white-space: nowrap;">
+          <nobr>{{ montant }} Ar</nobr>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- 6. Pied de page discret et professionnel -->
+  <div style="margin-top: 14px; border-top: 1px solid #E2E8F0; padding-top: 10px; text-align: center;">
+    <div style="font-size: 9.5pt; font-weight: bold; color: #1E3A8A; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px;">
+      NOUS VOUS REMERCIONS DE VOTRE CONFIANCE.
+    </div>
+    <div style="font-size: 8.5pt; color: #64748B; line-height: 1.35; margin-bottom: 4px;">
+      Document généré électroniquement par ImmoConnect, valant reçu officiel conformément aux conditions en vigueur.
+    </div>
+    <div style="font-size: 8pt; color: #94A3B8;">
+      ImmoConnect Gestion Locative &mdash; Généré le {{ date_generation }}
+    </div>
   </div>
 
 </body>

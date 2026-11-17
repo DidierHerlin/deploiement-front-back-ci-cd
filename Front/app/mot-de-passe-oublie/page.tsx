@@ -47,7 +47,7 @@ export default function ForgotPasswordPage() {
     setIsLoading(true)
 
     try {
-      const data = await demanderCodeMdp(email)
+      const data = await demanderCodeMdp(email, { skipAuth: true })
       if (data && data.success === false) {
         throw new Error(data.error ?? data.details?.email?.[0] ?? "Impossible d'envoyer le code.")
       }
@@ -66,7 +66,7 @@ export default function ForgotPasswordPage() {
     setIsLoading(true)
 
     try {
-      const data = await verifierCodeMdp(email, code)
+      const data = await verifierCodeMdp(email, code, { skipAuth: true })
       if (data && (data.success === false || data.valid === false)) {
         throw new Error(data.error ?? data.message ?? "Code invalide ou expiré.")
       }
@@ -99,11 +99,23 @@ export default function ForgotPasswordPage() {
       const data = await reinitialiserMdp({
         email,
         code,
+        new_password: newPassword,
+        password: newPassword,
         nouveau_mot_de_passe: newPassword,
+        confirm_password: confirmPassword,
         confirmation_mot_de_passe: confirmPassword,
-      })
+      }, { skipAuth: true })
       if (data && data.success === false) {
-        throw new Error(data.error ?? data.details?.new_password?.[0] ?? "Impossible de réinitialiser le mot de passe.")
+        throw new Error(
+          data.error ??
+            data.details?.new_password?.[0] ??
+            data.details?.password?.[0] ??
+            data.details?.nouveau_mot_de_passe?.[0] ??
+            data.details?.confirm_password?.[0] ??
+            data.details?.confirmation_mot_de_passe?.[0] ??
+            data.details?.non_field_errors?.[0] ??
+            "Impossible de réinitialiser le mot de passe."
+        )
       }
       setEtape("succes")
     } catch (err: any) {

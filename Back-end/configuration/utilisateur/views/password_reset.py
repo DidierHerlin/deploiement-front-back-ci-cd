@@ -63,6 +63,10 @@ class VerifyResetCodeView(ApiResponseMixin, APIView):
                 error_msg = str(serializer.errors["non_field_errors"][0])
             elif "code" in serializer.errors and serializer.errors["code"]:
                 error_msg = str(serializer.errors["code"][0])
+            elif "token" in serializer.errors and serializer.errors["token"]:
+                error_msg = str(serializer.errors["token"][0])
+            elif "otp" in serializer.errors and serializer.errors["otp"]:
+                error_msg = str(serializer.errors["otp"][0])
             elif "email" in serializer.errors and serializer.errors["email"]:
                 error_msg = str(serializer.errors["email"][0])
             return self.error_response(
@@ -89,8 +93,20 @@ class ResetPasswordView(ApiResponseMixin, APIView):
                 error_msg = str(serializer.errors["new_password"][0])
             elif "password" in serializer.errors and serializer.errors["password"]:
                 error_msg = str(serializer.errors["password"][0])
+            elif "nouveau_mot_de_passe" in serializer.errors and serializer.errors["nouveau_mot_de_passe"]:
+                error_msg = str(serializer.errors["nouveau_mot_de_passe"][0])
+            elif "confirm_password" in serializer.errors and serializer.errors["confirm_password"]:
+                error_msg = str(serializer.errors["confirm_password"][0])
+            elif "confirmation_mot_de_passe" in serializer.errors and serializer.errors["confirmation_mot_de_passe"]:
+                error_msg = str(serializer.errors["confirmation_mot_de_passe"][0])
+            elif "mot_de_passe_confirmation" in serializer.errors and serializer.errors["mot_de_passe_confirmation"]:
+                error_msg = str(serializer.errors["mot_de_passe_confirmation"][0])
             elif "code" in serializer.errors and serializer.errors["code"]:
                 error_msg = str(serializer.errors["code"][0])
+            elif "token" in serializer.errors and serializer.errors["token"]:
+                error_msg = str(serializer.errors["token"][0])
+            elif "otp" in serializer.errors and serializer.errors["otp"]:
+                error_msg = str(serializer.errors["otp"][0])
             elif "email" in serializer.errors and serializer.errors["email"]:
                 error_msg = str(serializer.errors["email"][0])
             return self.error_response(error_msg, details=serializer.errors)

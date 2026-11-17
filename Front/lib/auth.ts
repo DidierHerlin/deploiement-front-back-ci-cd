@@ -3,6 +3,11 @@ import { getApiUrl } from "./config"
 const AUTH_COOKIE = "auth"
 const AUTH_MAX_AGE_SECONDES = 60 * 60 * 24 * 14
 
+export interface AuthRequestOptions extends RequestInit {
+  skipAuth?: boolean
+  requiresAuth?: boolean
+}
+
 
 //Stockage des tokens JWT 
 export function sauvegarderTokens(access: string, refresh: string) {

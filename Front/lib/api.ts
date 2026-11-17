@@ -16,6 +16,29 @@ export function invalidateCache() {
 export * from "../types"
 export { fetchAPI, fetchAPI as apiFetch }
 
+export interface ApiOptions extends RequestInit {
+  skipAuth?: boolean
+  requiresAuth?: boolean
+}
+
+export type ApiFetchOptions = ApiOptions
+
+export function isPublicAuthRoute(path: string): boolean {
+  const cleanPath = path.split("?")[0].toLowerCase()
+  if (cleanPath.includes("changer-mot-de-passe")) {
+    return false
+  }
+  return (
+    cleanPath.startsWith("/auth/") ||
+    cleanPath.startsWith("/mot-de-passe/") ||
+    cleanPath.includes("/mot-de-passe/") ||
+    cleanPath.includes("login") ||
+    cleanPath.includes("register") ||
+    cleanPath.includes("signup") ||
+    cleanPath.includes("reinitialiser")
+  )
+}
+
 export interface Notification {
   id: number;
   utilisateur: number;
@@ -66,9 +89,15 @@ function gererExpirationSession() {
 
 async function fetchAPI<T>(
   path: string,
-  options: RequestInit = {}
+  options: ApiOptions = {}
 ): Promise<T> {
-  let token = getAccessToken()
+  const isPublic = isPublicAuthRoute(path)
+  const skipAuth =
+    options.skipAuth === true ||
+    options.requiresAuth === false ||
+    (options.skipAuth !== false && options.requiresAuth !== true && isPublic)
+
+  let token: string | null = null
   const method = (options.method || 'GET').toUpperCase()
   if (method === 'GET') {
     const cacheKey = getCacheKey(path, options)
@@ -78,26 +107,35 @@ async function fetchAPI<T>(
     }
   }
 
-  if (!path.startsWith("/auth/") && !path.includes("login") && !path.includes("register")) {
+  if (!skipAuth) {
+    token = getAccessToken()
     if (!isTokenValid(token)) {
       const refresh = getRefreshToken()
       if (!isTokenValid(refresh)) {
         gererExpirationSession()
-        throw new Error("Session expirée veuillez vous reconnecter.")
+        throw new Error("Votre session a expiré. Veuillez vous reconnecter.")
       }
       token = await rafraichirToken()
       if (!token) {
         gererExpirationSession()
-        throw new Error("Session expirée veuillez vous reconnecter.")
+        throw new Error("Votre session a expiré. Veuillez vous reconnecter.")
       }
     }
   }
 
-  const buildHeaders = (t: string | null): HeadersInit => ({
-    "Content-Type": "application/json",
-    ...(t ? { Authorization: `Bearer ${t}` } : {}),
-    ...((options.headers as Record<string, string>) ?? {}),
-  })
+  const buildHeaders = (t: string | null): HeadersInit => {
+    const customHeaders = ((options.headers as Record<string, string>) ?? {})
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      ...customHeaders,
+    }
+    if (!skipAuth && t) {
+      headers["Authorization"] = `Bearer ${t}`
+    } else if (skipAuth && headers["Authorization"]) {
+      delete headers["Authorization"]
+    }
+    return headers
+  }
 
   const TIMEOUT_MS = 30_000  
   const MAX_RETRIES = 1     
@@ -123,18 +161,18 @@ async function fetchAPI<T>(
   let lastError: any = null
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
-      let res = await doFetch(token)
-      if (res.status === 401) {
+      let res = await doFetch(skipAuth ? null : token)
+      if (res.status === 401 && !skipAuth) {
         token = await rafraichirToken()
         if (!token) {
           gererExpirationSession()
-          throw new Error("Session expirée veuillez vous reconnecter.")
+          throw new Error("Votre session a expiré. Veuillez vous reconnecter.")
         }
         res = await doFetch(token)
 
         if (res.status === 401) {
           gererExpirationSession()
-          throw new Error("Session expirée veuillez vous reconnecter.")
+          throw new Error("Votre session a expiré. Veuillez vous reconnecter.")
         }
       }
 
@@ -183,6 +221,7 @@ async function fetchAPI<T>(
                else if (path.includes('terminer')) msg = "Contrat terminé"
                else if (path.includes('finaliser_vente')) msg = "Vente finalisée"
                else if (path.includes('repondre')) msg = "Réponse envoyée"
+               else if (isPublic || skipAuth) return
                else msg = "Ajout effectué avec succès"
              } else if (method === 'PATCH' || method === 'PUT') {
                msg = "Mise à jour effectuée avec succès"
@@ -865,46 +904,93 @@ export async function getReportingStats(): Promise<any> {
   return res;
 }
 
-export async function demanderCodeMdp(email: string): Promise<any> {
+export async function demanderCodeMdp(email: string, options: ApiOptions = {}): Promise<any> {
   return await fetchAPI<any>("/mot-de-passe/demande/", {
+    ...options,
     method: "POST",
     body: JSON.stringify({ email }),
+    skipAuth: true,
   })
 }
 
-export async function verifierCodeMdp(email: string, code: string): Promise<any> {
+export async function verifierCodeMdp(email: string, code: string, options: ApiOptions = {}): Promise<any> {
+  const bodyData = {
+    email,
+    code,
+    token: code,
+    otp: code,
+  }
   try {
     return await fetchAPI<any>("/mot-de-passe/verifier-code/", {
+      ...options,
       method: "POST",
-      body: JSON.stringify({ email, code }),
+      body: JSON.stringify(bodyData),
+      skipAuth: true,
     })
   } catch (err: any) {
-    if (err?.message?.includes("404")) {
+    if (err?.message?.includes("404") || err?.status === 404) {
       return await fetchAPI<any>("/mot-de-passe/verifier/", {
+        ...options,
         method: "POST",
-        body: JSON.stringify({ email, code }),
+        body: JSON.stringify(bodyData),
+        skipAuth: true,
       })
     }
     throw err
   }
 }
 
-export async function reinitialiserMdp(payload: {
-  email: string
-  code: string
-  nouveau_mot_de_passe: string
-  confirmation_mot_de_passe: string
-}): Promise<any> {
+export async function reinitialiserMdp(
+  payload: {
+    email: string
+    code?: string
+    token?: string
+    otp?: string
+    nouveau_mot_de_passe?: string
+    new_password?: string
+    password?: string
+    confirmation_mot_de_passe?: string
+    confirm_password?: string
+    mot_de_passe_confirmation?: string
+  },
+  options: ApiOptions = {}
+): Promise<any> {
+  const codeVal = payload.code || payload.token || payload.otp || ""
+  const pwd = payload.new_password || payload.nouveau_mot_de_passe || payload.password || ""
+  const confirmPwd =
+    payload.confirm_password ||
+    payload.confirmation_mot_de_passe ||
+    payload.mot_de_passe_confirmation ||
+    pwd
+
+  const bodyData = {
+    email: payload.email,
+    code: codeVal,
+    token: codeVal,
+    otp: codeVal,
+    new_password: pwd,
+    password: pwd,
+    nouveau_mot_de_passe: pwd,
+    confirm_password: confirmPwd,
+    confirmation_mot_de_passe: confirmPwd,
+    mot_de_passe_confirmation: confirmPwd,
+    ...payload,
+  }
+
   try {
     return await fetchAPI<any>("/mot-de-passe/reinitialiser/", {
+      ...options,
       method: "POST",
-      body: JSON.stringify(payload),
+      body: JSON.stringify(bodyData),
+      skipAuth: true,
     })
   } catch (err: any) {
-    if (err?.message?.includes("404")) {
+    if (err?.message?.includes("404") || err?.status === 404) {
       return await fetchAPI<any>("/mot-de-passe/confirmer/", {
+        ...options,
         method: "POST",
-        body: JSON.stringify(payload),
+        body: JSON.stringify(bodyData),
+        skipAuth: true,
       })
     }
     throw err

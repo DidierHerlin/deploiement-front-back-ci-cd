@@ -87,16 +87,21 @@ def generate_quittance_pdf(paiement):
 
     # Coordonnées des parties
     locataire_user = getattr(locataire, 'user', None)
-    locataire_nom = locataire_user.get_full_name() if locataire_user else "Locataire"
+    locataire_nom = (locataire_user.get_full_name() or getattr(locataire_user, 'username', '') or getattr(locataire_user, 'email', '') or "Locataire").strip() if locataire_user else "Locataire"
     locataire_email = locataire_user.email if locataire_user else ""
     locataire_tel = getattr(locataire_user, 'telephone', '') or getattr(locataire, 'contact', '') or ''
 
     proprietaire_user = getattr(proprietaire, 'user', None)
-    proprietaire_nom = proprietaire_user.get_full_name() if proprietaire_user else "Propriétaire"
+    proprietaire_nom = (proprietaire_user.get_full_name() or getattr(proprietaire_user, 'username', '') or getattr(proprietaire_user, 'email', '') or "Propriétaire").strip() if proprietaire_user else "Propriétaire"
     proprietaire_email = proprietaire_user.email if proprietaire_user else ""
     proprietaire_tel = getattr(proprietaire_user, 'telephone', '') or getattr(proprietaire, 'contact', '') or ''
 
     mode_paiement_display = paiement.get_mode_paiement_display() if hasattr(paiement, 'get_mode_paiement_display') else "Mobile Money"
+    bien_titre = titre_bien or (bien.get_type_display() if hasattr(bien, 'get_type_display') else "") or "Bien immobilier"
+    reference_transaction = paiement.reference or "Non renseignée"
+
+    numero = f"{paiement.id:04d}" if hasattr(paiement, 'id') and paiement.id else "0001"
+    contrat_id = f"{contrat.id:04d}" if hasattr(contrat, 'id') and contrat.id else "0001"
 
     # 2. Construire le contexte enrichi pour le template
     context = {
@@ -111,17 +116,28 @@ def generate_quittance_pdf(paiement):
         'proprietaire_email': proprietaire_email,
         'proprietaire_tel': proprietaire_tel,
         'bien': bien,
+        'bien_titre': bien_titre,
+        'bien_adresse': adresse_propre,
         'bien_designation': bien_designation,
         'adresse_propre': adresse_propre,
+        'numero': numero,
+        'periode': periode_nom,
         'periode_nom': periode_nom,
+        'date_encaissement': date_paiement_str,
         'date_echeance_str': date_echeance_str,
         'date_paiement_str': date_paiement_str,
         'date_generation': date_generation,
+        'contrat_id': contrat_id,
+        'mode_paiement': mode_paiement_display,
         'mode_paiement_display': mode_paiement_display,
-        'reference': paiement.reference or "Non renseignée",
+        'reference_transaction': reference_transaction,
+        'reference': reference_transaction,
         'loyer_format': formater_montant_ar(loyer_effectif),
         'depot_garantie_format': formater_montant_ar(depot_garantie) if depot_garantie else None,
-        'montant_format': formater_montant_ar(total)
+        'montant': formater_montant_ar(total),
+        'montant_format': formater_montant_ar(total),
+        'sous_total_loyer': formater_montant_ar(loyer_effectif),
+        'total_regle': formater_montant_ar(total)
     }
 
     # 3. Rendre le template HTML

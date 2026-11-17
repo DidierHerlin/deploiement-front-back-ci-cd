@@ -357,6 +357,7 @@ class AuthRegistrationCoverageTests(APITestCase):
 class PasswordResetTests(APITestCase):
 
     def setUp(self):
+        cache.clear()
         self.user = Utilisateur.objects.create_user(email="testreset@t.com", password="oldpassword")
 
     def test_request_reset_code(self):
@@ -406,6 +407,90 @@ class PasswordResetTests(APITestCase):
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password("NewSecurePassword123!"))
         self.assertIsNone(self.user.reset_token)
+
+    def test_password_reset_with_invalid_or_expired_auth_header(self):
+        """Vérifie que les endpoints de réinitialisation acceptent les requêtes même avec un token expiré/invalide dans le header."""
+        headers = {"HTTP_AUTHORIZATION": "Bearer invalid_or_expired_jwt_token_12345"}
+
+        # 1. Demande de code
+        url_req = reverse('mdp-demande')
+        resp_req = self.client.post(url_req, {"email": "testreset@t.com"}, **headers)
+        self.assertEqual(resp_req.status_code, status.HTTP_200_OK)
+
+        self.user.refresh_from_db()
+        token = self.user.reset_token
+        self.assertIsNotNone(token)
+
+        # 2. Vérification de code
+        url_verify = reverse('mdp-verifier-code')
+        resp_verify = self.client.post(url_verify, {"email": "testreset@t.com", "code": token}, **headers)
+        self.assertEqual(resp_verify.status_code, status.HTTP_200_OK)
+        self.assertTrue(resp_verify.data.get("valid"))
+
+        # 3. Réinitialisation
+        url_reset = reverse('mdp-reinitialiser')
+        resp_reset = self.client.post(url_reset, {
+            "email": "testreset@t.com",
+            "code": token,
+            "new_password": "AnotherSecurePassword123!"
+        }, **headers)
+        self.assertEqual(resp_reset.status_code, status.HTTP_200_OK)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("AnotherSecurePassword123!"))
+
+    def test_confirm_reset_with_french_keys(self):
+        """Vérifie que la réinitialisation fonctionne avec 'nouveau_mot_de_passe' et 'confirmation_mot_de_passe'."""
+        self.user.reset_token = "123456"
+        self.user.reset_token_expiration = timezone.now() + timedelta(minutes=15)
+        self.user.save()
+        url = reverse('mdp-reinitialiser')
+        response = self.client.post(url, {
+            "email": "testreset@t.com",
+            "code": "123456",
+            "nouveau_mot_de_passe": "Test@2026/**..",
+            "confirmation_mot_de_passe": "Test@2026/**.."
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("Test@2026/**.."))
+        self.assertIsNone(self.user.reset_token)
+
+    def test_confirm_reset_with_token_and_otp_aliases(self):
+        """Vérifie que 'token' ou 'otp' est accepté à la place de 'code'."""
+        self.user.reset_token = "654321"
+        self.user.reset_token_expiration = timezone.now() + timedelta(minutes=15)
+        self.user.save()
+        url_verify = reverse('mdp-verifier-code')
+        resp_verify = self.client.post(url_verify, {
+            "email": "testreset@t.com",
+            "token": "654321"
+        })
+        self.assertEqual(resp_verify.status_code, status.HTTP_200_OK)
+
+        url_reset = reverse('mdp-reinitialiser')
+        resp_reset = self.client.post(url_reset, {
+            "email": "testreset@t.com",
+            "otp": "654321",
+            "new_password": "NewSecurePassword123!"
+        })
+        self.assertEqual(resp_reset.status_code, status.HTTP_200_OK)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("NewSecurePassword123!"))
+
+    def test_confirm_reset_mismatched_passwords(self):
+        """Vérifie le rejet quand la confirmation ne correspond pas au mot de passe."""
+        self.user.reset_token = "123456"
+        self.user.reset_token_expiration = timezone.now() + timedelta(minutes=15)
+        self.user.save()
+        url = reverse('mdp-reinitialiser')
+        response = self.client.post(url, {
+            "email": "testreset@t.com",
+            "code": "123456",
+            "new_password": "Test@2026/**..",
+            "confirm_password": "DifferentPassword123!"
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("confirm_password", response.data.get("details", {}))
 
 
 class PasswordResetCoverageTests(APITestCase):
