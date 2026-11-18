@@ -215,18 +215,6 @@ CSRF_TRUSTED_ORIGINS = [origin.rstrip("/") for origin in _raw_csrf_origins if or
 
 CORS_PREFLIGHT_MAX_AGE = config("CORS_PREFLIGHT_MAX_AGE", default=86400, cast=int)
 
-# Configuration SSL derrière Reverse Proxy Ingress (Traefik / Nginx)
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-USE_X_FORWARDED_HOST = True
-USE_X_FORWARDED_PORT = True
-
-# Sécurité des cookies de session et CSRF en HTTPS (hors mode test)
-if not DEBUG and not any(cmd in sys.argv for cmd in ("test", "pytest")):
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    CSRF_COOKIE_SAMESITE = "Lax"
-    SESSION_COOKIE_SAMESITE = "Lax"
-
 
 LANGUAGE_CODE = "fr-fr"
 TIME_ZONE = config("TIME_ZONE", default="Indian/Antananarivo")

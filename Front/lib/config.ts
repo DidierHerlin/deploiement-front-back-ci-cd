@@ -15,11 +15,7 @@ export function getApiUrl(): string {
   } else if (process.env.NEXT_PUBLIC_API_URL) {
     url = process.env.NEXT_PUBLIC_API_URL
   } else if (typeof window !== "undefined" && window.location?.hostname) {
-    if (window.location.hostname.includes("gestion-immobilier.duckdns.org")) {
-      url = "https://api-gestion-immobilier.duckdns.org/api"
-    } else {
-      url = `http://${window.location.hostname}:8000/api`
-    }
+    url = `http://${window.location.hostname}:8000/api`
   } else {
     url = "http://localhost:8000/api"
   }

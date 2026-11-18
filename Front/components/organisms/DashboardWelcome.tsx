@@ -15,7 +15,7 @@ export function DashboardWelcome({ user, setShowProfile }: DashboardWelcomeProps
   return (
     <div className="welcome-row">
       <div>
-        <h1>{t("dashboard.locataire.welcome", "Bonjour")} {fullName} </h1>
+        <h1>{t("dashboard.locataire.welcome", "Bonjour")} {fullName} 👋</h1>
         <p className="subtitle">{t("dashboard.locataire.welcome_desc", "Bienvenue sur votre espace locataire. Retrouvez ici votre bail, vos loyers et vos quittances.")}</p>
       </div>
       <button className="outline-button" onClick={() => setShowProfile(true)}>

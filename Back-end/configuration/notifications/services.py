@@ -12,6 +12,12 @@ from notifications.models import Notification
 logger = logging.getLogger(__name__)
 
 def get_public_backend_url(enforce_production=False):
+    """
+    Retourne l'adresse publique du backend à partir du réglage Django BACKEND_PUBLIC_URL
+    (alimenté par la variable d'environnement BACKEND_PUBLIC_URL).
+    Supprime tout repli vers une adresse fixe ou un protocole non sécurisé.
+    En production (DEBUG=False hors tests ou si enforce_production=True), exige une URL HTTPS absolue avec un hôte valide.
+    """
     raw_url = str(
         getattr(settings, "BACKEND_PUBLIC_URL", "") or os.getenv("BACKEND_PUBLIC_URL", "")
     ).strip()
