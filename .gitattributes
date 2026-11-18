@@ -1,0 +1,4 @@
+# Normaliser les fins de ligne pour les scripts shell et YAML
+*.sh text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf

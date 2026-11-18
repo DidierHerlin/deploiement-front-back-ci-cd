@@ -62,11 +62,15 @@ jobs:
               - 'k8s/k3s-secret.yaml'
               - 'k8s/namespace.yaml'
               - 'k8s/hpa.yaml'
+              - 'k8s/ingress.yaml'
+              - 'k8s/cluster-issuer.yaml'
             frontend_code:
               - 'Front/**'
             frontend_k8s:
               - 'k8s/frontend.yaml'
               - 'k8s/deploy-frontend.sh'
+              - 'k8s/ingress.yaml'
+              - 'k8s/cluster-issuer.yaml'
 
       - name: Resolve targets
         id: resolve
@@ -450,7 +454,7 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:${{ github.sha }}
           build-args: |
-            NEXT_PUBLIC_API_URL=http://${{ steps.resolve_ip.outputs.ec2_ip }}:8000/api
+            NEXT_PUBLIC_API_URL=https://api-gestion-immobilier.duckdns.org/api
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 
