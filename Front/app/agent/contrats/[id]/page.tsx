@@ -92,7 +92,7 @@ export default function ContratDetailPage({ params }: { params: Promise<{ id: st
               <div className="agent-detail-label"><Calendar size={15} /> Dates importantes</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13.5 }}>
                 <span><b>Créé le :</b> {formatDateFR(contrat.date_creation)}</span>
-                <span><b>Début :</b> {contrat.date_debut ? formatDateFR(contrat.date_debut) : '—'}</span>
+                <span><b>{isLocation ? 'Début :' : "Date d'achat :"}</b> {contrat.date_debut ? formatDateFR(contrat.date_debut) : '—'}</span>
                 {isLocation && (
                   <span><b>Fin :</b> {contrat.date_fin ? formatDateFR(contrat.date_fin) : 'Indéterminée'}</span>
                 )}

@@ -20,11 +20,43 @@ export type ContratFormProps = {
   onClose?: () => void
 }
 
+/**
+ * Retourne la date locale d'aujourd'hui au format YYYY-MM-DD
+ * en préservant le jour local sans décalage dû au fuseau horaire UTC.
+ */
+export function getLocalTodayDateString(d: Date = new Date()): string {
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+/**
+ * Normalise une date saisie pour l'API :
+ * - Chaîne vide / null / undefined -> null
+ * - Format strict YYYY-MM-DD -> conservé tel quel (aucun décalage)
+ * - Format ISO datetime (ex: 2026-11-20T...) -> extraction du préfixe YYYY-MM-DD
+ * - Valeur invalide quelconque -> conservée telle quelle pour validation backend
+ */
+export function normalizeDateInput(val: string | null | undefined): string | null {
+  if (val === null || val === undefined) return null
+  const trimmed = typeof val === 'string' ? val.trim() : String(val).trim()
+  if (!trimmed) return null
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return trimmed
+  }
+  const isoMatch = trimmed.match(/^(\d{4}-\d{2}-\d{2})T/)
+  if (isoMatch) {
+    return isoMatch[1]
+  }
+  return trimmed
+}
+
 const emptyForm: CreerContratPayload = {
   bien: 0,
   locataire: 0,
   type_contrat: "LOCATION",
-  date_debut: new Date().toISOString().split('T')[0],
+  date_debut: getLocalTodayDateString(),
   date_fin: "",
   loyer: "",
   depot_garantie: "",
@@ -43,7 +75,7 @@ export function ContratForm(props: ContratFormProps) {
       type_contrat: 'LOCATION',
       bien: '',
       locataire: '',
-      date_debut: '',
+      date_debut: getLocalTodayDateString(),
       date_fin: '',
       loyer: '',
       depot_garantie: '',
@@ -93,7 +125,23 @@ export function ContratForm(props: ContratFormProps) {
       setLoading(true)
       setError('')
       try {
-        await (onSubmit as any)(formData)
+        const payload: any = {
+          bien: Number(formData.bien),
+          locataire: Number(formData.locataire),
+          type_contrat: formData.type_contrat,
+        }
+        if (formData.type_contrat === 'LOCATION') {
+          payload.date_debut = normalizeDateInput(formData.date_debut)
+          payload.date_fin = normalizeDateInput(formData.date_fin)
+          payload.loyer = formData.loyer
+          payload.depot_garantie = formData.depot_garantie
+        } else {
+          payload.date_debut = normalizeDateInput(formData.date_debut)
+          payload.date_fin = null
+          payload.prix = formData.prix
+          payload.type_paiement_achat = formData.type_paiement_achat
+        }
+        await (onSubmit as any)(payload)
         onClose()
       } catch (err: any) {
         setError(err.message || t("forms.error", 'Erreur lors de l\'enregistrement'))
@@ -256,33 +304,50 @@ export function ContratForm(props: ContratFormProps) {
                   </div>
                 </>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                      {t("forms.sale_price", "Prix de vente *")}
-                    </label>
-                    <input 
-                      type="number" 
-                      step="0.01" 
-                      required 
-                      value={formData.prix} 
-                      onChange={e => setFormData({ ...formData, prix: e.target.value })} 
-                      className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                    />
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        {t("forms.sale_price", "Prix de vente *")}
+                      </label>
+                      <input 
+                        type="number" 
+                        step="0.01" 
+                        required 
+                        value={formData.prix} 
+                        onChange={e => setFormData({ ...formData, prix: e.target.value })} 
+                        className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        {t("admin.contrats.payment_mode_label", "Modalité de paiement *")}
+                      </label>
+                      <select 
+                        required 
+                        value={formData.type_paiement_achat} 
+                        onChange={e => setFormData({ ...formData, type_paiement_achat: e.target.value })}
+                        className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      >
+                        <option value="TOTALITE">{t("admin.contrats.payment_full", "Comptant (100%)")}</option>
+                        <option value="PARTIEL">{t("admin.contrats.payment_installment", "Échelonné (50% puis mensualités)")}</option>
+                      </select>
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                      {t("admin.contrats.payment_mode_label", "Modalité de paiement *")}
-                    </label>
-                    <select 
-                      required 
-                      value={formData.type_paiement_achat} 
-                      onChange={e => setFormData({ ...formData, type_paiement_achat: e.target.value })}
-                      className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                    >
-                      <option value="TOTALITE">{t("admin.contrats.payment_full", "Comptant (100%)")}</option>
-                      <option value="PARTIEL">{t("admin.contrats.payment_installment", "Échelonné (50% puis mensualités)")}</option>
-                    </select>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        Date d'achat *
+                      </label>
+                      <input 
+                        type="date" 
+                        required 
+                        value={formData.date_debut} 
+                        onChange={e => setFormData({ ...formData, date_debut: e.target.value })} 
+                        className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      />
+                    </div>
                   </div>
                 </div>
               )}
@@ -379,7 +444,23 @@ export function ContratForm(props: ContratFormProps) {
 
   const handleSubmitAgent = (e: React.FormEvent) => {
     e.preventDefault()
-    ;(onSubmit as any)(form)
+    const payload: CreerContratPayload = {
+      bien: Number(form.bien),
+      locataire: Number(form.locataire),
+      type_contrat: form.type_contrat,
+    }
+    if (form.type_contrat === 'LOCATION') {
+      payload.date_debut = normalizeDateInput(form.date_debut)
+      payload.date_fin = normalizeDateInput(form.date_fin)
+      payload.loyer = form.loyer
+      payload.depot_garantie = form.depot_garantie
+    } else {
+      payload.date_debut = normalizeDateInput(form.date_debut)
+      payload.date_fin = null
+      payload.prix = form.prix
+      payload.type_paiement_achat = form.type_paiement_achat
+    }
+    ;(onSubmit as any)(payload)
   }
 
   if (loadingContext) {
@@ -437,7 +518,7 @@ export function ContratForm(props: ContratFormProps) {
           </div>
 
           <div className="form-group">
-            <label>Date de début *</label>
+            <label>{form.type_contrat === 'ACHAT' ? "Date d'achat *" : "Date de début *"}</label>
             <input 
               type="date" 
               value={form.date_debut || ''} 

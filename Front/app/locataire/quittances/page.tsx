@@ -49,6 +49,7 @@ export default function LocataireQuittancesPage() {
             paiements={paiements}
             contrats={contrats}
             loading={loadingPaiements || loadingContrats}
+            currentUser={user}
           />
         </div>
       </main>

@@ -1711,5 +1711,211 @@ class MontantTotalEncaisseTestCase(APITestCase):
         self.assertEqual(res_apres.data["total_encaisse"], 100_000.0)
 
 
+class AchatsPaiementTests(APITestCase):
+    """Tests spécifiques pour le traitement des achats immobiliers :
+    - Échelonné (50 % puis 5 x 10 %)
+    - Comptant (100 %)
+    - Reçu de paiement d'achat vs Quittance de loyer
+    - Dates d'achat et téléchargement
+    """
+
+    def setUp(self):
+        self.user_admin = _make_user("admin.achats@example.com", "ADMIN")
+        self.user_proprio = _make_user("vendeur.achats@example.com", "PROPRIETAIRE")
+        self.user_acheteur = _make_user("acheteur.achats@example.com", "LOCATAIRE")
+
+        self.proprio = Proprietaire.objects.create(user=self.user_proprio)
+        self.locataire = Locataire.objects.create(user=self.user_acheteur)
+
+        self.bien_vente = Bien.objects.create(
+            proprietaire=self.proprio,
+            titre="Villa Vente Test",
+            type=Bien.TypeBien.MAISON,
+            mode_transaction=Bien.ModeTransaction.VENTE,
+            adresse="10 Rue de la Paix, Antananarivo",
+            surface=120,
+            nombre_pieces=4,
+            prix=Decimal("60000000.00"),
+            statut=Bien.StatutBien.DISPONIBLE,
+        )
+
+        self.bien_comptant = Bien.objects.create(
+            proprietaire=self.proprio,
+            titre="Appartement Comptant Test",
+            type=Bien.TypeBien.APPARTEMENT,
+            mode_transaction=Bien.ModeTransaction.VENTE,
+            adresse="20 Rue Royale, Antananarivo",
+            surface=65,
+            nombre_pieces=2,
+            prix=Decimal("50000000.00"),
+            statut=Bien.StatutBien.DISPONIBLE,
+        )
+
+    def test_achat_echelonne_validation_tranches_et_recu_pdf(self):
+        """Test achat échelonné : 6 tranches (50% puis 5x10%).
+        Validation tranche 1 : les 5 autres restent EN_ATTENTE.
+        Validation tranche 2 : cumul actualisé.
+        Vérification du reçu PDF avec montants en Ariary.
+        """
+        import pypdf
+
+        contrat = Contrat.objects.create(
+            bien=self.bien_vente,
+            locataire=self.locataire,
+            type_contrat=Contrat.TypeContrat.ACHAT,
+            type_paiement_achat=Contrat.TypePaiementAchat.PARTIEL,
+            prix=Decimal("60000000.00"),
+            date_debut=date(2026, 11, 20),
+            statut=Contrat.StatutContrat.ACTIF,
+        )
+
+        paiements = list(Paiement.objects.filter(contrat=contrat).order_by("num_echeance"))
+        self.assertEqual(len(paiements), 6)
+        self.assertEqual(paiements[0].montant, Decimal("30000000.00"))
+        self.assertEqual(paiements[0].date_echeance, date(2026, 11, 20))
+        for p in paiements[1:]:
+            self.assertEqual(p.montant, Decimal("6000000.00"))
+            self.assertEqual(p.statut, Paiement.StatutPaiement.EN_ATTENTE)
+
+        # 1. Validation de la première tranche (50 %)
+        p1 = paiements[0]
+        p1.valider_paiement()
+
+        contrat.refresh_from_db()
+        self.bien_vente.refresh_from_db()
+        self.assertEqual(contrat.statut, Contrat.StatutContrat.ACTIF)
+        self.assertEqual(self.bien_vente.statut, Bien.StatutBien.RESERVE)
+
+        # Vérifier que les 5 autres échéances restent EN_ATTENTE
+        autres_echeances = list(Paiement.objects.filter(contrat=contrat).exclude(id=p1.id).order_by("num_echeance"))
+        self.assertEqual(len(autres_echeances), 5)
+        for p in autres_echeances:
+            self.assertEqual(p.statut, Paiement.StatutPaiement.EN_ATTENTE)
+            self.assertEqual(p.montant, Decimal("6000000.00"))
+
+        # Vérifier le PDF généré pour la tranche 1
+        p1.refresh_from_db()
+        self.assertTrue(bool(p1.fichier_quittance))
+        reader = pypdf.PdfReader(p1.fichier_quittance.path)
+        texte_p1 = "".join([page.extract_text() for page in reader.pages])
+
+        self.assertIn("REÇU DE PAIEMENT D'ACHAT", texte_p1)
+        self.assertIn("VENDEUR", texte_p1)
+        self.assertIn("ACHETEUR", texte_p1)
+        self.assertIn("Paiement d'achat", texte_p1)
+        self.assertIn("Tranche 1/6", texte_p1)
+        self.assertIn("30 000 000 Ar", texte_p1)
+
+        # 2. Validation de la deuxième tranche (10 %)
+        p2 = autres_echeances[0]
+        p2.valider_paiement()
+
+        contrat.refresh_from_db()
+        self.assertEqual(contrat.statut, Contrat.StatutContrat.ACTIF)
+
+        # Vérifier que les 4 autres échéances restent EN_ATTENTE
+        restantes = list(Paiement.objects.filter(contrat=contrat, statut=Paiement.StatutPaiement.EN_ATTENTE))
+        self.assertEqual(len(restantes), 4)
+
+        # Vérifier le PDF généré pour la tranche 2 (cumul)
+        p2.refresh_from_db()
+        self.assertTrue(bool(p2.fichier_quittance))
+        reader2 = pypdf.PdfReader(p2.fichier_quittance.path)
+        texte_p2 = "".join([page.extract_text() for page in reader2.pages])
+
+        self.assertIn("REÇU DE PAIEMENT D'ACHAT", texte_p2)
+        self.assertIn("Tranche 2/6", texte_p2)
+        self.assertIn("6 000 000 Ar", texte_p2)
+        self.assertIn("36 000 000 Ar", texte_p2)  # Total déjà réglé
+        self.assertIn("24 000 000 Ar", texte_p2)  # Reste à payer
+
+    def test_achat_comptant_validation_api_et_recu_pdf(self):
+        """Test achat payé en totalité (comptant) :
+        Après validation, montant réglé = prix, reste = 0 Ar, statut = VENDU.
+        Vérification API, base et PDF.
+        """
+        import pypdf
+
+        contrat = Contrat.objects.create(
+            bien=self.bien_comptant,
+            locataire=self.locataire,
+            type_contrat=Contrat.TypeContrat.ACHAT,
+            type_paiement_achat=Contrat.TypePaiementAchat.TOTALITE,
+            prix=Decimal("50000000.00"),
+            date_debut=date(2026, 11, 20),
+            statut=Contrat.StatutContrat.ACTIF,
+        )
+
+        paiements = list(Paiement.objects.filter(contrat=contrat))
+        self.assertEqual(len(paiements), 1)
+        p = paiements[0]
+        self.assertEqual(p.montant, Decimal("50000000.00"))
+
+        # Validation via API
+        self.client.force_authenticate(user=self.user_admin)
+        res = self.client.post(f"/api/paiements/{p.id}/valider/", {"mode_paiement": "VIREMENT", "reference": "VIR-12345"})
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data["statut"], "PAYE")
+        self.assertEqual(res.data["montant_paye"], "50000000.00")
+        self.assertEqual(res.data["montant_restant"], "0.00")
+
+        # Vérification en base
+        contrat.refresh_from_db()
+        self.bien_comptant.refresh_from_db()
+        p.refresh_from_db()
+        self.assertEqual(contrat.statut, Contrat.StatutContrat.VENDU)
+        self.assertEqual(self.bien_comptant.statut, Bien.StatutBien.VENDU)
+        self.assertEqual(p.montant_paye, Decimal("50000000.00"))
+        self.assertEqual(p.montant_restant, Decimal("0.00"))
+
+        # Vérification du PDF généré
+        self.assertTrue(bool(p.fichier_quittance))
+        reader = pypdf.PdfReader(p.fichier_quittance.path)
+        texte = "".join([page.extract_text() for page in reader.pages])
+
+        self.assertIn("REÇU DE PAIEMENT D'ACHAT", texte)
+        self.assertIn("VENDEUR", texte)
+        self.assertIn("ACHETEUR", texte)
+        self.assertIn("Paiement d'achat", texte)
+        self.assertIn("50 000 000 Ar", texte)
+        self.assertIn("0 Ar", texte)  # Reste à payer
+
+        # Test téléchargement du reçu via endpoint quittance
+        res_dl = self.client.get(f"/api/paiements/{p.id}/quittance/")
+        self.assertEqual(res_dl.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_dl["Content-Type"], "application/pdf")
+        self.assertIn(f"recu-achat-{p.id}.pdf", res_dl["Content-Disposition"])
+
+    def test_contrat_location_conserve_quittance_loyer(self):
+        """Vérifie qu'un contrat de LOCATION continue d'utiliser le modèle
+        Quittance de loyer et non Reçu de paiement d'achat.
+        """
+        import pypdf
+
+        bien_loc = _make_bien(self.proprio, titre="Appartement Location")
+        contrat = _make_contrat(bien_loc, self.locataire)
+
+        paiements = list(Paiement.objects.filter(contrat=contrat).order_by("date_echeance"))
+        p = paiements[0]
+
+        self.client.force_authenticate(user=self.user_admin)
+        res = self.client.post(f"/api/paiements/{p.id}/valider/", {"mode_paiement": "ESPECE"})
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+        p.refresh_from_db()
+        self.assertTrue(bool(p.fichier_quittance))
+        reader = pypdf.PdfReader(p.fichier_quittance.path)
+        texte = "".join([page.extract_text() for page in reader.pages])
+
+        self.assertIn("QUITTANCE DE LOYER", texte)
+        self.assertIn("PROPRIÉTAIRE / BAILLEUR", texte)
+        self.assertIn("LOCATAIRE", texte)
+        self.assertNotIn("REÇU DE PAIEMENT D'ACHAT", texte)
+
+        res_dl = self.client.get(f"/api/paiements/{p.id}/quittance/")
+        self.assertEqual(res_dl.status_code, status.HTTP_200_OK)
+        self.assertIn(f"quittance-{p.id}.pdf", res_dl["Content-Disposition"])
+
+
 
 

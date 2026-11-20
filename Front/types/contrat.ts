@@ -4,8 +4,11 @@ export interface Contrat {
   bien_titre?: string
   bien_type?: string
   locataire: number
+  locataire_user_id?: number
   locataire_nom?: string
   locataire_prenoms?: string
+  proprietaire_user_id?: number | null
+  proprietaire_nom?: string | null
   type_contrat: "LOCATION" | "ACHAT"
   type_paiement_achat?: "TOTALITE" | "PARTIEL" | null
   date_debut?: string | null

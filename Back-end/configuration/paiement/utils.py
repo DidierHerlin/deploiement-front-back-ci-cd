@@ -1,5 +1,7 @@
 import logging
+from decimal import Decimal
 from io import BytesIO
+from django.db import models
 from django.template.loader import render_to_string
 from xhtml2pdf import pisa
 from .models import Paiement
@@ -103,48 +105,120 @@ def generate_quittance_pdf(paiement):
     numero = f"{paiement.id:04d}" if hasattr(paiement, 'id') and paiement.id else "0001"
     contrat_id = f"{contrat.id:04d}" if hasattr(contrat, 'id') and contrat.id else "0001"
 
-    # 2. Construire le contexte enrichi pour le template
-    context = {
-        'paiement': paiement,
-        'contrat': contrat,
-        'locataire': locataire,
-        'locataire_nom': locataire_nom,
-        'locataire_email': locataire_email,
-        'locataire_tel': locataire_tel,
-        'proprietaire': proprietaire,
-        'proprietaire_nom': proprietaire_nom,
-        'proprietaire_email': proprietaire_email,
-        'proprietaire_tel': proprietaire_tel,
-        'bien': bien,
-        'bien_titre': bien_titre,
-        'bien_adresse': adresse_propre,
-        'bien_designation': bien_designation,
-        'adresse_propre': adresse_propre,
-        'numero': numero,
-        'periode': periode_nom,
-        'periode_nom': periode_nom,
-        'date_encaissement': date_paiement_str,
-        'date_echeance_str': date_echeance_str,
-        'date_paiement_str': date_paiement_str,
-        'date_generation': date_generation,
-        'contrat_id': contrat_id,
-        'mode_paiement': mode_paiement_display,
-        'mode_paiement_display': mode_paiement_display,
-        'reference_transaction': reference_transaction,
-        'reference': reference_transaction,
-        'loyer_format': formater_montant_ar(loyer_effectif),
-        'depot_garantie_format': formater_montant_ar(depot_garantie) if depot_garantie else None,
-        'montant': formater_montant_ar(total),
-        'montant_format': formater_montant_ar(total),
-        'sous_total_loyer': formater_montant_ar(loyer_effectif),
-        'total_regle': formater_montant_ar(total)
-    }
+    # 2. Construire le contexte enrichi selon le type de contrat (ACHAT vs LOCATION)
+    is_achat = (getattr(contrat, 'type_contrat', '') == 'ACHAT')
+
+    if is_achat:
+        prix_vente = Decimal(str(contrat.prix or 0))
+        montant_tranche = Decimal(str(paiement.montant_paye or paiement.montant or 0))
+
+        # Somme des tranches déjà payées pour ce contrat
+        if paiement.num_echeance:
+            qs_paye = contrat.paiements.filter(
+                statut=Paiement.StatutPaiement.PAYE,
+                num_echeance__lte=paiement.num_echeance
+            )
+        else:
+            qs_paye = contrat.paiements.filter(
+                statut=Paiement.StatutPaiement.PAYE,
+                id__lte=paiement.id
+            )
+        total_regle = qs_paye.aggregate(models.Sum('montant_paye'))['montant_paye__sum'] or Decimal("0")
+        if total_regle == 0 and montant_tranche > 0:
+            total_regle = montant_tranche
+
+        if contrat.type_paiement_achat == 'TOTALITE':
+            tranche_label = "Paiement comptant (100%)"
+            tranche_description = "Règlement intégral comptant de l'acquisition du bien immobilier."
+            montant_tranche = prix_vente
+            total_regle = prix_vente
+            reste_a_payer = Decimal("0")
+        else:
+            num = paiement.num_echeance or 1
+            tranche_label = f"Tranche {num}/6"
+            tranche_description = f"Règlement de la tranche {num} sur 6 pour l'acquisition du bien immobilier."
+            reste_a_payer = max(prix_vente - total_regle, Decimal("0"))
+
+        context = {
+            'is_totalite': (contrat.type_paiement_achat == 'TOTALITE'),
+            'paiement': paiement,
+            'contrat': contrat,
+            'locataire': locataire,
+            'locataire_nom': locataire_nom,
+            'locataire_email': locataire_email,
+            'locataire_tel': locataire_tel,
+            'proprietaire': proprietaire,
+            'proprietaire_nom': proprietaire_nom,
+            'proprietaire_email': proprietaire_email,
+            'proprietaire_tel': proprietaire_tel,
+            'bien': bien,
+            'bien_titre': bien_titre,
+            'bien_adresse': adresse_propre,
+            'bien_designation': bien_designation,
+            'adresse_propre': adresse_propre,
+            'numero': numero,
+            'tranche_label': tranche_label,
+            'tranche_description': tranche_description,
+            'date_encaissement': date_paiement_str,
+            'date_echeance_str': date_echeance_str,
+            'date_paiement_str': date_paiement_str,
+            'date_generation': date_generation,
+            'contrat_id': contrat_id,
+            'mode_paiement': mode_paiement_display,
+            'mode_paiement_display': mode_paiement_display,
+            'reference_transaction': reference_transaction,
+            'reference': reference_transaction,
+            'montant_tranche_format': formater_montant_ar(montant_tranche),
+            'prix_vente_format': formater_montant_ar(prix_vente),
+            'total_regle_format': formater_montant_ar(total_regle),
+            'reste_a_payer_format': formater_montant_ar(reste_a_payer),
+        }
+        template_name = 'paiement/recu_achat_template.html'
+        filename = f"recu_achat_{paiement.id}.pdf"
+    else:
+        context = {
+            'paiement': paiement,
+            'contrat': contrat,
+            'locataire': locataire,
+            'locataire_nom': locataire_nom,
+            'locataire_email': locataire_email,
+            'locataire_tel': locataire_tel,
+            'proprietaire': proprietaire,
+            'proprietaire_nom': proprietaire_nom,
+            'proprietaire_email': proprietaire_email,
+            'proprietaire_tel': proprietaire_tel,
+            'bien': bien,
+            'bien_titre': bien_titre,
+            'bien_adresse': adresse_propre,
+            'bien_designation': bien_designation,
+            'adresse_propre': adresse_propre,
+            'numero': numero,
+            'periode': periode_nom,
+            'periode_nom': periode_nom,
+            'date_encaissement': date_paiement_str,
+            'date_echeance_str': date_echeance_str,
+            'date_paiement_str': date_paiement_str,
+            'date_generation': date_generation,
+            'contrat_id': contrat_id,
+            'mode_paiement': mode_paiement_display,
+            'mode_paiement_display': mode_paiement_display,
+            'reference_transaction': reference_transaction,
+            'reference': reference_transaction,
+            'loyer_format': formater_montant_ar(loyer_effectif),
+            'depot_garantie_format': formater_montant_ar(depot_garantie) if depot_garantie else None,
+            'montant': formater_montant_ar(total),
+            'montant_format': formater_montant_ar(total),
+            'sous_total_loyer': formater_montant_ar(loyer_effectif),
+            'total_regle': formater_montant_ar(total)
+        }
+        template_name = 'paiement/quittance_template.html'
+        filename = f"quittance_{paiement.id}.pdf"
 
     # 3. Rendre le template HTML
     try:
-        html_string = render_to_string('paiement/quittance_template.html', context)
+        html_string = render_to_string(template_name, context)
     except Exception as e:
-        logger.error(f"Erreur lors du rendu du template : {e}")
+        logger.error(f"Erreur lors du rendu du template {template_name} : {e}")
         raise Exception(f"Erreur de template : {e}")
 
     # 4. Générer le PDF à partir du HTML
@@ -158,10 +232,10 @@ def generate_quittance_pdf(paiement):
     # 5. Sauvegarder le PDF dans le champ FileField
     from django.core.files.base import ContentFile
     try:
-        filename = f"quittance_{paiement.id}.pdf"
         content_file = ContentFile(result.getvalue())
-        paiement.fichier_quittance.save(filename, content_file, save=True)
-        logger.info(f"Quittance sauvegardée pour le paiement #{paiement.pk}")
+        paiement.fichier_quittance.save(filename, content_file, save=False)
+        paiement.save(update_fields=["fichier_quittance"])
+        logger.info(f"Fichier PDF ({filename}) sauvegardé pour le paiement #{paiement.pk}")
         return paiement.fichier_quittance.name
     except Exception as e:
         logger.error(f"Erreur lors de la sauvegarde du fichier PDF : {e}")

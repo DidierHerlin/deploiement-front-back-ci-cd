@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Reçu de paiement d'achat - ImmoConnect</title>
+  <style>
+    @page {
+      size: a4 portrait;
+      margin: 1.0cm 1.4cm 0.8cm 1.4cm;
+    }
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+      font-size: 9pt;
+      line-height: 1.35;
+      color: #0F172A;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. En-tête (Header) -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 6px;">
+    <tr>
+      <td width="55%" valign="top" style="text-align: left;">
+        <div style="font-size: 22pt; font-weight: bold; color: #1E3A8A; line-height: 1.1;">
+          ImmoConnect
+        </div>
+        <div style="font-size: 9.5pt; color: #64748B; margin-top: 4px;">
+          Gestion des transactions &amp; ventes immobilières
+        </div>
+      </td>
+      <td width="45%" valign="top" style="text-align: right;">
+        <div style="font-size: 15pt; font-weight: bold; color: #0F172A; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+          REÇU DE PAIEMENT D'ACHAT
+        </div>
+        <div style="font-size: 9pt; color: #64748B; line-height: 1.45;">
+          Reçu N° : <strong style="color: #0F172A;">{{ numero }}</strong><br>
+          Date d'encaissement : <strong style="color: #0F172A;">{{ date_encaissement }}</strong><br>
+          Modalité : <strong style="color: #0F172A;">{{ tranche_label }}</strong>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Filet horizontal fin -->
+  <div style="border-bottom: 2px solid #E2E8F0; margin-bottom: 12px;"></div>
+
+  <!-- 2. Cartes Vendeur & Acheteur côte à côte -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 12px;">
+    <tr>
+      <td width="48%" valign="top" style="background-color: #F8FAFC; border: 1px solid #E2E8F0; padding: 10px 12px;">
+        <div style="font-size: 8.5pt; font-weight: bold; color: #1E3A8A; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+          VENDEUR
+        </div>
+        <div style="font-size: 11pt; font-weight: bold; color: #0F172A; margin-bottom: 3px;">
+          {{ proprietaire_nom }}
+        </div>
+        <div style="font-size: 9.5pt; color: #475569; line-height: 1.45;">
+          <span style="color: #64748B;">Email :</span> {{ proprietaire_email|default:"Non renseigné" }}<br>
+          <span style="color: #64748B;">Téléphone :</span> {{ proprietaire_tel|default:"Non renseigné" }}
+        </div>
+      </td>
+      <td width="4%">&nbsp;</td>
+      <td width="48%" valign="top" style="background-color: #F8FAFC; border: 1px solid #E2E8F0; padding: 10px 12px;">
+        <div style="font-size: 8.5pt; font-weight: bold; color: #1E3A8A; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+          ACHETEUR
+        </div>
+        <div style="font-size: 11pt; font-weight: bold; color: #0F172A; margin-bottom: 3px;">
+          {{ locataire_nom }}
+        </div>
+        <div style="font-size: 9.5pt; color: #475569; line-height: 1.45;">
+          <span style="color: #64748B;">Email :</span> {{ locataire_email|default:"Non renseigné" }}<br>
+          <span style="color: #64748B;">Téléphone :</span> {{ locataire_tel|default:"Non renseigné" }}
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- 3. Bandeau de statut du règlement -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 12px;">
+    <tr>
+      <td style="background-color: #ECFDF5; border: 1px solid #A7F3D0; padding: 8px 12px;">
+        <div style="font-size: 8.5pt; font-weight: bold; color: #065F46; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
+          RÈGLEMENT ENREGISTRÉ AVEC SUCCÈS — PAIEMENT D'ACHAT
+        </div>
+        <div style="font-size: 9pt; color: #047857; line-height: 1.35;">
+          Ce document officiel atteste de l'encaissement du paiement d'achat au titre de l'acquisition du bien immobilier désigné ci-dessous.
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- 4. Tableau des métadonnées du dossier -->
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 12px; border: 1px solid #E2E8F0;">
+    <thead>
+      <tr>
+        <th width="13%" style="background-color: #F1F5F9; color: #475569; font-size: 8.5pt; font-weight: bold; text-transform: uppercase; padding: 7px 5px; border-bottom: 1px solid #E2E8F0; text-align: center;">
+          CONTRAT
+        </th>
+        <th width="25%" style="background-color: #F1F5F9; color: #475569; font-size: 8.5pt; font-weight: bold; text-transform: uppercase; padding: 7px 8px; border-bottom: 1px solid #E2E8F0; text-align: left;">
+          BIEN CONCERNÉ
+        </th>
+        <th width="22%" style="background-color: #F1F5F9; color: #475569; font-size: 8.5pt; font-weight: bold; text-transform: uppercase; padding: 7px 8px; border-bottom: 1px solid #E2E8F0; text-align: left;">
+          ADRESSE DU BIEN
+        </th>
+        <th width="20%" style="background-color: #F1F5F9; color: #475569; font-size: 8.5pt; font-weight: bold; text-transform: uppercase; padding: 7px 6px; border-bottom: 1px solid #E2E8F0; text-align: center;">
+          MODE DE RÈGLEMENT
+        </th>
+        <th width="20%" style="background-color: #F1F5F9; color: #475569; font-size: 8.5pt; font-weight: bold; text-transform: uppercase; padding: 7px 6px; border-bottom: 1px solid #E2E8F0; text-align: center;">
+          RÉF. TRANSACTION
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="background-color: #ffffff; padding: 8px 5px; font-size: 8.5pt; text-align: center; font-weight: bold; color: #1E3A8A; border-bottom: 1px solid #E2E8F0;">
+          #{{ contrat_id }}
+        </td>
+        <td style="background-color: #ffffff; padding: 8px 8px; font-size: 8.5pt; color: #0F172A; border-bottom: 1px solid #E2E8F0;">
+          <strong>{{ bien_titre }}</strong>
+        </td>
+        <td style="background-color: #ffffff; padding: 8px 8px; font-size: 8.5pt; color: #475569; border-bottom: 1px solid #E2E8F0;">
+          {{ bien_adresse }}
+        </td>
+        <td style="background-color: #ffffff; padding: 8px 6px; font-size: 8.5pt; text-align: center; color: #475569; border-bottom: 1px solid #E2E8F0;">
+          {{ mode_paiement }}
+        </td>
+        <td style="background-color: #ffffff; padding: 8px 6px; font-size: 8.5pt; text-align: center; color: #475569; border-bottom: 1px solid #E2E8F0;">
+          {{ reference_transaction|default:"Non renseignée" }}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- 5. Tableau principal de facturation et bloc des totaux -->
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 12px; border: 1px solid #E2E8F0;">
+    <thead>
+      <tr>
+        <th width="20%" style="background-color: #F1F5F9; color: #334155; font-size: 8.5pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; padding: 7px 8px; text-align: center; border-bottom: 1px solid #CBD5E1;">
+          DATE
+        </th>
+        <th width="42%" style="background-color: #F1F5F9; color: #334155; font-size: 8.5pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; padding: 7px 10px; text-align: left; border-bottom: 1px solid #CBD5E1;">
+          DÉSIGNATION
+        </th>
+        <th width="18%" style="background-color: #F1F5F9; color: #334155; font-size: 8.5pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; padding: 7px 8px; text-align: center; border-bottom: 1px solid #CBD5E1;">
+          ÉCHÉANCE
+        </th>
+        <th width="20%" style="background-color: #F1F5F9; color: #334155; font-size: 8.5pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; padding: 7px 10px; text-align: right; border-bottom: 1px solid #CBD5E1; white-space: nowrap;">
+          MONTANT VERSÉ
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Ligne principale : Paiement d'achat -->
+      <tr>
+        <td style="padding: 10px 8px; font-size: 8.5pt; text-align: center; color: #475569; border-bottom: 1px solid #E2E8F0;">
+          {{ date_encaissement }}
+        </td>
+        <td style="padding: 10px 10px; font-size: 8.5pt; color: #0F172A; border-bottom: 1px solid #E2E8F0;">
+          <strong>Paiement d'achat</strong><br>
+          <span style="font-size: 8pt; color: #64748B;">{{ tranche_description }}</span>
+        </td>
+        <td style="padding: 10px 8px; font-size: 8.5pt; text-align: center; color: #475569; border-bottom: 1px solid #E2E8F0;">
+          {{ date_echeance_str }}
+        </td>
+        <td style="padding: 10px 10px; font-size: 9pt; font-weight: bold; text-align: right; color: #0F172A; border-bottom: 1px solid #E2E8F0; white-space: nowrap;">
+          {{ montant_tranche_format }} Ar
+        </td>
+      </tr>
+
+      <!-- Ligne d'espacement vide avant les totaux -->
+      <tr>
+        <td colspan="4" style="height: 10px; font-size: 1pt; line-height: 10px; border: none; background-color: #ffffff;">&nbsp;</td>
+      </tr>
+
+      <!-- Ligne Prix total de vente -->
+      <tr>
+        <td colspan="2" style="border: none; background-color: #ffffff;"></td>
+        <td style="padding: 5px 8px; font-size: 8.5pt; font-weight: bold; text-align: right; color: #64748B; border-bottom: 1px solid #E2E8F0;">
+          PRIX TOTAL DE VENTE
+        </td>
+        <td style="padding: 5px 10px; font-size: 8.5pt; font-weight: bold; text-align: right; color: #0F172A; border-bottom: 1px solid #E2E8F0; white-space: nowrap;">
+          {{ prix_vente_format }} Ar
+        </td>
+      </tr>
+
+      <!-- Ligne Montant versé cette tranche -->
+      <tr>
+        <td colspan="2" style="border: none; background-color: #ffffff;"></td>
+        <td style="padding: 5px 8px; font-size: 8.5pt; font-weight: bold; text-align: right; color: #64748B; border-bottom: 1px solid #E2E8F0;">
+          {% if is_totalite %}MONTANT RÉGLÉ{% else %}MONTANT RÉGLÉ (CETTE TRANCHE){% endif %}
+        </td>
+        <td style="padding: 5px 10px; font-size: 8.5pt; font-weight: bold; text-align: right; color: #0F172A; border-bottom: 1px solid #E2E8F0; white-space: nowrap;">
+          {{ montant_tranche_format }} Ar
+        </td>
+      </tr>
+
+      <!-- Ligne Total déjà réglé -->
+      <tr>
+        <td colspan="2" style="border: none; background-color: #ffffff;"></td>
+        <td style="padding: 5px 8px; font-size: 8.5pt; font-weight: bold; text-align: right; color: #065F46; border-bottom: 1px solid #E2E8F0;">
+          TOTAL DÉJÀ RÉGLÉ
+        </td>
+        <td style="padding: 5px 10px; font-size: 8.5pt; font-weight: bold; text-align: right; color: #065F46; border-bottom: 1px solid #E2E8F0; white-space: nowrap;">
+          {{ total_regle_format }} Ar
+        </td>
+      </tr>
+
+      <!-- Ligne Reste à payer -->
+      <tr>
+        <td colspan="2" style="border: none; background-color: #ffffff;"></td>
+        <td style="padding: 7px 8px; font-size: 9.5pt; font-weight: bold; text-align: right; color: #1E3A8A; background-color: #EFF6FF; border: 1px solid #BFDBFE; border-right: none;">
+          RESTE À PAYER
+        </td>
+        <td style="padding: 7px 10px; font-size: 11pt; font-weight: bold; text-align: right; color: #1E3A8A; background-color: #EFF6FF; border: 1px solid #BFDBFE; border-left: none; white-space: nowrap;">
+          {{ reste_a_payer_format }} Ar
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- 6. Pied de page discret et professionnel -->
+  <div style="margin-top: 14px; border-top: 1px solid #E2E8F0; padding-top: 10px; text-align: center;">
+    <div style="font-size: 9.5pt; font-weight: bold; color: #1E3A8A; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px;">
+      NOUS VOUS REMERCIONS DE VOTRE CONFIANCE.
+    </div>
+    <div style="font-size: 8.5pt; color: #64748B; line-height: 1.35; margin-bottom: 4px;">
+      Document généré électroniquement par ImmoConnect, valant reçu officiel de paiement d'achat immobilier.
+    </div>
+    <div style="font-size: 8pt; color: #94A3B8;">
+      ImmoConnect Transactions Immobilières &mdash; Généré le {{ date_generation }}
+    </div>
+  </div>
+
+</body>
+</html>

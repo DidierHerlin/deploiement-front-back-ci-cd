@@ -29,8 +29,16 @@ export interface Paiement {
   est_partiel: boolean
   date_creation: string
   locataire_nom: string
+  locataire_user_id?: number
+  locataire_id?: number
+  proprietaire_user_id?: number | null
+  proprietaire_id?: number | null
+  proprietaire_nom?: string | null
   bien_titre: string
   loyer_contrat: string
+  type_contrat?: string
+  prix_contrat?: string | null
+  type_paiement_achat?: string | null
   est_en_retard: boolean
   message_mois: string
   part_proprietaire: number | null

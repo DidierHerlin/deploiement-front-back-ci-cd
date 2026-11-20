@@ -21,6 +21,15 @@ class ContratSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "date_creation", "date_paiement", "date_fin"]
 
+    def to_internal_value(self, data: Any) -> dict:
+        if isinstance(data, dict):
+            data = data.copy()
+            for field_name in ("date_debut", "date_fin"):
+                val = data.get(field_name)
+                if isinstance(val, str) and val.strip() == "":
+                    data[field_name] = None
+        return super().to_internal_value(data)
+
     def validate(self, attrs: dict) -> dict:
         instance = self.instance
         type_contrat = attrs.get("type_contrat", getattr(instance, "type_contrat", None))
@@ -58,11 +67,9 @@ class ContratSerializer(serializers.ModelSerializer):
                 
         elif type_contrat == Contrat.TypeContrat.ACHAT:
             attrs.setdefault('prix', bien.prix)
-            # Pas de date_debut par defaut pour ne pas imposer de manuelle. Le systeme utilise date_creation
             attrs['date_fin'] = None
-            attrs['date_debut'] = None
             if not getattr(self, "instance", None):
-                attrs['statut'] = Contrat.StatutContrat.RESERVE
+                attrs.setdefault('statut', Contrat.StatutContrat.ACTIF)
 
     def _valider_coherence_financiere(self, attrs: dict, instance: Contrat | None, type_contrat: str | None) -> None:
         if type_contrat == Contrat.TypeContrat.LOCATION:
@@ -133,12 +140,16 @@ class ContratListSerializer(serializers.ModelSerializer):
     bien_type = serializers.CharField(source="bien.type", read_only=True)
     locataire_nom = serializers.CharField(source="locataire.user.nom", read_only=True)
     locataire_prenoms = serializers.CharField(source="locataire.user.prenoms", read_only=True)
+    locataire_user_id = serializers.IntegerField(source="locataire.user.id", read_only=True)
+    proprietaire_user_id = serializers.IntegerField(source="bien.proprietaire.user.id", read_only=True)
+    proprietaire_nom = serializers.CharField(source="bien.proprietaire.user.get_full_name", read_only=True)
 
     class Meta:
         model = Contrat
         fields = [
             "id", "bien", "bien_titre", "bien_type",
-            "locataire", "locataire_nom", "locataire_prenoms",
+            "locataire", "locataire_user_id", "locataire_nom", "locataire_prenoms",
+            "proprietaire_user_id", "proprietaire_nom",
             "type_contrat", "type_paiement_achat", "date_debut", "date_fin", "date_paiement",
             "loyer", "depot_garantie", "prix", "statut", "document_pdf", "date_creation"
         ]

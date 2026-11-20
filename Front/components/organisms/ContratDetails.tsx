@@ -18,6 +18,10 @@ export function ContratDetails({ contrat, onClose }: ContratDetailsProps) {
   
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return 'N/A';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      const [year, month, day] = dateStr.split('-').map(Number);
+      return new Date(year, month - 1, day).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR');
+    }
     return new Date(dateStr).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR');
   };
 
@@ -60,7 +64,7 @@ export function ContratDetails({ contrat, onClose }: ContratDetailsProps) {
               <div><span className="text-slate-500 dark:text-slate-400 text-xs block mb-1">{t('locataire_pages.contrat.ref', 'Référence')}</span><strong className="text-slate-900 dark:text-slate-100 font-semibold text-sm">#{contrat.id}</strong></div>
               <div><span className="text-slate-500 dark:text-slate-400 text-xs block mb-1">{t('locataire_pages.contrat.type', 'Type')}</span><strong className="text-slate-900 dark:text-slate-100 font-semibold text-sm">{isLocation ? t('types.location', 'Location') : t('types.sale', 'Achat')}</strong></div>
               <div><span className="text-slate-500 dark:text-slate-400 text-xs block mb-1">{t('locataire_pages.contrat.status', 'Statut')}</span><ContratStatusBadge statut={contrat.statut} /></div>
-              <div><span className="text-slate-500 dark:text-slate-400 text-xs block mb-1">{t('locataire_pages.contrat.start_date', 'Date de début')}</span><strong className="text-slate-900 dark:text-slate-100 font-semibold text-sm">{formatDate(contrat.date_debut)}</strong></div>
+              <div><span className="text-slate-500 dark:text-slate-400 text-xs block mb-1">{isLocation ? t('locataire_pages.contrat.start_date', 'Date de début') : "Date d'achat"}</span><strong className="text-slate-900 dark:text-slate-100 font-semibold text-sm">{formatDate(contrat.date_debut)}</strong></div>
               {isLocation && <div><span className="text-slate-500 dark:text-slate-400 text-xs block mb-1">{t('locataire_pages.contrat.end_date', 'Date de fin')}</span><strong className="text-slate-900 dark:text-slate-100 font-semibold text-sm">{formatDate(contrat.date_fin)}</strong></div>}
             </div>
           </div>

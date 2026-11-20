@@ -136,6 +136,8 @@ class PaiementViewSet(RoleScopedQuerySetMixin, viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        is_achat = getattr(paiement.contrat, "type_contrat", "") == "ACHAT"
+
         needs_generation = (
             not paiement.fichier_quittance
             or not paiement.fichier_quittance.name
@@ -143,6 +145,23 @@ class PaiementViewSet(RoleScopedQuerySetMixin, viewsets.ModelViewSet):
                 paiement.fichier_quittance.name
             )
         )
+        # Vérifier si le modèle de document en base correspond bien au type de contrat (achat vs location)
+        if not needs_generation:
+            try:
+                with paiement.fichier_quittance.open("rb") as f:
+                    content_start = f.read(1024 * 30)
+                    if is_achat:
+                        if (
+                            b"QUITTANCE DE LOYER" in content_start 
+                            or b"Quittance de loyer" in content_start
+                            or (b"RE\xc3\x87U DE PAIEMENT D'ACHAT" not in content_start and b"RECU DE PAIEMENT D'ACHAT" not in content_start)
+                        ):
+                            needs_generation = True
+                    else:
+                        if b"RE\xc3\x87U DE PAIEMENT D'ACHAT" in content_start or b"RECU DE PAIEMENT D'ACHAT" in content_start:
+                            needs_generation = True
+            except Exception:
+                needs_generation = True
         if needs_generation:
             try:
                 generate_quittance_pdf(paiement)
@@ -165,9 +184,14 @@ class PaiementViewSet(RoleScopedQuerySetMixin, viewsets.ModelViewSet):
             with paiement.fichier_quittance.open("rb") as f:
                 pdf_bytes = f.read()
 
+            download_filename = (
+                f'recu-achat-{paiement.pk}.pdf'
+                if getattr(paiement.contrat, 'type_contrat', '') == 'ACHAT'
+                else f'quittance-{paiement.pk}.pdf'
+            )
             response = HttpResponse(pdf_bytes, content_type="application/pdf")
             response["Content-Disposition"] = (
-                f'attachment; filename="quittance-{paiement.pk}.pdf"'
+                f'attachment; filename="{download_filename}"'
             )
             origin = request.META.get("HTTP_ORIGIN", "")
             if origin:

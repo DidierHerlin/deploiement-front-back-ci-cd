@@ -10,13 +10,14 @@ interface QuittanceListProps {
   paiements: Paiement[];
   contrats: Contrat[];
   loading: boolean;
+  currentUser?: any;
 }
 
-export function QuittanceList({ paiements, contrats, loading }: QuittanceListProps) {
+export function QuittanceList({ paiements, contrats, loading, currentUser }: QuittanceListProps) {
   const { t, lang } = useTranslation();
   const [searchTerm, setSearchTerm] = React.useState('');
 
-  const handleDownloadQuittance = async (paiementId: number) => {
+  const handleDownloadQuittance = async (paiementId: number, isAchatDoc: boolean = false) => {
     try {
       const { fetchBlob } = await import('@/lib/api');
       const blob = await fetchBlob(`/paiements/${paiementId}/quittance/`);
@@ -25,7 +26,7 @@ export function QuittanceList({ paiements, contrats, loading }: QuittanceListPro
       const a = document.createElement('a');
       a.style.display = 'none';
       a.href = url;
-      a.download = `Quittance_Loyer_${paiementId}.pdf`;
+      a.download = isAchatDoc ? `recu_achat_${paiementId}.pdf` : `Quittance_Loyer_${paiementId}.pdf`;
       document.body.appendChild(a);
       a.click();
       
@@ -42,8 +43,9 @@ export function QuittanceList({ paiements, contrats, loading }: QuittanceListPro
     }
   };
 
-  const getContratTitre = (contratId: number) => {
-    const c = contrats.find(c => c.id === contratId);
+  const getContratTitre = (contratId: number | any) => {
+    const id = typeof contratId === 'object' && contratId !== null ? contratId.id : contratId;
+    const c = contrats.find(c => c.id === id);
     return c ? c.bien_titre : 'Contrat inconnu';
   };
 
@@ -51,14 +53,39 @@ export function QuittanceList({ paiements, contrats, loading }: QuittanceListPro
   let quittancesDisponibles = paiements.filter(p => p.statut === 'PAYE' || p.statut === 'VALIDE');
 
   if (searchTerm) {
+    const term = searchTerm.toLowerCase();
     quittancesDisponibles = quittancesDisponibles.filter(p => {
       const periode = new Date(p.date_echeance).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR', { month: 'long', year: 'numeric' });
-      return periode.toLowerCase().includes(searchTerm.toLowerCase());
+      const contratId = typeof p.contrat === 'object' && p.contrat !== null ? (p.contrat as any).id : p.contrat;
+      const c = contrats.find(c => c.id === contratId);
+      const bienTitre = c?.bien_titre || p.bien_titre || '';
+      return (
+        periode.toLowerCase().includes(term) ||
+        bienTitre.toLowerCase().includes(term) ||
+        p.id.toString().includes(term)
+      );
     });
   }
 
   // Trier par date la plus récente
   quittancesDisponibles.sort((a, b) => new Date(b.date_echeance).getTime() - new Date(a.date_echeance).getTime());
+
+  // Détection des types de documents présents dans la liste
+  const aDesAchats = quittancesDisponibles.some(p => {
+    const contratId = typeof p.contrat === 'object' && p.contrat !== null ? (p.contrat as any).id : p.contrat;
+    const c = contrats.find(c => c.id === contratId);
+    return c?.type_contrat === 'ACHAT' || (p as any).type_contrat === 'ACHAT' || (!c?.loyer && !(p as any).loyer_contrat && !!(c?.prix || (p as any).prix_contrat));
+  });
+
+  const aDesLocations = quittancesDisponibles.some(p => {
+    const contratId = typeof p.contrat === 'object' && p.contrat !== null ? (p.contrat as any).id : p.contrat;
+    const c = contrats.find(c => c.id === contratId);
+    return c ? c.type_contrat === 'LOCATION' : (p as any).type_contrat !== 'ACHAT';
+  });
+
+  const pageTitle = (aDesAchats && aDesLocations) || aDesAchats
+    ? t('locataire_pages.quittances.title_mixed', 'Mes quittances et reçus')
+    : t('locataire_pages.quittances.title', 'Mes Quittances de Loyer');
 
   if (loading) {
     return (
@@ -73,7 +100,7 @@ export function QuittanceList({ paiements, contrats, loading }: QuittanceListPro
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">
-            {t('locataire_pages.quittances.title', 'Mes Quittances de Loyer')}
+            {pageTitle}
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400">
             {t('locataire_pages.quittances.subtitle', 'Téléchargez les reçus officiels de vos paiements validés.')}
@@ -108,10 +135,71 @@ export function QuittanceList({ paiements, contrats, loading }: QuittanceListPro
             const datePaiement = paiement.date_paiement ? new Date(paiement.date_paiement).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR') : '-';
             const contratTitre = getContratTitre(paiement.contrat);
             
-            // Calcul du montant (Règle : contrat.loyer)
-            const c = contrats.find(c => c.id === paiement.contrat);
-            const montantEffectif = c ? parseFloat(c.loyer || '0') : parseFloat(paiement.montant_paye || '0');
+            // Résolution du contrat associé
+            const contratId = typeof paiement.contrat === 'object' && paiement.contrat !== null
+              ? (paiement.contrat as any).id
+              : paiement.contrat;
+            const c = contrats.find(c => c.id === contratId);
+
+            const isAchat = (c?.type_contrat === 'ACHAT') || ((paiement as any).type_contrat === 'ACHAT') || (!c?.loyer && !(paiement as any).loyer_contrat && !!(c?.prix || (paiement as any).prix_contrat));
+            const typeAchat = c?.type_paiement_achat || (paiement as any).type_paiement_achat;
+            const prixVente = c?.prix || (paiement as any).prix_contrat;
+
+            // Calcul du montant selon les règles :
+            // - Achat payé en totalité : montant réglé = prix de vente du contrat
+            // - Achat en tranches : montant réglé = montant payé de la tranche concernée
+            // - Location : montant réglé = loyer du contrat (ou montant payé)
+            let montantEffectif = 0;
+            if (isAchat) {
+              if (typeAchat === 'TOTALITE') {
+                montantEffectif = parseFloat((prixVente || paiement.montant_paye || paiement.montant || '0').toString());
+              } else {
+                montantEffectif = parseFloat((paiement.montant_paye || paiement.montant || '0').toString());
+              }
+            } else {
+              montantEffectif = parseFloat((c?.loyer || paiement.montant_paye || paiement.montant || '0').toString());
+            }
             const montantFormat = formatMontantAr(montantEffectif);
+
+            const numeroStr = paiement.id.toString().padStart(4, '0');
+
+            // Détection acheteur vs vendeur
+            let isVendeur = false;
+            if (isAchat) {
+              const currentUserId = currentUser?.id;
+              const currentUserRole = currentUser?.role;
+              const propUserId = (paiement as any).proprietaire_user_id || c?.proprietaire_user_id;
+              const locUserId = paiement.locataire_user_id || c?.locataire_user_id;
+
+              if (currentUserId && propUserId && currentUserId === propUserId) {
+                isVendeur = true;
+              } else if (currentUserId && locUserId && currentUserId === locUserId) {
+                isVendeur = false;
+              } else if (currentUserRole === 'PROPRIETAIRE') {
+                isVendeur = true;
+              } else if (currentUserRole === 'LOCATAIRE') {
+                isVendeur = false;
+              }
+            }
+
+            // Libellé officiel du type de transaction (Location, Achat, Vente)
+            const typeTransaction = isAchat ? (isVendeur ? 'Vente' : 'Achat') : 'Location';
+
+            // Titre de la carte selon le type et le destinataire
+            let titreDocument = '';
+            if (isAchat) {
+              if (isVendeur) {
+                titreDocument = typeAchat === 'PARTIEL'
+                  ? `Reçu de vente (Tranche ${paiement.num_echeance || 1}/6) · N° ${numeroStr}`
+                  : `Reçu de vente · N° ${numeroStr}`;
+              } else {
+                titreDocument = typeAchat === 'PARTIEL'
+                  ? `Reçu d’achat (Tranche ${paiement.num_echeance || 1}/6) · N° ${numeroStr}`
+                  : `Reçu d’achat · N° ${numeroStr}`;
+              }
+            } else {
+              titreDocument = `${t('locataire_pages.quittances.receipt_prefix', 'Quittance')} ${periode}`;
+            }
 
             return (
               <div 
@@ -122,15 +210,28 @@ export function QuittanceList({ paiements, contrats, loading }: QuittanceListPro
                   <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
                     <FileText size={20} className="shrink-0" />
                     <span className="text-slate-900 dark:text-white font-semibold text-base">
-                      {t('locataire_pages.quittances.receipt_prefix', 'Quittance')} {periode}
+                      {titreDocument}
                     </span>
                   </div>
-                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border dark:border-emerald-500/30 shrink-0">
-                    N° {paiement.id.toString().padStart(4, '0')}
-                  </span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/15 dark:text-blue-400 dark:border dark:border-blue-500/30">
+                      {typeTransaction}
+                    </span>
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border dark:border-emerald-500/30">
+                      N° {numeroStr}
+                    </span>
+                  </div>
                 </div>
                 
                 <div className="flex flex-col gap-2.5 text-sm mb-6 flex-1">
+                  <div className="flex justify-between items-center gap-2">
+                    <span className="text-slate-500 dark:text-slate-400">
+                      {t('locataire_pages.quittances.transaction_type', 'Type de transaction')} :
+                    </span>
+                    <strong className="text-slate-800 dark:text-slate-200 font-semibold">
+                      {typeTransaction}
+                    </strong>
+                  </div>
                   <div className="flex justify-between items-center gap-2">
                     <span className="text-slate-500 dark:text-slate-400">
                       {t('locataire_pages.quittances.concerned_property', 'Bien concerné')} :
@@ -158,7 +259,7 @@ export function QuittanceList({ paiements, contrats, loading }: QuittanceListPro
                 </div>
 
                 <button 
-                  onClick={() => handleDownloadQuittance(paiement.id)}
+                  onClick={() => handleDownloadQuittance(paiement.id, isAchat)}
                   className="w-full py-2.5 px-4 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer"
                 >
                   <Download size={16} />

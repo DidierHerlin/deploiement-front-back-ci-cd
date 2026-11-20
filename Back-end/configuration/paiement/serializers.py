@@ -21,6 +21,21 @@ class PaiementSerializer(serializers.ModelSerializer):
         source="contrat.locataire.id",
         read_only=True
     )
+    proprietaire_user_id = serializers.IntegerField(
+        source="contrat.bien.proprietaire.user.id",
+        read_only=True,
+        allow_null=True
+    )
+    proprietaire_id = serializers.IntegerField(
+        source="contrat.bien.proprietaire.id",
+        read_only=True,
+        allow_null=True
+    )
+    proprietaire_nom = serializers.CharField(
+        source="contrat.bien.proprietaire.user.get_full_name",
+        read_only=True,
+        allow_null=True
+    )
     bien_titre = serializers.CharField(
         source="contrat.bien.titre",
         read_only=True
@@ -31,6 +46,22 @@ class PaiementSerializer(serializers.ModelSerializer):
         max_digits=10,
         decimal_places=2
     )
+    type_contrat = serializers.CharField(
+        source="contrat.type_contrat",
+        read_only=True
+    )
+    prix_contrat = serializers.DecimalField(
+        source="contrat.prix",
+        read_only=True,
+        max_digits=15,
+        decimal_places=2,
+        allow_null=True
+    )
+    type_paiement_achat = serializers.CharField(
+        source="contrat.type_paiement_achat",
+        read_only=True,
+        allow_null=True
+    )
 
     # Champs calcules en lecture seule
 
@@ -39,7 +70,7 @@ class PaiementSerializer(serializers.ModelSerializer):
 
     montant_restant = serializers.DecimalField(
         read_only=True,
-        max_digits=10,
+        max_digits=15,
         decimal_places=2,
         allow_null=True
     )
@@ -98,8 +129,14 @@ class PaiementSerializer(serializers.ModelSerializer):
             "locataire_nom",
             "locataire_user_id",
             "locataire_id",
+            "proprietaire_user_id",
+            "proprietaire_id",
+            "proprietaire_nom",
             "bien_titre",
             "loyer_contrat",
+            "type_contrat",
+            "prix_contrat",
+            "type_paiement_achat",
             "est_en_retard",
             "message_mois",
             "part_proprietaire",

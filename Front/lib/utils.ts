@@ -26,6 +26,11 @@ export function formatDateFR(
   options?: Intl.DateTimeFormatOptions
 ): string {
   if (!date) return '-'
+  if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const [year, month, day] = date.split('-').map(Number)
+    const localDate = new Date(year, month - 1, day)
+    return localDate.toLocaleDateString('fr-FR', options)
+  }
   const d = typeof date === 'string' ? new Date(date) : date
   if (isNaN(d.getTime())) return '-'
   return d.toLocaleDateString('fr-FR', options)

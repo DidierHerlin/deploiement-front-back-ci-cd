@@ -639,6 +639,89 @@ class ContratCreateTests(APITestCase):
         response = self.client.post("/api/contrats/", data)
         self.assertIn(response.status_code, [status.HTTP_400_BAD_REQUEST])
 
+    def test_create_contrat_empty_string_date_debut_defaults_to_today(self):
+        bien_dispo = make_bien(self.prop, titre="Bien Libre Test Dates")
+        self.client.force_authenticate(user=self.agent)
+        data = {
+            "bien": bien_dispo.id,
+            "locataire": self.loc.id,
+            "type_contrat": "LOCATION",
+            "date_debut": "",
+            "date_fin": "",
+            "loyer": 1000,
+            "depot_garantie": 1000,
+        }
+        response = self.client.post("/api/contrats/", data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        contrat = Contrat.objects.get(id=response.data["id"])
+        self.assertEqual(contrat.date_debut, timezone.now().date())
+
+    def test_create_contrat_empty_string_date_debut_achat(self):
+        bien_vente = make_bien(self.prop, titre="Bien Vente Test Dates", mode=Bien.ModeTransaction.VENTE)
+        self.client.force_authenticate(user=self.agent)
+        data = {
+            "bien": bien_vente.id,
+            "locataire": self.loc.id,
+            "type_contrat": "ACHAT",
+            "type_paiement_achat": "TOTALITE",
+            "prix": 50000000,
+            "date_debut": "",
+            "date_fin": "",
+        }
+        response = self.client.post("/api/contrats/", data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        contrat = Contrat.objects.get(id=response.data["id"])
+        self.assertIsNone(contrat.date_debut)
+
+    def test_create_contrat_with_date_achat(self):
+        bien_vente = make_bien(self.prop, titre="Bien Vente Date Achat", mode=Bien.ModeTransaction.VENTE)
+        self.client.force_authenticate(user=self.agent)
+        data = {
+            "bien": bien_vente.id,
+            "locataire": self.loc.id,
+            "type_contrat": "ACHAT",
+            "type_paiement_achat": "PARTIEL",
+            "prix": 60000000,
+            "date_debut": "2026-11-20",
+        }
+        response = self.client.post("/api/contrats/", data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        contrat = Contrat.objects.get(id=response.data["id"])
+        self.assertEqual(contrat.date_debut, date(2026, 11, 20))
+
+    def test_create_contrat_invalid_date_format_triggers_clear_message(self):
+        bien_dispo = make_bien(self.prop, titre="Bien Libre Format Invalide")
+        self.client.force_authenticate(user=self.agent)
+        data = {
+            "bien": bien_dispo.id,
+            "locataire": self.loc.id,
+            "type_contrat": "LOCATION",
+            "date_debut": "2026-99-99",
+            "loyer": 1000,
+            "depot_garantie": 1000,
+        }
+        response = self.client.post("/api/contrats/", data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("date_debut", response.data)
+        self.assertTrue(any("format" in str(msg).lower() or "yyyy-mm-dd" in str(msg).lower() for msg in response.data["date_debut"]))
+
+    def test_create_contrat_valid_date_format_preserves_selected_day(self):
+        bien_dispo = make_bien(self.prop, titre="Bien Libre Date Exacte")
+        self.client.force_authenticate(user=self.agent)
+        selected_date = "2026-11-20"
+        data = {
+            "bien": bien_dispo.id,
+            "locataire": self.loc.id,
+            "type_contrat": "LOCATION",
+            "date_debut": selected_date,
+            "loyer": 1000,
+            "depot_garantie": 1000,
+        }
+        response = self.client.post("/api/contrats/", data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        contrat = Contrat.objects.get(id=response.data["id"])
+        self.assertEqual(contrat.date_debut.isoformat(), selected_date)
+
 
 class ContratTransitionTests(APITestCase):
     @classmethod

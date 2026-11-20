@@ -25,6 +25,10 @@ export function ContratModal({ contrat, paiements, onClose, onAction }: ContratM
   
   const formatDate = (d: string) => {
     if (!d) return '-'
+    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+      const [year, month, day] = d.split('-').map(Number)
+      return new Date(year, month - 1, day).toLocaleDateString('fr-FR')
+    }
     return new Date(d).toLocaleDateString('fr-FR')
   }
 
@@ -105,7 +109,7 @@ export function ContratModal({ contrat, paiements, onClose, onAction }: ContratM
               </div>
             </div>
 
-            {isLocation && (
+            {isLocation ? (
               <div className="bg-slate-50 dark:bg-slate-950/50 border border-slate-200/80 dark:border-slate-800/80 rounded-xl p-3.5">
                 <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mb-2">
                   <Calendar size={14} /> {t("admin.contrats.col_period", "Période")}
@@ -119,6 +123,16 @@ export function ContratModal({ contrat, paiements, onClose, onAction }: ContratM
                     <span className="text-slate-500 dark:text-slate-400">{t("admin.contrats.end_date", "Date de fin")}</span>
                     <strong className="block text-slate-900 dark:text-white mt-0.5">{formatDate(contrat.date_fin)}</strong>
                   </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-slate-50 dark:bg-slate-950/50 border border-slate-200/80 dark:border-slate-800/80 rounded-xl p-3.5">
+                <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mb-2">
+                  <Calendar size={14} /> Date de la vente
+                </h3>
+                <div className="text-xs">
+                  <span className="text-slate-500 dark:text-slate-400">Date d'achat</span>
+                  <strong className="block text-slate-900 dark:text-white mt-0.5">{formatDate(contrat.date_debut)}</strong>
                 </div>
               </div>
             )}

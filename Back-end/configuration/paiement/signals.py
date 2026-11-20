@@ -14,6 +14,7 @@ import logging
 from datetime import date
 from decimal import Decimal
 
+from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
@@ -55,23 +56,46 @@ def mettre_a_jour_statut_bien_apres_paiement(sender, instance: Paiement, **kwarg
     Si un paiement d'un contrat est validé (PAYE),
     le statut du bien est mis à jour selon le type de contrat.
     LOCATION -> LOUE
-    ACHAT -> VENDU
+    ACHAT -> VENDU (uniquement si le montant intégral est réglé et plus d'échéances en attente)
+             Sinon le contrat reste ACTIF et le bien reste RESERVE
     """
+    update_fields = kwargs.get("update_fields")
+    if update_fields is not None and "statut" not in update_fields:
+        return
+
     if instance.statut == Paiement.StatutPaiement.PAYE:
         contrat = instance.contrat
         from bien.models import Bien
         bien = contrat.bien
         
         if contrat.type_contrat == Contrat.TypeContrat.ACHAT:
-            # Passer le contrat en VENDU
-            if contrat.statut in (Contrat.StatutContrat.ACTIF, Contrat.StatutContrat.RESERVE):
-                contrat.statut = Contrat.StatutContrat.VENDU
-                contrat.save(update_fields=["statut"])
-                logger.info(f"Contrat #{contrat.pk} passé en VENDU suite au premier paiement.")
-            
-            # Passer le bien en VENDU
-            if bien.statut == Bien.StatutBien.RESERVE:
-                bien.changer_statut(Bien.StatutBien.VENDU, motif=f"premier paiement du contrat #{contrat.pk}")
+            # Vérifier si l'intégralité du prix de vente a été réglée
+            total_paye = contrat.paiements.filter(
+                statut=Paiement.StatutPaiement.PAYE
+            ).aggregate(models.Sum('montant_paye'))['montant_paye__sum'] or Decimal("0")
+
+            unpaid_exists = contrat.paiements.filter(
+                statut__in=[Paiement.StatutPaiement.EN_ATTENTE, Paiement.StatutPaiement.EN_RETARD]
+            ).exclude(pk=instance.pk).exists()
+
+            if not unpaid_exists and total_paye >= contrat.prix:
+                # Vente finalisée : passer le contrat et le bien en VENDU
+                if contrat.statut != Contrat.StatutContrat.VENDU:
+                    contrat.statut = Contrat.StatutContrat.VENDU
+                    contrat.save(update_fields=["statut"])
+                    logger.info(f"Contrat #{contrat.pk} passé en VENDU suite au règlement intégral.")
+                
+                if bien.statut != Bien.StatutBien.VENDU:
+                    bien.changer_statut(Bien.StatutBien.VENDU, motif=f"règlement intégral du contrat #{contrat.pk}")
+            else:
+                # Échéances restantes : le contrat reste ACTIF et le bien reste RESERVE
+                if contrat.statut not in (Contrat.StatutContrat.ACTIF, Contrat.StatutContrat.VENDU):
+                    contrat.statut = Contrat.StatutContrat.ACTIF
+                    contrat.save(update_fields=["statut"])
+                    logger.info(f"Contrat #{contrat.pk} maintenu en ACTIF (échéances restantes).")
+                
+                if bien.statut == Bien.StatutBien.DISPONIBLE:
+                    bien.changer_statut(Bien.StatutBien.RESERVE, motif=f"tranche du contrat #{contrat.pk}")
                 
         elif contrat.type_contrat == Contrat.TypeContrat.LOCATION:
             # Passer le bien en LOUE
@@ -220,8 +244,8 @@ def generer_echeancier_achat(contrat: Contrat, *, mode: str = "echelonne") -> No
 
     prix = contrat.prix
     echeances = []
-    # La date de base est la date de création du contrat
-    date_courante = contrat.date_creation.date()
+    # La date de base est la date d'achat (date_debut) ou à défaut la date de création
+    date_courante = contrat.date_debut or (contrat.date_creation.date() if contrat.date_creation else timezone.now().date())
 
     if mode == "comptant":
         # Paiement comptant : 100 % du prix
@@ -337,7 +361,6 @@ def generer_echeancier_contrat(sender, instance: Contrat, **kwargs) -> None:
     elif instance.statut in (
         Contrat.StatutContrat.RESILIE,
         Contrat.StatutContrat.TERMINE,
-        Contrat.StatutContrat.VENDU,
     ):
-        # Cas 2 / 4 : contrat terminé → annulation des échéances futures
+        # Cas 2 : contrat résilié ou terminé → annulation des échéances futures
         annuler_echeances_futures(instance)

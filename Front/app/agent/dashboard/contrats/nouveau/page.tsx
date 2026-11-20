@@ -188,14 +188,14 @@ export default function NouveauContratPage() {
       }
 
       if (form.type_contrat === "LOCATION") {
-        payload.date_debut = form.date_debut
-        if (form.date_fin) payload.date_fin = form.date_fin
+        payload.date_debut = form.date_debut ? form.date_debut.trim() : null
+        payload.date_fin = form.date_fin && form.date_fin.trim() ? form.date_fin.trim() : null
         if (form.loyer) payload.loyer = nettoyerMontant(form.loyer)
         if (form.depot_garantie)
           payload.depot_garantie = nettoyerMontant(form.depot_garantie)
       } else {
         payload.date_fin = null
-        payload.date_debut = null
+        payload.date_debut = form.date_debut && form.date_debut.trim() ? form.date_debut.trim() : null
         payload.type_paiement_achat = form.type_paiement_achat
         if (form.prix) payload.prix = nettoyerMontant(form.prix)
       }
@@ -295,6 +295,12 @@ export default function NouveauContratPage() {
                   <option value="TOTALITE">Totalité (Comptant - 100%)</option>
                   <option value="PARTIEL">Partiel (50% puis 5x10%)</option>
                 </select>
+              </label>
+            )}
+
+            {!isLocation && (
+              <label className="agent-field">Date d'achat *
+                <input type="date" name="date_debut" value={form.date_debut} onChange={handleChange} required={!isLocation} />
               </label>
             )}
 

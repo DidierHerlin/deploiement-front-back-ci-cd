@@ -471,17 +471,44 @@ export async function getContrat(id: number): Promise<Contrat> {
   return res
 }
 
+export function cleanContratDatePayload<T extends Partial<CreerContratPayload>>(payload: T): T {
+  const result = { ...payload }
+  for (const key of ['date_debut', 'date_fin'] as const) {
+    if (key in result) {
+      const val = result[key]
+      if (val === '' || val === undefined) {
+        result[key] = null
+      } else if (typeof val === 'string') {
+        const trimmed = val.trim()
+        if (!trimmed) {
+          result[key] = null
+        } else if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+          result[key] = trimmed as any
+        } else {
+          const isoMatch = trimmed.match(/^(\d{4}-\d{2}-\d{2})T/)
+          if (isoMatch) {
+            result[key] = isoMatch[1] as any
+          }
+        }
+      }
+    }
+  }
+  return result
+}
+
 export async function creerContrat(payload: CreerContratPayload): Promise<Contrat> {
+  const cleanPayload = cleanContratDatePayload(payload)
   return fetchAPI<Contrat>("/contrats/", {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: JSON.stringify(cleanPayload),
   })
 }
 
 export async function updateContrat(id: number, payload: Partial<CreerContratPayload>): Promise<Contrat> {
+  const cleanPayload = cleanContratDatePayload(payload)
   return fetchAPI<Contrat>(`/contrats/${id}/`, {
     method: "PATCH",
-    body: JSON.stringify(payload),
+    body: JSON.stringify(cleanPayload),
   })
 }
 

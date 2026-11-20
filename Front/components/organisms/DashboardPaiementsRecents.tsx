@@ -20,7 +20,7 @@ export function DashboardPaiementsRecents({ paiements, contratActif }: Dashboard
 
   const formatMontant = (montant: any) => formatMontantAr(montant);
 
-  const handleDownloadQuittance = async (paiementId: number) => {
+  const handleDownloadQuittance = async (paiementId: number, isAchatDoc: boolean = false) => {
     try {
       const { fetchBlob } = await import('@/lib/api');
       const blob = await fetchBlob(`/paiements/${paiementId}/quittance/`);
@@ -29,7 +29,7 @@ export function DashboardPaiementsRecents({ paiements, contratActif }: Dashboard
       const a = document.createElement('a');
       a.style.display = 'none';
       a.href = url;
-      a.download = `Quittance_Loyer_${paiementId}.pdf`;
+      a.download = isAchatDoc ? `recu_achat_${paiementId}.pdf` : `Quittance_Loyer_${paiementId}.pdf`;
       document.body.appendChild(a);
       a.click();
       
@@ -78,7 +78,22 @@ export function DashboardPaiementsRecents({ paiements, contratActif }: Dashboard
             ) : (
               recents.map((payment) => {
                 const isValide = payment.statut === 'PAYE' || payment.statut === 'VALIDE';
-                const montantEffectif = (isValide && contratActif) ? contratActif.loyer : payment.montant_paye;
+                const isAchat = (contratActif?.type_contrat === 'ACHAT') || ((payment as any).type_contrat === 'ACHAT');
+                const typeAchat = contratActif?.type_paiement_achat || (payment as any).type_paiement_achat;
+                const prixVente = contratActif?.prix || (payment as any).prix_contrat;
+
+                let montantEffectif: any = payment.montant_paye;
+                if (isValide) {
+                  if (isAchat) {
+                    if (typeAchat === 'TOTALITE') {
+                      montantEffectif = prixVente || payment.montant_paye || payment.montant;
+                    } else {
+                      montantEffectif = payment.montant_paye || payment.montant;
+                    }
+                  } else {
+                    montantEffectif = (contratActif && contratActif.loyer) ? contratActif.loyer : (payment.montant_paye || payment.montant);
+                  }
+                }
                 
                 const periode = new Date(payment.date_echeance).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR', { month: 'long', year: 'numeric' }).replace(/^\w/, (c) => c.toUpperCase());
                 const datePaiement = payment.date_paiement ? new Date(payment.date_paiement).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR') : '-';
@@ -93,7 +108,7 @@ export function DashboardPaiementsRecents({ paiements, contratActif }: Dashboard
                     </td>
                     <td>
                       {isValide ? (
-                        <button className="download-link" onClick={() => handleDownloadQuittance(payment.id)}>
+                        <button className="download-link" onClick={() => handleDownloadQuittance(payment.id, isAchat)}>
                           <ArrowDownToLine size={14} /> {lang === 'en' ? 'Download' : 'Télécharger'}
                         </button>
                       ) : (
