@@ -600,6 +600,8 @@
       "montant_a_valider": "Amount to validate",
       "title_prefix": "Manage",
       "title_span": "Payments",
+      "seller_share": "Seller share",
+      "agency_commission_label": "Agency commission",
       "cancelled_banner_desc": "These payments and invoices belong to cancelled leases ({count} invoice(s)). They are not counted in active payments.",
       "empty_cancelled": "No cancelled invoices found.",
       "empty_active": "No payments found."

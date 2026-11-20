@@ -19,6 +19,42 @@ export function PaiementDetails({ paiement, onClose, onValiderDemande, onRefuser
 
   const isPendingMM = isMobileMoneyPending(paiement)
 
+  // Détection du type de transaction et de contrat
+  const contratObj = typeof paiement.contrat === 'object' && paiement.contrat !== null ? (paiement.contrat as any) : null;
+  const typeContrat = paiement.type_contrat || contratObj?.type_contrat;
+  const typePaiementAchat = paiement.type_paiement_achat || contratObj?.type_paiement_achat;
+  const isAchat = typeContrat === 'ACHAT' || (!paiement.loyer_contrat && !!paiement.prix_contrat);
+  const isVenteTranches = isAchat && (typePaiementAchat === 'PARTIEL' || (paiement.num_echeance !== undefined && typePaiementAchat !== 'TOTALITE'));
+  const isValide = paiement.statut === 'PAYE' || paiement.statut === 'VALIDE';
+
+  // Par défaut : traitement actuel (locations et ventes payées en une seule fois)
+  let labelPart = t("admin.paiements.owner_share", "Part Propriétaire");
+  let valeurPart = formatMontant(paiement.part_proprietaire?.toString() || null);
+  let labelCommission = t("admin.paiements.agency_commission", "Commission Agence");
+  let valeurCommission = formatMontant(paiement.commission_agent?.toString() || null);
+
+  // Vente en plusieurs tranches : calcul dynamique selon le numéro d'échéance
+  if (isVenteTranches) {
+    const numEcheance = Number(paiement.num_echeance || 1);
+    const isPremiereTranche = numEcheance === 1;
+    const taux = isPremiereTranche ? 5 : 1;
+
+    labelCommission = `${t("admin.paiements.agency_commission_label", "Commission agence")} (${taux} %)`;
+    labelPart = t("admin.paiements.seller_share", "Part du vendeur");
+
+    if (isValide) {
+      const montantVerse = parseFloat((paiement.montant_paye || '0').toString());
+      const commission = Math.round(montantVerse * (taux / 100));
+      const partVendeur = Math.max(montantVerse - commission, 0);
+
+      valeurCommission = formatMontantAr(commission);
+      valeurPart = formatMontantAr(partVendeur);
+    } else {
+      valeurCommission = '-';
+      valeurPart = '-';
+    }
+  }
+
   return (
     <div className="modal-backdrop" role="presentation">
       <section className="modal" role="dialog" aria-modal="true" style={{ width: '90vw', maxWidth: '1200px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', padding: '20px' }}>
@@ -97,8 +133,8 @@ export function PaiementDetails({ paiement, onClose, onValiderDemande, onRefuser
                 {paiement.est_partiel && (
                   <div><small style={{ color: '#64748b' }}>{t("admin.paiements.remaining", "Montant restant")}</small><div style={{ fontWeight: 500, color: '#dc2626' }}>{formatMontant(paiement.montant_restant)}</div></div>
                 )}
-                <div style={{ marginTop: '10px' }}><small style={{ color: '#64748b' }}>{t("admin.paiements.owner_share", "Part Propriétaire")}</small><div style={{ fontWeight: 500 }}>{formatMontant(paiement.part_proprietaire?.toString() || null)}</div></div>
-                <div><small style={{ color: '#64748b' }}>{t("admin.paiements.agency_commission", "Commission Agence")}</small><div style={{ fontWeight: 500 }}>{formatMontant(paiement.commission_agent?.toString() || null)}</div></div>
+                <div style={{ marginTop: '10px' }}><small style={{ color: '#64748b' }}>{labelPart}</small><div style={{ fontWeight: 500 }}>{valeurPart}</div></div>
+                <div><small style={{ color: '#64748b' }}>{labelCommission}</small><div style={{ fontWeight: 500 }}>{valeurCommission}</div></div>
               </div>
             </div>
 

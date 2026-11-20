@@ -600,6 +600,8 @@
       "montant_a_valider": "Montant à valider",
       "title_prefix": "Gestion des",
       "title_span": "Paiements",
+      "seller_share": "Part du vendeur",
+      "agency_commission_label": "Commission agence",
       "cancelled_banner_desc": "Ces paiements et échéances correspondent à des contrats résiliés ({count} facture(s)). Ils ne sont pas comptabilisés dans les paiements actifs.",
       "empty_cancelled": "Aucune facture résiliée trouvée.",
       "empty_active": "Aucun paiement trouvé."
