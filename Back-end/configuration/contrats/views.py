@@ -30,17 +30,15 @@ class ContratViewSet(RoleScopedQuerySetMixin, viewsets.ModelViewSet):
 
         contrat = self.get_object()  # Vérifie automatiquement que le contrat est accessible
 
-        if contrat.type_contrat != Contrat.TypeContrat.LOCATION:
-            return Response({"error": "Seuls les contrats de location ont un bail."}, status=status.HTTP_400_BAD_REQUEST)
-
         pdf_bytes = generate_contrat_pdf(contrat)
         if not pdf_bytes:
             return Response({"error": "Erreur lors de la génération du document."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         response = HttpResponse(pdf_bytes, content_type='application/pdf')
-        nom_locataire = contrat.locataire.user.nom or contrat.locataire.user.prenoms or "Locataire"
-        nom_bien = contrat.bien.titre.replace(" ", "_")
-        response['Content-Disposition'] = f'inline; filename="Contrat_Bail_{nom_locataire}_{nom_bien}.pdf"'
+        nom_client = contrat.locataire.user.nom or contrat.locataire.user.prenoms or ("Locataire" if contrat.type_contrat == Contrat.TypeContrat.LOCATION else "Acheteur")
+        nom_bien = (contrat.bien.titre or "Bien").replace(" ", "_")
+        prefix = "Contrat_Bail" if contrat.type_contrat == Contrat.TypeContrat.LOCATION else "Contrat_Vente"
+        response['Content-Disposition'] = f'inline; filename="{prefix}_{nom_client}_{nom_bien}.pdf"'
         return response
 
     queryset = defer_bien_photos(Contrat.objects.select_related("bien", "locataire", "locataire__user"), "bien")

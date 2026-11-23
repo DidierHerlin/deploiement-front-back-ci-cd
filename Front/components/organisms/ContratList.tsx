@@ -4,6 +4,7 @@ import React from 'react';
 import { Contrat } from '@/lib/api';
 import { Building2, FileText } from 'lucide-react';
 import { ContratStatusBadge } from "@/components/atoms/ContratStatusBadge";
+import { ContratDownloadButton } from "@/components/atoms/ContratDownloadButton";
 import { useTranslation } from '@/lib/i18n';
 
 interface ContratListProps {
@@ -62,13 +63,23 @@ export function ContratList({ contrats, onViewDetails }: ContratListProps) {
                   <ContratStatusBadge status={contrat.statut} />
                 </td>
                 <td>
-                  {onViewDetails ? (
-                    <button className="link-button" onClick={() => onViewDetails(contrat)} style={{ padding: 0 }}>
-                      <FileText size={14} /> {t("forms.view", "Voir")}
-                    </button>
-                  ) : (
-                    <span style={{ fontSize: '12px', color: '#9aa3b0' }}>-</span>
-                  )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {onViewDetails ? (
+                      <button className="link-button" onClick={() => onViewDetails(contrat)} style={{ padding: 0 }}>
+                        <FileText size={14} /> {t("forms.view", "Voir")}
+                      </button>
+                    ) : (
+                      <span style={{ fontSize: '12px', color: '#9aa3b0' }}>-</span>
+                    )}
+                    <ContratDownloadButton 
+                      contratId={contrat.id} 
+                      typeContrat={contrat.type_contrat} 
+                      clientName={`${contrat.locataire_prenoms || ''} ${contrat.locataire_nom || ''}`}
+                      bienTitle={contrat.bien_titre}
+                      variant="icon"
+                      size="sm"
+                    />
+                  </div>
                 </td>
               </tr>
             ))}

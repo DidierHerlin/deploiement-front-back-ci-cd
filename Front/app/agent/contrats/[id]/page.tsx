@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { getContrat, getBienDetail, getLocataireDetail, Contrat, Bien, Locataire } from "@/lib/api"
 import { ArrowLeft, Calendar, FileText, Home, User, Edit } from "lucide-react"
 import { formatMontantAr, formatDateFR } from "@/lib/utils"
+import { ContratDownloadButton } from "@/components/atoms/ContratDownloadButton"
 
 export default function ContratDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
@@ -54,7 +55,15 @@ export default function ContratDetailPage({ params }: { params: Promise<{ id: st
         <button className="agent-back" onClick={() => router.back()} style={{ marginBottom: 0 }}>
           <ArrowLeft size={16} /> Retour aux contrats
         </button>
-        <div className="agent-head-actions">
+        <div className="agent-head-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <ContratDownloadButton 
+            contratId={id} 
+            typeContrat={contrat.type_contrat} 
+            clientName={locataire ? `${locataire.user.prenoms} ${locataire.user.nom}` : undefined}
+            bienTitle={bien?.titre}
+            variant="primary"
+            showBadge={true}
+          />
           <button className="agent-btn agent-btn-ghost" onClick={() => router.push(`/agent/contrats/${id}/modifier`)}>
             <Edit size={14} /> Modifier
           </button>
@@ -125,19 +134,16 @@ export default function ContratDetailPage({ params }: { params: Promise<{ id: st
               )}
             </div>
 
-            {contrat.document_pdf && (
-              <div>
-                <div className="agent-detail-label"><FileText size={15} /> Document joint</div>
-                <a
-                  className="agent-btn agent-btn-ghost"
-                  href={contrat.document_pdf}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <FileText size={15} /> Télécharger le PDF
-                </a>
-              </div>
-            )}
+            <div>
+              <div className="agent-detail-label"><FileText size={15} /> Document contractuel</div>
+              <ContratDownloadButton 
+                contratId={id} 
+                typeContrat={contrat.type_contrat} 
+                clientName={locataire ? `${locataire.user.prenoms} ${locataire.user.nom}` : undefined}
+                bienTitle={bien?.titre}
+                variant="outline"
+              />
+            </div>
           </div>
         </div>
       </article>

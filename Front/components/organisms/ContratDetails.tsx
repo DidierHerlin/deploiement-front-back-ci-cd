@@ -108,7 +108,14 @@ export function ContratDetails({ contrat, onClose }: ContratDetailsProps) {
         
         {/* Footer Actions */}
         <div className="p-4 px-6 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center flex-shrink-0 bg-slate-50/60 dark:bg-slate-950/40">
-          <ContratDownloadButton contratId={contrat.id} typeContrat={contrat.type_contrat} />
+          <ContratDownloadButton 
+            contratId={contrat.id} 
+            typeContrat={contrat.type_contrat} 
+            clientName={`${contrat.locataire_prenoms || ''} ${contrat.locataire_nom || ''}`}
+            bienTitle={contrat.bien_titre}
+            variant="primary"
+            showBadge={true}
+          />
           <button className="primary-button cursor-pointer" onClick={onClose}>{t('common.close', 'Fermer')}</button>
         </div>
       </section>

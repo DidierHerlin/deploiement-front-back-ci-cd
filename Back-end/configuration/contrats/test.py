@@ -875,10 +875,18 @@ class ContratUtilsAndSerializerBoostTests(TestCase):
         self.assertEqual(formater_montant_ar(1000000), "1 000 000")
         self.assertEqual(formater_montant_ar("invalid_val"), "invalid_val")
 
-    def test_generate_contrat_pdf_achat_returns_false(self):
+    def test_generate_contrat_pdf_achat_success(self):
         from contrats.utils import generate_contrat_pdf
         self.contrat.type_contrat = Contrat.TypeContrat.ACHAT
-        self.assertFalse(generate_contrat_pdf(self.contrat))
+        self.contrat.prix = 50000000
+        self.contrat.type_paiement_achat = Contrat.TypePaiementAchat.TOTALITE
+        pdf = generate_contrat_pdf(self.contrat)
+        self.assertTrue(bool(pdf))
+
+        # Test achat échelonné
+        self.contrat.type_paiement_achat = Contrat.TypePaiementAchat.PARTIEL
+        pdf_echelonne = generate_contrat_pdf(self.contrat)
+        self.assertTrue(bool(pdf_echelonne))
 
     def test_generate_contrat_pdf_success_and_error(self):
         from contrats.utils import generate_contrat_pdf

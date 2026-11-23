@@ -1,6 +1,7 @@
 import { Eye, Pencil, Trash2 } from 'lucide-react'
 import { Contrat } from '@/lib/api'
 import { useTranslation } from '@/lib/i18n'
+import { ContratDownloadButton } from '@/components/atoms/ContratDownloadButton'
 
 type ContratTableRowProps = {
   contrat: Contrat
@@ -93,6 +94,14 @@ export function ContratTableRow({ contrat, onView, onEdit, onDelete }: ContratTa
       <td>{renderStatut(contrat.statut)}</td>
       <td>
         <div className="flex items-center justify-end gap-1.5">
+          <ContratDownloadButton 
+            contratId={contrat.id} 
+            typeContrat={contrat.type_contrat} 
+            clientName={`${contrat.locataire_prenoms || ''} ${contrat.locataire_nom || ''}`} 
+            bienTitle={contrat.bien_titre} 
+            variant="icon" 
+            size="sm" 
+          />
           <button 
             aria-label={t("forms.view", "Voir")} 
             onClick={() => onView(contrat)} 

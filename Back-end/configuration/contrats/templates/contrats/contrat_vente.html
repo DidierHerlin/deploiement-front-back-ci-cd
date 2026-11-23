@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Contrat de Vente Immobilière</title>
+    <style>
+        @page {
+            size: a4 portrait;
+            margin: 0.8cm 1.3cm 0.7cm 1.3cm;
+        }
+        body { 
+            font-family: Helvetica, Arial, sans-serif; 
+            font-size: 8.5pt; 
+            line-height: 1.35; 
+            color: #1e293b; 
+        }
+        
+        .header-container {
+            text-align: center;
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+            border-bottom: 2px solid #1e3a8a;
+        }
+        h1 { 
+            color: #1e3a8a; 
+            font-size: 13.5pt;
+            letter-spacing: 0.5px;
+            margin: 0 0 2px 0;
+            padding: 0;
+            text-transform: uppercase;
+        }
+        .header-meta {
+            font-size: 8pt;
+            color: #64748b;
+        }
+        .intro-text {
+            margin: 4px 0 6px 0;
+            font-size: 8.5pt;
+        }
+
+        h2 { 
+            color: #1e3a8a; 
+            font-size: 9.5pt; 
+            margin-top: 6px; 
+            margin-bottom: 2px;
+            font-weight: bold;
+            letter-spacing: 0.2px;
+        }
+
+        table.natural-table {
+            width: 100%;
+            margin-top: 2px;
+            margin-bottom: 5px;
+            border-top: 1px solid #cbd5e1;
+            border-bottom: 1.5px solid #94a3b8;
+        }
+        
+        table.natural-table th {
+            background-color: #f8fafc;
+            color: #334155;
+            font-size: 8pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            padding: 3px 6px;
+            border-bottom: 1.5px solid #cbd5e1;
+            text-align: left;
+        }
+        
+        table.natural-table td {
+            padding: 3px 6px;
+            font-size: 8pt;
+            color: #1e293b;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+
+        .table-label {
+            width: 32%;
+            font-weight: bold;
+            color: #475569;
+            background-color: #fbfcfd;
+        }
+
+        .table-value {
+            color: #0f172a;
+        }
+
+        .highlight-val {
+            font-weight: bold;
+            color: #0f172a;
+        }
+
+        p { 
+            text-align: justify; 
+            margin: 2px 0 4px 0;
+            font-size: 8pt;
+            line-height: 1.35;
+        }
+
+        table.signature-table {
+            width: 100%;
+            margin-top: 6px;
+            margin-bottom: 4px;
+        }
+        
+        .sig-card {
+            width: 48%;
+            padding: 6px 10px 8px 10px;
+            border: 1px solid #e2e8f0;
+            background-color: #fafbfc;
+            text-align: center;
+            vertical-align: top;
+        }
+        
+        .sig-role {
+            font-weight: bold;
+            color: #1e3a8a;
+            font-size: 8.5pt;
+            margin-bottom: 1px;
+        }
+
+        .sig-name {
+            font-size: 8pt;
+            color: #334155;
+            margin-bottom: 16px;
+        }
+        
+        .sig-line {
+            font-size: 7.5pt;
+            color: #64748b;
+            font-style: italic;
+            border-top: 1px dashed #cbd5e1;
+            padding-top: 2px;
+            display: block;
+        }
+
+        .conformity-badge {
+            margin-top: 2px;
+            padding: 3px 6px;
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+            font-size: 7.5pt;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <h1>CONTRAT DE VENTE IMMOBILIÈRE</h1>
+        <div class="header-meta">Contrat n° <strong>{{ contrat.id }}</strong> &bull; Statut : <strong>{{ contrat.get_statut_display|default:"Actif" }}</strong> &bull; Référence bien : <strong>#{{ contrat.bien.id }}</strong></div>
+    </div>
+    
+    <p class="intro-text">Le présent contrat de vente immobilière est conclu le <strong>{{ contrat.date_debut|date:"d/m/Y"|default:contrat.date_creation|date:"d/m/Y"|default:"[À compléter]" }}</strong> entre les parties soussignées :</p>
+
+    <h2>Article 1 — Identification des parties</h2>
+    <table class="natural-table" cellpadding="0" cellspacing="0">
+        <thead>
+            <tr>
+                <th style="width: 25%;">Rôle</th>
+                <th style="width: 32%;">Nom complet</th>
+                <th style="width: 25%;">Adresse e-mail</th>
+                <th style="width: 18%;">Téléphone</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="highlight-val">Vendeur (Propriétaire)</td>
+                <td>{{ contrat.bien.proprietaire.user.get_full_name|default:contrat.bien.proprietaire.user.email|default:"[À compléter]" }}</td>
+                <td>{{ contrat.bien.proprietaire.user.email|default:"[À compléter]" }}</td>
+                <td>{{ contrat.bien.proprietaire.user.telephone|default:"[À compléter]" }}</td>
+            </tr>
+            <tr>
+                <td class="highlight-val">Acheteur (Acquéreur)</td>
+                <td>{{ contrat.locataire.user.get_full_name|default:contrat.locataire.user.email|default:"[À compléter]" }}</td>
+                <td>{{ contrat.locataire.user.email|default:"[À compléter]" }}</td>
+                <td>{{ contrat.locataire.user.telephone|default:"[À compléter]" }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Article 2 — Désignation du bien vendu</h2>
+    <table class="natural-table" cellpadding="0" cellspacing="0">
+        <tbody>
+            <tr>
+                <td class="table-label">Désignation du bien</td>
+                <td class="table-value highlight-val">{{ contrat.bien.titre|default:"[À compléter]" }}</td>
+            </tr>
+            <tr>
+                <td class="table-label">Type de bien</td>
+                <td class="table-value">{{ contrat.bien.get_type_bien_display|default:"[À compléter]" }}</td>
+            </tr>
+            <tr>
+                <td class="table-label">Adresse et localisation</td>
+                <td class="table-value">{{ contrat.bien.adresse|default:"[À compléter]" }}{% if contrat.bien.ville %}, {{ contrat.bien.ville }}{% endif %}</td>
+            </tr>
+            <tr>
+                <td class="table-label">Surface habitable / terrain</td>
+                <td class="table-value">{{ contrat.bien.surface|default:"[À compléter]" }} m²</td>
+            </tr>
+            <tr>
+                <td class="table-label">Nombre de pièces</td>
+                <td class="table-value">{{ contrat.bien.nombre_pieces|default:"[À compléter]" }} pièces</td>
+            </tr>
+            <tr>
+                <td class="table-label">Références disponibles</td>
+                <td class="table-value">Bien n° {{ contrat.bien.id }} &bull; Transaction : Vente</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Article 3 — Prix de vente et engagements des parties</h2>
+    <table class="natural-table" cellpadding="0" cellspacing="0">
+        <thead>
+            <tr>
+                <th style="width: 45%;">Élément</th>
+                <th style="width: 55%;">Conditions convenues</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Prix de vente total convenu</td>
+                <td class="highlight-val">{{ prix_format }} Ar</td>
+            </tr>
+            <tr>
+                <td>Date de conclusion du contrat</td>
+                <td class="highlight-val">{{ contrat.date_debut|date:"d/m/Y"|default:contrat.date_creation|date:"d/m/Y"|default:"[À compléter]" }}</td>
+            </tr>
+            <tr>
+                <td>Mode de règlement prévu</td>
+                <td><strong>{{ mode_reglement }}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+    <p><strong>Engagement du vendeur :</strong> Le vendeur s'oblige expressément à transférer la pleine et entière propriété du bien désigné ci-dessus, quitte et libre de toute hypothèque, privilège ou servitude non déclarée.</p>
+    <p><strong>Engagement de l'acheteur :</strong> L'acheteur déclare acquérir ledit bien et s'oblige irrévocablement à en régler le prix total de <strong>{{ prix_format }} Ar</strong> selon l'échéancier et les modalités stipulés au présent contrat.</p>
+
+    <h2>Article 4 — Échéancier des règlements</h2>
+    <table class="natural-table" cellpadding="0" cellspacing="0">
+        <thead>
+            <tr>
+                <th style="width: 25%;">Tranche</th>
+                <th style="width: 25%;">Date d'échéance</th>
+                <th style="width: 25%;">Montant prévu (Ar)</th>
+                <th style="width: 25%;">Statut actuel</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ech in echeances %}
+            <tr>
+                <td class="highlight-val">Tranche n° {{ ech.numero }}{% if ech.pourcentage %} ({{ ech.pourcentage }}){% endif %}</td>
+                <td>{{ ech.date|date:"d/m/Y"|default:ech.date }}</td>
+                <td class="highlight-val">{{ ech.montant_format }} Ar</td>
+                <td>{{ ech.statut }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="text-align: center; color: #64748b;">[Échéancier à compléter par les parties]</td>
+            </tr>
+            {% endfor %}
+            <tr style="background-color: #f8fafc; font-weight: bold;">
+                <td colspan="2" style="border-top: 1.5px solid #cbd5e1;">TOTAL DES ÉCHÉANCES</td>
+                <td style="border-top: 1.5px solid #cbd5e1; color: #1e3a8a;">{{ total_echeances_format }} Ar</td>
+                <td style="border-top: 1.5px solid #cbd5e1;">
+                    {% if total_echeances_conforme %}
+                    <span style="color: #166534;">Conforme au prix (100 %)</span>
+                    {% else %}
+                    <span style="color: #b45309;">À vérifier</span>
+                    {% endif %}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Article 5 — Transfert de propriété et prise de possession</h2>
+    <p>Le transfert de propriété et la remise effective des clés interviendront à compter de la validation du complet paiement du prix convenu, sauf accord dérogatoire exprès et écrit entre les parties.</p>
+
+    <h2>Article 6 — Signatures des parties</h2>
+    <p>Fait en deux exemplaires originaux, pour servir et valoir ce que de droit.</p>
+    
+    <table class="signature-table" cellpadding="0" cellspacing="0">
+        <tr>
+            <td class="sig-card">
+                <div class="sig-role">Le Vendeur (Propriétaire)</div>
+                <div class="sig-name">{{ contrat.bien.proprietaire.user.get_full_name|default:contrat.bien.proprietaire.user.email|default:"[À compléter]" }}</div>
+                <span class="sig-line">(Lu et approuvé)</span>
+            </td>
+            <td style="width: 4%;"></td>
+            <td class="sig-card">
+                <div class="sig-role">L'Acheteur (Acquéreur)</div>
+                <div class="sig-name">{{ contrat.locataire.user.get_full_name|default:contrat.locataire.user.email|default:"[À compléter]" }}</div>
+                <span class="sig-line">(Lu et approuvé)</span>
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

@@ -3,6 +3,7 @@ import { X, FileText, Calendar, Building2, User, CreditCard } from 'lucide-react
 import { Contrat, Paiement } from '@/lib/api'
 import { Pagination } from "@/components/molecules/pagination"
 import { useTranslation } from '@/lib/i18n'
+import { ContratDownloadButton } from '@/components/atoms/ContratDownloadButton'
 
 type ContratModalProps = {
   contrat: Contrat
@@ -184,6 +185,14 @@ export function ContratModal({ contrat, paiements, onClose, onAction }: ContratM
 
         <div className="border-t border-slate-200 dark:border-slate-800 pt-4 mt-4 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2">
+            <ContratDownloadButton 
+              contratId={contrat.id} 
+              typeContrat={contrat.type_contrat} 
+              clientName={`${contrat.locataire_prenoms || ''} ${contrat.locataire_nom || ''}`} 
+              bienTitle={contrat.bien_titre} 
+              variant="primary" 
+              showBadge={true} 
+            />
             {contrat.statut === 'ACTIF' && isLocation && (
               <>
                 <button 
