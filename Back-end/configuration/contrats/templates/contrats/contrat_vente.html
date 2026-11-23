@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr" xml:lang="fr">
 <head>
     <meta charset="utf-8">
     <title>Contrat de Vente Immobilière</title>
@@ -67,7 +67,7 @@
             text-align: left;
         }
         
-        table.natural-table td {
+        table.natural-table td, table.natural-table th.table-label {
             padding: 3px 6px;
             font-size: 8pt;
             color: #1e293b;
@@ -80,6 +80,7 @@
             font-weight: bold;
             color: #475569;
             background-color: #fbfcfd;
+            text-align: left;
         }
 
         .table-value {
@@ -102,6 +103,16 @@
             width: 100%;
             margin-top: 6px;
             margin-bottom: 4px;
+        }
+
+        table.signature-table th {
+            background-color: transparent;
+            border: none;
+            color: #1e3a8a;
+            font-size: 8.5pt;
+            font-weight: bold;
+            padding-bottom: 4px;
+            text-align: center;
         }
         
         .sig-card {
@@ -134,16 +145,6 @@
             padding-top: 2px;
             display: block;
         }
-
-        .conformity-badge {
-            margin-top: 2px;
-            padding: 3px 6px;
-            background-color: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            color: #166534;
-            font-size: 7.5pt;
-            font-weight: bold;
-        }
     </style>
 </head>
 <body>
@@ -159,10 +160,10 @@
     <table class="natural-table" cellpadding="0" cellspacing="0">
         <thead>
             <tr>
-                <th style="width: 25%;">Rôle</th>
-                <th style="width: 32%;">Nom complet</th>
-                <th style="width: 25%;">Adresse e-mail</th>
-                <th style="width: 18%;">Téléphone</th>
+                <th scope="col" style="width: 25%;">Rôle</th>
+                <th scope="col" style="width: 32%;">Nom complet</th>
+                <th scope="col" style="width: 25%;">Adresse e-mail</th>
+                <th scope="col" style="width: 18%;">Téléphone</th>
             </tr>
         </thead>
         <tbody>
@@ -183,29 +184,35 @@
 
     <h2>Article 2 — Désignation du bien vendu</h2>
     <table class="natural-table" cellpadding="0" cellspacing="0">
+        <thead>
+            <tr>
+                <th scope="col" style="width: 32%;">Caractéristique</th>
+                <th scope="col" style="width: 68%;">Détail du bien</th>
+            </tr>
+        </thead>
         <tbody>
             <tr>
-                <td class="table-label">Désignation du bien</td>
+                <th scope="row" class="table-label">Désignation du bien</th>
                 <td class="table-value highlight-val">{{ contrat.bien.titre|default:"[À compléter]" }}</td>
             </tr>
             <tr>
-                <td class="table-label">Type de bien</td>
+                <th scope="row" class="table-label">Type de bien</th>
                 <td class="table-value">{{ contrat.bien.get_type_bien_display|default:"[À compléter]" }}</td>
             </tr>
             <tr>
-                <td class="table-label">Adresse et localisation</td>
+                <th scope="row" class="table-label">Adresse et localisation</th>
                 <td class="table-value">{{ contrat.bien.adresse|default:"[À compléter]" }}{% if contrat.bien.ville %}, {{ contrat.bien.ville }}{% endif %}</td>
             </tr>
             <tr>
-                <td class="table-label">Surface habitable / terrain</td>
+                <th scope="row" class="table-label">Surface habitable / terrain</th>
                 <td class="table-value">{{ contrat.bien.surface|default:"[À compléter]" }} m²</td>
             </tr>
             <tr>
-                <td class="table-label">Nombre de pièces</td>
+                <th scope="row" class="table-label">Nombre de pièces</th>
                 <td class="table-value">{{ contrat.bien.nombre_pieces|default:"[À compléter]" }} pièces</td>
             </tr>
             <tr>
-                <td class="table-label">Références disponibles</td>
+                <th scope="row" class="table-label">Références disponibles</th>
                 <td class="table-value">Bien n° {{ contrat.bien.id }} &bull; Transaction : Vente</td>
             </tr>
         </tbody>
@@ -215,8 +222,8 @@
     <table class="natural-table" cellpadding="0" cellspacing="0">
         <thead>
             <tr>
-                <th style="width: 45%;">Élément</th>
-                <th style="width: 55%;">Conditions convenues</th>
+                <th scope="col" style="width: 45%;">Élément</th>
+                <th scope="col" style="width: 55%;">Conditions convenues</th>
             </tr>
         </thead>
         <tbody>
@@ -241,10 +248,10 @@
     <table class="natural-table" cellpadding="0" cellspacing="0">
         <thead>
             <tr>
-                <th style="width: 25%;">Tranche</th>
-                <th style="width: 25%;">Date d'échéance</th>
-                <th style="width: 25%;">Montant prévu (Ar)</th>
-                <th style="width: 25%;">Statut actuel</th>
+                <th scope="col" style="width: 25%;">Tranche</th>
+                <th scope="col" style="width: 25%;">Date d'échéance</th>
+                <th scope="col" style="width: 25%;">Montant prévu (Ar)</th>
+                <th scope="col" style="width: 25%;">Statut actuel</th>
             </tr>
         </thead>
         <tbody>
@@ -281,19 +288,28 @@
     <p>Fait en deux exemplaires originaux, pour servir et valoir ce que de droit.</p>
     
     <table class="signature-table" cellpadding="0" cellspacing="0">
-        <tr>
-            <td class="sig-card">
-                <div class="sig-role">Le Vendeur (Propriétaire)</div>
-                <div class="sig-name">{{ contrat.bien.proprietaire.user.get_full_name|default:contrat.bien.proprietaire.user.email|default:"[À compléter]" }}</div>
-                <span class="sig-line">(Lu et approuvé)</span>
-            </td>
-            <td style="width: 4%;"></td>
-            <td class="sig-card">
-                <div class="sig-role">L'Acheteur (Acquéreur)</div>
-                <div class="sig-name">{{ contrat.locataire.user.get_full_name|default:contrat.locataire.user.email|default:"[À compléter]" }}</div>
-                <span class="sig-line">(Lu et approuvé)</span>
-            </td>
-        </tr>
+        <thead>
+            <tr>
+                <th scope="col" style="width: 48%; text-align: center;">Pour le Vendeur</th>
+                <th scope="col" style="width: 4%;"></th>
+                <th scope="col" style="width: 48%; text-align: center;">Pour l'Acheteur</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="sig-card">
+                    <div class="sig-role">Le Vendeur (Propriétaire)</div>
+                    <div class="sig-name">{{ contrat.bien.proprietaire.user.get_full_name|default:contrat.bien.proprietaire.user.email|default:"[À compléter]" }}</div>
+                    <span class="sig-line">(Lu et approuvé)</span>
+                </td>
+                <td></td>
+                <td class="sig-card">
+                    <div class="sig-role">L'Acheteur (Acquéreur)</div>
+                    <div class="sig-name">{{ contrat.locataire.user.get_full_name|default:contrat.locataire.user.email|default:"[À compléter]" }}</div>
+                    <span class="sig-line">(Lu et approuvé)</span>
+                </td>
+            </tr>
+        </tbody>
     </table>
 
 </body>
