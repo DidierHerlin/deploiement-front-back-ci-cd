@@ -13,8 +13,6 @@ logger = logging.getLogger(__name__)
 
 
 class Reservation(models.Model):
-    """Table RESERVATION du MLD."""
-
     class TypeReservation(models.TextChoices):
         LOCATION = "LOCATION", "Location"
         ACHAT = "ACHAT", "Achat"
@@ -122,6 +120,5 @@ class Reservation(models.Model):
             self._notifier_admin_et_agent()
 
     def _notifier_admin_et_agent(self) -> None:
-        """Crée une notification pour chaque ADMIN et AGENT via NotificationService."""
         from notifications.services import NotificationService
         NotificationService.notifier_nouvelle_reservation(self)

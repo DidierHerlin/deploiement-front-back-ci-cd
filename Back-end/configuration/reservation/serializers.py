@@ -9,8 +9,6 @@ from .models import Reservation
 
 
 class ReservationSerializer(serializers.ModelSerializer):
-    """Serializer pour la création et la mise à jour de réservations."""
-
     class Meta:
         model = Reservation
         fields = [
@@ -55,10 +53,8 @@ class ReservationSerializer(serializers.ModelSerializer):
 
         return attrs
 
-
+# Liste détaillé duu réservation
 class ReservationDetailSerializer(serializers.ModelSerializer):
-    """Serializer enrichi pour la lecture (list / retrieve)."""
-
     # Infos locataire
     locataire_nom = serializers.CharField(source="locataire.user.nom", read_only=True)
     locataire_prenoms = serializers.CharField(source="locataire.user.prenoms", read_only=True)
@@ -66,8 +62,6 @@ class ReservationDetailSerializer(serializers.ModelSerializer):
     locataire_telephone = serializers.CharField(
         source="locataire.user.telephone", read_only=True, default=""
     )
-
-    # Infos bien
     bien_titre = serializers.CharField(source="bien.titre", read_only=True)
     bien_type = serializers.CharField(source="bien.type", read_only=True)
     bien_adresse = serializers.CharField(source="bien.adresse", read_only=True)
@@ -117,8 +111,6 @@ class ReservationDetailSerializer(serializers.ModelSerializer):
 
 
 class RepondreReservationSerializer(serializers.Serializer):
-    """Serializer pour la réponse admin/agent à une réservation."""
-
     reponse_admin = serializers.CharField(required=True)
     statut = serializers.ChoiceField(
         choices=[

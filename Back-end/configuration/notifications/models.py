@@ -10,8 +10,6 @@ logger = logging.getLogger(__name__)
 
 
 class Notification(models.Model):
-    """Table NOTIFICATION du MLD."""
-
     class Type(models.TextChoices):
         CONTRAT_CREE = "CONTRAT_CREE", "Contrat créé"
         PAIEMENT_VALIDE = "PAIEMENT_VALIDE", "Paiement validé"

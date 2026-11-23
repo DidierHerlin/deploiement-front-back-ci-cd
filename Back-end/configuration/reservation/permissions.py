@@ -1,13 +1,3 @@
-"""Permissions du module Reservation.
-
-Matrice de droits :
-
-    Rôle                | Lecture         | Création | Mise à jour (répondre)
-    --------------------|-----------------|----------|------------------------
-    ADMIN / AGENT       | Toutes          | Non      | Oui
-    LOCATAIRE           | Les siennes     | Oui      | Non
-"""
-
 from rest_framework import permissions
 from rest_framework.request import Request
 from rest_framework.views import APIView
@@ -17,9 +7,6 @@ from utilisateur.models import Utilisateur
 
 
 class ReservationPermission(permissions.BasePermission):
-    """Lecture ouverte aux authentifiés ; création réservée au LOCATAIRE ;
-    mise à jour réservée à ADMIN/AGENT."""
-
     def has_permission(self, request: Request, view: APIView) -> bool:
         if not (request.user and request.user.is_authenticated):
             return False
@@ -27,7 +14,7 @@ class ReservationPermission(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        # Création : uniquement LOCATAIRE
+        # Création pour locataire seulement (les autres rôles ne peuvent pas créer de réservation)
         if request.method == "POST" and view.action == "create":
             return request.user.role == Utilisateur.Role.LOCATAIRE
 

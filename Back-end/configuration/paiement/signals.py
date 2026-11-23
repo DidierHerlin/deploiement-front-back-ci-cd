@@ -1,14 +1,3 @@
-"""Signaux de l'application paiement.
-
-Contient :
-- Génération automatique de quittance (RG-16) sur Paiement
-- Mise à jour automatique du statut EN_RETARD (RG-15) sur Paiement
-- Génération automatique de l'échéancier de paiements sur Contrat (post_save)
-  · Location : règles premier mois (loyer + dépôt + frais agence) / mois suivants (loyer + frais agence)
-  · Achat    : comptant (1 échéance) ou échelonné (50 % + 5 × 10 % avec frais agence)
-- Annulation des échéances futures lors de résiliation/terminaison d'un Contrat
-"""
-
 import calendar
 import logging
 from datetime import date
@@ -35,10 +24,6 @@ TAUX_FRAIS_AGENCE = Decimal("0.10")
 
 @receiver(post_save, sender=Paiement)
 def generer_quittance_apres_validation(sender, instance: Paiement, **kwargs):
-    """
-    RG-16 : Génère automatiquement une quittance lorsque le paiement passe à PAYE.
-    Le PDF est stocké dans le champ fichier_quittance du modèle.
-    """
     # Vérifier que le paiement est validé ET que la quittance n'existe pas encore
     if instance.statut == Paiement.StatutPaiement.PAYE and not instance.fichier_quittance:
         try:
@@ -52,13 +37,6 @@ def generer_quittance_apres_validation(sender, instance: Paiement, **kwargs):
 
 @receiver(post_save, sender=Paiement)
 def mettre_a_jour_statut_bien_apres_paiement(sender, instance: Paiement, **kwargs):
-    """
-    Si un paiement d'un contrat est validé (PAYE),
-    le statut du bien est mis à jour selon le type de contrat.
-    LOCATION -> LOUE
-    ACHAT -> VENDU (uniquement si le montant intégral est réglé et plus d'échéances en attente)
-             Sinon le contrat reste ACTIF et le bien reste RESERVE
-    """
     update_fields = kwargs.get("update_fields")
     if update_fields is not None and "statut" not in update_fields:
         return
@@ -105,9 +83,6 @@ def mettre_a_jour_statut_bien_apres_paiement(sender, instance: Paiement, **kwarg
 
 @receiver(post_save, sender=Paiement)
 def mettre_a_jour_statut_retard(sender, instance: Paiement, **kwargs):
-    """
-    RG-15 : Met à jour automatiquement le statut EN_RETARD si nécessaire.
-    """
     # Ne pas modifier le statut si déjà PAYE ou ANNULE
     if instance.statut in (Paiement.StatutPaiement.PAYE, Paiement.StatutPaiement.ANNULE):
         return
@@ -133,16 +108,6 @@ def mettre_a_jour_statut_retard(sender, instance: Paiement, **kwargs):
 
 
 def _ajouter_un_mois(date_courante: date) -> date:
-    """Ajoute un mois à une date en gérant correctement les fins de mois.
-
-    Exemples :
-        31 janvier → 28 (ou 29) février
-        31 mars    → 30 avril
-        28 février → 28 mars
-
-    Utilise ``calendar.monthrange`` de la bibliothèque standard
-    (aucune dépendance externe type ``python-dateutil``).
-    """
     annee = date_courante.year + (date_courante.month // 12)
     mois = (date_courante.month % 12) + 1
     dernier_jour_du_mois = calendar.monthrange(annee, mois)[1]
@@ -154,11 +119,6 @@ def _ajouter_un_mois(date_courante: date) -> date:
 
 
 def _paiement_base(contrat: Contrat, **kwargs) -> Paiement:
-    """Construit un objet Paiement sans le sauvegarder.
-
-    Note : mode_paiement est volontairement absent (null) — il sera renseigné
-    uniquement au moment de l'enregistrement réel du paiement.
-    """
     date_echeance = kwargs.get('date_echeance')
     return Paiement(
         contrat=contrat,
@@ -172,15 +132,6 @@ def _paiement_base(contrat: Contrat, **kwargs) -> Paiement:
 
 
 def generer_echeancier_location(contrat: Contrat) -> None:
-    """Génère l'échéancier de paiements pour un contrat de LOCATION actif.
-
-    Règles métier :
-    ─ Premier mois  : loyer + dépôt de garantie + frais d'agence (10 % du loyer)
-    ─ Mois suivants : loyer + frais d'agence (10 % du loyer)
-
-    Idempotence : si des paiements existent déjà, on ne régénère rien.
-    Utilise ``bulk_create()`` pour la performance.
-    """
     if Paiement.objects.filter(contrat=contrat).exists():
         logger.debug(
             "Échéancier déjà existant pour le contrat #%s — aucune génération.", contrat.pk
@@ -225,17 +176,6 @@ def generer_echeancier_location(contrat: Contrat) -> None:
 
 
 def generer_echeancier_achat(contrat: Contrat, *, mode: str = "echelonne") -> None:
-    """Génère l'échéancier de paiements pour un contrat d'ACHAT actif.
-
-    Deux modes possibles :
-
-    ``comptant``  — Une seule échéance couvrant l'intégralité du prix (100%).
-    ``echelonne`` — Paiement en 6 échéances :
-        · Échéance 1 : 50 % du prix
-        · Échéances 2 à 6 : 10 % du prix
-        Les dates sont générées à partir de date_creation.
-    Idempotence : si des paiements existent déjà, on ne régénère rien.
-    """
     if Paiement.objects.filter(contrat=contrat).exists():
         logger.debug(
             "Échéancier déjà existant pour le contrat #%s — aucune génération.", contrat.pk
@@ -316,12 +256,6 @@ def generer_echeancier(contrat: Contrat) -> None:
 
 
 def annuler_echeances_futures(contrat: Contrat) -> None:
-    """Annule (statut → ANNULE) les échéances EN_ATTENTE d'un contrat résilié/terminé.
-
-    Comportement par défaut activé lors du passage du contrat à RESILIE ou TERMINE.
-    Seules les échéances dont le statut est encore EN_ATTENTE sont touchées ;
-    les paiements déjà PAYE ou EN_RETARD restent inchangés.
-    """
     nombre_annule = Paiement.objects.filter(
         contrat=contrat,
         statut=Paiement.StatutPaiement.EN_ATTENTE,
@@ -337,19 +271,6 @@ def annuler_echeances_futures(contrat: Contrat) -> None:
 
 @receiver(post_save, sender=Contrat)
 def generer_echeancier_contrat(sender, instance: Contrat, **kwargs) -> None:
-    """Récepteur post_save sur Contrat — orchestre la génération ou l'annulation
-    de l'échéancier de paiements.
-
-    Déclencheur → Contrat (modèle source de l'événement)
-    Modèle modifié → Paiement (lignes créées ou mises à jour)
-
-    Cas traités :
-    1. Contrat LOCATION + ACTIF  → génération de l'échéancier location (idempotent).
-    2. Contrat LOCATION + RESILIE/TERMINE → annulation des échéances en attente.
-    3. Contrat ACHAT   + ACTIF  → génération de l'échéancier achat échelonné (idempotent).
-       (Pour un paiement comptant, la vue/API devra appeler generer_echeancier_achat(mode='comptant').)
-    4. Contrat ACHAT   + VENDU  → annulation des échéances en attente.
-    """
     if instance.statut == Contrat.StatutContrat.ACTIF and instance.type_contrat == Contrat.TypeContrat.LOCATION:
         # Cas 1 : contrat de location actif → génération de l'échéancier location
         generer_echeancier_location(instance)

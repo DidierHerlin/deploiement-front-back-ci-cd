@@ -18,10 +18,6 @@ logger = logging.getLogger(__name__)
 
 
 class NotificationListView(APIView):
-    """
-    GET /api/notifications/
-    Filtres optionnels : ?lu=false, ?type=RETARD_PAIEMENT
-    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -55,10 +51,6 @@ class NotificationCountView(APIView):
 
 
 class NotificationDetailView(APIView):
-    """
-    GET /api/notifications/<id>/ — détail + marque comme lue automatiquement
-    DELETE /api/notifications/<id>/ — suppression
-    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
@@ -92,10 +84,6 @@ class NotificationDetailView(APIView):
 
 class MarquerLuView(APIView):
     serializer_class = MarquerLuSerializer
-    """
-    POST /api/notifications/marquer-lu/
-    Body : { "notification_ids": [1, 2, 3] } — vide = tout marquer comme lu.
-    """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -117,11 +105,6 @@ class MarquerLuView(APIView):
 
 class NotificationCreateView(APIView):
     serializer_class = NotificationCreateSerializer
-    """
-    POST /api/notifications/creer/
-    Réservé aux administrateurs. Déclenche automatiquement l'envoi d'email
-    via le signal post_save défini dans models/notification.py.
-    """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):

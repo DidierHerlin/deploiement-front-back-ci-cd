@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
-from .models import Paiement
+from .models import Paiement,DemandePaiement
 
 
 @admin.register(Paiement)
@@ -40,16 +40,10 @@ class PaiementAdmin(admin.ModelAdmin):
 
     @admin.display(description="Quittance")
     def lien_quittance(self, obj):
-        """
-        Affiche un lien cliquable vers le fichier PDF si la quittance existe.
-        """
         if obj.fichier_quittance:
             url = obj.fichier_quittance.url
             return format_html('<a href="{}" target="_blank">📄 Télécharger</a>', url)
         return "-"
-
-
-from .models import DemandePaiement
 
 
 @admin.register(DemandePaiement)
@@ -100,4 +94,4 @@ class DemandePaiementAdmin(admin.ModelAdmin):
         for demande in queryset.filter(statut=DemandePaiement.StatutDemande.EN_ATTENTE):
             demande.refuser(motif="Refusé depuis l'administration")
             count += 1
-        self.message_user(request, f"{count} demande(s) de paiement refusée(s).")
+        self.message_user(request, f"{count} demande(s) de paiement refusée(s).")

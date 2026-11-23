@@ -6,8 +6,6 @@ from .models import Notification
 
 
 class NotificationSerializer(serializers.ModelSerializer):
-    """Serializer complet pour la lecture des notifications."""
-
     type_display = serializers.CharField(source="get_type_display", read_only=True)
 
     class Meta:
@@ -28,7 +26,6 @@ class NotificationSerializer(serializers.ModelSerializer):
 
 
 class NotificationCreateSerializer(serializers.ModelSerializer):
-    """Création de notifications (usage interne / admin)."""
 
     class Meta:
         model = Notification
@@ -36,8 +33,6 @@ class NotificationCreateSerializer(serializers.ModelSerializer):
 
 
 class MarquerLuSerializer(serializers.Serializer):
-    """Permet de marquer une ou plusieurs notifications comme lues."""
-
     notification_ids = serializers.ListField(
         child=serializers.IntegerField(),
         required=False,

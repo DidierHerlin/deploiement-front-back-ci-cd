@@ -11,11 +11,6 @@ logger = logging.getLogger(__name__)
 
 
 def generate_contrat_pdf(contrat: Contrat) -> bytes | bool:
-    """
-    Génère un document contractuel PDF adapté au type de transaction :
-    - LOCATION : Contrat de bail
-    - ACHAT    : Contrat de vente immobilière
-    """
     if contrat.type_contrat == Contrat.TypeContrat.LOCATION:
         context = {
             "contrat": contrat,

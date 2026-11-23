@@ -13,12 +13,11 @@ from drf_spectacular.views import (
 
 @require_GET
 def health_check(request):
-    """Sonde de sante pour l'infrastructure (Docker, Kubernetes, load balancers)."""
     return JsonResponse({"status": "ok"})
 
 
 urlpatterns = [
-    # Verifications de sante
+    # Verifications l'etat de l'application 
     path("health/", health_check, name="health"),
     path("api/health/", health_check, name="api-health"),
     path("api/health", health_check),
@@ -37,7 +36,7 @@ urlpatterns = [
     path("api/", include("Transaction.urls")),
     path("api/", include("Status.urls")),
 
-    # Documentation API OpenAPI / Swagger
+    #Documentation API ave Swagger
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
     path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),

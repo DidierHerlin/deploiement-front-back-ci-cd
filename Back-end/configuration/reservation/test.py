@@ -1,7 +1,3 @@
-"""
-Tests complets pour l'application Reservation.
-Couvre : list, retrieve, create, repondre, filtres, permissions, et modèle.
-"""
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -31,8 +27,6 @@ def make_bien(proprietaire, titre="Appart", mode=Bien.ModeTransaction.LOCATION, 
 
 
 class ReservationListTests(APITestCase):
-    """Tests pour la liste et le retrieve des réservations."""
-
     @classmethod
     def setUpTestData(cls):
         cls.admin = make_user("admin@r.com", Utilisateur.Role.ADMIN)
@@ -100,7 +94,6 @@ class ReservationListTests(APITestCase):
 
 
 class ReservationCreateTests(APITestCase):
-    """Tests pour la création de réservations."""
 
     @classmethod
     def setUpTestData(cls):
@@ -205,7 +198,6 @@ class ReservationRepondreTests(APITestCase):
 
 
 class ReservationModelTests(APITestCase):
-    """Tests pour les méthodes du modèle Reservation."""
 
     @classmethod
     def setUpTestData(cls):

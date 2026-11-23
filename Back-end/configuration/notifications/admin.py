@@ -12,6 +12,5 @@ class NotificationAdmin(admin.ModelAdmin):
     ordering = ("-date_creation",)
 
     def message_court(self, obj):
-        """Affiche les 80 premiers caractères du message."""
         return obj.message[:80] + "…" if len(obj.message) > 80 else obj.message
     message_court.short_description = "Message"

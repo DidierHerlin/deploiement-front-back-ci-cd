@@ -1,5 +1,3 @@
-"""Vues du module Reservation."""
-
 from __future__ import annotations
 
 import logging
@@ -51,7 +49,6 @@ class ReservationViewSet(RoleScopedQuerySetMixin, viewsets.ModelViewSet):
         return self.filter_by_user_role(super().get_queryset())
 
     def perform_create(self, serializer):
-        """Associe automatiquement le locataire connecté à la réservation."""
         locataire = self.request.user.profil_locataire
         serializer.save(locataire=locataire)
 
@@ -92,11 +89,6 @@ class ReservationViewSet(RoleScopedQuerySetMixin, viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     def repondre(self, request: Request, pk=None) -> Response:
-        """
-        POST /reservations/{id}/repondre/
-        Permet à l'admin ou l'agent de répondre à une réservation.
-        Body : { "reponse_admin": "...", "statut": "TRAITEE" | "ANNULEE" }
-        """
         reservation = self.get_object()
 
         if reservation.statut != Reservation.StatutReservation.EN_ATTENTE:

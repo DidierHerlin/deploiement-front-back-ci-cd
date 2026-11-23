@@ -303,9 +303,6 @@ class PaiementSerializer(serializers.ModelSerializer):
 # Demandes de paiement locataire (Mobile Money)
 
 class DemandePaiementSerializer(serializers.ModelSerializer):
-    """
-    Sérialiseur complet pour la consultation des demandes de paiement.
-    """
     locataire_nom = serializers.CharField(
         source="locataire.user.get_full_name",
         read_only=True
@@ -363,17 +360,6 @@ class DemandePaiementSerializer(serializers.ModelSerializer):
 
 
 class DemandePaiementCreateSerializer(serializers.ModelSerializer):
-    """
-    Sérialiseur pour la soumission d'une demande de paiement par le locataire.
-    Vérifie toutes les règles métier :
-    - Exclusivement Mobile Money (MVOLA, ORANGE_MONEY, AIRTEL_MONEY)
-    - Facture du mois à venir uniquement
-    - Refus des factures passées ou hors mois autorisé
-    - Facture non déjà payée
-    - Pas de doublon (demande déjà en cours)
-    - Montant conforme au montant réel de la facture
-    - Locataire propriétaire du contrat
-    """
     montant = serializers.DecimalField(
         max_digits=15, decimal_places=2, required=False
     )
@@ -479,4 +465,4 @@ class DemandePaiementCreateSerializer(serializers.ModelSerializer):
         elif not facture.reference:
             facture.reference = f"DEM-{demande.id}"
         facture.save()
-        return demande
+        return demande

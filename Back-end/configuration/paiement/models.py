@@ -8,19 +8,10 @@ import os  # Pour la fonction de chemin
 
 # Fonction pour générer le chemin de stockage du PDF
 def quittance_upload_path(instance, filename):
-    """
-    Génère un chemin personnalisé pour les quittances.
-    Exemple : quittances/contrat_1/paiement_5.pdf
-    """
     return f"quittances/contrat_{instance.contrat.id}/paiement_{instance.pk}.pdf"
 
 
 class Quittance:
-    """
-    Objet représentant une quittance de loyer créée pour un paiement.
-    Permet d'associer un identifiant de quittance propre (ex: id=10 ou id=99)
-    au paiement concerné (accessible via l'attribut .paiement).
-    """
     def __init__(self, id=None, paiement=None, numero=None, **kwargs):
         self.id = id
         self.pk = id
@@ -279,7 +270,6 @@ class Paiement(models.Model):
 
     @property
     def mois_echeance(self) -> str:
-        """Retourne le mois de l'échéance sous forme lisible (ex: 'janvier 2026')."""
         MOIS_FR = [
             "", "janvier", "février", "mars", "avril", "mai", "juin",
             "juillet", "août", "septembre", "octobre", "novembre", "décembre"
@@ -288,12 +278,10 @@ class Paiement(models.Model):
 
     @property
     def message_mois(self) -> str:
-        """Message informatif sur le mois concerné par ce paiement."""
         return f"Ce paiement correspond au mois de {self.mois_echeance}."
 
     @property
     def est_mois_a_venir(self) -> bool:
-        """Indique si cette facture correspond au mois à venir (mois suivant)."""
         if not self.date_echeance:
             return False
         annee_cible, mois_cible = get_mois_a_venir()
@@ -301,7 +289,6 @@ class Paiement(models.Model):
 
     @property
     def est_mois_passe(self) -> bool:
-        """Indique si cette facture correspond à un mois passé par rapport au mois à venir."""
         if not self.date_echeance:
             return False
         annee_cible, mois_cible = get_mois_a_venir()
@@ -309,7 +296,6 @@ class Paiement(models.Model):
 
     @property
     def a_echeance_anterieure_impayee(self) -> bool:
-        """Vérifie s'il existe une échéance antérieure non payée sur ce contrat."""
         if not self.date_echeance or not self.contrat_id:
             return False
         return Paiement.objects.filter(
@@ -321,17 +307,10 @@ class Paiement(models.Model):
 
     @property
     def a_demande_en_cours(self) -> bool:
-        """Vérifie si une demande de paiement est déjà en cours (EN_ATTENTE) pour cette facture."""
         return self.demandes_paiement.filter(statut=DemandePaiement.StatutDemande.EN_ATTENTE).exists()
 
     @property
     def est_eligible_demande(self) -> bool:
-        """
-        Une facture est éligible à une demande de paiement si :
-        - Elle a un statut en attente (non encore payée ni annulée)
-        - Aucune facture antérieure n'est encore impayée sur ce contrat (règlement chronologique obligatoire)
-        - Elle n'a pas déjà une demande en cours de validation
-        """
         if self.statut in (self.StatutPaiement.PAYE, self.StatutPaiement.ANNULE):
             return False
         if self.a_demande_en_cours:
@@ -361,7 +340,6 @@ class Paiement(models.Model):
 
     @property
     def quittance(self):
-        """Retourne l'objet Quittance associé s'il a été défini ou créé."""
         if hasattr(self, "_quittance_obj"):
             return self._quittance_obj
         if self.fichier_quittance or self.statut == self.StatutPaiement.PAYE:
@@ -374,10 +352,6 @@ class Paiement(models.Model):
 
 
 def get_mois_a_venir(reference_date=None):
-    """
-    Retourne le tuple (année, mois) du mois à venir (mois calendaire suivant).
-    Exemple : si reference_date est en octobre 2026, retourne (2026, 11).
-    """
     if reference_date is None:
         reference_date = timezone.now().date()
     annee = reference_date.year + (reference_date.month // 12)
@@ -386,12 +360,6 @@ def get_mois_a_venir(reference_date=None):
 
 
 class DemandePaiement(models.Model):
-    """
-    Demande de paiement d'une facture mensuelle soumise par le locataire.
-    Limitée exclusivement aux moyens de paiement Mobile Money.
-    Autorisée uniquement pour la facture du mois à venir.
-    """
-
     class MoyenPaiement(models.TextChoices):
         MVOLA = "MVOLA", "Mvola"
         ORANGE_MONEY = "ORANGE_MONEY", "Orange Money"
@@ -579,4 +547,4 @@ class DemandePaiement(models.Model):
             if self.facture_id and self.facture.statut != Paiement.StatutPaiement.PAYE:
                 self.facture.mode_paiement = None
                 self.facture.reference = None
-                self.facture.save()
+                self.facture.save()

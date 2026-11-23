@@ -4,13 +4,6 @@ from utilisateur.models import Utilisateur
 
 
 class PaiementPermission(permissions.BasePermission):
-    """
-    Permissions pour les paiements :
-    - ADMIN / AGENT : CRUD complet + supervision
-    - LOCATAIRE : lecture de ses propres paiements
-    - PROPRIETAIRE : lecture des paiements liés à ses biens
-    """
-
     def has_permission(self, request, view):
         user = request.user
         if not (user and user.is_authenticated):
@@ -40,13 +33,6 @@ class PaiementPermission(permissions.BasePermission):
 
 
 class DemandePaiementPermission(permissions.BasePermission):
-    """
-    Permissions pour les demandes de paiement :
-    - ADMIN / AGENT : accès complet (CRUD, validation, refus)
-    - LOCATAIRE : peut créer une demande, consulter ses propres demandes, et annuler sa demande en attente
-    - PROPRIETAIRE : consultation des demandes liées à ses biens
-    """
-
     def has_permission(self, request, view):
         user = request.user
         if not (user and user.is_authenticated):
