@@ -28,19 +28,19 @@ permissions:
 
 jobs:
   # ═══════════════════════════════════════════════════════════════════════════
-  # 0. DÉTECTION DES MODIFICATIONS (Change Detection / Path Filtering)
+  # ÉTAPE 0 : DÉTECTION DES MODIFICATIONS
   # ═══════════════════════════════════════════════════════════════════════════
   detect-changes:
     name: Detect Changes
     runs-on: ubuntu-latest
     outputs:
-      backend_py: ${{ steps.resolve.outputs.backend_py }}
-      backend_docker: ${{ steps.resolve.outputs.backend_docker }}
-      backend_deploy: ${{ steps.resolve.outputs.backend_deploy }}
+      backend_py:      ${{ steps.resolve.outputs.backend_py }}
+      backend_docker:  ${{ steps.resolve.outputs.backend_docker }}
+      backend_deploy:  ${{ steps.resolve.outputs.backend_deploy }}
       django_test_targets: ${{ steps.resolve.outputs.django_test_targets }}
-      frontend_code: ${{ steps.resolve.outputs.frontend_code }}
+      frontend_code:   ${{ steps.resolve.outputs.frontend_code }}
       frontend_deploy: ${{ steps.resolve.outputs.frontend_deploy }}
-      terraform_code: ${{ steps.resolve.outputs.terraform_code }}
+      terraform_code:  ${{ steps.resolve.outputs.terraform_code }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -76,25 +76,25 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             if [ "${{ inputs.component }}" = "backend" ]; then
-              echo "backend_py=true" >> "$GITHUB_OUTPUT"
+              echo "backend_py=true"     >> "$GITHUB_OUTPUT"
               echo "backend_docker=true" >> "$GITHUB_OUTPUT"
               echo "backend_deploy=true" >> "$GITHUB_OUTPUT"
               echo "frontend_code=false" >> "$GITHUB_OUTPUT"
               echo "frontend_deploy=false" >> "$GITHUB_OUTPUT"
             elif [ "${{ inputs.component }}" = "frontend" ]; then
-              echo "backend_py=false" >> "$GITHUB_OUTPUT"
+              echo "backend_py=false"    >> "$GITHUB_OUTPUT"
               echo "backend_docker=false" >> "$GITHUB_OUTPUT"
               echo "backend_deploy=false" >> "$GITHUB_OUTPUT"
-              echo "frontend_code=true" >> "$GITHUB_OUTPUT"
+              echo "frontend_code=true"  >> "$GITHUB_OUTPUT"
               echo "frontend_deploy=true" >> "$GITHUB_OUTPUT"
             else
-              echo "backend_py=true" >> "$GITHUB_OUTPUT"
+              echo "backend_py=true"     >> "$GITHUB_OUTPUT"
               echo "backend_docker=true" >> "$GITHUB_OUTPUT"
               echo "backend_deploy=true" >> "$GITHUB_OUTPUT"
-              echo "frontend_code=true" >> "$GITHUB_OUTPUT"
+              echo "frontend_code=true"  >> "$GITHUB_OUTPUT"
               echo "frontend_deploy=true" >> "$GITHUB_OUTPUT"
             fi
-            echo "terraform_code=true" >> "$GITHUB_OUTPUT"
+            echo "terraform_code=true"  >> "$GITHUB_OUTPUT"
             echo "django_test_targets=" >> "$GITHUB_OUTPUT"
           else
             B_PY="${{ steps.filter.outputs.backend_py }}"
@@ -103,11 +103,11 @@ jobs:
             F_CODE="${{ steps.filter.outputs.frontend_code }}"
             F_K8S="${{ steps.filter.outputs.frontend_k8s }}"
 
-            echo "backend_py=${B_PY}" >> "$GITHUB_OUTPUT"
+            echo "backend_py=${B_PY}"     >> "$GITHUB_OUTPUT"
             echo "backend_docker=${B_DOCKER}" >> "$GITHUB_OUTPUT"
 
             if [ "$B_DOCKER" = "true" ] || [ "$B_K8S" = "true" ]; then
-              echo "backend_deploy=true" >> "$GITHUB_OUTPUT"
+              echo "backend_deploy=true"  >> "$GITHUB_OUTPUT"
             else
               echo "backend_deploy=false" >> "$GITHUB_OUTPUT"
             fi
@@ -115,7 +115,7 @@ jobs:
             echo "frontend_code=${F_CODE}" >> "$GITHUB_OUTPUT"
 
             if [ "$F_CODE" = "true" ] || [ "$F_K8S" = "true" ]; then
-              echo "frontend_deploy=true" >> "$GITHUB_OUTPUT"
+              echo "frontend_deploy=true"  >> "$GITHUB_OUTPUT"
             else
               echo "frontend_deploy=false" >> "$GITHUB_OUTPUT"
             fi
@@ -152,12 +152,15 @@ jobs:
           fi
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # 1. VALIDATION TERRAFORM (Qualité, Formatage & Syntaxe)
+  # ÉTAPE 1A : VALIDATION TERRAFORM (Syntaxe & Formatage)
   # ═══════════════════════════════════════════════════════════════════════════
   terraform-validate:
-    name: Terraform Validate
+    name: "Terraform ▶ Validate"
     needs: detect-changes
-    if: needs.detect-changes.outputs.terraform_code == 'true' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    if: >
+      needs.detect-changes.outputs.terraform_code == 'true' ||
+      github.event_name == 'workflow_dispatch' ||
+      github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
@@ -173,7 +176,7 @@ jobs:
         working-directory: ./terraform
         run: terraform fmt -check
 
-      - name: Terraform Init (Validation sans backend)
+      - name: Terraform Init (sans backend distant)
         working-directory: ./terraform
         run: terraform init -backend=false
 
@@ -182,10 +185,68 @@ jobs:
         run: terraform validate
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # 2. BRANCHE BACKEND (Tests, Qualité, Conteneurisation & Déploiement)
+  # ÉTAPE 1B : VÉRIFICATION / CRÉATION DE LA VM EC2 AVEC TERRAFORM
+  #
+  #  Logique :
+  #    1. Cherche l'instance par ID (i-06299e2b1578249f2 / secret AWS_INSTANCE_ID)
+  #    2. Si ID introuvable → cherche par tag Name=gestion-immobilier-devops
+  #    3. Si trouvée & running  → récupère l'IP publique → continue le déploiement
+  #    4. Si trouvée & stopped  → la démarre → attend running → continue
+  #    5. Si aucune instance    → terraform apply crée la VM → configure prérequis
+  #    6. Si plusieurs instances avec le même tag → ERREUR (arrêt du workflow)
+  # ═══════════════════════════════════════════════════════════════════════════
+  terraform-infra:
+    name: "Terraform ▶ Provision EC2"
+    needs: [detect-changes, terraform-validate]
+    if: >
+      always() &&
+      (needs.terraform-validate.result == 'success' || needs.terraform-validate.result == 'skipped') &&
+      (
+        needs.detect-changes.outputs.backend_deploy  == 'true' ||
+        needs.detect-changes.outputs.frontend_deploy == 'true' ||
+        needs.detect-changes.outputs.frontend_code   == 'true'
+      ) &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      github.ref == 'refs/heads/main'
+    concurrency:
+      group: aws-ec2-deployment
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    outputs:
+      ec2_ip:      ${{ steps.provision.outputs.ec2_ip }}
+      instance_id: ${{ steps.provision.outputs.instance_id }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.17.2
+
+      # Ce step contient toute la logique :
+      #   - Vérification existence instance (ID → Tag)
+      #   - Démarrage si arrêtée
+      #   - Création via terraform apply si absente
+      #   - Vérification SSH accessible
+      - name: Vérifier ou Créer l'instance EC2
+        id: provision
+        env:
+          AWS_ACCESS_KEY_ID:     ${{ secrets.AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_KEY }}
+          AWS_DEFAULT_REGION:    ${{ secrets.AWS_REGION || 'eu-north-1' }}
+          AWS_REGION:            ${{ secrets.AWS_REGION || 'eu-north-1' }}
+          AWS_INSTANCE_ID:       ${{ secrets.AWS_INSTANCE_ID }}
+          AWS_EC2_SSH_KEY:       ${{ secrets.AWS_EC2_SSH_KEY }}
+          STATIC_IP:             ${{ secrets.AWS_EC2_IP }}
+        run: bash .github/scripts/resolve_ip.sh
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # ÉTAPE 2 : TESTS & QUALITÉ BACKEND (en parallèle de terraform-infra)
   # ═══════════════════════════════════════════════════════════════════════════
   backend-tests:
-    name: Backend Tests
+    name: "Backend ▶ Tests Django"
     needs: detect-changes
     if: needs.detect-changes.outputs.backend_py == 'true'
     runs-on: ubuntu-latest
@@ -266,7 +327,7 @@ jobs:
           retention-days: 1
 
   backend-quality:
-    name: SonarQube Quality Gate
+    name: "Backend ▶ SonarQube"
     needs: [detect-changes, backend-tests]
     if: needs.detect-changes.outputs.backend_py == 'true'
     runs-on: ubuntu-latest
@@ -314,7 +375,7 @@ jobs:
             -Dsonar.sourceEncoding=UTF-8
 
   backend-docker:
-    name: Backend Docker Build
+    name: "Backend ▶ Docker Build & Push"
     needs: [detect-changes, backend-tests, backend-quality]
     if: needs.detect-changes.outputs.backend_docker == 'true'
     runs-on: ubuntu-latest
@@ -346,107 +407,10 @@ jobs:
           cache-to: type=gha,mode=max,scope=backend
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # 3. INFRASTRUCTURE AWS EC2 & TERRAFORM (Gestion conditionnelle de la VM)
-  # ═══════════════════════════════════════════════════════════════════════════
-  terraform-infra:
-    name: Manage EC2 Infrastructure
-    needs: [detect-changes, terraform-validate]
-    if: always() && (needs.terraform-validate.result == 'success' || needs.terraform-validate.result == 'skipped') && (needs.detect-changes.outputs.backend_deploy == 'true' || needs.detect-changes.outputs.frontend_code == 'true' || needs.detect-changes.outputs.frontend_deploy == 'true') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
-    concurrency:
-      group: aws-ec2-deployment
-      cancel-in-progress: false
-    runs-on: ubuntu-latest
-    outputs:
-      ec2_ip: ${{ steps.resolve_infra.outputs.ec2_ip }}
-      instance_id: ${{ steps.resolve_infra.outputs.instance_id }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.17.2
-
-      - name: Resolve, Start or Create EC2 Instance
-        id: resolve_infra
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
-          AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
-          AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
-          AWS_EC2_SSH_KEY: ${{ secrets.AWS_EC2_SSH_KEY }}
-          STATIC_IP: ${{ secrets.AWS_EC2_IP }}
-        run: bash .github/scripts/resolve_ip.sh
-
-  deploy-backend:
-    name: Deploy Backend
-    needs: [detect-changes, backend-quality, backend-docker, terraform-infra]
-    if: always() && needs.detect-changes.outputs.backend_deploy == 'true' && (needs.backend-docker.result == 'success' || needs.backend-docker.result == 'skipped') && (needs.backend-quality.result == 'success' || needs.backend-quality.result == 'skipped') && needs.terraform-infra.result == 'success' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
-    concurrency:
-      group: aws-ec2-deployment
-      cancel-in-progress: false
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Resolve EC2 IP address
-        id: resolve_ip
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
-          AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
-          AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
-          AWS_EC2_SSH_KEY: ${{ secrets.AWS_EC2_SSH_KEY }}
-          STATIC_IP: ${{ secrets.AWS_EC2_IP }}
-          PREV_IP: ${{ needs.terraform-infra.outputs.ec2_ip }}
-        run: bash .github/scripts/resolve_ip.sh
-
-      - name: Copy Kubernetes manifests to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ steps.resolve_ip.outputs.ec2_ip }}
-          username: ubuntu
-          key: ${{ secrets.AWS_EC2_SSH_KEY }}
-          source: "k8s/*"
-          target: "/home/ubuntu/k8s"
-          strip_components: 1
-          overwrite: true
-
-      - name: Deploy backend to AWS
-        uses: appleboy/ssh-action@v1.0.3
-        env:
-          DB_HOST: ${{ secrets.AWS_RDS_ENDPOINT }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          DB_NAME: "postgres"
-          DB_USER: "postgres"
-          DB_PORT: "5432"
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          AWS_EC2_IP: ${{ steps.resolve_ip.outputs.ec2_ip }}
-          ENABLE_HPA: ${{ secrets.ENABLE_HPA }}
-          GIT_SHA: ${{ github.sha }}
-          DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/immobilier-drf:${{ needs.backend-docker.result == 'success' && github.sha || 'latest' }}
-          EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
-          EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
-          BACKEND_PUBLIC_URL: ${{ secrets.BACKEND_PUBLIC_URL }}
-        with:
-          host: ${{ steps.resolve_ip.outputs.ec2_ip }}
-          username: ubuntu
-          key: ${{ secrets.AWS_EC2_SSH_KEY }}
-          envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME, AWS_EC2_IP, ENABLE_HPA, GIT_SHA, DOCKER_IMAGE, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, BACKEND_PUBLIC_URL
-          script: bash /home/ubuntu/k8s/deploy-backend.sh
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # 2. BRANCHE FRONTEND (100% Indépendante, sans attente du Backend)
+  # ÉTAPE 3 : FRONTEND BUILD & DOCKER (en parallèle de terraform-infra)
   # ═══════════════════════════════════════════════════════════════════════════
   frontend-build:
-    name: Frontend Build
+    name: "Frontend ▶ Build Next.js"
     needs: detect-changes
     if: needs.detect-changes.outputs.frontend_code == 'true'
     runs-on: ubuntu-latest
@@ -484,9 +448,14 @@ jobs:
         run: pnpm run build
 
   frontend-docker:
-    name: Frontend Docker Build
+    name: "Frontend ▶ Docker Build & Push"
+    # Attend terraform-infra pour obtenir l'IP EC2 (injectée dans NEXT_PUBLIC_API_URL)
     needs: [detect-changes, frontend-build, terraform-infra]
-    if: always() && needs.detect-changes.outputs.frontend_code == 'true' && (needs.frontend-build.result == 'success' || needs.frontend-build.result == 'skipped') && (needs.terraform-infra.result == 'success' || needs.terraform-infra.result == 'skipped')
+    if: >
+      always() &&
+      needs.detect-changes.outputs.frontend_code == 'true' &&
+      (needs.frontend-build.result == 'success' || needs.frontend-build.result == 'skipped') &&
+      needs.terraform-infra.result == 'success'
     runs-on: ubuntu-latest
     outputs:
       ec2_ip: ${{ steps.resolve_ip.outputs.ec2_ip }}
@@ -495,18 +464,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Resolve EC2 IP address
+      # Réutilise l'IP déjà résolue par terraform-infra (aucune détection AWS supplémentaire)
+      - name: Récupérer l'IP EC2 depuis terraform-infra
         id: resolve_ip
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
-          AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
-          AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
-          AWS_EC2_SSH_KEY: ${{ secrets.AWS_EC2_SSH_KEY }}
-          STATIC_IP: ${{ secrets.AWS_EC2_IP }}
-          PREV_IP: ${{ needs.terraform-infra.outputs.ec2_ip }}
-        run: bash .github/scripts/resolve_ip.sh
+        run: |
+          EC2_IP="${{ needs.terraform-infra.outputs.ec2_ip }}"
+          if [ -z "$EC2_IP" ]; then
+            echo "[ERROR] Aucune IP EC2 reçue depuis le job terraform-infra." >&2
+            exit 1
+          fi
+          echo "[OK] IP EC2 : $EC2_IP"
+          echo "ec2_ip=$EC2_IP" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -532,10 +500,20 @@ jobs:
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 
-  deploy-frontend:
-    name: Deploy Frontend
-    needs: [detect-changes, frontend-docker, terraform-infra]
-    if: always() && needs.detect-changes.outputs.frontend_deploy == 'true' && (needs.frontend-docker.result == 'success' || needs.frontend-docker.result == 'skipped') && needs.terraform-infra.result == 'success' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+  # ═══════════════════════════════════════════════════════════════════════════
+  # ÉTAPE 4 : DÉPLOIEMENTS (bloqués par terraform-infra SUCCESS)
+  # ═══════════════════════════════════════════════════════════════════════════
+  deploy-backend:
+    name: "Deploy ▶ Backend sur EC2"
+    needs: [detect-changes, backend-quality, backend-docker, terraform-infra]
+    if: >
+      always() &&
+      needs.detect-changes.outputs.backend_deploy == 'true' &&
+      (needs.backend-docker.result == 'success' || needs.backend-docker.result == 'skipped') &&
+      (needs.backend-quality.result == 'success' || needs.backend-quality.result == 'skipped') &&
+      needs.terraform-infra.result == 'success' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      github.ref == 'refs/heads/main'
     concurrency:
       group: aws-ec2-deployment
       cancel-in-progress: false
@@ -545,18 +523,81 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Resolve EC2 IP address
+      - name: Récupérer l'IP EC2 depuis terraform-infra
         id: resolve_ip
+        run: |
+          EC2_IP="${{ needs.terraform-infra.outputs.ec2_ip }}"
+          if [ -z "$EC2_IP" ]; then
+            echo "[ERROR] Aucune IP EC2 reçue depuis le job terraform-infra." >&2
+            exit 1
+          fi
+          echo "[OK] Déploiement backend vers : $EC2_IP"
+          echo "ec2_ip=$EC2_IP" >> "$GITHUB_OUTPUT"
+
+      - name: Copy Kubernetes manifests to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ steps.resolve_ip.outputs.ec2_ip }}
+          username: ubuntu
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          source: "k8s/*"
+          target: "/home/ubuntu/k8s"
+          strip_components: 1
+          overwrite: true
+
+      - name: Deploy backend to AWS
+        uses: appleboy/ssh-action@v1.0.3
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
-          AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
-          AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
-          AWS_EC2_SSH_KEY: ${{ secrets.AWS_EC2_SSH_KEY }}
-          STATIC_IP: ${{ secrets.AWS_EC2_IP }}
-          PREV_IP: ${{ needs.terraform-infra.outputs.ec2_ip || needs.frontend-docker.outputs.ec2_ip }}
-        run: bash .github/scripts/resolve_ip.sh
+          DB_HOST:            ${{ secrets.AWS_RDS_ENDPOINT }}
+          DB_PASSWORD:        ${{ secrets.DB_PASSWORD }}
+          SECRET_KEY:         ${{ secrets.SECRET_KEY }}
+          DB_NAME:            "postgres"
+          DB_USER:            "postgres"
+          DB_PORT:            "5432"
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          AWS_EC2_IP:         ${{ steps.resolve_ip.outputs.ec2_ip }}
+          ENABLE_HPA:         ${{ secrets.ENABLE_HPA }}
+          GIT_SHA:            ${{ github.sha }}
+          DOCKER_IMAGE:       ${{ secrets.DOCKERHUB_USERNAME }}/immobilier-drf:${{ needs.backend-docker.result == 'success' && github.sha || 'latest' }}
+          EMAIL_HOST_USER:    ${{ secrets.EMAIL_HOST_USER }}
+          EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
+          BACKEND_PUBLIC_URL: ${{ secrets.BACKEND_PUBLIC_URL }}
+        with:
+          host:     ${{ steps.resolve_ip.outputs.ec2_ip }}
+          username: ubuntu
+          key:      ${{ secrets.AWS_EC2_SSH_KEY }}
+          envs: DB_HOST, DB_PASSWORD, SECRET_KEY, DB_NAME, DB_USER, DB_PORT, DOCKERHUB_USERNAME, AWS_EC2_IP, ENABLE_HPA, GIT_SHA, DOCKER_IMAGE, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, BACKEND_PUBLIC_URL
+          script: bash /home/ubuntu/k8s/deploy-backend.sh
+
+  deploy-frontend:
+    name: "Deploy ▶ Frontend sur EC2"
+    needs: [detect-changes, frontend-docker, terraform-infra]
+    if: >
+      always() &&
+      needs.detect-changes.outputs.frontend_deploy == 'true' &&
+      needs.frontend-docker.result == 'success' &&
+      needs.terraform-infra.result == 'success' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      github.ref == 'refs/heads/main'
+    concurrency:
+      group: aws-ec2-deployment
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Récupérer l'IP EC2 depuis terraform-infra
+        id: resolve_ip
+        run: |
+          EC2_IP="${{ needs.terraform-infra.outputs.ec2_ip }}"
+          if [ -z "$EC2_IP" ]; then
+            echo "[ERROR] Aucune IP EC2 reçue depuis le job terraform-infra." >&2
+            exit 1
+          fi
+          echo "[OK] Déploiement frontend vers : $EC2_IP"
+          echo "ec2_ip=$EC2_IP" >> "$GITHUB_OUTPUT"
 
       - name: Copy Kubernetes manifests to EC2
         uses: appleboy/scp-action@v0.1.7
@@ -572,12 +613,12 @@ jobs:
       - name: Deploy frontend to AWS
         uses: appleboy/ssh-action@v1.0.3
         env:
-          AWS_EC2_IP: ${{ steps.resolve_ip.outputs.ec2_ip }}
+          AWS_EC2_IP:         ${{ steps.resolve_ip.outputs.ec2_ip }}
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:${{ needs.frontend-docker.result == 'success' && github.sha || 'latest' }}
+          DOCKER_IMAGE:       ${{ secrets.DOCKERHUB_USERNAME }}/login-page-immobilier:${{ needs.frontend-docker.result == 'success' && github.sha || 'latest' }}
         with:
-          host: ${{ steps.resolve_ip.outputs.ec2_ip }}
+          host:     ${{ steps.resolve_ip.outputs.ec2_ip }}
           username: ubuntu
-          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          key:      ${{ secrets.AWS_EC2_SSH_KEY }}
           envs: AWS_EC2_IP, DOCKERHUB_USERNAME, DOCKER_IMAGE
           script: bash /home/ubuntu/k8s/deploy-frontend.sh
