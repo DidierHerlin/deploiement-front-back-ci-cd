@@ -40,6 +40,7 @@ jobs:
       django_test_targets: ${{ steps.resolve.outputs.django_test_targets }}
       frontend_code: ${{ steps.resolve.outputs.frontend_code }}
       frontend_deploy: ${{ steps.resolve.outputs.frontend_deploy }}
+      infra: ${{ steps.resolve.outputs.infra }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -67,6 +68,10 @@ jobs:
             frontend_k8s:
               - 'k8s/frontend.yaml'
               - 'k8s/deploy-frontend.sh'
+            infra:
+              - 'terraform/**'
+              - '.github/workflows/terraform-infra.yml'
+              - '.github/scripts/manage_ec2.sh'
 
       - name: Resolve targets
         id: resolve
@@ -78,18 +83,21 @@ jobs:
               echo "backend_deploy=true" >> "$GITHUB_OUTPUT"
               echo "frontend_code=false" >> "$GITHUB_OUTPUT"
               echo "frontend_deploy=false" >> "$GITHUB_OUTPUT"
+              echo "infra=true" >> "$GITHUB_OUTPUT"
             elif [ "${{ inputs.component }}" = "frontend" ]; then
               echo "backend_py=false" >> "$GITHUB_OUTPUT"
               echo "backend_docker=false" >> "$GITHUB_OUTPUT"
               echo "backend_deploy=false" >> "$GITHUB_OUTPUT"
               echo "frontend_code=true" >> "$GITHUB_OUTPUT"
               echo "frontend_deploy=true" >> "$GITHUB_OUTPUT"
+              echo "infra=true" >> "$GITHUB_OUTPUT"
             else
               echo "backend_py=true" >> "$GITHUB_OUTPUT"
               echo "backend_docker=true" >> "$GITHUB_OUTPUT"
               echo "backend_deploy=true" >> "$GITHUB_OUTPUT"
               echo "frontend_code=true" >> "$GITHUB_OUTPUT"
               echo "frontend_deploy=true" >> "$GITHUB_OUTPUT"
+              echo "infra=true" >> "$GITHUB_OUTPUT"
             fi
             echo "django_test_targets=" >> "$GITHUB_OUTPUT"
           else
@@ -98,9 +106,11 @@ jobs:
             B_K8S="${{ steps.filter.outputs.backend_k8s }}"
             F_CODE="${{ steps.filter.outputs.frontend_code }}"
             F_K8S="${{ steps.filter.outputs.frontend_k8s }}"
+            INFRA="${{ steps.filter.outputs.infra }}"
 
             echo "backend_py=${B_PY}" >> "$GITHUB_OUTPUT"
             echo "backend_docker=${B_DOCKER}" >> "$GITHUB_OUTPUT"
+            echo "infra=${INFRA}" >> "$GITHUB_OUTPUT"
 
             if [ "$B_DOCKER" = "true" ] || [ "$B_K8S" = "true" ]; then
               echo "backend_deploy=true" >> "$GITHUB_OUTPUT"
@@ -146,12 +156,31 @@ jobs:
           fi
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # 1. BRANCHE BACKEND (Tests, Qualité, Conteneurisation & Déploiement)
+  # 1. GESTION DE L'INFRASTRUCTURE TERRAFORM (IaC - Infrastructure as Code)
+  # ═══════════════════════════════════════════════════════════════════════════
+  iac:
+    name: "Infrastructure as Code"
+    uses: ./.github/workflows/terraform-infra.yml
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && (needs.detect-changes.outputs.backend_deploy == 'true' || needs.detect-changes.outputs.frontend_code == 'true' || needs.detect-changes.outputs.frontend_deploy == 'true' || needs.detect-changes.outputs.infra == 'true')
+    needs: detect-changes
+    with:
+      aws_region: "eu-north-1"
+      instance_id: "i-06299e2b1578249f2"
+      tag_name: "gestion-immobilier-devops"
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_KEY }}
+      AWS_EC2_SSH_KEY: ${{ secrets.AWS_EC2_SSH_KEY }}
+      AWS_TF_STATE_BUCKET: ${{ secrets.AWS_TF_STATE_BUCKET }}
+      STATIC_IP: ${{ secrets.AWS_EC2_IP }}
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # 2. BRANCHE BACKEND (Tests, Qualité, Conteneurisation & Déploiement)
   # ═══════════════════════════════════════════════════════════════════════════
   backend-tests:
     name: Backend Tests
-    needs: detect-changes
-    if: needs.detect-changes.outputs.backend_py == 'true'
+    needs: [detect-changes, iac]
+    if: always() && needs.detect-changes.outputs.backend_py == 'true' && (needs.iac.result == 'success' || needs.iac.result == 'skipped')
     runs-on: ubuntu-latest
 
     services:
@@ -309,29 +338,10 @@ jobs:
           cache-from: type=gha,scope=backend
           cache-to: type=gha,mode=max,scope=backend
 
-  # ═══════════════════════════════════════════════════════════════════════════
-  # GESTION DE L'INFRASTRUCTURE TERRAFORM (Workflow Réutilisable)
-  # ═══════════════════════════════════════════════════════════════════════════
-  terraform-infra:
-    name: "Infrastructure Terraform"
-    uses: ./.github/workflows/terraform-infra.yml
-    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && (needs.detect-changes.outputs.backend_deploy == 'true' || needs.detect-changes.outputs.frontend_code == 'true' || needs.detect-changes.outputs.frontend_deploy == 'true')
-    needs: detect-changes
-    with:
-      aws_region: "eu-north-1"
-      instance_id: "i-06299e2b1578249f2"
-      tag_name: "gestion-immobilier-devops"
-    secrets:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_KEY }}
-      AWS_EC2_SSH_KEY: ${{ secrets.AWS_EC2_SSH_KEY }}
-      AWS_TF_STATE_BUCKET: ${{ secrets.AWS_TF_STATE_BUCKET }}
-      STATIC_IP: ${{ secrets.AWS_EC2_IP }}
-
   deploy-backend:
     name: Deploy Backend
-    needs: [detect-changes, backend-quality, backend-docker, terraform-infra]
-    if: always() && needs.detect-changes.outputs.backend_deploy == 'true' && (needs.backend-docker.result == 'success' || needs.backend-docker.result == 'skipped') && (needs.backend-quality.result == 'success' || needs.backend-quality.result == 'skipped') && needs.terraform-infra.result == 'success' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    needs: [detect-changes, backend-quality, backend-docker, iac]
+    if: always() && needs.detect-changes.outputs.backend_deploy == 'true' && (needs.backend-docker.result == 'success' || needs.backend-docker.result == 'skipped') && (needs.backend-quality.result == 'success' || needs.backend-quality.result == 'skipped') && needs.iac.result == 'success' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     concurrency:
       group: aws-ec2-deployment
       cancel-in-progress: false
@@ -349,7 +359,7 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
           AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
           STATIC_IP: ${{ secrets.AWS_EC2_IP }}
-          PREV_IP: ${{ needs.terraform-infra.outputs.ec2_ip }}
+          PREV_IP: ${{ needs.iac.outputs.ec2_ip }}
         run: bash .github/scripts/resolve_ip.sh
 
       - name: Copy Kubernetes manifests to EC2
@@ -388,12 +398,12 @@ jobs:
           script: bash /home/ubuntu/k8s/deploy-backend.sh
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # 2. BRANCHE FRONTEND (100% Indépendante, sans attente du Backend)
+  # 3. BRANCHE FRONTEND (100% Indépendante, après initialisation de l'IaC)
   # ═══════════════════════════════════════════════════════════════════════════
   frontend-build:
     name: Frontend Build
-    needs: detect-changes
-    if: needs.detect-changes.outputs.frontend_code == 'true'
+    needs: [detect-changes, iac]
+    if: always() && needs.detect-changes.outputs.frontend_code == 'true' && (needs.iac.result == 'success' || needs.iac.result == 'skipped')
     runs-on: ubuntu-latest
 
     defaults:
@@ -430,8 +440,8 @@ jobs:
 
   frontend-docker:
     name: Frontend Docker Build
-    needs: [detect-changes, frontend-build, terraform-infra]
-    if: always() && needs.detect-changes.outputs.frontend_code == 'true' && (needs.frontend-build.result == 'success' || needs.frontend-build.result == 'skipped') && (needs.terraform-infra.result == 'success' || needs.terraform-infra.result == 'skipped')
+    needs: [detect-changes, frontend-build, iac]
+    if: always() && needs.detect-changes.outputs.frontend_code == 'true' && (needs.frontend-build.result == 'success' || needs.frontend-build.result == 'skipped') && (needs.iac.result == 'success' || needs.iac.result == 'skipped')
     runs-on: ubuntu-latest
     outputs:
       ec2_ip: ${{ steps.resolve_ip.outputs.ec2_ip }}
@@ -448,7 +458,7 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
           AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
           STATIC_IP: ${{ secrets.AWS_EC2_IP }}
-          PREV_IP: ${{ needs.terraform-infra.outputs.ec2_ip }}
+          PREV_IP: ${{ needs.iac.outputs.ec2_ip }}
         run: bash .github/scripts/resolve_ip.sh
 
       - name: Set up Docker Buildx
@@ -477,8 +487,8 @@ jobs:
 
   deploy-frontend:
     name: Deploy Frontend
-    needs: [detect-changes, frontend-docker, terraform-infra]
-    if: always() && needs.detect-changes.outputs.frontend_deploy == 'true' && (needs.frontend-docker.result == 'success' || needs.frontend-docker.result == 'skipped') && needs.terraform-infra.result == 'success' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    needs: [detect-changes, frontend-docker, iac]
+    if: always() && needs.detect-changes.outputs.frontend_deploy == 'true' && (needs.frontend-docker.result == 'success' || needs.frontend-docker.result == 'skipped') && needs.iac.result == 'success' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     concurrency:
       group: aws-ec2-deployment
       cancel-in-progress: false
@@ -496,7 +506,7 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
           AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
           STATIC_IP: ${{ secrets.AWS_EC2_IP }}
-          PREV_IP: ${{ needs.terraform-infra.outputs.ec2_ip || needs.frontend-docker.outputs.ec2_ip }}
+          PREV_IP: ${{ needs.iac.outputs.ec2_ip || needs.frontend-docker.outputs.ec2_ip }}
         run: bash .github/scripts/resolve_ip.sh
 
       - name: Copy Kubernetes manifests to EC2
