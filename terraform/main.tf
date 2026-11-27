@@ -6,7 +6,6 @@ terraform {
       version = "~> 5.0"
     }
   }
-  backend "s3" {}
 }
 
 provider "aws" {
@@ -72,5 +71,5 @@ resource "aws_instance" "main" {
     tags                  = { Name = "gestion-immo-disk" }
   }
 
-  tags = { Name = "gestion-immobilier-devops" }
+  tags = { Name = "Gestion-immo-devops" }
 }
