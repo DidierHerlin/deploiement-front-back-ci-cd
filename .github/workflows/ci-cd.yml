@@ -171,6 +171,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.17.2
+          terraform_wrapper: false   # Désactive le wrapper pour que les outputs Terraform soient lisibles correctement
 
       - name: Terraform Format Check
         working-directory: ./terraform
@@ -224,6 +225,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.17.2
+          terraform_wrapper: false   # Désactive le wrapper pour que les outputs Terraform soient lisibles correctement
 
       # Ce step contient toute la logique :
       #   - Vérification existence instance (ID → Tag)

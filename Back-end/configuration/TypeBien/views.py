@@ -2,7 +2,7 @@ from common.views import BaseReferentielViewSet
 from .models import TypeBien
 from .serializers import TypeBienSerializer
 
-#views biens 
+#views biens  rrrrr
 class TypeBienViewSet(BaseReferentielViewSet):
     queryset = TypeBien.objects.all().order_by("id")
     serializer_class = TypeBienSerializer
