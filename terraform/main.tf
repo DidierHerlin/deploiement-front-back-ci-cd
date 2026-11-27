@@ -22,9 +22,9 @@ provider "aws" {
 
 locals {
   ingress_rules = [
-    { port = 22, description = "SSH" },
-    { port = 80, description = "HTTP" },
-    { port = 443, description = "HTTPS" },
+    { port = 22,   description = "SSH" },
+    { port = 80,   description = "HTTP" },
+    { port = 443,  description = "HTTPS" },
     { port = 3000, description = "Frontend Next.js" },
     { port = 3001, description = "Grafana" },
     { port = 8000, description = "Backend Django" },
