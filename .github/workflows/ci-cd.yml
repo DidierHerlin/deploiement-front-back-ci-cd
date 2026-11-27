@@ -329,6 +329,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
           AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
+          AWS_EC2_SSH_KEY: ${{ secrets.AWS_EC2_SSH_KEY }}
           STATIC_IP: ${{ secrets.AWS_EC2_IP }}
         run: bash .github/scripts/resolve_ip.sh
 
@@ -427,6 +428,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
           AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
+          AWS_EC2_SSH_KEY: ${{ secrets.AWS_EC2_SSH_KEY }}
           STATIC_IP: ${{ secrets.AWS_EC2_IP }}
         run: bash .github/scripts/resolve_ip.sh
 
@@ -474,6 +476,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
           AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
+          AWS_EC2_SSH_KEY: ${{ secrets.AWS_EC2_SSH_KEY }}
           STATIC_IP: ${{ secrets.AWS_EC2_IP }}
           PREV_IP: ${{ needs.frontend-docker.outputs.ec2_ip }}
         run: bash .github/scripts/resolve_ip.sh
