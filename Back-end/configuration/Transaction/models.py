@@ -1,7 +1,7 @@
 from django.db import models
 from common.models import BaseReferentielModel
 
-#Model 
+
 class Transaction(BaseReferentielModel):
     name_field = "nomTransaction"
 
