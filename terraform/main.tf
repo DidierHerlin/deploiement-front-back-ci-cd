@@ -6,6 +6,7 @@ terraform {
       version = "~> 5.0"
     }
   }
+  backend "s3" {}
 }
 
 provider "aws" {
@@ -21,9 +22,9 @@ provider "aws" {
 
 locals {
   ingress_rules = [
-    { port = 22,   description = "SSH" },
-    { port = 80,   description = "HTTP" },
-    { port = 443,  description = "HTTPS" },
+    { port = 22, description = "SSH" },
+    { port = 80, description = "HTTP" },
+    { port = 443, description = "HTTPS" },
     { port = 3000, description = "Frontend Next.js" },
     { port = 3001, description = "Grafana" },
     { port = 8000, description = "Backend Django" },
@@ -71,5 +72,5 @@ resource "aws_instance" "main" {
     tags                  = { Name = "gestion-immo-disk" }
   }
 
-  tags = { Name = "Gestion-immo-devops" }
+  tags = { Name = "gestion-immobilier-devops" }
 }

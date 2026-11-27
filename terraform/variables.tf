@@ -31,5 +31,5 @@ variable "disk_size_gb" {
 variable "key_pair_name" {
   description = "Nom de la clé SSH dans AWS (laisser vide pour ignorer)"
   type        = string
-  default     = ""
+  default     = "gestion-immobilier"
 }

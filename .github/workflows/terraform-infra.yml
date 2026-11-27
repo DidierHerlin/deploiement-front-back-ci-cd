@@ -1,0 +1,85 @@
+name: "Terraform Infrastructure Management"
+
+on:
+  workflow_call:
+    inputs:
+      aws_region:
+        description: "Région AWS"
+        required: false
+        type: string
+        default: "eu-north-1"
+      instance_id:
+        description: "ID de l'instance prioritaire"
+        required: false
+        type: string
+        default: "i-06299e2b1578249f2"
+      tag_name:
+        description: "Tag Name de l'instance"
+        required: false
+        type: string
+        default: "gestion-immobilier-devops"
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      AWS_EC2_SSH_KEY:
+        required: false
+      AWS_TF_STATE_BUCKET:
+        required: false
+      STATIC_IP:
+        required: false
+    outputs:
+      ec2_ip:
+        description: "Adresse IP publique de l'instance EC2"
+        value: ${{ jobs.manage-infrastructure.outputs.ec2_ip }}
+      instance_id:
+        description: "ID de l'instance EC2"
+        value: ${{ jobs.manage-infrastructure.outputs.instance_id }}
+      instance_status:
+        description: "Statut (running, started, created_by_terraform)"
+        value: ${{ jobs.manage-infrastructure.outputs.instance_status }}
+
+jobs:
+  manage-infrastructure:
+    name: "EC2 Lifecycle & Terraform"
+    concurrency:
+      group: aws-ec2-deployment
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    outputs:
+      ec2_ip: ${{ steps.lifecycle.outputs.ec2_ip }}
+      instance_id: ${{ steps.lifecycle.outputs.instance_id }}
+      instance_status: ${{ steps.lifecycle.outputs.instance_status }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.17.2
+          terraform_wrapper: false
+
+      - name: Validate Terraform Syntax & Format
+        working-directory: ./terraform
+        run: |
+          terraform fmt -check
+          terraform init -backend=false
+          terraform validate
+
+      - name: Resolve, Start or Create EC2 Instance
+        id: lifecycle
+        env:
+          INPUT_AWS_REGION: ${{ inputs.aws_region }}
+          INPUT_INSTANCE_ID: ${{ inputs.instance_id }}
+          INPUT_TAG_NAME: ${{ inputs.tag_name }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ inputs.aws_region }}
+          AWS_REGION: ${{ inputs.aws_region }}
+          AWS_EC2_SSH_KEY: ${{ secrets.AWS_EC2_SSH_KEY }}
+          AWS_TF_STATE_BUCKET: ${{ secrets.AWS_TF_STATE_BUCKET }}
+          STATIC_IP: ${{ secrets.STATIC_IP }}
+        run: bash .github/scripts/manage_ec2.sh

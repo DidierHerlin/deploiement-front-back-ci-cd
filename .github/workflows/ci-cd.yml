@@ -309,10 +309,29 @@ jobs:
           cache-from: type=gha,scope=backend
           cache-to: type=gha,mode=max,scope=backend
 
+  # ═══════════════════════════════════════════════════════════════════════════
+  # GESTION DE L'INFRASTRUCTURE TERRAFORM (Workflow Réutilisable)
+  # ═══════════════════════════════════════════════════════════════════════════
+  terraform-infra:
+    name: "Infrastructure Terraform"
+    uses: ./.github/workflows/terraform-infra.yml
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && (needs.detect-changes.outputs.backend_deploy == 'true' || needs.detect-changes.outputs.frontend_code == 'true' || needs.detect-changes.outputs.frontend_deploy == 'true')
+    needs: detect-changes
+    with:
+      aws_region: "eu-north-1"
+      instance_id: "i-06299e2b1578249f2"
+      tag_name: "gestion-immobilier-devops"
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_KEY }}
+      AWS_EC2_SSH_KEY: ${{ secrets.AWS_EC2_SSH_KEY }}
+      AWS_TF_STATE_BUCKET: ${{ secrets.AWS_TF_STATE_BUCKET }}
+      STATIC_IP: ${{ secrets.AWS_EC2_IP }}
+
   deploy-backend:
     name: Deploy Backend
-    needs: [detect-changes, backend-quality, backend-docker]
-    if: always() && needs.detect-changes.outputs.backend_deploy == 'true' && (needs.backend-docker.result == 'success' || needs.backend-docker.result == 'skipped') && (needs.backend-quality.result == 'success' || needs.backend-quality.result == 'skipped') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    needs: [detect-changes, backend-quality, backend-docker, terraform-infra]
+    if: always() && needs.detect-changes.outputs.backend_deploy == 'true' && (needs.backend-docker.result == 'success' || needs.backend-docker.result == 'skipped') && (needs.backend-quality.result == 'success' || needs.backend-quality.result == 'skipped') && needs.terraform-infra.result == 'success' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     concurrency:
       group: aws-ec2-deployment
       cancel-in-progress: false
@@ -330,6 +349,7 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
           AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
           STATIC_IP: ${{ secrets.AWS_EC2_IP }}
+          PREV_IP: ${{ needs.terraform-infra.outputs.ec2_ip }}
         run: bash .github/scripts/resolve_ip.sh
 
       - name: Copy Kubernetes manifests to EC2
@@ -410,8 +430,8 @@ jobs:
 
   frontend-docker:
     name: Frontend Docker Build
-    needs: [detect-changes, frontend-build]
-    if: needs.detect-changes.outputs.frontend_code == 'true'
+    needs: [detect-changes, frontend-build, terraform-infra]
+    if: always() && needs.detect-changes.outputs.frontend_code == 'true' && (needs.frontend-build.result == 'success' || needs.frontend-build.result == 'skipped') && (needs.terraform-infra.result == 'success' || needs.terraform-infra.result == 'skipped')
     runs-on: ubuntu-latest
     outputs:
       ec2_ip: ${{ steps.resolve_ip.outputs.ec2_ip }}
@@ -428,6 +448,7 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
           AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
           STATIC_IP: ${{ secrets.AWS_EC2_IP }}
+          PREV_IP: ${{ needs.terraform-infra.outputs.ec2_ip }}
         run: bash .github/scripts/resolve_ip.sh
 
       - name: Set up Docker Buildx
@@ -456,8 +477,8 @@ jobs:
 
   deploy-frontend:
     name: Deploy Frontend
-    needs: [detect-changes, frontend-docker]
-    if: always() && needs.detect-changes.outputs.frontend_deploy == 'true' && (needs.frontend-docker.result == 'success' || needs.frontend-docker.result == 'skipped') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    needs: [detect-changes, frontend-docker, terraform-infra]
+    if: always() && needs.detect-changes.outputs.frontend_deploy == 'true' && (needs.frontend-docker.result == 'success' || needs.frontend-docker.result == 'skipped') && needs.terraform-infra.result == 'success' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     concurrency:
       group: aws-ec2-deployment
       cancel-in-progress: false
@@ -475,7 +496,7 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
           AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
           STATIC_IP: ${{ secrets.AWS_EC2_IP }}
-          PREV_IP: ${{ needs.frontend-docker.outputs.ec2_ip }}
+          PREV_IP: ${{ needs.terraform-infra.outputs.ec2_ip || needs.frontend-docker.outputs.ec2_ip }}
         run: bash .github/scripts/resolve_ip.sh
 
       - name: Copy Kubernetes manifests to EC2
