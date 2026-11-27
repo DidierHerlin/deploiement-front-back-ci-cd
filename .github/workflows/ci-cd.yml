@@ -364,13 +364,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION || 'eu-north-1' }}
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -379,8 +372,9 @@ jobs:
       - name: Resolve, Start or Create EC2 Instance
         id: resolve_infra
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
           AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
           AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
           AWS_EC2_SSH_KEY: ${{ secrets.AWS_EC2_SSH_KEY }}
@@ -403,8 +397,9 @@ jobs:
       - name: Resolve EC2 IP address
         id: resolve_ip
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
           AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
           AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
           AWS_EC2_SSH_KEY: ${{ secrets.AWS_EC2_SSH_KEY }}
@@ -503,8 +498,9 @@ jobs:
       - name: Resolve EC2 IP address
         id: resolve_ip
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
           AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
           AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
           AWS_EC2_SSH_KEY: ${{ secrets.AWS_EC2_SSH_KEY }}
@@ -552,8 +548,9 @@ jobs:
       - name: Resolve EC2 IP address
         id: resolve_ip
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
           AWS_REGION: ${{ secrets.AWS_REGION || 'eu-north-1' }}
           AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
           AWS_EC2_SSH_KEY: ${{ secrets.AWS_EC2_SSH_KEY }}
