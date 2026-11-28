@@ -11,7 +11,40 @@ from notifications.models import Notification
 
 logger = logging.getLogger(__name__)
 
-def get_public_backend_url(enforce_production=False):
+def get_aws_backend_url():
+    """Renvoie l'URL du serveur backend sur AWS (EC2/Production)."""
+    raw_url = str(
+        getattr(settings, "BACKEND_PUBLIC_URL", "") or os.getenv("BACKEND_PUBLIC_URL", "")
+    ).strip()
+    if raw_url and "localhost" not in raw_url and "127.0.0.1" not in raw_url:
+        return raw_url.rstrip("/")
+
+    aws_ip = str(
+        getattr(settings, "AWS_EC2_IP", "")
+        or os.getenv("AWS_EC2_IP", "")
+        or getattr(settings, "EC2_PUBLIC_IP", "")
+        or os.getenv("EC2_PUBLIC_IP", "")
+        or "13.53.227.16"
+    ).strip()
+    return f"http://{aws_ip}:8000".rstrip("/")
+
+
+def get_local_backend_url():
+    """Renvoie l'URL du serveur backend en environnement local."""
+    return "http://localhost:8000"
+
+
+def get_public_backend_url(request=None, enforce_production=False):
+    # 1. Détection dynamique à partir de la requête HTTP si fournie (ex: requête depuis AWS ou Local)
+    if request is not None and hasattr(request, "get_host"):
+        try:
+            scheme = "https" if request.is_secure() else "http"
+            host = request.get_host()
+            if host:
+                return f"{scheme}://{host}".rstrip("/")
+        except Exception:
+            pass
+
     raw_url = str(
         getattr(settings, "BACKEND_PUBLIC_URL", "") or os.getenv("BACKEND_PUBLIC_URL", "")
     ).strip()
@@ -25,8 +58,7 @@ def get_public_backend_url(enforce_production=False):
                 "Le réglage Django BACKEND_PUBLIC_URL est obligatoire en production et doit être une URL HTTPS absolue."
             )
         if is_production:
-            logger.error("Le réglage Django BACKEND_PUBLIC_URL est manquant en production.")
-            return ""
+            return get_aws_backend_url()
         # Valeur par défaut pour l'environnement local de développement / test
         raw_url = "http://localhost:8000"
 
@@ -46,7 +78,7 @@ def get_public_backend_url(enforce_production=False):
             )
         if not parsed.netloc:
             logger.error(f"BACKEND_PUBLIC_URL invalide sans hôte : '{raw_url}'")
-            return ""
+            return get_aws_backend_url()
     else:
         if not parsed.scheme or not parsed.netloc:
             raise ImproperlyConfigured(
@@ -103,11 +135,15 @@ class NotificationService:
             return notification
             
         contexte = dict(contexte_email) if contexte_email else {}
+        request_obj = contexte.get("request")
         try:
-            raw_backend = get_public_backend_url()
+            raw_backend = get_public_backend_url(request=request_obj)
         except Exception as e:
             logger.warning(f"Impossible de déterminer BACKEND_PUBLIC_URL ({e}). Utilisation du chemin relatif.")
             raw_backend = ""
+
+        aws_backend = get_aws_backend_url()
+        local_backend = get_local_backend_url()
 
         raw_frontend = str(getattr(settings, "FRONTEND_URL", "http://localhost:3000")).split(",")[0].strip().rstrip("/")
         
@@ -145,6 +181,12 @@ class NotificationService:
             if "url_quittance" not in contexte and paiement_id:
                 route_quittance = f"/api/paiements/{paiement_id}/quittance/"
                 contexte["url_quittance"] = f"{raw_backend}{route_quittance}" if raw_backend else route_quittance
+            if "url_quittance_aws" not in contexte and paiement_id:
+                route_quittance = f"/api/paiements/{paiement_id}/quittance/"
+                contexte["url_quittance_aws"] = f"{aws_backend}{route_quittance}"
+            if "url_quittance_local" not in contexte and paiement_id:
+                route_quittance = f"/api/paiements/{paiement_id}/quittance/"
+                contexte["url_quittance_local"] = f"{local_backend}{route_quittance}"
 
         nom_dest = ""
         if utilisateur:
@@ -249,7 +291,7 @@ class NotificationService:
             )
 
     @classmethod
-    def notifier_paiement_valide(cls, paiement_ou_quittance):
+    def notifier_paiement_valide(cls, paiement_ou_quittance, request=None):
         """
         Notifie les parties de la validation d'un paiement.
         Accepte soit un objet Paiement, soit un objet Quittance.
@@ -295,12 +337,17 @@ class NotificationService:
             lien_quittance = f"/api/paiements/{paiement_id}/quittance/"
 
         try:
-            raw_backend = get_public_backend_url()
+            raw_backend = get_public_backend_url(request=request)
         except Exception as e:
             logger.warning(f"BACKEND_PUBLIC_URL indisponible: {e}")
             raw_backend = ""
 
+        aws_backend = get_aws_backend_url()
+        local_backend = get_local_backend_url()
+
         url_quittance = f"{raw_backend}{lien_quittance}" if raw_backend else lien_quittance
+        url_quittance_aws = f"{aws_backend}{lien_quittance}"
+        url_quittance_local = f"{local_backend}{lien_quittance}"
 
         destinataires = []
         if contrat and getattr(contrat, "locataire", None) and getattr(contrat.locataire, "user", None):
@@ -324,7 +371,10 @@ class NotificationService:
                         "date_paiement_format": date_paiement_format,
                         "contrat_titre": contrat_titre,
                         "url_quittance": url_quittance,
+                        "url_quittance_aws": url_quittance_aws,
+                        "url_quittance_local": url_quittance_local,
                         "lien_quittance": lien_quittance,
+                        "request": request,
                     }
                 )
             except Exception as e:

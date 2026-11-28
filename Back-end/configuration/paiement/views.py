@@ -78,7 +78,7 @@ class PaiementViewSet(RoleScopedQuerySetMixin, viewsets.ModelViewSet):
             # S'assurer que la notification est finalisée (le service gère l'anti-doublon)
             try:
                 from notifications.services import NotificationService
-                NotificationService.notifier_paiement_valide(paiement)
+                NotificationService.notifier_paiement_valide(paiement, request=request)
             except Exception as e:
                 logger.error(f"Erreur notification lors du rejeu #{paiement.pk}: {e}")
             
@@ -100,7 +100,7 @@ class PaiementViewSet(RoleScopedQuerySetMixin, viewsets.ModelViewSet):
             
         try:
             from notifications.services import NotificationService
-            NotificationService.notifier_paiement_valide(paiement)
+            NotificationService.notifier_paiement_valide(paiement, request=request)
         except Exception as e:
             logger.error(f"Erreur notification post-validation paiement #{paiement.pk}: {e}", exc_info=True)
 
@@ -386,6 +386,11 @@ class DemandePaiementViewSet(viewsets.ModelViewSet):
                 facture.reference = demande.reference
             facture.save()
             facture.valider_paiement()
+        try:
+            from notifications.services import NotificationService
+            NotificationService.notifier_paiement_valide(facture, request=request)
+        except Exception as e:
+            logger.error(f"Erreur notification validation demande #{demande.pk}: {e}", exc_info=True)
         return Response(DemandePaiementSerializer(demande).data)
 
     @action(detail=True, methods=["post"])

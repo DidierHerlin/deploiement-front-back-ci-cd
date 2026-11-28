@@ -22,6 +22,22 @@
     </p>
     {% endif %}
 
+    {% if url_quittance_aws or url_quittance_local %}
+    <div style="margin-top: 15px; padding: 12px; background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; font-size: 13px; color: #495057;">
+        <p style="margin: 0 0 8px 0; font-weight: bold; color: #333;">Liens directs de téléchargement (AWS / Local) :</p>
+        {% if url_quittance_aws %}
+        <p style="margin: 4px 0;">
+            🌐 <strong>Serveur AWS / En ligne :</strong> <a href="{{ url_quittance_aws }}" style="color: #007bff; word-break: break-all;">{{ url_quittance_aws }}</a>
+        </p>
+        {% endif %}
+        {% if url_quittance_local %}
+        <p style="margin: 4px 0;">
+            💻 <strong>Environnement local :</strong> <a href="{{ url_quittance_local }}" style="color: #28a745; word-break: break-all;">{{ url_quittance_local }}</a>
+        </p>
+        {% endif %}
+    </div>
+    {% endif %}
+
     <p>Cordialement,<br>L’équipe Gestion Immobilière</p>
 </body>
 </html>

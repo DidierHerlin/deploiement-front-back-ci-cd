@@ -205,6 +205,7 @@ CORS_ALLOWED_ORIGINS = [origin.rstrip("/") for origin in _raw_cors_origins if or
 
 FRONTEND_URL = config("FRONTEND_URL", default="http://localhost:3000,http://localhost:3001")
 BACKEND_PUBLIC_URL = config("BACKEND_PUBLIC_URL", default="")
+AWS_EC2_IP = config("AWS_EC2_IP", default=config("EC2_PUBLIC_IP", default="13.53.227.16"))
 
 _raw_csrf_origins = config(
     "CSRF_TRUSTED_ORIGINS",

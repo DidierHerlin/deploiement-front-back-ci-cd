@@ -9,5 +9,9 @@ Contrat concerné : {{ contrat_titre }}
 Télécharger la quittance PDF
 {{ url_quittance }}
 
+{% if url_quittance_aws %}Lien AWS : {{ url_quittance_aws }}
+{% endif %}{% if url_quittance_local %}Lien Local : {{ url_quittance_local }}
+{% endif %}
+
 Cordialement,
 L’équipe Gestion Immobilière

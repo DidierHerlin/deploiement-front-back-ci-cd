@@ -85,6 +85,11 @@ class DemandePaiementAdmin(admin.ModelAdmin):
                     facture.reference = demande.reference
                 facture.save()
                 facture.valider_paiement()
+                try:
+                    from notifications.services import NotificationService
+                    NotificationService.notifier_paiement_valide(facture, request=request)
+                except Exception:
+                    pass
                 count += 1
         self.message_user(request, f"{count} demande(s) de paiement validée(s) avec succès.")
 
