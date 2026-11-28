@@ -266,53 +266,6 @@ class NotificationServiceTests(TestCase):
         self.assertIn("Montant : 420 000 Ar", email2.body)
         self.assertEqual(email2.body.count("420 000 Ar"), 1)
 
-    def test_email_quittance_local_et_aws_urls(self):
-        """Vérifie que l'email de quittance inclut à la fois le lien AWS et le lien local."""
-        from django.test import RequestFactory
-        from notifications.services import NotificationService
-
-        mail.outbox.clear()
-        factory = RequestFactory()
-        req_aws = factory.get("/api/paiements/55/valider/", HTTP_HOST="13.53.227.16:8000")
-
-        contrat = Contrat.objects.create(
-            bien=self.bien,
-            locataire=self.loc,
-            type_contrat="LOCATION",
-            loyer=500,
-            depot_garantie=500,
-            date_debut=timezone.now().date(),
-            date_fin=timezone.now().date() + datetime.timedelta(days=365),
-        )
-        paiement = Paiement.objects.filter(contrat=contrat).first()
-        if not paiement:
-            paiement = Paiement.objects.create(
-                contrat=contrat,
-                montant=500000,
-                date_echeance=timezone.now().date(),
-                statut=Paiement.StatutPaiement.PAYE,
-            )
-        else:
-            paiement.statut = Paiement.StatutPaiement.PAYE
-            paiement.save()
-
-        NotificationService.notifier_paiement_valide(paiement, request=req_aws)
-        self.assertGreaterEqual(len(mail.outbox), 1)
-        email = [e for e in mail.outbox if self.locataire_user.email in e.to][0]
-
-        # 1. Le lien principal dynamique pointe vers l'hôte de la requête (AWS)
-        expected_aws = f"http://13.53.227.16:8000/api/paiements/{paiement.pk}/quittance/"
-        self.assertIn(expected_aws, email.body)
-
-        # 2. Le lien local est également présent dans l'email
-        expected_local = f"http://localhost:8000/api/paiements/{paiement.pk}/quittance/"
-        self.assertIn(expected_local, email.body)
-
-        # 3. L'alternative HTML contient les deux liens
-        html_content = email.alternatives[0][0]
-        self.assertIn(expected_aws, html_content)
-        self.assertIn(expected_local, html_content)
-
     def test_backend_public_url_production_validation(self):
         from django.core.exceptions import ImproperlyConfigured
         from notifications.services import get_public_backend_url

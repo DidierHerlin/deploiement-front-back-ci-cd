@@ -6,19 +6,17 @@ export async function GET(request: NextRequest) {
   const id = searchParams.get('id')
   const token = searchParams.get('token')
 
-  if (!id) {
-    return NextResponse.json({ error: "Missing id" }, { status: 400 })
+  if (!id || !token) {
+    return NextResponse.json({ error: "Missing id or token" }, { status: 400 })
   }
 
   const API_URL = getApiUrl()
   
   try {
-    const headers: Record<string, string> = {}
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`
-    }
     const res = await fetch(`${API_URL}/paiements/${id}/quittance/`, {
-      headers
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     })
 
     if (!res.ok) {
@@ -26,13 +24,13 @@ export async function GET(request: NextRequest) {
     }
 
     const blob = await res.blob()
-    const headersResponse = new Headers()
-    headersResponse.set('Content-Type', 'application/pdf')
-    headersResponse.set('Content-Disposition', `attachment; filename="quittance_${id}.pdf"`)
+    const headers = new Headers()
+    headers.set('Content-Type', 'application/pdf')
+    headers.set('Content-Disposition', `attachment; filename="quittance_${id}.pdf"`)
 
     return new NextResponse(blob, {
       status: 200,
-      headers: headersResponse
+      headers
     })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })

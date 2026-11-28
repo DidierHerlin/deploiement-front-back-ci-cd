@@ -42,7 +42,7 @@ on:
 
 jobs:
   manage-infrastructure:
-    name: "EC2 Terraform"
+    name: "EC2 Lifecycle & Terraform"
     concurrency:
       group: aws-ec2-deployment
       cancel-in-progress: false
@@ -62,7 +62,7 @@ jobs:
           terraform_version: 1.17.2
           terraform_wrapper: false
 
-      - name: Validate Terraform Syntax and Format
+      - name: Validate Terraform Syntax & Format
         working-directory: ./terraform
         run: |
           terraform fmt -check
