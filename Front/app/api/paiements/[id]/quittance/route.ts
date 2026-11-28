@@ -19,14 +19,23 @@ export async function GET(
     request.nextUrl.searchParams.get("token")
 
   const estMarqueConnecte = request.cookies.get("auth")?.value === "1"
+  const API_URL = getApiUrl()
 
-  // 2. Si le token est absent dans les cookies et headers
-  if (!token) {
-    // Si la session est marquée connectée (token présent dans le localStorage côté client),
-    // on renvoie une page passerelle pour synchroniser le cookie et déclencher le téléchargement.
-    if (estMarqueConnecte) {
-      return new NextResponse(
-        `<!DOCTYPE html>
+  try {
+    const fetchHeaders: Record<string, string> = {}
+    if (token) {
+      fetchHeaders["Authorization"] = `Bearer ${token}`
+    }
+
+    const backendRes = await fetch(`${API_URL}/paiements/${id}/quittance/`, {
+      headers: fetchHeaders,
+    })
+
+    // Si le backend renvoie 401 et qu'aucun token valide n'est présent
+    if (backendRes.status === 401) {
+      if (estMarqueConnecte) {
+        return new NextResponse(
+          `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -49,31 +58,13 @@ export async function GET(
   </script>
 </body>
 </html>`,
-        {
-          status: 200,
-          headers: { "Content-Type": "text/html; charset=utf-8" },
-        }
-      )
-    }
+          {
+            status: 200,
+            headers: { "Content-Type": "text/html; charset=utf-8" },
+          }
+        )
+      }
 
-    // Sinon, redirection vers /login en mémorisant la destination
-    const loginUrl = new URL("/login", request.url)
-    loginUrl.searchParams.set("redirect", `/api/paiements/${id}/quittance`)
-    return NextResponse.redirect(loginUrl)
-  }
-
-  // 3. Appel sécurisé au backend Django
-  const API_URL = getApiUrl()
-
-  try {
-    const backendRes = await fetch(`${API_URL}/paiements/${id}/quittance/`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-
-    // Token expiré ou non reconnu par Django -> Redirection vers login
-    if (backendRes.status === 401) {
       const loginUrl = new URL("/login", request.url)
       loginUrl.searchParams.set("redirect", `/api/paiements/${id}/quittance`)
       const res = NextResponse.redirect(loginUrl)
@@ -82,11 +73,10 @@ export async function GET(
       return res
     }
 
-    // Contrôle d'autorisation : le locataire n'est pas autorisé ou la quittance n'existe pas
     if (backendRes.status === 403 || backendRes.status === 404) {
       return NextResponse.json(
-        { error: "Accès refusé. Vous n'êtes pas autorisé à consulter ou télécharger cette quittance." },
-        { status: 403 }
+        { error: "Accès refusé ou quittance introuvable." },
+        { status: backendRes.status }
       )
     }
 
@@ -97,7 +87,7 @@ export async function GET(
       )
     }
 
-    // 4. Renvoi du PDF en pièce jointe avec en-têtes explicites
+    // Renvoi du PDF en pièce jointe
     const blob = await backendRes.blob()
     const headers = new Headers()
     headers.set("Content-Type", "application/pdf")

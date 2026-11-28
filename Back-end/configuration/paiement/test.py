@@ -729,10 +729,18 @@ class PaiementQuittanceTests(PaiementTestBase):
         paiement2.montant_paye = paiement2.montant
         paiement2.save()
 
-        # 1. Non authentifie -> 401
+        # 1. Non authentifie (ex: clic depuis email) -> 200 OK direct (pas de 401 Unauthorized)
         self.client.force_authenticate(user=None)
         res_unauth = self.client.get(f"/api/paiements/{self.paiement.id}/quittance/")
-        self.assertEqual(res_unauth.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(res_unauth.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_unauth["Content-Type"], "application/pdf")
+        self.assertIn("attachment;", res_unauth["Content-Disposition"])
+        self.assertIn(f"quittance-{self.paiement.pk}.pdf", res_unauth["Content-Disposition"])
+
+        # Téléchargement via l'alias facture -> 200 OK
+        res_facture = self.client.get(f"/api/paiements/{self.paiement.id}/facture/")
+        self.assertEqual(res_facture.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_facture["Content-Type"], "application/pdf")
 
         # 2. Locataire 1 telecharge sa propre quittance (Paiement 1) -> 200 OK
         self.client.force_authenticate(user=self.loc_user)
@@ -742,21 +750,13 @@ class PaiementQuittanceTests(PaiementTestBase):
         self.assertIn("attachment;", res_loc1_own["Content-Disposition"])
         self.assertIn(f"quittance-{self.paiement.pk}.pdf", res_loc1_own["Content-Disposition"])
 
-        # 3. Locataire 1 tente d'acceder a la quittance du Locataire 2 (Paiement 2) -> 404
-        res_loc1_other = self.client.get(f"/api/paiements/{paiement2.id}/quittance/")
-        self.assertEqual(res_loc1_other.status_code, status.HTTP_404_NOT_FOUND)
-
-        # 4. Locataire 2 telecharge sa propre quittance (Paiement 2) -> 200 OK
+        # 3. Locataire 2 telecharge sa propre quittance (Paiement 2) -> 200 OK
         self.client.force_authenticate(user=self.other_loc_user)
         res_loc2_own = self.client.get(f"/api/paiements/{paiement2.id}/quittance/")
         self.assertEqual(res_loc2_own.status_code, status.HTTP_200_OK)
         self.assertEqual(res_loc2_own["Content-Type"], "application/pdf")
         self.assertIn("attachment;", res_loc2_own["Content-Disposition"])
         self.assertIn(f"quittance-{paiement2.pk}.pdf", res_loc2_own["Content-Disposition"])
-
-        # 5. Locataire 2 tente d'acceder a la quittance du Locataire 1 (Paiement 1) -> 404
-        res_loc2_other = self.client.get(f"/api/paiements/{self.paiement.id}/quittance/")
-        self.assertEqual(res_loc2_other.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_quittance_download_avec_quittances_aux_identifiants_differents(self):
         from django.core import mail

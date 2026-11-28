@@ -49,7 +49,15 @@ class PaiementViewSet(RoleScopedQuerySetMixin, viewsets.ModelViewSet):
         from notifications.services import NotificationService
         NotificationService.notifier_paiement_cree(paiement)
 
+    def get_permissions(self):
+        if self.action in ["quittance", "facture"]:
+            return [permissions.AllowAny()]
+        return super().get_permissions()
+
     def get_queryset(self):
+        if self.action in ["quittance", "facture"]:
+            # Téléchargement public des quittances et factures / reçus validés (liens envoyés par email)
+            return super().get_queryset()
         return self.filter_by_user_role(super().get_queryset())
 
     @action(detail=True, methods=["post"])
@@ -126,7 +134,7 @@ class PaiementViewSet(RoleScopedQuerySetMixin, viewsets.ModelViewSet):
                 demande.annuler()
         return Response(PaiementSerializer(paiement).data)
 
-    @action(detail=True, methods=["get"])
+    @action(detail=True, methods=["get"], permission_classes=[permissions.AllowAny])
     def quittance(self, request, pk=None):
         paiement = self.get_object()
 
@@ -203,6 +211,10 @@ class PaiementViewSet(RoleScopedQuerySetMixin, viewsets.ModelViewSet):
                 {"error": "Impossible de lire le fichier de quittance sur le serveur après génération."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+    @action(detail=True, methods=["get"], permission_classes=[permissions.AllowAny])
+    def facture(self, request, pk=None):
+        return self.quittance(request, pk=pk)
 
     @action(detail=False, methods=["get"])
     def impayes(self, request):
