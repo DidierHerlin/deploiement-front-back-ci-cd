@@ -19,10 +19,12 @@ on:
         type: string
         default: "gestion-immobilier-devops"
     secrets:
+      AWS_ROLE_ARN:
+        required: false
       AWS_ACCESS_KEY_ID:
-        required: true
+        required: false
       AWS_SECRET_ACCESS_KEY:
-        required: true
+        required: false
       AWS_EC2_SSH_KEY:
         required: false
       AWS_TF_STATE_BUCKET:
@@ -47,6 +49,9 @@ jobs:
       group: aws-ec2-deployment
       cancel-in-progress: false
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     outputs:
       ec2_ip: ${{ steps.lifecycle.outputs.ec2_ip }}
       instance_id: ${{ steps.lifecycle.outputs.instance_id }}
@@ -55,6 +60,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Configure AWS credentials via OIDC
+        if: secrets.AWS_ROLE_ARN != ''
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ inputs.aws_region }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
